@@ -16,11 +16,12 @@
 //   4. REDIRECTS ARE FOLLOWED BY HAND. Each hop's target is held to rule 1, so a redirect elsewhere is
 //      refused (`redirect_refused`); a hop to another origin drops the key (the token was minted for
 //      the first); 303 (and 301/302 of a POST) turns into a GET with no body; a streamed body cannot be
-//      sent twice, so a hop that would replay one is refused.
+//      sent twice, so a hop that would replay one is refused. A refused hop's error never names its
+//      target: the server wrote that URL, and it was sent the key, so it can spell a host from it.
 //   5. NO TIME LIMIT WHILE DATA FLOWS. One idle watchdog, re-armed by every chunk sent, received or
-//      read: a generation may stream for an hour, and only silence (five minutes by default, or the
-//      request's own `idleTimeoutMs`) ends it, as `idle_timeout`. Cancelling the body releases the
-//      socket at once. (Bun drains a Response's body as it arrives whether or not the caller reads, so
+//      read: a generation may stream for an hour, and only silence (five minutes by default) ends it, as
+//      `idle_timeout`. A request may name its own `idleTimeoutMs`, held to 1 s - 30 min
+//      (`clampKeyedIdleTimeoutMs`). Cancelling the body releases the socket at once. (Bun drains a Response's body as it arrives whether or not the caller reads, so
 //      an abandoned body runs until the server ends or goes silent.)
 //   6. A 401 GETS ONE RETRY. The entry's token source is asked for a token newer than the one sent (the
 //      core's refresher, §8.5); when there is one and the body can be sent again, the request is
@@ -89,7 +90,11 @@ export interface KeyedFetchConfig {
   hosts: readonly string[];
   /** The plugin's `auth` entries, by `secret` name. A placement off the closed list refuses the config (TypeError). */
   auth?: Readonly<Record<string, KeyedAuthEntry>>;
-  /** No data either way for this long ends a request, unless the request names its own. Default `DEFAULT_KEYED_IDLE_TIMEOUT_MS`. */
+  /**
+   * The host's own idle limit: no data either way for this long ends a request that names none. Default
+   * `DEFAULT_KEYED_IDLE_TIMEOUT_MS`. It is the host's setting, not the plugin's, so it is not clamped (a
+   * test sets it short); a request's own `idleTimeoutMs` is (`clampKeyedIdleTimeoutMs`).
+   */
   idleTimeoutMs?: number;
   /** Hops followed before refusing. Default 5. */
   maxRedirects?: number;
@@ -103,6 +108,20 @@ export interface KeyedFetchConfig {
 }
 
 export const DEFAULT_KEYED_IDLE_TIMEOUT_MS = 300_000;
+/** The shortest idle limit a request may ask for: below this, a request is held to it. */
+export const MIN_KEYED_IDLE_TIMEOUT_MS = 1_000;
+/** The longest idle limit a request may ask for: a silent server holds a socket no longer than this. */
+export const MAX_KEYED_IDLE_TIMEOUT_MS = 1_800_000;
+
+/**
+ * A request's own `idleTimeoutMs`, held to `MIN_KEYED_IDLE_TIMEOUT_MS` - `MAX_KEYED_IDLE_TIMEOUT_MS` (1 s -
+ * 30 min); anything that is not a number (NaN included) is the default, five minutes. Lane B's `net.fetch`
+ * holds the option to the same bounds.
+ */
+export function clampKeyedIdleTimeoutMs(requested: unknown): number {
+  if (typeof requested !== "number" || Number.isNaN(requested)) return DEFAULT_KEYED_IDLE_TIMEOUT_MS;
+  return Math.min(MAX_KEYED_IDLE_TIMEOUT_MS, Math.max(MIN_KEYED_IDLE_TIMEOUT_MS, Math.round(requested)));
+}
 const DEFAULT_MAX_REDIRECTS = 5;
 /** An HTTP auth scheme: an RFC 9110 token (the same rule as the core's `net.fetch`, lane B's plugin SDK). */
 export const AUTH_SCHEME_RE = /^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,32}$/;
@@ -188,22 +207,25 @@ export function createKeyedFetch(config: KeyedFetchConfig): KeyedFetch {
   const followRedirects = config.followRedirects !== false;
   const platformFetch = config.fetch ?? ((url: string, init: RequestInit) => fetch(url, init));
 
+  // The request URL is the caller's own, so its refusal names the host. A redirect target is the SERVER's,
+  // and the server was sent the key: it can spell a host from it, so a refused hop names nothing of it.
   const checkUrl = (raw: string, hop: "request" | "redirect"): URL => {
-    const what = hop === "request" ? "the request URL" : "the redirect target";
+    const request = hop === "request";
+    const what = request ? "the request URL" : "the redirect target";
     let url: URL;
     try {
       url = new URL(raw);
     } catch {
-      throw new KeyedFetchError(hop === "request" ? "insecure_url" : "redirect_refused", `${what} is not an absolute URL`);
+      throw new KeyedFetchError(request ? "insecure_url" : "redirect_refused", `${what} is not an absolute URL`);
     }
     if (url.username !== "" || url.password !== "") {
-      throw new KeyedFetchError(hop === "request" ? "insecure_url" : "redirect_refused", `${what} carries user info`);
+      throw new KeyedFetchError(request ? "insecure_url" : "redirect_refused", `${what} carries user info`);
     }
     if (url.protocol !== "https:" && !(url.protocol === "http:" && isLoopbackHost(url))) {
-      throw new KeyedFetchError(hop === "request" ? "insecure_url" : "redirect_refused", `${url.protocol}//${url.host} is not https (plain http reaches only this computer's loopback)`);
+      throw new KeyedFetchError(request ? "insecure_url" : "redirect_refused", `${request ? `${url.protocol}//${url.host}` : what} is not https (plain http reaches only this computer's loopback)`);
     }
     if (!hostAllowed(url, hosts)) {
-      throw new KeyedFetchError(hop === "request" ? "host_not_declared" : "redirect_refused", `${url.host} is not one of this plugin's network hosts`);
+      throw new KeyedFetchError(request ? "host_not_declared" : "redirect_refused", `${request ? url.host : "the redirect target's host"} is not one of this plugin's network hosts`);
     }
     return url;
   };
@@ -211,7 +233,7 @@ export function createKeyedFetch(config: KeyedFetchConfig): KeyedFetch {
   return async (rawUrl: string, init: KeyedFetchInit = {}, options: KeyedFetchOptions = {}): Promise<Response> => {
     const signal = init.signal;
     if (signal?.aborted === true) throw new KeyedFetchError("aborted", "the request was aborted before it was sent");
-    const idleMs = options.idleTimeoutMs ?? defaultIdleMs;
+    const idleMs = options.idleTimeoutMs === undefined ? defaultIdleMs : clampKeyedIdleTimeoutMs(options.idleTimeoutMs);
 
     // ONE controller for the whole exchange, every hop and the body: the watchdog and the caller abort it.
     const controller = new AbortController();

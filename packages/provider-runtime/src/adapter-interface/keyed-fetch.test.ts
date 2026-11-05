@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { KeyedFetchError, createKeyedFetch, type KeyedAuthEntry, type KeyedTokenSource } from "./keyed-fetch.ts";
+import { DEFAULT_KEYED_IDLE_TIMEOUT_MS, KeyedFetchError, MAX_KEYED_IDLE_TIMEOUT_MS, MIN_KEYED_IDLE_TIMEOUT_MS, clampKeyedIdleTimeoutMs, createKeyedFetch, type KeyedAuthEntry, type KeyedTokenSource } from "./keyed-fetch.ts";
 import { hostAllowed, parseNetworkHost } from "./network-hosts.ts";
 import { tokenSourceFromCredentialStore } from "./token-source.ts";
 import { createMemoryCredentialStore } from "../credentials/memory.ts";
@@ -39,6 +39,12 @@ beforeAll(() => {
           return new Response(null, { status: 302, headers: { location: "https://elsewhere.example/ok" } });
         case "/redirect-303":
           return new Response(null, { status: 303, headers: { location: "/ok" } });
+        case "/redirect-key-host":
+        case "/redirect-key-http": {
+          // A server that was sent the key spells a host from it.
+          const sent = (req.headers.get("authorization") ?? "").replace(/^Bearer /, "").toLowerCase();
+          return new Response(null, { status: 302, headers: { location: `${url.pathname === "/redirect-key-http" ? "http" : "https"}://${sent}.example/x` } });
+        }
         case "/needs-new-token":
           return req.headers.get("authorization") === `Bearer token-${tokenGeneration}` && tokenGeneration > 1 ? new Response("fresh") : new Response("expired", { status: 401 });
         case "/always-401":
@@ -51,6 +57,18 @@ beforeAll(() => {
                 controller.enqueue(new TextEncoder().encode(part));
                 await Bun.sleep(120);
               }
+              controller.close();
+            },
+          });
+          return new Response(stream);
+        }
+        case "/slow-400": {
+          // Two chunks 400 ms apart: past a 250 ms idle limit, within a 1 s one.
+          const stream = new ReadableStream<Uint8Array>({
+            async start(controller) {
+              controller.enqueue(new TextEncoder().encode("a"));
+              await Bun.sleep(400);
+              controller.enqueue(new TextEncoder().encode("b"));
               controller.close();
             },
           });
@@ -310,11 +328,44 @@ describe("the keyed fetch: the key's placement is the entry's, and the key never
   });
 
   test("a request's own idle limit applies to that request", async () => {
-    const keyed = createKeyedFetch({ hosts: hostsFor() });
-    // 120 ms between chunks: fine under the default, cut short by a 50 ms request limit.
-    const err = await keyed(`${base}/slow-stream`, {}, { idleTimeoutMs: 50 }).then((r) => r.text()).then(() => undefined, (e: unknown) => e as KeyedFetchError);
+    // The host's limit is 250 ms: 400 ms of silence ends the request, unless it asks for 1 s.
+    const keyed = createKeyedFetch({ hosts: hostsFor(), idleTimeoutMs: 250 });
+    const err = await keyed(`${base}/slow-400`).then((r) => r.text()).then(() => undefined, (e: unknown) => e as KeyedFetchError);
     expect(err?.code).toBe("idle_timeout");
-    expect(await (await keyed(`${base}/slow-stream`)).text()).toBe("abc");
+    expect(await (await keyed(`${base}/slow-400`, {}, { idleTimeoutMs: 1_000 })).text()).toBe("ab");
+  });
+
+  test("a request's own idle limit is held to 1 s - 30 min; anything not a number is the default, five minutes", async () => {
+    expect([MIN_KEYED_IDLE_TIMEOUT_MS, DEFAULT_KEYED_IDLE_TIMEOUT_MS, MAX_KEYED_IDLE_TIMEOUT_MS]).toEqual([1_000, 300_000, 1_800_000]);
+    expect([1, 0, -5, -Infinity, 999.4].map(clampKeyedIdleTimeoutMs)).toEqual([1_000, 1_000, 1_000, 1_000, 1_000]);
+    expect([1_000, 60_000, 1_800_000].map(clampKeyedIdleTimeoutMs)).toEqual([1_000, 60_000, 1_800_000]);
+    expect([1_800_001, 1e12, Infinity].map(clampKeyedIdleTimeoutMs)).toEqual([1_800_000, 1_800_000, 1_800_000]);
+    expect([NaN, "10", null, undefined].map(clampKeyedIdleTimeoutMs)).toEqual([300_000, 300_000, 300_000, 300_000]);
+    // In use: 1 ms is raised to 1 s, so 120 ms gaps never end the stream...
+    const keyed = createKeyedFetch({ hosts: hostsFor() });
+    expect(await (await keyed(`${base}/slow-stream`, {}, { idleTimeoutMs: 1 })).text()).toBe("abc");
+    // ...and real silence ends it at 1 s, not before.
+    const started = Date.now();
+    const stalled = await keyed(`${base}/stall`, {}, { idleTimeoutMs: 1 });
+    const reader = stalled.body!.getReader();
+    await reader.read();
+    const err = await reader.read().then(() => undefined, (e: unknown) => e as KeyedFetchError);
+    expect(err?.code).toBe("idle_timeout");
+    expect(Date.now() - started).toBeGreaterThanOrEqual(950);
+  });
+
+  test("a refused redirect never names its target: the server was sent the key and can spell a host from it", async () => {
+    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("sk-spelled-into-a-host") } });
+    for (const path of ["/redirect-key-host", "/redirect-key-http", "/redirect-away"]) {
+      const err = await keyed(`${base}${path}`).then(() => undefined, (e: unknown) => e as KeyedFetchError);
+      expect(err?.code).toBe("redirect_refused");
+      expect(err!.message).not.toContain("sk-spelled-into-a-host");
+      expect(err!.message).not.toContain(".example");
+    }
+    // The caller's own URL is named: it is the caller's, not the server's.
+    const own = await createKeyedFetch({ hosts: hostsFor() })("https://api.undeclared.example/v1").then(() => undefined, (e: unknown) => e as KeyedFetchError);
+    expect(own?.code).toBe("host_not_declared");
+    expect(own!.message).toContain("api.undeclared.example");
   });
 });
 

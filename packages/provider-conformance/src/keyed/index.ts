@@ -4,7 +4,7 @@
 //   runKeyedFetchConformance(make): any implementation of spec §5.4's `net.fetch` -- the SDK's reference
 //     `createKeyedFetch`, and the daemon's plugin API -- against a loopback fake: declared hosts only,
 //     the key added where the adapter says and nowhere else, redirects, the 401 retry, streaming with no
-//     time limit while data flows. Two implementations that pass are interchangeable to an adapter.
+//     time limit while data flows, a request's own idle limit held to 1 s - 30 min. Two implementations that pass are interchangeable to an adapter.
 //
 //   runModelAdapterConformance(opts): a model adapter against its family's fake: it speaks the
 //     interface version, reads nothing but the context the interface hands it (no credential store, no
@@ -88,13 +88,14 @@ export type KeyedFetchCaseId =
   | "redirect-elsewhere-refused"
   | "retry-401-once-with-newer-token"
   | "stream-without-time-limit"
-  | "idle-ends-typed";
+  | "idle-ends-typed"
+  | "idle-option-bounded";
 
 export const KEYED_FETCH_CASES: ReadonlyArray<ConformanceCaseSpec<KeyedFetchCaseId>> = [
   { id: "declared-hosts-only", question: "is a request to a host the plugin did not declare refused before anything is sent?" },
   { id: "https-or-loopback", question: "is plain http refused except to this computer's loopback?" },
   { id: "key-in-placement", question: "does the key go where its auth entry declares (default `Authorization: Bearer`), and only there, whatever the request asks?" },
-  { id: "placement-closed-list", question: "is an auth entry whose placement is off the closed list (`authorization`, `x-api-key`, `api-key`, `x-goog-api-key`) refused?" },
+  { id: "placement-closed-list", question: "is an auth entry whose placement is off the closed list (`authorization`, `x-api-key`, `api-key`, `x-goog-api-key`) refused when the fetch is built?" },
   { id: "key-never-echoed", question: "is every response header that carries the key removed before the caller sees it?" },
   { id: "caller-cannot-set-the-key", question: "is a request that sets the key's header itself refused?" },
   { id: "abort-reaches-token-wait", question: "does the caller's abort end a request still waiting on its token source?" },
@@ -102,10 +103,11 @@ export const KEYED_FETCH_CASES: ReadonlyArray<ConformanceCaseSpec<KeyedFetchCase
   { id: "auth-entry-choice", question: "is the only auth entry used by default, a named one on request, none with `auth: false`, and several without a name refused?" },
   { id: "redirect-same-origin-keeps-key", question: "does a same-origin redirect keep the key?" },
   { id: "redirect-cross-origin-drops-key", question: "does a redirect to another declared origin drop the key?" },
-  { id: "redirect-elsewhere-refused", question: "is a redirect to an undeclared host refused?" },
+  { id: "redirect-elsewhere-refused", question: "is a redirect to an undeclared host refused, with an error that never names the target (a server that was sent the key can spell a host from it)?" },
   { id: "retry-401-once-with-newer-token", question: "after a 401, is the request retried exactly once, with a newer token from the source?" },
   { id: "stream-without-time-limit", question: "does a response that keeps sending outlive the idle limit?" },
   { id: "idle-ends-typed", question: "does silence past the idle limit end the request as `idle_timeout`?" },
+  { id: "idle-option-bounded", question: "is a request's own `idleTimeoutMs` held to 1 s - 30 min (1 ms is raised to 1 s, and silence then ends the request at 1 s, not before)?" },
 ];
 
 /** What the kit asks an implementation to build: the reference's own config shape (an auth entry carries its placement). */
@@ -127,6 +129,13 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
       { path: "/same", handler: () => new Response(null, { status: 302, headers: { location: "/ok" } }) },
       { path: "/cross", handler: () => new Response(null, { status: 307, headers: { location: `${otherUrl}/ok` } }) },
       { path: "/away", handler: () => new Response(null, { status: 302, headers: { location: "https://undeclared.example/ok" } }) },
+      {
+        path: "/away-spelled",
+        handler: (req) => {
+          const key = (req.headers.get("authorization") ?? "").replace(/^Bearer /, "").toLowerCase();
+          return new Response(null, { status: 302, headers: { location: `https://${key}.example/ok` } });
+        },
+      },
       { path: "/fresh-only", handler: (req) => (req.headers.get("authorization") === `Bearer t${generation}` && generation > 1 ? new Response("fresh") : new Response("no", { status: 401 })) },
       {
         path: "/drip",
@@ -235,7 +244,13 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
       check(hop.path === "/ok" && hop.headers["authorization"] === undefined, "the cross-origin hop kept the key");
     },
     "redirect-elsewhere-refused": async () => {
-      check((await refusal(make({ hosts: declared, auth: { a: fixed("k") } })(`${fake.url}/away`))) === "redirect_refused", "a redirect to an undeclared host was not refused");
+      const keyed = make({ hosts: declared, auth: { a: fixed("conformance-spelled-key") } });
+      for (const path of ["/away", "/away-spelled"]) {
+        const err = await keyed(`${fake.url}${path}`).then(async (res) => (await res.body?.cancel().catch(() => {}), undefined), (e: unknown) => e as { code?: unknown; message?: unknown });
+        check(err?.code === "redirect_refused", `a redirect to an undeclared host (${path}) was not refused as redirect_refused`);
+        const message = String(err?.message ?? "");
+        check(!message.includes("conformance-spelled-key") && !message.includes(".example"), `a refused redirect's error named its target (${path})`);
+      }
     },
     "retry-401-once-with-newer-token": async () => {
       generation = 1;
@@ -267,6 +282,19 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
       await reader.read();
       const code = await reader.read().then(() => "no error", (e: unknown) => String((e as { code?: string }).code ?? "untyped"));
       check(code === "idle_timeout", `silence ended as ${code}, not idle_timeout`);
+    },
+    "idle-option-bounded": async () => {
+      // The host's limit is 150 ms; the request asks for 1 ms. Held to 1 s, the 80 ms drip completes...
+      const keyed = make({ hosts: declared, idleTimeoutMs: 150 });
+      check((await (await probe(keyed, "/drip", {}, { idleTimeoutMs: 1 })).text()) === "1234", "a 1 ms request idle limit was not raised to 1 s");
+      // ...and silence ends the request at 1 s: not at 1 ms, and not at the host's 150 ms.
+      const started = Date.now();
+      const res = await probe(keyed, "/silent", {}, { idleTimeoutMs: 1 });
+      const reader = res.body!.getReader();
+      await reader.read();
+      const code = await reader.read().then(() => "no error", (e: unknown) => String((e as { code?: string }).code ?? "untyped"));
+      const after = Date.now() - started;
+      check(code === "idle_timeout" && after >= 950 && after < 3000, `with a 1 ms request idle limit, silence ended as ${code} after ${after} ms (expected idle_timeout at 1 s)`);
     },
   };
 

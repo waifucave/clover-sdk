@@ -49,7 +49,11 @@ export interface KeyedFetchOptions {
    * for a public endpoint of a plugin that has one.
    */
   auth?: string | false;
-  /** How long silence (no data either way) may last before `idle_timeout`. Default five minutes. */
+  /**
+   * How long silence (no data either way) may last before `idle_timeout`. Held to 1 s - 30 min
+   * (`MIN_KEYED_IDLE_TIMEOUT_MS`, `MAX_KEYED_IDLE_TIMEOUT_MS`): a shorter one is raised, a longer one
+   * lowered. Absent: the host's limit, five minutes by default.
+   */
   idleTimeoutMs?: number;
 }
 

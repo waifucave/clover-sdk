@@ -1,7 +1,7 @@
 // The kit on the model adapter interface, run against what the SDK ships: the reference keyed fetch,
 // and the Bedrock adapter in a process of its own -- SigV4 signed THERE, checked by the fake.
 import { describe, expect, test } from "bun:test";
-import { createKeyedFetch, spawnBedrockAdapterProcess, type AdapterContext, type CredentialMaterial, type ProviderEvent } from "@waifucave/clover-provider-runtime";
+import { KeyedFetchError, createKeyedFetch, spawnBedrockAdapterProcess, type AdapterContext, type CredentialMaterial, type ProviderEvent } from "@waifucave/clover-provider-runtime";
 import { FAKE_ACCESS_KEY_ID, FAKE_REGION, FAKE_SECRET_ACCESS_KEY, eventStreamResponse, startBedrockFake, textTurnFrames } from "../fakes/bedrock.ts";
 import { stalledResponse } from "../fakes/server.ts";
 import { KEYED_FETCH_CASES, MODEL_ADAPTER_CASES, formatConformanceReport, runKeyedFetchConformance, runModelAdapterConformance } from "./index.ts";
@@ -32,6 +32,22 @@ describe("the keyed fetch conformance cases", () => {
     expect(report.ok).toBe(false);
     const failed = report.outcomes.filter((o) => o.status === "failed").map((o) => o.id);
     expect(failed).toEqual(expect.arrayContaining(["declared-hosts-only", "key-in-placement", "caller-cannot-set-the-key", "redirect-elsewhere-refused", "retry-401-once-with-newer-token", "idle-ends-typed"]));
+  }, 30_000);
+
+  test("a fetch that names a refused redirect's target, or takes a request's idle limit unbounded, fails those cases", async () => {
+    const report = await runKeyedFetchConformance("an unbounded, target-naming fetch", (config) => async (url, init, options) => {
+      // The request's own idle limit becomes the host's, unclamped; redirects come back unfollowed.
+      const keyed = createKeyedFetch({ ...config, followRedirects: false, ...(options?.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: options.idleTimeoutMs }) });
+      const res = await keyed(url, init, options?.auth === undefined ? {} : { auth: options.auth });
+      const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (location === null) return res;
+      const target = new URL(location, url);
+      // ...and a hop off the declared hosts is refused BY NAME, as this fetch's first version did.
+      if (!config.hosts.includes(target.host)) throw new KeyedFetchError("redirect_refused", `${target.host} is not one of this plugin's network hosts`);
+      return keyed(target.toString(), init, options?.auth === undefined ? {} : { auth: options.auth });
+    });
+    const failed = report.outcomes.filter((o) => o.status === "failed").map((o) => o.id);
+    expect(failed).toEqual(expect.arrayContaining(["redirect-elsewhere-refused", "idle-option-bounded"]));
   }, 30_000);
 });
 

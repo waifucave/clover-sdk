@@ -41,8 +41,9 @@ brand in its own process or Worker, so a reader deeper down that was not handed 
 holds a key. `createKeyedFetch` is the reference: declared hosts only (a wildcard needs a real domain:
 no `*.com`, no `*.1`); the key added where its AUTH ENTRY says, from a closed list (`authorization`
 with a scheme, `x-api-key`, `api-key`, `x-goog-api-key`), never where a request asks; every response
-header that carries the key removed; redirects followed by hand; an idle watchdog (settable per
-request) and no total limit; one retry after a 401 with a newer token, never replaying a streamed
+header that carries the key removed; redirects followed by hand, a refused hop's error never naming
+its target (the server can spell a host from the key); an idle watchdog, five minutes by default, a
+request's own `idleTimeoutMs` held to 1 s - 30 min (`clampKeyedIdleTimeoutMs`), and no total limit; one retry after a 401 with a newer token, never replaying a streamed
 body; the caller's abort honoured at every wait, the token source's included; and every failure a
 `KeyedFetchError` with a closed code. `providerAdapterFromModelAdapter` runs a model adapter in
 today's runtime. An adapter that signs with its secret runs in a process of its own
