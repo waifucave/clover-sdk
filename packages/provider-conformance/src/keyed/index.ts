@@ -13,7 +13,7 @@
 //
 // The per-family corpora (`corpus/<family>.ts`) still ask their questions of `ProviderAdapter`s; each
 // family moves onto this interface when its adapter moves into its model plugin (A-M2).
-import { KeyedFetchError, MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type KeyedFetch, type KeyedFetchConfig, type KeyedTokenSource, type ModelAdapter } from "@waifucave/clover-provider-runtime";
+import { KeyedFetchError, MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type KeyPlacement, type KeyedAuthEntry, type KeyedFetch, type KeyedFetchConfig, type KeyedTokenSource, type ModelAdapter } from "@waifucave/clover-provider-runtime";
 import type { TurnRequest } from "@waifucave/clover-provider-runtime";
 import { startFake } from "../fakes/server.ts";
 import { describeCaseFailure } from "../corpus/classifier-safety.ts";
@@ -77,7 +77,11 @@ export type KeyedFetchCaseId =
   | "declared-hosts-only"
   | "https-or-loopback"
   | "key-in-placement"
+  | "placement-closed-list"
+  | "key-never-echoed"
   | "caller-cannot-set-the-key"
+  | "abort-reaches-token-wait"
+  | "streamed-body-not-replayed"
   | "auth-entry-choice"
   | "redirect-same-origin-keeps-key"
   | "redirect-cross-origin-drops-key"
@@ -89,8 +93,12 @@ export type KeyedFetchCaseId =
 export const KEYED_FETCH_CASES: ReadonlyArray<ConformanceCaseSpec<KeyedFetchCaseId>> = [
   { id: "declared-hosts-only", question: "is a request to a host the plugin did not declare refused before anything is sent?" },
   { id: "https-or-loopback", question: "is plain http refused except to this computer's loopback?" },
-  { id: "key-in-placement", question: "does the key go in the header the adapter names (default `Authorization: Bearer`), and only there?" },
+  { id: "key-in-placement", question: "does the key go where its auth entry declares (default `Authorization: Bearer`), and only there, whatever the request asks?" },
+  { id: "placement-closed-list", question: "is an auth entry whose placement is off the closed list (`authorization`, `x-api-key`, `api-key`, `x-goog-api-key`) refused?" },
+  { id: "key-never-echoed", question: "is every response header that carries the key removed before the caller sees it?" },
   { id: "caller-cannot-set-the-key", question: "is a request that sets the key's header itself refused?" },
+  { id: "abort-reaches-token-wait", question: "does the caller's abort end a request still waiting on its token source?" },
+  { id: "streamed-body-not-replayed", question: "after a 401, is a streamed body left unsent a second time (the 401 is the answer)?" },
   { id: "auth-entry-choice", question: "is the only auth entry used by default, a named one on request, none with `auth: false`, and several without a name refused?" },
   { id: "redirect-same-origin-keeps-key", question: "does a same-origin redirect keep the key?" },
   { id: "redirect-cross-origin-drops-key", question: "does a redirect to another declared origin drop the key?" },
@@ -100,7 +108,7 @@ export const KEYED_FETCH_CASES: ReadonlyArray<ConformanceCaseSpec<KeyedFetchCase
   { id: "idle-ends-typed", question: "does silence past the idle limit end the request as `idle_timeout`?" },
 ];
 
-/** What the kit asks an implementation to build: the reference's own config shape. */
+/** What the kit asks an implementation to build: the reference's own config shape (an auth entry carries its placement). */
 export type KeyedFetchFactory = (config: Pick<KeyedFetchConfig, "hosts" | "auth" | "idleTimeoutMs">) => KeyedFetch;
 
 export async function runKeyedFetchConformance(subject: string, make: KeyedFetchFactory): Promise<ConformanceReport<KeyedFetchCaseId>> {
@@ -109,6 +117,13 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
   const fake = await startFake({
     routes: [
       { path: "/ok", handler: () => new Response("ok") },
+      {
+        path: "/echo",
+        handler: (req) => {
+          const key = (req.headers.get("authorization") ?? req.headers.get("x-api-key") ?? "").replace(/^Bearer /, "");
+          return new Response("echoed", { headers: { "x-echo": `got ${key}`, "access-control-allow-origin": key, "x-plain": "kept" } });
+        },
+      },
       { path: "/same", handler: () => new Response(null, { status: 302, headers: { location: "/ok" } }) },
       { path: "/cross", handler: () => new Response(null, { status: 307, headers: { location: `${otherUrl}/ok` } }) },
       { path: "/away", handler: () => new Response(null, { status: 302, headers: { location: "https://undeclared.example/ok" } }) },
@@ -131,7 +146,7 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
   });
   const port = new URL(fake.url).port;
   otherUrl = `http://localhost:${port}`;
-  const fixed = (value: string): KeyedTokenSource => ({ current: async () => ({ value, generation: 1 }), newer: async () => null });
+  const fixed = (value: string, placement?: KeyPlacement): KeyedAuthEntry => ({ source: { current: async () => ({ value, generation: 1 }), newer: async () => null }, ...(placement === undefined ? {} : { placement }) });
   const declared = [`127.0.0.1:${port}`];
   // The fake records every request with its credential headers redacted to their scheme (`Bearer ***`),
   // which is exactly what these cases ask about: whether a key was there, and where.
@@ -150,13 +165,52 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
       await res.text();
     },
     "key-in-placement": async () => {
-      const keyed = make({ hosts: declared, auth: { a: fixed("conformance-key") } });
-      await (await probe(keyed, "/ok")).text();
+      const keyed = make({ hosts: declared, auth: { a: fixed("conformance-key"), b: fixed("conformance-key", { header: "x-api-key" }) } });
+      await (await probe(keyed, "/ok", {}, { auth: "a" })).text();
       const bearer = fake.requests.at(-1)!;
       check(bearer.headers["authorization"] === "Bearer ***", "the default placement is not `Authorization: Bearer`");
-      await (await probe(keyed, "/ok", {}, { placement: { header: "x-api-key" } })).text();
+      await (await probe(keyed, "/ok", {}, { auth: "b" })).text();
       const custom = fake.requests.at(-1)!;
-      check(custom.headers["x-api-key"] === "***" && custom.headers["authorization"] === undefined, "a named placement did not carry the key alone");
+      check(custom.headers["x-api-key"] === "***" && custom.headers["authorization"] === undefined, "the entry's declared placement did not carry the key alone");
+      // A request that tries to choose a placement anyway changes nothing.
+      await (await probe(keyed, "/ok", {}, { auth: "a", placement: { header: "origin" } } as never)).text();
+      const steered = fake.requests.at(-1)!;
+      check(steered.headers["authorization"] === "Bearer ***" && steered.headers["origin"] === undefined, "a request steered the key into another header");
+    },
+    "placement-closed-list": async () => {
+      for (const header of ["origin", "host", "x-request-id", "cookie"]) {
+        let refused = false;
+        try {
+          make({ hosts: declared, auth: { a: fixed("k", { header } as never) } });
+        } catch {
+          refused = true;
+        }
+        check(refused, `an auth entry placing its key in ${header} was accepted`);
+      }
+    },
+    "key-never-echoed": async () => {
+      const res = await probe(make({ hosts: declared, auth: { a: fixed("conformance-echo-key") } }), "/echo");
+      await res.text();
+      const values = [...res.headers.values()].join(" ");
+      check(!values.includes("conformance-echo-key"), "a response header handed the key back to the caller");
+      check(res.headers.get("x-plain") === "kept", "headers that carry no key were removed too");
+    },
+    "abort-reaches-token-wait": async () => {
+      const slow: KeyedTokenSource = { current: () => new Promise((resolve) => setTimeout(() => resolve({ value: "late", generation: 1 }), 2000)), newer: async () => null };
+      const controller = new AbortController();
+      const started = Date.now();
+      setTimeout(() => controller.abort(), 50);
+      const code = await refusal(make({ hosts: declared, auth: { a: { source: slow } } })(`${fake.url}/ok`, { signal: controller.signal }));
+      check(code === "aborted" && Date.now() - started < 1000, `an abort during the token wait ended as ${String(code)} after ${Date.now() - started} ms`);
+    },
+    "streamed-body-not-replayed": async () => {
+      let asked = 0;
+      const source: KeyedTokenSource = { current: async () => ({ value: "t-stream", generation: 1 }), newer: async () => { asked += 1; return { value: "t-newer", generation: 2 }; } };
+      const before = fake.requests.length;
+      const body = new ReadableStream<Uint8Array>({ start(c) { c.enqueue(new TextEncoder().encode("once")); c.close(); } });
+      const res = await probe(make({ hosts: declared, auth: { a: { source } } }), "/fresh-only", { method: "POST", body });
+      await res.text();
+      check(res.status === 401 && fake.requests.length - before === 1, `a streamed body was sent ${fake.requests.length - before} times after a 401`);
     },
     "caller-cannot-set-the-key": async () => {
       check((await refusal(make({ hosts: declared, auth: { a: fixed("k") } })(`${fake.url}/ok`, { headers: { authorization: "Bearer guess" } }))) === "credential_header", "a caller-set key header was not refused");
@@ -195,7 +249,7 @@ export async function runKeyedFetchConformance(subject: string, make: KeyedFetch
         },
       };
       const before = fake.requests.length;
-      const res = await probe(make({ hosts: declared, auth: { a: source } }), "/fresh-only", { method: "POST", body: "turn" });
+      const res = await probe(make({ hosts: declared, auth: { a: { source } } }), "/fresh-only", { method: "POST", body: "turn" });
       check(res.status === 200 && (await res.text()) === "fresh", "the retry with the newer token did not succeed");
       check(asked === 1 && fake.requests.length - before === 2, `expected one retry, saw ${fake.requests.length - before} requests and ${asked} token asks`);
       const stuck = fake.requests.length;
@@ -277,6 +331,7 @@ export async function runModelAdapterConformance(opts: RunModelAdapterConformanc
       check(opts.adapter.interfaceVersion === MODEL_ADAPTER_INTERFACE_VERSION, `the adapter speaks interface ${String(opts.adapter.interfaceVersion)}, not ${MODEL_ADAPTER_INTERFACE_VERSION}`);
     },
     "context-only": async () => {
+      if (opts.ownProcess === true) return { skipped: "the adapter reads its context inside its own process; the host side only proxies it" };
       const read = new Set<string>();
       const base = opts.context();
       const watched = new Proxy(base, {
@@ -293,14 +348,27 @@ export async function runModelAdapterConformance(opts: RunModelAdapterConformanc
       const platform = globalThis.fetch;
       let direct = 0;
       let keyed = 0;
+      // Calls made while a keyed fetch is in progress are the keyed fetch's own; any other is the adapter's.
+      let insideKeyed = 0;
       const base = opts.context();
       globalThis.fetch = Object.assign((...args: Parameters<typeof fetch>) => {
-        direct += 1;
+        if (insideKeyed === 0) direct += 1;
         return platform(...args);
       }, { preconnect: platform.preconnect }) as typeof fetch;
       try {
         const before = opts.fakeRequests?.() ?? 0;
-        await drain({ ...base, fetch: (url, init, options) => { keyed += 1; return base.fetch(url, init, options); } }, opts.turn);
+        await drain({
+          ...base,
+          fetch: async (url, init, options) => {
+            keyed += 1;
+            insideKeyed += 1;
+            try {
+              return await base.fetch(url, init, options);
+            } finally {
+              insideKeyed -= 1;
+            }
+          },
+        }, opts.turn);
         if (opts.ownProcess === true) {
           check((opts.fakeRequests?.() ?? 0) > before, "the own-process turn never reached its fake");
           check(direct === 0 && keyed === 0, "an own-process adapter's host side made a request itself");
@@ -310,8 +378,7 @@ export async function runModelAdapterConformance(opts: RunModelAdapterConformanc
       } finally {
         globalThis.fetch = platform;
       }
-      // The reference keyed fetch itself calls the platform fetch once per request; more is a direct call.
-      check(direct <= keyed + 2, `the adapter called fetch directly (${direct} platform calls for ${keyed} keyed ones)`);
+      check(direct === 0, `the adapter called fetch directly ${direct} time(s), outside ctx.fetch`);
     },
     "no-credential-header": async () => {
       if (opts.ownProcess === true) return { skipped: "an adapter in a process of its own signs its requests itself" };
@@ -320,7 +387,10 @@ export async function runModelAdapterConformance(opts: RunModelAdapterConformanc
       await drain({
         ...base,
         fetch: (url, init, options) => {
-          for (const name of Object.keys(init?.headers ?? {})) if (CREDENTIAL_HEADERS.includes(name.toLowerCase())) set.push(name);
+          // However the headers are given (a record, a Headers object, pairs), each name is checked.
+          new Headers((init?.headers ?? {}) as HeadersInit).forEach((_value, name) => {
+            if (CREDENTIAL_HEADERS.includes(name.toLowerCase())) set.push(name);
+          });
           return base.fetch(url, init, options);
         },
       }, opts.turn);

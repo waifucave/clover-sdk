@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { KeyedFetchError, createKeyedFetch, type KeyedTokenSource } from "./keyed-fetch.ts";
+import { KeyedFetchError, createKeyedFetch, type KeyedAuthEntry, type KeyedTokenSource } from "./keyed-fetch.ts";
 import { hostAllowed, parseNetworkHost } from "./network-hosts.ts";
 import { tokenSourceFromCredentialStore } from "./token-source.ts";
 import { createMemoryCredentialStore } from "../credentials/memory.ts";
@@ -27,6 +27,10 @@ beforeAll(() => {
       switch (url.pathname) {
         case "/ok":
           return new Response("hello");
+        case "/echo-key": {
+          const sent = (req.headers.get("authorization") ?? "").replace(/^Bearer /, "");
+          return new Response("echoed", { headers: { "x-echo": `got ${sent}`, "access-control-allow-origin": sent, "x-plain": "kept" } });
+        }
         case "/redirect-same":
           return new Response(null, { status: 302, headers: { location: "/ok" } });
         case "/redirect-other":
@@ -73,7 +77,7 @@ afterAll(() => {
   server.stop(true);
 });
 
-const fixed = (value: string): KeyedTokenSource => ({ current: async () => ({ value, generation: 1 }), newer: async () => null });
+const fixed = (value: string): KeyedAuthEntry => ({ source: { current: async () => ({ value, generation: 1 }), newer: async () => null } });
 const hostsFor = (): string[] => [`127.0.0.1:${server.port}`];
 
 describe("network hosts", () => {
@@ -82,7 +86,7 @@ describe("network hosts", () => {
     expect(parseNetworkHost("LocalHost:11434")).toEqual({ host: "localhost", wildcard: false, port: 11434 });
     expect(parseNetworkHost("*.amazonaws.com")).toEqual({ host: "amazonaws.com", wildcard: true });
     expect(parseNetworkHost("[::1]:8080")).toEqual({ host: "::1", wildcard: false, port: 8080 });
-    for (const bad of ["", "https://api.example.com", "api.example.com/v1", "*.*.example.com", "host:0", "host:99999", "exa mple.com", "*.[::1]"]) {
+    for (const bad of ["", "https://api.example.com", "api.example.com/v1", "*.*.example.com", "host:0", "host:99999", "exa mple.com", "*.[::1]", "*.com", "*.1", "*.0.1", "*.localhost"]) {
       expect(typeof parseNetworkHost(bad)).toBe("string");
     }
   });
@@ -106,11 +110,11 @@ describe("network hosts", () => {
 
 describe("the keyed fetch (spec §5.4)", () => {
   test("adds the auth entry's key where the adapter says, and the adapter's own request never held it", async () => {
-    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { openai: fixed("sk-test-1") } });
-    const res = await keyed(`${base}/ok`);
+    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { openai: fixed("sk-test-1"), anthropic: { ...fixed("sk-test-1"), placement: { header: "x-api-key" } } } });
+    const res = await keyed(`${base}/ok`, {}, { auth: "openai" });
     expect(await res.text()).toBe("hello");
     expect(seen.at(-1)?.headers["authorization"]).toBe("Bearer sk-test-1");
-    await keyed(`${base}/ok`, { headers: { "anthropic-version": "2023-06-01" } }, { placement: { header: "x-api-key" } });
+    await keyed(`${base}/ok`, { headers: { "anthropic-version": "2023-06-01" } }, { auth: "anthropic" });
     expect(seen.at(-1)?.headers["x-api-key"]).toBe("sk-test-1");
     expect(seen.at(-1)?.headers["authorization"]).toBeUndefined();
     expect(seen.at(-1)?.headers["anthropic-version"]).toBe("2023-06-01");
@@ -144,7 +148,7 @@ describe("the keyed fetch (spec §5.4)", () => {
   test("a caller that sets the key's header itself is refused; an entry with nothing stored is refused typed", async () => {
     const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("k") } });
     await expect(keyed(`${base}/ok`, { headers: { Authorization: "Bearer guessed" } })).rejects.toMatchObject({ code: "credential_header" });
-    const empty = createKeyedFetch({ hosts: hostsFor(), auth: { a: { current: async () => null, newer: async () => null } } });
+    const empty = createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: { current: async () => null, newer: async () => null } } } });
     await expect(empty(`${base}/ok`)).rejects.toMatchObject({ code: "no_credential" });
   });
 
@@ -176,7 +180,7 @@ describe("the keyed fetch (spec §5.4)", () => {
       },
     };
     const before = seen.length;
-    const res = await createKeyedFetch({ hosts: hostsFor(), auth: { a: refreshing } })(`${base}/needs-new-token`, { method: "POST", body: "turn" });
+    const res = await createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: refreshing } } })(`${base}/needs-new-token`, { method: "POST", body: "turn" });
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("fresh");
     expect(asked).toBe(1);
@@ -190,7 +194,7 @@ describe("the keyed fetch (spec §5.4)", () => {
     let bumps = 0;
     const alwaysNewer: KeyedTokenSource = { current: async () => ({ value: "g1", generation: 1 }), newer: async (g) => ({ value: `g${g + 1 + bumps++}`, generation: g + 1 }) };
     const once = seen.length;
-    const twice = await createKeyedFetch({ hosts: hostsFor(), auth: { a: alwaysNewer } })(`${base}/always-401`);
+    const twice = await createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: alwaysNewer } } })(`${base}/always-401`);
     expect(twice.status).toBe(401);
     expect(seen.length - once).toBe(2);
   });
@@ -238,6 +242,78 @@ describe("the keyed fetch (spec §5.4)", () => {
       const err = await call().then(() => undefined, (e: unknown) => e);
       expect(String((err as Error).message)).not.toContain("sk-SECRET-VALUE");
     }
+  });
+});
+
+describe("the keyed fetch: the key's placement is the entry's, and the key never comes back (review B1)", () => {
+  test("an entry's placement is taken from the closed list only; anything else refuses the config", () => {
+    for (const header of ["origin", "host", "x-request-id", "connection", "cookie", "x-forwarded-for"]) {
+      expect(() => createKeyedFetch({ hosts: hostsFor(), auth: { a: { ...fixed("k"), placement: { header } as never } } })).toThrow(TypeError);
+    }
+    expect(() => createKeyedFetch({ hosts: hostsFor(), auth: { a: { ...fixed("k"), placement: { header: "x-api-key", scheme: "Bearer" } as never } } })).toThrow(TypeError);
+    expect(() => createKeyedFetch({ hosts: hostsFor(), auth: { a: { ...fixed("k"), placement: { header: "authorization", scheme: "Bearer x" } } } })).toThrow(TypeError);
+    for (const header of ["authorization", "x-api-key", "api-key", "x-goog-api-key"] as const) {
+      expect(() => createKeyedFetch({ hosts: hostsFor(), auth: { a: { ...fixed("k"), placement: { header } as never } } })).not.toThrow();
+    }
+  });
+
+  test("a request cannot choose a placement: an unknown option is ignored and the key goes where the entry says", async () => {
+    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("sk-placed") } });
+    await (await keyed(`${base}/ok`, {}, { placement: { header: "origin" } } as never)).text();
+    expect(seen.at(-1)?.headers["authorization"]).toBe("Bearer sk-placed");
+    expect(seen.at(-1)?.headers["origin"]).toBeUndefined();
+  });
+
+  test("every response header whose value carries the key is removed; the rest stay", async () => {
+    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("sk-ECHOED-1") } });
+    const res = await keyed(`${base}/echo-key`);
+    await res.text();
+    expect(res.headers.get("x-echo")).toBeNull();
+    expect(res.headers.get("access-control-allow-origin")).toBeNull();
+    expect(res.headers.get("x-plain")).toBe("kept");
+    expect([...res.headers.values()].join(" ")).not.toContain("sk-ECHOED-1");
+  });
+
+  test("the caller's abort reaches a token source that is still answering, and a newer() after a 401", async () => {
+    const slow: KeyedTokenSource = { current: () => new Promise((resolve) => setTimeout(() => resolve({ value: "late", generation: 1 }), 2000)), newer: async () => null };
+    const controller = new AbortController();
+    const started = Date.now();
+    setTimeout(() => controller.abort(), 50);
+    await expect(createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: slow } } })(`${base}/ok`, { signal: controller.signal })).rejects.toMatchObject({ code: "aborted" });
+    expect(Date.now() - started).toBeLessThan(1000);
+    const slowNewer: KeyedTokenSource = { current: async () => ({ value: "old", generation: 1 }), newer: () => new Promise((resolve) => setTimeout(() => resolve({ value: "new", generation: 2 }), 2000)) };
+    const second = new AbortController();
+    const t0 = Date.now();
+    setTimeout(() => second.abort(), 150);
+    await expect(createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: slowNewer } } })(`${base}/always-401`, { signal: second.signal })).rejects.toMatchObject({ code: "aborted" });
+    expect(Date.now() - t0).toBeLessThan(1500);
+  });
+
+  test("a token source that throws, and malformed headers, fail with closed codes and say nothing of the cause", async () => {
+    const broken: KeyedTokenSource = { current: async () => { throw new Error("keychain said sk-LEAK"); }, newer: async () => null };
+    const err = await createKeyedFetch({ hosts: hostsFor(), auth: { a: { source: broken } } })(`${base}/ok`).then(() => undefined, (e: unknown) => e as KeyedFetchError);
+    expect(err?.code).toBe("no_credential");
+    expect(err?.message).not.toContain("sk-LEAK");
+    await expect(createKeyedFetch({ hosts: hostsFor() })(`${base}/ok`, { headers: { "bad header": "x" } })).rejects.toMatchObject({ code: "refused" });
+  });
+
+  test("a streamed body is never replayed after a 401, and a cross-origin hop carries no key", async () => {
+    let asked = 0;
+    const source: KeyedTokenSource = { current: async () => ({ value: "s1", generation: 1 }), newer: async () => { asked += 1; return { value: "s2", generation: 2 }; } };
+    const before = seen.length;
+    const body = new ReadableStream<Uint8Array>({ start(c) { c.enqueue(new TextEncoder().encode("once")); c.close(); } });
+    const res = await createKeyedFetch({ hosts: hostsFor(), auth: { a: { source } } })(`${base}/always-401`, { method: "POST", body });
+    expect(res.status).toBe(401);
+    expect(seen.length - before).toBe(1);
+    expect(asked).toBe(0);
+  });
+
+  test("a request's own idle limit applies to that request", async () => {
+    const keyed = createKeyedFetch({ hosts: hostsFor() });
+    // 120 ms between chunks: fine under the default, cut short by a 50 ms request limit.
+    const err = await keyed(`${base}/slow-stream`, {}, { idleTimeoutMs: 50 }).then((r) => r.text()).then(() => undefined, (e: unknown) => e as KeyedFetchError);
+    expect(err?.code).toBe("idle_timeout");
+    expect(await (await keyed(`${base}/slow-stream`)).text()).toBe("abc");
   });
 });
 

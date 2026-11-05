@@ -5,7 +5,8 @@
 //   * a name matches its own host on the scheme's default port; any other port must be named
 //     (`localhost:11434`), so declaring a host never opens every service on it;
 //   * `*.example.com` matches every subdomain of `example.com` at any depth, and never `example.com`
-//     itself (declare both when both are meant);
+//     itself (declare both when both are meant); the domain under `*.` has at least two labels and ends
+//     in a name, so `*.com` (a whole TLD) and `*.1` (every address ending in `.1`) are refused;
 //   * names compare in lowercase, and an IPv6 literal is written in brackets (`[::1]:8080`);
 //   * an entry that is not one of those shapes is refused when the fetch is built, never ignored.
 
@@ -52,6 +53,12 @@ export function parseNetworkHost(entry: string): NetworkHost | string {
       host = rest;
     }
     if (!NAME_RE.test(host)) return `${JSON.stringify(entry)}: not a host name (letters, digits, hyphens and dots)`;
+    if (wildcard) {
+      const labels = host.split(".");
+      if (labels.length < 2 || !/^[a-z]/.test(labels[labels.length - 1]!)) {
+        return `${JSON.stringify(entry)}: a wildcard covers subdomains of a registered domain (\`*.example.com\`), never a whole TLD or an address range`;
+      }
+    }
   }
   if (portText === undefined) return { host, wildcard };
   if (!/^[0-9]{1,5}$/.test(portText)) return `${JSON.stringify(entry)}: the port is not a number`;

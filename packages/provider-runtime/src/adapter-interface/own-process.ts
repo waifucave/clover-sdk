@@ -11,11 +11,13 @@
 //     secret -- and it holds no secret itself.
 //
 //   serveModelAdapterProcess (the child side): runs the real adapter with `ctx.secrets` (asking the
-//     host per call) and a fetch limited to the plugin's `network:` hosts. It installs that limit on
-//     `globalThis.fetch` too, so an adapter that calls `fetch` directly is held to the same hosts.
+//     host per call) and a fetch limited to the plugin's `network:` hosts. It puts the same limit on
+//     `globalThis.fetch`, BEST EFFORT: `node:http(s)`, `Bun.connect`, a WebSocket or a `fetch` captured
+//     before `init` are not held to it (spec §5.3: host code is not held to the list). It installs the
+//     identity the host sends in `init`, so the process presents as its host does.
 //
 // THE WIRE, one JSON object per line, `t` naming the message:
-//   host → child   init {hosts}                    first, once
+//   host → child   init {hosts, identity}          first, once
 //                  call {id, method, req?, ctx}    a `streamTurn`, `listModels`, `validateCredential` or `countTokens`
 //                  cancel {id}                     the caller aborted or stopped reading
 //                  secret {rid, material|error}    the answer to a `secrets.get`
@@ -27,10 +29,15 @@
 //                  secret {rid, name}              `secrets.get(name)`
 //                  log {id, event}                 a call's telemetry: identifiers and counts only
 //
-// A process that exits mid-call fails that call as a retryable `network` error. Nothing a secret
-// touches is ever written to the pipe by the host except the `secret` answer the child asked for.
+// LIFECYCLE. `exited` settles when the process ends. A process that ends before it is ready fails every
+// call at once, NOT retryable, with the tail of its stderr; one that ends later fails the calls in
+// flight and every later one as a retryable `network` error (a host respawns it). Every call has a
+// cancel path or a deadline, and after stdin closes the child gives its calls a short grace, then exits.
+// Nothing a secret touches is ever written to the pipe by the host except the `secret` answer the child
+// asked for.
 import { requireBunRuntime } from "../bun-required.ts";
 import { ProviderRequestError } from "../http.ts";
+import { activeWinterIdentity, setWinterIdentity, type WinterIdentity } from "../identity.ts";
 import type { CredentialMaterial, ModelCatalogResult, ProviderContext, ProviderError, ProviderEvent, TurnRequest } from "../types.ts";
 import { createKeyedFetch } from "./keyed-fetch.ts";
 import { MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type AdapterDiscoveryContext, type AdapterSecrets, type ModelAdapter } from "./types.ts";
@@ -45,7 +52,7 @@ interface WireContext {
 }
 
 type HostMessage =
-  | { t: "init"; hosts: string[] }
+  | { t: "init"; hosts: string[]; identity?: WinterIdentity }
   | { t: "call"; id: number; method: CallMethod; req?: Omit<TurnRequest, "signal">; ctx: WireContext }
   | { t: "cancel"; id: number }
   | { t: "secret"; rid: number; material?: CredentialMaterial | null; error?: string };
@@ -127,10 +134,25 @@ export interface ModelAdapterProcessOptions {
   stderr?: (line: string) => void;
   /** The served adapter offers `countTokens`. Default false: the proxy then has none. */
   countTokens?: boolean;
+  /** The identity the process presents (User-Agent, originator, contact). Default: this process's own. */
+  identity?: WinterIdentity;
+  /** A deadline for `validateCredential` and `countTokens`, which have no limit of their own. Default 60 s. */
+  callDeadlineMs?: number;
+}
+
+/** How a model adapter's process ended. */
+export interface ModelAdapterProcessExit {
+  code: number | null;
+  /** True when it ended before it was ready (a broken install, a crash at load). */
+  beforeReady: boolean;
+  /** The last lines it wrote to stderr. */
+  stderrTail: string[];
 }
 
 export interface ModelAdapterProcess extends ModelAdapter {
   readonly pid: number;
+  /** Settles when the process has ended. */
+  readonly exited: Promise<ModelAdapterProcessExit>;
   /** Ends the process: its stdin closes, and after `graceMs` (default 2000) it is killed. */
   close(graceMs?: number): Promise<void>;
 }
@@ -155,6 +177,10 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
   const pending = new Map<number, PendingCall>();
   let nextId = 1;
   let exited = false;
+  let isReady = false;
+  const stderrTail: string[] = [];
+  const STDERR_TAIL_LINES = 20;
+  const callDeadlineMs = options.callDeadlineMs ?? 60_000;
   let readyResolve!: (identity: WireIdentity) => void;
   let readyReject!: (err: Error) => void;
   const ready = new Promise<WireIdentity>((resolve, reject) => {
@@ -180,6 +206,15 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
     pending.clear();
   };
 
+  const sink = options.stderr;
+  const stderrDone = (async () => {
+    for await (const line of lines(proc.stderr)) {
+      stderrTail.push(line);
+      if (stderrTail.length > STDERR_TAIL_LINES) stderrTail.shift();
+      sink?.(line);
+    }
+  })().catch(() => {});
+
   void (async () => {
     try {
       for await (const line of lines(proc.stdout)) {
@@ -191,6 +226,7 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
         }
         switch (message.t) {
           case "ready":
+            isReady = true;
             readyResolve(message.identity);
             break;
           case "event":
@@ -229,20 +265,28 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
       }
     } finally {
       exited = true;
-      failAll("the model adapter's process exited");
+      // Its stderr is read to the end before the reason is written, so the tail is complete.
+      await stderrDone;
+      if (!isReady) {
+        // A process that never became ready will not on a retry either (a broken install, a crash at load).
+        const reason = stderrTail.length > 0 ? `: ${stderrTail.slice(-5).join(" | ")}` : "";
+        const err = new ProviderRequestError({ code: "capability", message: `the model adapter's process exited before it was ready${reason}`, retryable: false });
+        readyReject(err);
+        for (const call of pending.values()) call.reject(err);
+        pending.clear();
+      } else {
+        failAll("the model adapter's process exited");
+      }
     }
   })();
 
-  if (options.stderr !== undefined) {
-    const sink = options.stderr;
-    void (async () => {
-      for await (const line of lines(proc.stderr)) sink(line);
-    })().catch(() => {});
-  } else {
-    void proc.stderr.cancel().catch(() => {});
-  }
+  const exitedPromise: Promise<ModelAdapterProcessExit> = (async () => {
+    const code = await proc.exited;
+    await stderrDone;
+    return { code, beforeReady: !isReady, stderrTail: [...stderrTail] };
+  })();
 
-  send({ t: "init", hosts: [...options.hosts] });
+  send({ t: "init", hosts: [...options.hosts], identity: options.identity ?? activeWinterIdentity() });
 
   const wireContext = (ctx: AdapterContext | AdapterDiscoveryContext): WireContext => ({
     connection: ctx.connection,
@@ -257,6 +301,7 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
     }
     // A process that already exited answers nothing: fail now rather than wait on a reply that cannot come.
     if (exited) throw new ProviderRequestError({ code: "network", message: "the model adapter's process exited", retryable: true });
+    if (signal?.aborted === true) throw new ProviderRequestError({ code: "aborted", message: "the call was aborted before it was sent", retryable: false });
     const id = nextId++;
     const result = new Promise<unknown>((resolve, reject) => {
       pending.set(id, { resolve, reject, log: ctx.log, ...(onEvent === undefined ? {} : { onEvent }) });
@@ -266,7 +311,15 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
       const { signal: _signal, ...rest } = req;
       request = rest;
     }
-    const onAbort = (): void => send({ t: "cancel", id });
+    // The child is told, and the caller is answered at once: a call the child's adapter does not end on
+    // cancel (validateCredential takes no signal) never holds its caller.
+    const onAbort = (): void => {
+      send({ t: "cancel", id });
+      const call = pending.get(id);
+      pending.delete(id);
+      const timedOut = (signal?.reason as { name?: string } | undefined)?.name === "TimeoutError";
+      call?.reject(new ProviderRequestError(timedOut ? { code: "timeout", message: `the model adapter's process did not answer ${method} in time`, retryable: true } : { code: "aborted", message: `${method} was aborted`, retryable: false }));
+    };
     signal?.addEventListener("abort", onAbort, { once: true });
     send({ t: "call", id, method, ctx: wireContext(ctx), ...(request === undefined ? {} : { req: request }) });
     try {
@@ -283,10 +336,13 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
     family: options.local.family,
     protocol: options.local.protocol,
     pid: proc.pid,
+    exited: exitedPromise,
     mapEffort: (effort, model) => options.local.mapEffort(effort, model),
     capabilities: (model) => options.local.capabilities(model),
-    validateCredential: async (ctx) => (await call("validateCredential", ctx, undefined)) as Awaited<ReturnType<ModelAdapter["validateCredential"]>>,
-    listModels: async (ctx) => (await call("listModels", ctx, undefined, undefined, ctx.signal)) as ModelCatalogResult,
+    // No signal of its own: a deadline, so a hung process cannot hold the caller forever.
+    validateCredential: async (ctx) => (await call("validateCredential", ctx, undefined, undefined, AbortSignal.timeout(callDeadlineMs))) as Awaited<ReturnType<ModelAdapter["validateCredential"]>>,
+    // Discovery is time-bounded by its own limits, and the caller's signal ends it sooner.
+    listModels: async (ctx) => (await call("listModels", ctx, undefined, undefined, ctx.signal === undefined ? AbortSignal.timeout(ctx.limits.timeoutMs) : AbortSignal.any([ctx.signal, AbortSignal.timeout(ctx.limits.timeoutMs)]))) as ModelCatalogResult,
     streamTurn(req, ctx) {
       return {
         [Symbol.asyncIterator](): AsyncIterator<ProviderEvent> {
@@ -351,7 +407,7 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
     },
   };
   if (options.countTokens === true) {
-    adapter.countTokens = async (req, ctx) => (await call("countTokens", ctx, req, undefined, req.signal)) as number;
+    adapter.countTokens = async (req, ctx) => (await call("countTokens", ctx, req, undefined, req.signal === undefined ? AbortSignal.timeout(callDeadlineMs) : AbortSignal.any([req.signal, AbortSignal.timeout(callDeadlineMs)]))) as number;
   }
   return adapter;
 }
@@ -447,6 +503,8 @@ export async function serveModelAdapterProcess(create: () => ModelAdapter, io?: 
     }
     switch (message.t) {
       case "init": {
+        // The host's identity, installed for this process's life: its provider calls present as the host's.
+        if (message.identity !== undefined) setWinterIdentity(message.identity);
         const limited = createKeyedFetch({ hosts: message.hosts });
         hostLimitedFetch = limited;
         // The process's own `fetch` too: an adapter written against `fetch` directly (or a library it
@@ -457,8 +515,19 @@ export async function serveModelAdapterProcess(create: () => ModelAdapter, io?: 
         const guarded = createKeyedFetch({ hosts: message.hosts, followRedirects: false, fetch: (url, init) => platform(url, init) });
         globalThis.fetch = Object.assign(
           (input: string | URL | Request, init?: RequestInit) => {
+            // A `Request` carries its own method, headers, body and signal; `init` overrides each, as `fetch` does.
+            const req = input instanceof Request ? input : undefined;
             const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-            return guarded(url, { ...(init?.method === undefined ? {} : { method: init.method }), ...(init?.headers === undefined ? {} : { headers: Object.fromEntries(new Headers(init.headers).entries()) }), ...(init?.body === undefined || init.body === null ? {} : { body: init.body as string }), ...(init?.signal === undefined || init.signal === null ? {} : { signal: init.signal }) }, { auth: false });
+            const method = init?.method ?? req?.method;
+            const headers = init?.headers ?? req?.headers;
+            const body = init?.body ?? req?.body ?? undefined;
+            const signal = init?.signal ?? req?.signal ?? undefined;
+            return guarded(url, {
+              ...(method === undefined ? {} : { method }),
+              ...(headers === undefined ? {} : { headers: Object.fromEntries(new Headers(headers).entries()) }),
+              ...(body === undefined || body === null ? {} : { body: body as string | Uint8Array | ReadableStream<Uint8Array> }),
+              ...(signal === undefined || signal === null ? {} : { signal }),
+            }, { auth: false });
           },
           { preconnect: platform.preconnect },
         ) as typeof fetch;
@@ -483,5 +552,11 @@ export async function serveModelAdapterProcess(create: () => ModelAdapter, io?: 
     }
   }
   for (const controller of running.values()) controller.abort();
-  await Promise.allSettled(calls);
+  // A short grace for the calls to end on their abort; an adapter that ignores it does not keep the process.
+  const grace = new Promise<void>((resolve) => setTimeout(resolve, SERVE_EXIT_GRACE_MS));
+  await Promise.race([Promise.allSettled(calls), grace]);
+  if (io === undefined) process.exit(0);
 }
+
+/** How long a model adapter's process waits for its calls after stdin closes before it exits. */
+export const SERVE_EXIT_GRACE_MS = 2000;

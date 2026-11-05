@@ -6,6 +6,7 @@ import { spawnModelAdapterProcess, type ModelAdapterProcess } from "./own-proces
 import type { AdapterContext } from "./types.ts";
 
 const PROBE_PROCESS = fileURLToPath(new URL("./fixtures/probe-process.ts", import.meta.url));
+const DYING_PROCESS = fileURLToPath(new URL("./fixtures/dying-process.ts", import.meta.url));
 let server: ReturnType<typeof Bun.serve>;
 let outside: ReturnType<typeof Bun.serve>;
 let outsideHits = 0;
@@ -72,8 +73,8 @@ describe("a model adapter in a process of its own (spec §5.2)", () => {
     const iterator = proc.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "stall" }], signal: controller.signal }, ctx())[Symbol.asyncIterator]();
     expect((await iterator.next()).value).toMatchObject({ type: "message_start" });
     controller.abort();
-    expect((await iterator.next()).value).toMatchObject({ type: "text_delta", text: "cancelled" });
-    expect((await iterator.next()).done).toBe(true);
+    // The caller is answered at once (the child is told to cancel too).
+    await expect(iterator.next()).rejects.toMatchObject({ code: "aborted" });
   });
 
   test("the other calls cross too, and the pure half answers here", async () => {
@@ -88,5 +89,37 @@ describe("a model adapter in a process of its own (spec §5.2)", () => {
     const short = spawnModelAdapterProcess({ command: [process.execPath, PROBE_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null } });
     await short.close();
     await expect(collect(short.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "hi" }] }, ctx()))).rejects.toMatchObject({ code: "network", retryable: true });
+  });
+
+  test("S1: the process presents the identity its host sends in init", async () => {
+    const identity = { product: "probe-host", codexOriginator: "probe-host", contactUrl: "https://example.test/contact", version: "7.7.7" };
+    const own = spawnModelAdapterProcess({ command: [process.execPath, PROBE_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null }, identity });
+    try {
+      const events = await collect(own.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "identity" }] }, ctx()));
+      expect(text(events)).toBe("ua:probe-host/7.7.7");
+    } finally {
+      await own.close();
+    }
+  });
+
+  test("S5: a process that dies before it is ready fails every call at once, not retryable, with its stderr; `exited` says so", async () => {
+    const dying = spawnModelAdapterProcess({ command: [process.execPath, DYING_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null } });
+    const err = await collect(dying.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "hi" }] }, ctx())).then(() => undefined, (e: unknown) => e as { code: string; retryable: boolean; message: string });
+    expect(err).toMatchObject({ code: "capability", retryable: false });
+    expect(err?.message).toContain("a module is missing");
+    expect(await dying.exited).toMatchObject({ code: 3, beforeReady: true });
+    expect((await dying.exited).stderrTail.join("\n")).toContain("a module is missing");
+  });
+
+  test("S5: a call with no signal of its own (validateCredential) ends at its deadline on a hung process", async () => {
+    const own = spawnModelAdapterProcess({ command: [process.execPath, PROBE_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null }, callDeadlineMs: 300 });
+    try {
+      const started = Date.now();
+      await expect(own.validateCredential({ ...ctx(), connection: { ...ctx().connection, headers: { "x-hang": "1" } } })).rejects.toMatchObject({ code: "timeout" });
+      expect(Date.now() - started).toBeLessThan(3000);
+    } finally {
+      await own.close();
+    }
+    expect(await own.exited).toMatchObject({ beforeReady: false });
   });
 });

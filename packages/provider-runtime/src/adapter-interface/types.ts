@@ -19,7 +19,7 @@
 // VERSIONED. `MODEL_ADAPTER_INTERFACE_VERSION` is the contract number; a change that is not purely
 // additive bumps it, and `interface.test.ts` pins the shape (member names and kinds) so an accidental
 // change fails a test before it reaches a plugin.
-import type { ProviderProtocol, ToolCalling, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import type { CatalogRow, ProviderProtocol, ToolCalling } from "@waifucave/clover-provider-catalog";
 import type { ConnectionProfile, CredentialMaterial, CredentialStatus, DiscoveryContext, ModelCatalogResult, ProviderContext, ProviderEvent, ProviderFamily, TurnRequest } from "../types.ts";
 
 /** The contract number of this interface. A plugin states the one it was built against. */
@@ -39,16 +39,9 @@ export interface KeyedFetchInit {
 }
 
 /**
- * WHERE the key or token goes. The core adds it; the adapter, which knows its provider's protocol, says
- * where. Header placement only: a key in a URL lands in every proxy and access log on the way.
+ * A request names WHICH key, never where it goes: an `auth` entry's placement is declared once, in the
+ * plugin's manifest, held by the core, and taken from a closed list of headers (`KEY_HEADERS`).
  */
-export interface AuthPlacement {
-  /** The header that carries it. Default `authorization`. */
-  header?: string;
-  /** What precedes the value, with one space. Default `Bearer` on `authorization`, nothing on any other header. */
-  scheme?: string;
-}
-
 export interface KeyedFetchOptions {
   /**
    * Which of the plugin's `auth` entries to add, by its `secret` name. ABSENT: the plugin's only one
@@ -56,7 +49,8 @@ export interface KeyedFetchOptions {
    * for a public endpoint of a plugin that has one.
    */
   auth?: string | false;
-  placement?: AuthPlacement;
+  /** How long silence (no data either way) may last before `idle_timeout`. Default five minutes. */
+  idleTimeoutMs?: number;
 }
 
 /** Spec §5.4's `net.fetch(url, init, { auth })`: the only door an adapter has to the network. */
@@ -107,6 +101,6 @@ export interface ModelAdapter {
   /** Optional. A REAL count when the provider offers one; never an estimate. */
   countTokens?(req: TurnRequest, ctx: AdapterContext): Promise<number>;
   /** Map onto the model's VERIFIED effort vocabulary, or refuse BEFORE a request is sent. */
-  mapEffort(effort: TurnRequest["effort"], model: WinterModelDescriptor): { ok: true; value: unknown } | { ok: false; reason: string };
-  capabilities(model: WinterModelDescriptor): { toolCalling: ToolCalling; continuationDomain?: string; readableState: "none" | "summary" | "full-exposed" };
+  mapEffort(effort: TurnRequest["effort"], model: CatalogRow): { ok: true; value: unknown } | { ok: false; reason: string };
+  capabilities(model: CatalogRow): { toolCalling: ToolCalling; continuationDomain?: string; readableState: "none" | "summary" | "full-exposed" };
 }

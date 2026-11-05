@@ -11,7 +11,7 @@
 //     refuses, typed, before anything is sent.
 import type { ConnectionProfile, CredentialMaterial, CredentialRef, CredentialStatus, CredentialStore, ProviderAdapter, ProviderContext } from "../types.ts";
 import { ProviderRequestError } from "../http.ts";
-import { createKeyedFetch } from "./keyed-fetch.ts";
+import { createKeyedFetch, type KeyPlacement } from "./keyed-fetch.ts";
 import { tokenSourceFromCredentialStore } from "./token-source.ts";
 import { MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type AdapterSecrets, type ModelAdapter } from "./types.ts";
 
@@ -20,6 +20,8 @@ export interface ModelAdapterBridgeOptions {
   hosts(connection: ConnectionProfile): readonly string[];
   /** The name the adapter gives its one `auth` entry. Default `"default"`. */
   authName?: string;
+  /** Where that entry's key goes, as its manifest declares it. Default `Authorization: Bearer`. */
+  placement?: KeyPlacement;
   /** The keyed fetch's idle limit (a test seam). */
   idleTimeoutMs?: number;
 }
@@ -32,7 +34,7 @@ export function providerAdapterFromModelAdapter(adapter: ModelAdapter, options: 
     log: ctx.log,
     fetch: createKeyedFetch({
       hosts: options.hosts(ctx.connection),
-      auth: ref.kind === "none" ? {} : { [authName]: tokenSourceFromCredentialStore(ctx.credentials, ref) },
+      auth: ref.kind === "none" ? {} : { [authName]: { source: tokenSourceFromCredentialStore(ctx.credentials, ref), ...(options.placement === undefined ? {} : { placement: options.placement }) } },
       ...(options.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: options.idleTimeoutMs }),
     }),
   });
