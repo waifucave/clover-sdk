@@ -3,7 +3,7 @@
 // signs with its secret. See `types.ts` for the contract itself.
 export { MODEL_ADAPTER_INTERFACE_VERSION } from "./types.ts";
 export type { AdapterContext, AdapterDiscoveryContext, AdapterSecrets, KeyedFetch, KeyedFetchInit, KeyedFetchOptions, ModelAdapter } from "./types.ts";
-export { DEFAULT_KEYED_IDLE_TIMEOUT_MS, DEFAULT_KEY_PLACEMENT, KEY_HEADERS, KeyedFetchError, createKeyedFetch } from "./keyed-fetch.ts";
+export { AUTH_SCHEME_RE, DEFAULT_KEYED_IDLE_TIMEOUT_MS, DEFAULT_KEY_PLACEMENT, KEY_HEADERS, KeyedFetchError, createKeyedFetch } from "./keyed-fetch.ts";
 export type { KeyHeader, KeyPlacement, KeyedAuthEntry, KeyedFetchConfig, KeyedFetchErrorCode, KeyedToken, KeyedTokenSource } from "./keyed-fetch.ts";
 export { hostAllowed, isLoopbackHost, parseNetworkHost, parseNetworkHosts } from "./network-hosts.ts";
 export type { NetworkHost } from "./network-hosts.ts";

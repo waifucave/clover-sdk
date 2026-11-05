@@ -85,10 +85,20 @@ describe("a model adapter in a process of its own (spec §5.2)", () => {
     expect([proc.interfaceVersion, proc.id, proc.family]).toEqual([1, "probe", "custom"]);
   });
 
-  test("a process that is gone fails a call as a retryable network error", async () => {
+  test("a process that is gone fails a later call at once, and NOT as retryable (the host starts a new one)", async () => {
     const short = spawnModelAdapterProcess({ command: [process.execPath, PROBE_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null } });
     await short.close();
-    await expect(collect(short.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "hi" }] }, ctx()))).rejects.toMatchObject({ code: "network", retryable: true });
+    await expect(collect(short.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "hi" }] }, ctx()))).rejects.toMatchObject({ code: "network", retryable: false });
+  });
+
+  test("S5: a process that dies mid-stream fails that turn as retryable, every later call as not, and `exited` reports it", async () => {
+    const dying = spawnModelAdapterProcess({ command: [process.execPath, PROBE_PROCESS], local: createProbeAdapter(), hosts: [], secrets: { get: async () => null } });
+    const seen: string[] = [];
+    const turn = (async () => { for await (const ev of dying.streamTurn({ model: "probe-1", messages: [{ role: "user", content: "die" }] }, ctx())) seen.push(ev.type); })();
+    await expect(turn).rejects.toMatchObject({ code: "network", retryable: true });
+    expect(seen).toEqual(["message_start"]);
+    expect(await dying.exited).toMatchObject({ code: 9, beforeReady: false });
+    await expect(dying.validateCredential(ctx())).rejects.toMatchObject({ code: "network", retryable: false });
   });
 
   test("S1: the process presents the identity its host sends in init", async () => {

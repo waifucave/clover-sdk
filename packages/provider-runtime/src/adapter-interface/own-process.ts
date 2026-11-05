@@ -30,9 +30,11 @@
 //                  log {id, event}                 a call's telemetry: identifiers and counts only
 //
 // LIFECYCLE. `exited` settles when the process ends. A process that ends before it is ready fails every
-// call at once, NOT retryable, with the tail of its stderr; one that ends later fails the calls in
-// flight and every later one as a retryable `network` error (a host respawns it). Every call has a
-// cancel path or a deadline, and after stdin closes the child gives its calls a short grace, then exits.
+// call at once, NOT retryable, with the tail of its stderr. One that ends later fails the calls in flight
+// as a retryable `network` error (the same turn can succeed on a new process), and every LATER call at
+// once as a `network` error that is NOT retryable: this object will never answer again, so a retry here
+// would loop; the host watches `exited` and starts a new one. Every call has a cancel path or a deadline,
+// and after stdin closes the child gives its calls a short grace, then exits.
 // Nothing a secret touches is ever written to the pipe by the host except the `secret` answer the child
 // asked for.
 import { requireBunRuntime } from "../bun-required.ts";
@@ -299,8 +301,9 @@ export function spawnModelAdapterProcess(options: ModelAdapterProcessOptions): M
     if (identity.interfaceVersion !== MODEL_ADAPTER_INTERFACE_VERSION) {
       throw new ProviderRequestError({ code: "capability", message: `the adapter process speaks model adapter interface ${identity.interfaceVersion}; this host speaks ${MODEL_ADAPTER_INTERFACE_VERSION}`, retryable: false });
     }
-    // A process that already exited answers nothing: fail now rather than wait on a reply that cannot come.
-    if (exited) throw new ProviderRequestError({ code: "network", message: "the model adapter's process exited", retryable: true });
+    // A process that already exited answers nothing: fail now rather than wait on a reply that cannot come,
+    // and not as retryable (this object never answers again; the host starts a new process, see `exited`).
+    if (exited) throw new ProviderRequestError({ code: "network", message: "the model adapter's process has exited; a new one must be started", retryable: false });
     if (signal?.aborted === true) throw new ProviderRequestError({ code: "aborted", message: "the call was aborted before it was sent", retryable: false });
     const id = nextId++;
     const result = new Promise<unknown>((resolve, reject) => {

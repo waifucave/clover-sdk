@@ -24,6 +24,11 @@ export function createProbeAdapter(): ModelAdapter {
     async *streamTurn(req, ctx) {
       yield { type: "message_start", model: req.model };
       const prompt = typeof req.messages[0]?.content === "string" ? req.messages[0].content : "";
+      if (prompt === "die") {
+        // Dies mid-stream, after the first event (review S5's probe).
+        setTimeout(() => process.exit(9), 10);
+        await new Promise<never>(() => {});
+      }
       if (prompt === "identity") {
         yield { type: "text_delta", text: `ua:${winterUserAgent()}` };
         return;

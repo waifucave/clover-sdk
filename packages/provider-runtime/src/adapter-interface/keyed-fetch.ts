@@ -104,7 +104,8 @@ export interface KeyedFetchConfig {
 
 export const DEFAULT_KEYED_IDLE_TIMEOUT_MS = 300_000;
 const DEFAULT_MAX_REDIRECTS = 5;
-const SCHEME_RE = /^[A-Za-z0-9!#$%&'*+\-.^_`|~]{1,32}$/;
+/** An HTTP auth scheme: an RFC 9110 token (the same rule as the core's `net.fetch`, lane B's plugin SDK). */
+export const AUTH_SCHEME_RE = /^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,32}$/;
 
 /** The entry's placement, checked against the closed list; `null` describes why it is refused. */
 function checkedPlacement(name: string, placement: KeyPlacement | undefined): { header: KeyHeader; scheme: string | undefined } {
@@ -118,7 +119,7 @@ function checkedPlacement(name: string, placement: KeyPlacement | undefined): { 
     return { header: header as KeyHeader, scheme: undefined };
   }
   const scheme = (p as { scheme?: string }).scheme ?? "Bearer";
-  if (!SCHEME_RE.test(scheme)) throw new TypeError(`auth entry ${JSON.stringify(name)}: ${JSON.stringify(scheme)} is not an auth scheme`);
+  if (!AUTH_SCHEME_RE.test(scheme)) throw new TypeError(`auth entry ${JSON.stringify(name)}: ${JSON.stringify(scheme)} is not an auth scheme`);
   return { header: "authorization", scheme };
 }
 
@@ -161,11 +162,16 @@ function tapUpload(source: ReadableStream<Uint8Array>, onChunk: () => void): Rea
   });
 }
 
-/** A copy of `headers` without any whose value contains one of `secrets` (rule 3). */
+/**
+ * A copy of `headers` without any whose value contains one of `secrets`, as sent or %-encoded (rule 3; the same
+ * rule as the core's `net.fetch`, lane B's `stripEchoedKey`). Each `set-cookie` line is judged on its own.
+ */
 function withoutEchoes(headers: Headers, secrets: ReadonlySet<string>): Headers {
+  const forms = new Set<string>();
+  for (const secret of secrets) if (secret.length > 0) { forms.add(secret); forms.add(encodeURIComponent(secret)); }
   const out = new Headers();
   headers.forEach((value, name) => {
-    for (const secret of secrets) if (secret.length > 0 && value.includes(secret)) return;
+    for (const form of forms) if (value.includes(form)) return;
     out.append(name, value);
   });
   return out;
@@ -220,6 +226,9 @@ export function createKeyedFetch(config: KeyedFetchConfig): KeyedFetch {
         controller.abort();
         signal?.removeEventListener("abort", onCallerAbort);
       }, idleMs);
+      // The watchdog never holds a process open by itself: a response its caller abandoned (body never read)
+      // must not keep a one-shot host alive for the whole idle limit. A live exchange keeps its own handles.
+      (timer as { unref?: () => void }).unref?.();
     };
     const pause = (): void => {
       if (timer !== undefined) clearTimeout(timer);

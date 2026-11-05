@@ -29,7 +29,7 @@ beforeAll(() => {
           return new Response("hello");
         case "/echo-key": {
           const sent = (req.headers.get("authorization") ?? "").replace(/^Bearer /, "");
-          return new Response("echoed", { headers: { "x-echo": `got ${sent}`, "access-control-allow-origin": sent, "x-plain": "kept" } });
+          return new Response("echoed", { headers: { "x-echo": `got ${sent}`, "access-control-allow-origin": sent, "x-request-uri": `/v1?key=${encodeURIComponent(sent)}`, "x-plain": "kept" } });
         }
         case "/redirect-same":
           return new Response(null, { status: 302, headers: { location: "/ok" } });
@@ -264,14 +264,15 @@ describe("the keyed fetch: the key's placement is the entry's, and the key never
     expect(seen.at(-1)?.headers["origin"]).toBeUndefined();
   });
 
-  test("every response header whose value carries the key is removed; the rest stay", async () => {
-    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("sk-ECHOED-1") } });
+  test("every response header whose value carries the key is removed, as sent or %-encoded; the rest stay", async () => {
+    const keyed = createKeyedFetch({ hosts: hostsFor(), auth: { a: fixed("sk-ECHOED/1+x") } });
     const res = await keyed(`${base}/echo-key`);
     await res.text();
     expect(res.headers.get("x-echo")).toBeNull();
     expect(res.headers.get("access-control-allow-origin")).toBeNull();
+    expect(res.headers.get("x-request-uri")).toBeNull(); // the %-encoded form
     expect(res.headers.get("x-plain")).toBe("kept");
-    expect([...res.headers.values()].join(" ")).not.toContain("sk-ECHOED-1");
+    expect([...res.headers.values()].join(" ")).not.toContain("sk-ECHOED");
   });
 
   test("the caller's abort reaches a token source that is still answering, and a newer() after a 401", async () => {
