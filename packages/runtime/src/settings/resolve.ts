@@ -16,8 +16,8 @@ export {
   PROJECT_PERMISSIVE_KEYS,
   // WS-13b R6b-7: lanes import the seam from HERE, so the narrowing travels with the rest of it.
   providerSettingsFrom,
-} from "@yanlinglabs/winter-agent-sdk";
-import { resolveSettingsDetailed as sdkResolveSettingsDetailed, loadSettingsFile as sdkLoadSettingsFile, type ResolveSettingsDetailedOptions, type ResolveSettingsOptions } from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
+import { resolveSettingsDetailed as sdkResolveSettingsDetailed, loadSettingsFile as sdkLoadSettingsFile, type ResolveSettingsDetailedOptions, type ResolveSettingsOptions } from "@waifucave/clover-agent-sdk";
 import { readSourceText } from "../sandbox/source-read.ts";
 export const loadSettingsFile = (path: string) => sdkLoadSettingsFile(path, readSourceText);
 export const resolveSettingsDetailed = (opts: ResolveSettingsDetailedOptions = {}) => sdkResolveSettingsDetailed(opts, readSourceText);
@@ -42,4 +42,4 @@ export type {
   DetailedSettingsSourceEntry,
   ResolveSettingsDetailedOptions,
   WorkspaceTrustFilterOptions,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";

@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-conformance/fakes` — every loopback fake in this directory, as one
+// `@waifucave/clover-provider-conformance/fakes` — every loopback fake in this directory, as one
 // subpath (P7a Lane C, WS-02 §9 Step 2). A consumer who only wants the fakes (not the corpus runner,
 // the continuity corpus, the classifier-safety corpus, or the live-gate machinery the package's main
 // barrel also carries) imports this instead, for a smaller import graph.
@@ -6,7 +6,7 @@
 // The main barrel (`../index.ts`) re-exports this file's entire surface via `export *`, so every
 // existing consumer that imports a fake from the TOP-LEVEL package name (e.g.
 // `verify-provider-live.test.ts`'s `import { anthropicConsoleOauthFake, ... } from
-// "@yanlinglabs/winter-provider-conformance"`) keeps working unmodified.
+// "@waifucave/clover-provider-conformance"`) keeps working unmodified.
 //
 // NAMESPACES RATHER THAN A FLAT `export *` for the per-family fakes, and the reason is not style:
 // `corpus/anthropic.ts` and `corpus/google.ts` both export `collectEvents`, and the fakes below have

@@ -6,7 +6,7 @@
 // this), so a fixture proves the adapter against the thing that will actually consume it rather than
 // a re-implementation.
 //
-// The bridge import is RELATIVE because `@yanlinglabs/winter-provider-runtime`'s `exports` map
+// The bridge import is RELATIVE because `@waifucave/clover-provider-runtime`'s `exports` map
 // publishes only `.` and its barrel is frozen (R6-12) -- a deep specifier does not resolve. Same for
 // the adapter itself.
 import { describe, expect, test } from "bun:test";
@@ -22,10 +22,10 @@ import {
   anthropicCredentialRef,
   mapAnthropicEffort,
   winterUserAgent,
-} from "@yanlinglabs/winter-provider-runtime";
+} from "@waifucave/clover-provider-runtime";
 import { anthropicError, anthropicFakeRoutes, anthropicTurnResponse, assertAnthropicRequest, anthropicBody, messageBlocks } from "../fakes/anthropic-messages.ts";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { THINKING_ENABLED_NEEDS_BUDGET } from "@yanlinglabs/winter-provider-runtime/testing";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import { THINKING_ENABLED_NEEDS_BUDGET } from "@waifucave/clover-provider-runtime/testing";
 // `foldProviderStream` stays relative (review r1 Critical-2): `winter-agent-runtime` is
 // `"private": true`, never published -- irrelevant here since `.test.ts` files never ship as
 // reachable code.

@@ -12,8 +12,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { RuntimeConfig, WinterFrame, PermissionMode, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, PermissionMode, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import type { Provider } from "../engine.ts";
 import { resetSpawnLimitsForTest } from "./limits.ts";
@@ -149,7 +149,7 @@ describe("restoredChildHandle: an unbound handle preserves identity and refuses 
 });
 
 // The factory and store are real; the provider is deterministic and never contacts a service.
-import { WinterCompatibilitySessionStore, compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { createChildEngineFactory } from "./child-engine.ts";
 import { bindRestoredChildren } from "./restore.ts";
 import { currentRunningSubagentCount } from "./limits.ts";

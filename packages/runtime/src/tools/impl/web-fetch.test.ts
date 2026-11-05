@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { resolveWebToolsConfig, type ResolvedWebToolsConfig } from "@yanlinglabs/winter-agent-sdk";
+import { resolveWebToolsConfig, type ResolvedWebToolsConfig } from "@waifucave/clover-agent-sdk";
 import type { Provider, ProviderRequest, ProviderTurn, ProviderUsage } from "../../engine.ts";
 import { getRegisteredTool, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
 import { registerWebSessionRuntime, resetWebSessionRuntimesForTest, type WebSessionRuntime } from "../../web/session-runtime.ts";

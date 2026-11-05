@@ -21,7 +21,7 @@
 // human `message`, so on a real context-overflow body the cap slices away exactly the field a
 // consumer wants.
 
-import { scanForSecrets } from "@yanlinglabs/winter-provider-catalog";
+import { scanForSecrets } from "@waifucave/clover-provider-catalog";
 import type { ProviderError, SdkAssistantMessageError } from "./types.ts";
 
 /** The body snippet embedded in a normalized message. Norma's own value, kept: enough to diagnose, short enough to log. */

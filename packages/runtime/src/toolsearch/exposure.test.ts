@@ -5,7 +5,7 @@
 // tests must target a throwaway, invented server name: the registry is a process-wide singleton
 // across one `bun test` invocation.
 import { describe, test, expect } from "bun:test";
-import { registerMcpServerTools, registerTool, unregisterMcpServerTools, unregisterToolForTest, type DeferralActivation } from "../tools/registry.ts";
+import { getRegisteredTool, registerMcpServerTools, registerTool, unregisterMcpServerTools, unregisterToolForTest, type DeferralActivation } from "../tools/registry.ts";
 import { computeExposurePartition } from "./exposure.ts";
 import type { ToolSearchSessionRuntime } from "./search.ts";
 
@@ -162,6 +162,61 @@ describe("computeExposurePartition: a HOST alias edge excludes its twin too (RUL
     } finally {
       unregisterToolForTest(NATIVE);
       unregisterMcpServerTools(ALIAS_SRV);
+    }
+  });
+});
+
+// C0 follow-up (lane A): the standing server's canonical twins are spelled from the SESSION'S brand,
+// here as in `init.tools`. A branded host (Clover's `mcp__clover__send_message`) that withholds
+// `SendMessage` must not find the twin in ToolSearch's candidate pool -- which it did while
+// `computeExposurePartition` spelled the twins from the SDK's default brand.
+describe("computeExposurePartition: the canonical twins follow the session's brand", () => {
+  const SERVER = "brandexposuresrv";
+  const twin = `mcp__${SERVER}__send_message`;
+
+  test("a withheld SendMessage hides its branded twin; without the brand the twin leaked as loadable", () => {
+    const nativeWasRegistered = getRegisteredTool("SendMessage") !== undefined;
+    try {
+      if (!nativeWasRegistered) {
+        registerTool({
+          descriptor: {
+            canonicalName: "SendMessage",
+            advertisedName: "SendMessage",
+            source: "builtin",
+            inputSchema: { type: "object" },
+            description: "the native SendMessage, as a fixture",
+            exposure: "eager",
+            permissionClass: "read",
+            availability: {},
+            capabilityRequirements: [],
+            disposition: "implement-now",
+          },
+        });
+      }
+      registerMcpServerTools(SERVER, [{ name: "send_message", inputSchema: { type: "object" } }], { deferredDefault: true });
+      const base = { mode: "default" as const, activation: ACTIVE, capabilities: [...WITH_MCP_CAP], disallowedTools: ["SendMessage"] };
+      const visible = (p: ReturnType<typeof computeExposurePartition>) => [...p.eager, ...p.deferred].map((d) => d.canonicalName);
+
+      // The control: spelled from the default brand, the branded twin is not recognised as one.
+      expect(visible(computeExposurePartition(base))).toContain(twin);
+
+      const branded = computeExposurePartition({ ...base, brand: { mcpServerName: SERVER } });
+      expect(visible(branded)).not.toContain(twin);
+      expect(branded.hidden.map((d) => d.canonicalName)).toContain(twin);
+
+      // ...and through the session-scoped shape engine.ts registers (`ToolSearchDeps.brand`).
+      const deps: ToolSearchSessionRuntime = { getMode: () => "default", activation: ACTIVE, capabilities: [...WITH_MCP_CAP], disallowedTools: ["SendMessage"], brand: { mcpServerName: SERVER } };
+      const viaDeps = computeExposurePartition({
+        mode: deps.getMode(),
+        activation: deps.activation,
+        ...(deps.capabilities !== undefined ? { capabilities: deps.capabilities } : {}),
+        ...(deps.disallowedTools !== undefined ? { disallowedTools: deps.disallowedTools } : {}),
+        ...(deps.brand !== undefined ? { brand: deps.brand } : {}),
+      });
+      expect(viaDeps.hidden.map((d) => d.canonicalName)).toContain(twin);
+    } finally {
+      if (!nativeWasRegistered) unregisterToolForTest("SendMessage");
+      unregisterMcpServerTools(SERVER);
     }
   });
 });

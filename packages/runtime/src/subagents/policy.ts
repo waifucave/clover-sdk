@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 // WS-10 §5: foreground/background policy. `run_in_background` (AgentInput) is an INVOCATION
 // REQUEST, never the whole rule. Resolution order, verbatim:
 //
@@ -66,7 +66,7 @@ export interface ResolveForegroundBackgroundInput {
    */
   backgroundByDefault?: boolean;
   env?: Record<string, string | undefined>;
-  /** P7a (D19): the session's brand -- the background kill switch's env NAME. Omitted = `WINTER_BRAND`. */
+  /** P7a (D19): the session's brand -- the background kill switch's env NAME. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: Pick<BrandProfile, "envPrefix">;
 }
 
@@ -84,7 +84,7 @@ function isTruthyEnv(v: string | undefined): boolean {
  * thing being toggled here is itself already the default, not an opt-in feature.
  */
 export function resolveBackgroundByDefaultEnabled(env: Record<string, string | undefined> = process.env, brand?: Pick<BrandProfile, "envPrefix">): boolean {
-  const raw = env[envName(brand ?? WINTER_BRAND, "BACKGROUND_BY_DEFAULT")]?.trim().toLowerCase();
+  const raw = env[envName(requireBrand(brand), "BACKGROUND_BY_DEFAULT")]?.trim().toLowerCase();
   if (raw === undefined || raw.length === 0) return true;
   return !(raw === "0" || raw === "false" || raw === "no" || raw === "off");
 }
@@ -126,7 +126,7 @@ export function resolveWorkspaceTrust(ctx?: { trustedWorkspace?: boolean }): boo
  * `resolveForegroundBackground`'s own five-stage chain.
  */
 export function resolveBackgroundTasksDisabled(env: Record<string, string | undefined> = process.env, brand?: Pick<BrandProfile, "envPrefix">): boolean {
-  return isTruthyEnv(env[envName(brand ?? WINTER_BRAND, "DISABLE_BACKGROUND_TASKS")]);
+  return isTruthyEnv(env[envName(requireBrand(brand), "DISABLE_BACKGROUND_TASKS")]);
 }
 
 export function resolveForegroundBackground(input: ResolveForegroundBackgroundInput): ForegroundBackgroundDecision {
@@ -135,7 +135,7 @@ export function resolveForegroundBackground(input: ResolveForegroundBackgroundIn
   // Stage 1 (agent-team constraints): documented no-op -- see header.
 
   // Stage 2: hard kill switch.
-  const killSwitch = envName(input.brand ?? WINTER_BRAND, "DISABLE_BACKGROUND_TASKS");
+  const killSwitch = envName(requireBrand(input.brand), "DISABLE_BACKGROUND_TASKS");
   if (resolveBackgroundTasksDisabled(env, input.brand)) {
     return { background: false, reason: killSwitch };
   }
@@ -171,7 +171,7 @@ export function resolveForegroundBackground(input: ResolveForegroundBackgroundIn
   // `input.backgroundByDefault` is the caller's already-merged (config ?? env) verdict.
   const backgroundByDefault = input.backgroundByDefault ?? resolveBackgroundByDefaultEnabled(env, input.brand);
   if (!backgroundByDefault) {
-    return { background: false, reason: envName(input.brand ?? WINTER_BRAND, "BACKGROUND_BY_DEFAULT") };
+    return { background: false, reason: envName(requireBrand(input.brand), "BACKGROUND_BY_DEFAULT") };
   }
 
   // SDK 0.0.16 Lane N: BACKGROUND IS THE DEFAULT, as in claude -- whose own formula reduces to

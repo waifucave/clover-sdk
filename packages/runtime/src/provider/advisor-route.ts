@@ -28,8 +28,8 @@
 // and `session-provider.ts`'s advisor block turns that answer into a `Provider` under Ruling E-1's
 // credential rule. That split is what makes "typed refusal, NO REQUEST" structural rather than
 // careful — a refusal never reaches a code path that could build a provider at all.
-import type { ProviderAuthKind, WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { CLAUDE_FAMILY_ID, familyOfModelKey } from "@yanlinglabs/winter-provider-catalog";
+import type { ProviderAuthKind, WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { CLAUDE_FAMILY_ID, familyOfModelKey } from "@waifucave/clover-provider-catalog";
 import type { SlotProviderResolution } from "./slots.ts";
 
 /**

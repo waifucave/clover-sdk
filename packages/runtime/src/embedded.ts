@@ -25,8 +25,8 @@ import { claimLinuxSession, linuxSessionHeldInputEpoch, linuxSessionBindings, bi
 //
 // COMPILED-BINARY CONSTRAINTS apply exactly as in `main.ts` (a host compiles this into its own
 // single-file binary): static, literal imports only.
-import type { RuntimeConfig, WinterFrame, HostExecutionFloor } from "@yanlinglabs/winter-agent-sdk";
-import { splitFrames, encodeFrame, MandatoryFloorUnavailableError } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, HostExecutionFloor } from "@waifucave/clover-agent-sdk";
+import { splitFrames, encodeFrame, MandatoryFloorUnavailableError } from "@waifucave/clover-agent-sdk";
 import { requireHostCodeProcessBroker } from "./sandbox/host-code-process.ts";
 import { installHostChildFloor } from "./sandbox/host-child-floor.ts";
 import { installHostCodeProtection, type HostCodeProtection, type HostCodeProtectionLease } from "./sandbox/host-code-protection.ts";
@@ -41,7 +41,7 @@ import { registerDefaultChildEngineFactory } from "./subagents/register-default-
 // Phase 5 Task 8: the SHARED production wiring every entrypoint calls -- see that module's header.
 import { buildProductionWiring, withAutoSkillPermissions } from "./production-wiring.ts";
 import { loadResumedChain } from "./provider/session-provider.ts";
-import { WinterCompatibilitySessionStore, compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { resolveProjectDirName } from "./paths/project-dir-name.ts";
 import { restoreChildRoster } from "./subagents/restore.ts";
 // Review r2 finding 9's process-group sweep -- the embedded ABORT's first act, as it is SIGTERM's.

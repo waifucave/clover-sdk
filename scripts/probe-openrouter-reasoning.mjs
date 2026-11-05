@@ -37,14 +37,14 @@
 //   bun run build:packages && node scripts/probe-openrouter-reasoning.mjs
 // From packed tarballs (`bun run release:pack` writes them):
 //   mkdir probe && cd probe && npm init -y >/dev/null
-//   npm install <path>/yanlinglabs-winter-provider-catalog-<v>.tgz <path>/yanlinglabs-winter-provider-runtime-<v>.tgz
+//   npm install <path>/waifucave-clover-provider-catalog-<v>.tgz <path>/waifucave-clover-provider-runtime-<v>.tgz
 //   cp <checkout>/scripts/probe-openrouter-reasoning.mjs . && node probe-openrouter-reasoning.mjs
 // `--dry-run` answers every request from a canned in-process responder with a fake key (no network, no
 // key needed), to check the probe's own plumbing. Its numbers are fabricated.
 // Exit code: 0 when every step passes, 1 otherwise, 2 when OPENROUTER_API_KEY is unset.
 const SONNET_EFFORT = "high";
-import { createEnvCredentialStore, createHistoryRenderer, createRegistry, createShippedAdapters, assembledToMessage, foldProviderStream, setWinterIdentity } from "@yanlinglabs/winter-provider-runtime";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { createEnvCredentialStore, createHistoryRenderer, createRegistry, createShippedAdapters, assembledToMessage, foldProviderStream, setWinterIdentity } from "@waifucave/clover-provider-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 
 const KEY_VAR = "OPENROUTER_API_KEY";
 const DRY_RUN = process.argv.includes("--dry-run");

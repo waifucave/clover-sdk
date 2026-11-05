@@ -11,14 +11,14 @@
 // collects multiple errors, never returns a partially-filtered `slots` array).
 //
 // Node-portable like the rest of `packages/sdk/src` (tsconfig.sdk-fence.json): no Bun API, no
-// filesystem. `@yanlinglabs/winter-provider-catalog` is fence-resident (tsconfig.sdk-fence.json
+// filesystem. `@waifucave/clover-provider-catalog` is fence-resident (tsconfig.sdk-fence.json
 // includes its `src/**/*.ts` alongside the sdk's own), so the THREE PURE, DATA-FREE helpers this
 // module imports from it (`SLOT_NAME_RE`, `CLAUDE_RESERVED_SLOT_NAMES`, `CURRENCY_RE` — a regex and
 // two constants, no `WinterCatalog` instance) stay inside the fence.
 //
 // CORRECTED (P6.6 Lane B, fix round 1, review Important-2): an earlier version of this comment
 // claimed this module "never imports the CATALOG ITSELF". That is false on the path that matters.
-// `@yanlinglabs/winter-provider-catalog`'s `package.json` `exports` map has only one entry (`"."` ->
+// `@waifucave/clover-provider-catalog`'s `package.json` `exports` map has only one entry (`"."` ->
 // `src/index.ts`; Bun enforces the map, so no subpath import can reach `families.ts` alone), and
 // `src/index.ts` unconditionally does `import catalogJson from "../generated/catalog.json" with {
 // type: "json" }` at the top level -- a 1.4 MB static import with no guard. So importing the three
@@ -35,7 +35,7 @@
 // both are spine-owned edits, out of this lane's file list; flagged for the controller instead.
 // R-6c-19: the DATA-FREE subpath -- `families.ts` imports only `./types.ts`, so the sdk's unbundled
 // graph never loads generated/catalog.json (the barrel `"."` does, 1.4 MB, on the unbundled path).
-import { CLAUDE_RESERVED_SLOT_NAMES, CURRENCY_RE, SLOT_NAME_RE } from "@yanlinglabs/winter-provider-catalog/families";
+import { CLAUDE_RESERVED_SLOT_NAMES, CURRENCY_RE, SLOT_NAME_RE } from "@waifucave/clover-provider-catalog/families";
 import type { ModelSlotSetting } from "../protocol/config.ts";
 
 /**

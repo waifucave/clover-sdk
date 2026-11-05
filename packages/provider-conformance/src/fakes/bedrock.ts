@@ -28,7 +28,7 @@
 // `ValidationException`s. Without them, the adapter's merging and empty-block dropping would be
 // asserted against a server that accepts anything.
 
-// review r1 (Critical-2): both come through the new `@yanlinglabs/winter-provider-runtime/testing`
+// review r1 (Critical-2): both come through the new `@waifucave/clover-provider-runtime/testing`
 // subpath now, not a relative path escaping this package.
 import {
   concatFrames,
@@ -36,7 +36,7 @@ import {
   converseStreamException,
   verifySigV4,
   parseAuthorization,
-} from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime/testing";
 import { jsonResponse, scenarioTable, startFake, type FakeServer, type RecordedRequest, type ScenarioResponder } from "./server.ts";
 
 /** AWS's own published example credentials. They authenticate nothing; the fake knows the secret so it can recompute. */

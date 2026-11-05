@@ -14,9 +14,9 @@
 // with the signature the endpoint sent, and never quotes a model's reasoning back to it as text.
 import { describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { loadCatalog, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { RECOVERED_REASONING_TAG, createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { RECOVERED_REASONING_TAG, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { runEngine } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { stubExecutor } from "./mock.ts";

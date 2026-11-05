@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 import { createSessionReadState } from "../read-state.ts";
 import { getRegisteredTool, type ToolExecutionContext } from "../registry.ts";
 import { EXIT_PLAN_MODE_TOOL_NAME, exitPlanModeExecutor } from "./exit-plan-mode.ts";

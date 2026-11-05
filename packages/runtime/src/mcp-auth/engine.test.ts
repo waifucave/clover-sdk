@@ -2,7 +2,7 @@
 // asks the HOST over its own control bridge (`mcp_oauth_refresh`), and a host with no handler leaves the
 // session to refresh in-process. The host side here is the in-memory channel, answering like a daemon.
 import { afterEach, beforeEach, expect, spyOn, test } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider } from "../provider/mock.ts";

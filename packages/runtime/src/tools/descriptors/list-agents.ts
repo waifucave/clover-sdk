@@ -1,5 +1,5 @@
 // WS-06 §3.3 "ListAgents" -- implement-now, captured, verbatim schema. [WS-10] owns the router.
-import { LIST_AGENTS_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { LIST_AGENTS_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, ALWAYS_AVAILABLE, builtinNameOf, definitionFields } from "./_shared.ts";
 

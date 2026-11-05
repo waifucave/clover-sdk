@@ -1,9 +1,9 @@
 // 0.0.56 (W9): the PROVIDER LAYER installs alone -- no `winter` binary, no sdk wrapper.
 //
 // A host with its own agent loop (an in-process `streamTurn` caller under Node) installs
-// `@yanlinglabs/winter-provider-runtime` and `@yanlinglabs/winter-provider-catalog` and nothing else.
-// Until 0.0.56 the runtime package listed `@yanlinglabs/winter-agent-sdk` as a dependency, and the sdk
-// carries the compiled `winter` binary (`@yanlinglabs/winter-agent-sdk-darwin-arm64`, ~71 MB) as an
+// `@waifucave/clover-provider-runtime` and `@waifucave/clover-provider-catalog` and nothing else.
+// Until 0.0.56 the runtime package listed `@waifucave/clover-agent-sdk` as a dependency, and the sdk
+// carries the compiled `winter` binary (`@waifucave/clover-agent-sdk-darwin-arm64`, ~71 MB) as an
 // optionalDependency: every such host pulled the wrapper, and on darwin-arm64 the binary, for four
 // constants. This script is the gate that keeps it gone:
 //
@@ -24,9 +24,9 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPublishablePackages, extractTarball, packOne, type PackedPackage } from "./release-pack.ts";
 
-export const PROVIDER_PACKAGES = ["@yanlinglabs/winter-provider-runtime", "@yanlinglabs/winter-provider-catalog"] as const;
+export const PROVIDER_PACKAGES = ["@waifucave/clover-provider-runtime", "@waifucave/clover-provider-catalog"] as const;
 /** What the provider layer must never pull in: the wrapper, and the platform package that carries the binary. */
-export const FORBIDDEN_PACKAGES = ["@yanlinglabs/winter-agent-sdk", "@yanlinglabs/winter-agent-sdk-darwin-arm64"] as const;
+export const FORBIDDEN_PACKAGES = ["@waifucave/clover-agent-sdk", "@waifucave/clover-agent-sdk-darwin-arm64"] as const;
 const DEPENDENCY_FIELDS = ["dependencies", "optionalDependencies", "peerDependencies", "bundleDependencies", "bundledDependencies"] as const;
 
 /** One packed package as the gate sees it: its manifest and every file it ships (relative path + first bytes). */
@@ -46,8 +46,8 @@ function isNativeExecutable(head: Uint8Array): boolean {
   return b[0] === 0x4d && b[1] === 0x5a; // MZ
 }
 
-/** A bare `@yanlinglabs/winter-agent-sdk` specifier in an import/export/require -- the package root or any subpath. */
-const SDK_SPECIFIER_RE = /(?:from\s*|import\s*\(\s*|require\s*\(\s*|import\s+)["']@yanlinglabs\/winter-agent-sdk(?:-darwin-arm64)?(?:\/[^"']*)?["']/;
+/** A bare `@waifucave/clover-agent-sdk` specifier in an import/export/require -- the package root or any subpath. */
+const SDK_SPECIFIER_RE = /(?:from\s*|import\s*\(\s*|require\s*\(\s*|import\s+)["']@waifucave\/clover-agent-sdk(?:-darwin-arm64)?(?:\/[^"']*)?["']/;
 
 /** Every reason a packed provider package would drag the sdk or a binary into a host's install. Empty means clean. */
 export function closureViolations(view: PackedView): string[] {
@@ -65,7 +65,7 @@ export function closureViolations(view: PackedView): string[] {
   if (view.manifest["bin"] !== undefined) out.push(`${name}: declares a bin`);
   for (const file of view.files) {
     if (isNativeExecutable(file.head)) out.push(`${name}: ships a native executable (${file.path})`);
-    if (file.text !== undefined && SDK_SPECIFIER_RE.test(file.text)) out.push(`${name}: ${file.path} imports @yanlinglabs/winter-agent-sdk`);
+    if (file.text !== undefined && SDK_SPECIFIER_RE.test(file.text)) out.push(`${name}: ${file.path} imports @waifucave/clover-agent-sdk`);
   }
   return out;
 }
@@ -157,7 +157,7 @@ export async function packProviderClosure(opts: { root?: string; build?: boolean
     const run = Bun.spawn(["node", probe, "--dry-run"], { cwd: project, stdout: "pipe", stderr: "pipe", env: nodeEnv });
     const [probeOut, probeErr, probeCode] = await Promise.all([new Response(run.stdout).text(), new Response(run.stderr).text(), run.exited]);
     if (probeCode !== 0 || !probeOut.includes("ALL 6 STEPS PASS")) violations.push(`the installed packages failed the probe's dry run under Node (exit ${probeCode}):\n${probeOut}${probeErr}`);
-    const fake = Bun.spawn(["node", "--input-type=module", "-e", "const t = await import('@yanlinglabs/winter-provider-runtime/testing'); const r = await import('@yanlinglabs/winter-provider-runtime'); const a = t.createFakeProviderAdapter({ turns: [t.fakeTextTurn('ok')] }); const turn = await r.foldProviderStream(a.streamTurn({ model: 'm', messages: [] }, {})); if (turn.text !== 'ok') process.exit(3);"], { cwd: project, stdout: "pipe", stderr: "pipe", env: nodeEnv });
+    const fake = Bun.spawn(["node", "--input-type=module", "-e", "const t = await import('@waifucave/clover-provider-runtime/testing'); const r = await import('@waifucave/clover-provider-runtime'); const a = t.createFakeProviderAdapter({ turns: [t.fakeTextTurn('ok')] }); const turn = await r.foldProviderStream(a.streamTurn({ model: 'm', messages: [] }, {})); if (turn.text !== 'ok') process.exit(3);"], { cwd: project, stdout: "pipe", stderr: "pipe", env: nodeEnv });
     const [fakeOut, fakeErr, fakeCode] = await Promise.all([new Response(fake.stdout).text(), new Response(fake.stderr).text(), fake.exited]);
     if (fakeCode !== 0) violations.push(`the ./testing fake adapter failed under Node (exit ${fakeCode}):\n${fakeOut}${fakeErr}`);
     return { packed, violations, installed };

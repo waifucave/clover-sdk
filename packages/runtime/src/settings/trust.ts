@@ -30,7 +30,7 @@
 // design, between the permission evaluator, the hook registry, the MCP source resolver and the
 // child-rule mirror — one value, so those four can never drift). Absent/false keeps every one of
 // them byte-identical to before this seam existed.
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 
 /**
  * Two reasons, not four.

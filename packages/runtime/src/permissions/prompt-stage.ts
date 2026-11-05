@@ -52,7 +52,7 @@
 // callback is converted to a typed deny PermissionResult AT THE WRAPPER, never surfaced as a bridge
 // rejection.
 import { randomUUID } from "node:crypto";
-import type { PermissionRequestPayload, PermissionResult, PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionRequestPayload, PermissionResult, PermissionUpdate } from "@waifucave/clover-agent-sdk";
 import type { RpcBridge } from "../rpc/bridge.ts";
 import type { PermissionCall, EvaluationContext, PromptStage, PromptStageMeta, PromptDecision } from "./evaluator.ts";
 import { webFetchHostnameOf } from "./grammar.ts";

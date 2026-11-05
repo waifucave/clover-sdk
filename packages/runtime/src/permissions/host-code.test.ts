@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { createHostCodePermissionEvaluator, type HostCodePermissionSnapshot, type HostCodePermissionRequest } from "./host-code.ts";
 import { sourceRule } from "./ruleset.ts";
 import { createAutoEngine } from "./auto/engine.ts";

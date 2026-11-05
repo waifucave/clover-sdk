@@ -2,7 +2,7 @@
 // fixture authorization server and the MCP server it protects. Every test proves what did NOT happen as
 // much as what did -- no refresh of a usable token, no request at all for a dead sign-in.
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
-import type { McpOAuthRefreshAnswer, McpOAuthRefreshRequest } from "@yanlinglabs/winter-agent-sdk";
+import type { McpOAuthRefreshAnswer, McpOAuthRefreshRequest } from "@waifucave/clover-agent-sdk";
 import { getRegisteredTool } from "../tools/registry.ts";
 import { createElicitationAsker } from "../mcp/elicitation.ts";
 import { parseMcpEnvConfig } from "../mcp/env.ts";

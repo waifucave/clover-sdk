@@ -39,7 +39,7 @@
 // AND `tsconfig.base.json` CARRIES `paths` FOR THE SAME REASON. tsc resolves the `types` condition,
 // which names a file that does not exist until this script has run -- so without the path mapping,
 // `bun run typecheck` on a fresh clone would fail with "Cannot find module
-// '@yanlinglabs/winter-provider-catalog'" (measured, not assumed). The mapping points tsc at `src`,
+// '@waifucave/clover-provider-catalog'" (measured, not assumed). The mapping points tsc at `src`,
 // which is where Bun and this repo already look; nothing about the PUBLISHED resolution changes.
 //
 // NOTHING HERE PUBLISHES ANYTHING, and nothing here writes outside `packages/<pkg>/dist` (which is

@@ -9,7 +9,7 @@
 // hand-written wire-level server rather than the SDK's own. Its default era negotiation is
 // `'legacy'` (mcp/client.ts's `resolveVersionNegotiation` says why).
 import { SSEClientTransport, type AuthProvider, type Transport } from "@modelcontextprotocol/client";
-import type { McpSSEServerConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { McpSSEServerConfig } from "@waifucave/clover-agent-sdk";
 import { refusingRedirectsFetch } from "./http.ts";
 
 // Returns the `Transport` INTERFACE type, uncast -- see transports/http.ts for why v1's cast is gone.

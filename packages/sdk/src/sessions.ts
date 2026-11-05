@@ -22,7 +22,7 @@
 //     store's own module doc pins -- P4 is what will ever populate a real one; empty until then.
 import { WinterCompatibilitySessionStore, type SessionStoreEntry } from "./store/session-store.ts";
 import { forkSessionByKey } from "./store/fork-session.ts";
-import { resolveBrand, type BrandProfile } from "./brand.ts";
+import { requireBrand, resolveBrand, type BrandProfile } from "./brand.ts";
 import { resolveWinterHome } from "./paths/home.ts";
 import { compatibilityKeys } from "./paths/keys.ts";
 import { SessionNotFoundError } from "./errors.ts";
@@ -54,7 +54,8 @@ interface SessionQueryOptions {
 
 function resolveHome(winterHome: string | undefined, brand: Partial<BrandProfile> | undefined): string {
   if (winterHome !== undefined) return winterHome;
-  if (brand === undefined) return resolveWinterHome();
+  // A1 (fail closed): no brand here means the process's installed one, else `BrandRequiredError`.
+  if (brand === undefined) return resolveWinterHome(undefined, requireBrand());
   const resolved = resolveBrand(brand);
   // A REFUSAL, never a silent fall back to Winter's own home. Falling back is the exact failure this
   // field exists to prevent: the caller asked for their product's store and would get Winter's.

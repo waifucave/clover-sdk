@@ -2,7 +2,7 @@
 // the real invoker and runner (both doors: DECLARED `async: true` and an ANNOUNCED `{"async": true}`
 // first line), then the engine delivering what one said at the next safe point.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createAsyncHookQueue, finishedOutput, type AsyncHookJob, type FinishedHookProcess } from "./async-hooks.ts";
 import { createCommandHookInvoker } from "./command-invoker.ts";
 import { buildHookEntriesFromSettings } from "./from-config.ts";

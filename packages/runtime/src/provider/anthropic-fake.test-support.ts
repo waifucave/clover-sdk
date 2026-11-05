@@ -13,8 +13,8 @@
 // fixture credential is an inline `fixture` string), and a credential header is recorded by its
 // SCHEME only.
 import { serve } from "bun";
-import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 
 export interface AnthropicFakeRequest {
   path: string;

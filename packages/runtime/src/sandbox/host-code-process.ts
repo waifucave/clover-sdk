@@ -1,4 +1,4 @@
-import { HOST_CODE_PROCESS_SUBTYPES, type HostCodeProcessHandle, type HostCodeProcessScope, type HostCodeProcessStart, type HostCodeProcessStartReply, type HostCodeProcessPollReply, type HostCodeProcessWrite } from "@yanlinglabs/winter-agent-sdk";
+import { HOST_CODE_PROCESS_SUBTYPES, type HostCodeProcessHandle, type HostCodeProcessScope, type HostCodeProcessStart, type HostCodeProcessStartReply, type HostCodeProcessPollReply, type HostCodeProcessWrite } from "@waifucave/clover-agent-sdk";
 import type { RpcBridge } from "../rpc/bridge.ts";
 
 export interface HostCodeProcessClient {

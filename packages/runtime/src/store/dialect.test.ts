@@ -12,8 +12,8 @@ import { mkdtempSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
-import type { RuntimeConfig, WinterFrame, SpawnedRuntimeProcess } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
+import type { RuntimeConfig, WinterFrame, SpawnedRuntimeProcess } from "@waifucave/clover-agent-sdk";
 
 import {
   userEntry,
@@ -37,8 +37,8 @@ import {
   type SessionCtx,
 } from "./dialect.ts";
 // session-store.ts and paths/keys.ts moved to the sdk package (Task 10, WS-05 §6).
-import { WinterCompatibilitySessionStore, DIALECT_RECORD_ENTRY_TYPE, type SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
-import { compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, DIALECT_RECORD_ENTRY_TYPE, type SessionStoreEntry } from "@waifucave/clover-agent-sdk";
+import { compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import { scriptedProvider, stubExecutor } from "../provider/mock.ts";
 import type { ToolExecutor } from "../engine.ts";
@@ -961,7 +961,7 @@ describe("B-M1: the rider-16 entry types", () => {
 // binary itself wrote, captured hermetically via `conformance/src/official/capture.ts`'s
 // `runCompactionCapture` (see that function's own header for the measured trigger and why "two
 // completed real exchanges, then /compact" is what actually reaches the network). Read here via a
-// plain relative fs path -- deliberately NOT a workspace dependency on `@yanlinglabs/winter-
+// plain relative fs path -- deliberately NOT a workspace dependency on `@waifucave/clover-
 // conformance` (that package already depends on this one; the reverse edge would be circular).
 //
 // The comparison mirrors `normalizeCompactionEntry`'s own volatile-field set (capture.ts) rather

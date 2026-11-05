@@ -28,7 +28,7 @@ import {
   type PermissionCall,
 } from "./evaluator.ts";
 import { emptyRuleSet } from "./ruleset.ts";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 
 const HOME = "/synthetic/home/tester";
 const CWD = "/synthetic/workspace";

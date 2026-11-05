@@ -3,7 +3,7 @@
 // (never a real `runEngine`, matching `_inner-model.test.ts`'s own unit-level convention -- the
 // engine-level "usage lands in the turn" claim is THAT file's, not this one's).
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
-import { resolveWebToolsConfig, type ResolvedWebToolsConfig } from "@yanlinglabs/winter-agent-sdk";
+import { resolveWebToolsConfig, type ResolvedWebToolsConfig } from "@waifucave/clover-agent-sdk";
 import "./web-search.ts";
 import { createWebSearchExecutor, MAX_DOMAIN_LIST_ENTRIES, WEB_SEARCH_RESULT_CAP } from "./web-search.ts";
 import { getRegisteredTool, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
@@ -16,8 +16,8 @@ import { createExaBackendState, type ExaBackendState } from "./_exa-client.ts";
 import { advancedPayload, basicPayload, tooManyRequests, withExaFixture, type ExaFixture } from "./_exa-fixture.test-support.ts";
 import { resetExaSessionClientsForTest } from "./_exa-session-client.ts";
 import { INNER_MODEL_BUDGET_EXCEEDED_DETAIL } from "./_inner-model.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider } from "../../provider/session-provider.ts";
 import { fakeAnthropicCatalog, startAnthropicFake } from "../../provider/anthropic-fake.test-support.ts";
 

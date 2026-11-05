@@ -5,8 +5,8 @@
 // query.test.ts's real-engine integration tests); this file's job is purely "does createBridge
 // PromptStage build the right payload and map the right result," independent of the wire.
 import { test, expect } from "bun:test";
-import type { PermissionResult, PermissionRequestPayload, PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
-import { WinterRpcError } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionResult, PermissionRequestPayload, PermissionUpdate } from "@waifucave/clover-agent-sdk";
+import { WinterRpcError } from "@waifucave/clover-agent-sdk";
 import type { RpcBridge } from "../rpc/bridge.ts";
 import { createBridgePromptStage } from "./prompt-stage.ts";
 import type { PermissionCall, EvaluationContext, PromptStageMeta } from "./evaluator.ts";

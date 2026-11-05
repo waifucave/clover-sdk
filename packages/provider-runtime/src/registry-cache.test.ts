@@ -1,8 +1,8 @@
 // WS-23 item 6: a 1-hour cache write is priced at twice the input rate; the rest of the writes keep
 // the row's own cache-write rate.
 import { describe, expect, test } from "bun:test";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 import { estimateCostUsd, ONE_HOUR_CACHE_WRITE_INPUT_MULTIPLIER } from "./registry.ts";
 
 const row = (): WinterModelDescriptor =>

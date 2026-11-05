@@ -11,9 +11,9 @@
 // GROUND TRUTH IS THE FAKE'S REQUEST LOG for the wire, the store double's records for the sidecar,
 // and the frame stream for what the host saw.
 import { describe, expect, test } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider, type SessionProviderWiring } from "./session-provider.ts";
 import { ProviderTurnError, runEngine, type EngineProviderIdentity, type ModelSwitchResolution, type Provider, type ProviderRequest, type ResolveModelSwitch } from "../engine.ts";
 import { foldProviderStream } from "./bridge.ts";
@@ -21,7 +21,7 @@ import { stubExecutor } from "./mock.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import type { ProviderStateRecordInput } from "../store/provider-state.ts";
 import { chatCatalog, chatModel, chatProvider, startRawChatFake, type RawChatFake } from "./raw-chat-fake.test-support.ts";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { startScenarioFake, SCENARIO_CHILD_MODEL } from "./scenario-fake.ts";
 import { buildProductionWiring } from "../production-wiring.ts";
 import { mkdtempSync, rmSync } from "node:fs";

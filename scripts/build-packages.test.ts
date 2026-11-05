@@ -69,7 +69,7 @@ describe("build-packages: the plan is DERIVED from each manifest", () => {
       }
     }
     // Not vacuous: the catalog really does precede the sdk, which is the pair alphabetical order got wrong.
-    expect(position.get("@yanlinglabs/winter-provider-catalog")! < position.get("@yanlinglabs/winter-agent-sdk")!).toBe(true);
+    expect(position.get("@waifucave/clover-provider-catalog")! < position.get("@waifucave/clover-agent-sdk")!).toBe(true);
   });
 
   test("every manifest's three conditions agree with the entry they describe", () => {
@@ -130,7 +130,7 @@ describe("jsHasRelativeTsSpecifier -- a parsed check, not a text regex", () => {
   });
 
   test("a bare package specifier and a relative .js specifier are both fine", () => {
-    expect(jsHasRelativeTsSpecifier('import { a } from "@yanlinglabs/winter-provider-catalog";')).toBe(false);
+    expect(jsHasRelativeTsSpecifier('import { a } from "@waifucave/clover-provider-catalog";')).toBe(false);
     expect(jsHasRelativeTsSpecifier('import { a } from "./chunk-abc123.js";')).toBe(false);
   });
 });
@@ -152,7 +152,7 @@ describe("rewriteDeclarationSpecifiers (the step `rewriteRelativeImportExtension
   test("a BARE specifier and a non-specifier string are untouched", () => {
     // A package name is resolved by the consumer's node_modules and must keep its exact spelling; a
     // string literal TYPE that merely ends in `.ts` is data, not a module reference.
-    expect(rewriteDeclarationSpecifiers('export { x } from "@yanlinglabs/winter-provider-catalog";')).toBe('export { x } from "@yanlinglabs/winter-provider-catalog";');
+    expect(rewriteDeclarationSpecifiers('export { x } from "@waifucave/clover-provider-catalog";')).toBe('export { x } from "@waifucave/clover-provider-catalog";');
     expect(rewriteDeclarationSpecifiers('declare const p: "./notes.ts";')).toBe('declare const p: "./notes.ts";');
     expect(rewriteDeclarationSpecifiers('export declare function f(path: "src/x.ts"): void;')).toBe('export declare function f(path: "src/x.ts"): void;');
   });
@@ -227,12 +227,12 @@ describe.skipIf(!BUILD_ENABLED)("build-packages: the real build", () => {
         .map((f) => readFileSync(join(dir, "dist", f), "utf8"))
         .join("\n");
 
-    const runtime = result.packages.find((p) => p.name === "@yanlinglabs/winter-provider-runtime")!;
+    const runtime = result.packages.find((p) => p.name === "@waifucave/clover-provider-runtime")!;
     const js = allJs(runtime.dir);
-    expect(js).toContain("@yanlinglabs/winter-provider-catalog");
+    expect(js).toContain("@waifucave/clover-provider-catalog");
     expect(js).toMatch(/from\s*["']node:/);
 
-    const catalog = result.packages.find((p) => p.name === "@yanlinglabs/winter-provider-catalog")!;
+    const catalog = result.packages.find((p) => p.name === "@waifucave/clover-provider-catalog")!;
     const catalogJs = allJs(catalog.dir);
     // No relative IMPORT of the JSON is left (asserted on the specifier, not on the string: the
     // inlined catalog data itself mentions the filename in its own provenance citations). Chunk
@@ -282,7 +282,7 @@ describe.skipIf(!BUILD_ENABLED)("build-packages: the real build", () => {
   test("the dist tree MIRRORS src, so two entries both named index.ts cannot collide", () => {
     // `conformance` has `./` and `./official`, both `index.ts`. A flat `--outdir` would have written
     // one over the other, silently, and the smoke would import whichever won.
-    const conformance = result.packages.find((p) => p.name === "@yanlinglabs/winter-conformance")!;
+    const conformance = result.packages.find((p) => p.name === "@waifucave/clover-conformance")!;
     const byPath = conformance.entries.map((e) => e.js).sort();
     expect(byPath).toEqual(["dist/index.js", "dist/official/index.js", "dist/trace.js"]);
     expect(new Set(byPath).size).toBe(byPath.length);
@@ -292,7 +292,7 @@ describe.skipIf(!BUILD_ENABLED)("build-packages: the real build", () => {
     // The cheapest possible statement of the fix, independent of pack/install: point Node at the
     // emitted file itself. The installed-tarball smoke proves the same thing THROUGH the exports map;
     // this one fails first, and its failure names the file rather than the specifier.
-    const catalog = result.packages.find((p) => p.name === "@yanlinglabs/winter-provider-catalog")!;
+    const catalog = result.packages.find((p) => p.name === "@waifucave/clover-provider-catalog")!;
     const entry = join(catalog.dir, "dist/index.js");
     const code = `import(${JSON.stringify(entry)}).then((m) => { if (typeof m.loadCatalog !== "function") { console.error("no loadCatalog export"); process.exit(1); } }).catch((e) => { console.error(e && e.message ? e.message : e); process.exit(1); });`;
     const proc = Bun.spawn(["node", "-e", code], { stdout: "pipe", stderr: "pipe" });
@@ -303,7 +303,7 @@ describe.skipIf(!BUILD_ENABLED)("build-packages: the real build", () => {
   test("...and Bun resolves the `bun` condition, i.e. the SOURCE, for the same specifier", async () => {
     // The other half of the contract, and the reason nothing in this repo changed behaviour: Bun --
     // this repo's tests, verify:workflow, the compiled binary -- must still get `src/*.ts`.
-    const code = `const m = await import("@yanlinglabs/winter-provider-catalog"); const url = import.meta.resolve("@yanlinglabs/winter-provider-catalog"); if (!url.endsWith("/src/index.ts")) { console.error("resolved to " + url); process.exit(1); } if (typeof m.loadCatalog !== "function") { console.error("no loadCatalog"); process.exit(1); }`;
+    const code = `const m = await import("@waifucave/clover-provider-catalog"); const url = import.meta.resolve("@waifucave/clover-provider-catalog"); if (!url.endsWith("/src/index.ts")) { console.error("resolved to " + url); process.exit(1); } if (typeof m.loadCatalog !== "function") { console.error("no loadCatalog"); process.exit(1); }`;
     const proc = Bun.spawn(["bun", "-e", code], { cwd: REPO_ROOT, stdout: "pipe", stderr: "pipe" });
     const [stderr, exitCode] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
     expect([exitCode, stderr.trim()]).toEqual([0, ""]);

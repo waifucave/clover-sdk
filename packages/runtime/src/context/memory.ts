@@ -15,7 +15,7 @@
 // (context/assembler.ts). Both are built once per session context: an edit to MEMORY.md is seen after
 // the next compaction or in a new session, which is claude's behaviour too.
 import { join } from "node:path";
-import { WINTER_BRAND, type Settings } from "@yanlinglabs/winter-agent-sdk";
+import { type Settings, requireBrand } from "@waifucave/clover-agent-sdk";
 import { readCappedLinesAndBytes } from "./injection.ts";
 
 export const MEMORY_INDEX_BASENAME = "MEMORY.md";
@@ -72,13 +72,13 @@ export const AUTO_MEMORY_HEADING = "# auto memory";
  * (which names the directory). Injected even with no `MEMORY.md` on disk -- a fresh project has
  * nothing to recall but every reason to know it CAN save something.
  */
-export function renderAutoMemorySection(memoryDir: string, instructionsFile: string = WINTER_BRAND.instructionsFile): string {
+export function renderAutoMemorySection(memoryDir: string, instructionsFile: string = requireBrand().instructionsFile): string {
   // P7a fix wave (item 5, M-1): the instructions file is named IN PROSE SENT TO THE MODEL, so the
   // session's own brand supplies it.
   return `${AUTO_MEMORY_HEADING}\n\n${memoryGuidance(memoryDir, instructionsFile)}`;
 }
 
 /** `excludeDynamicSections`: the same guidance as the userContext value under the key `auto memory`, without its heading. */
-export function renderAutoMemoryContextValue(memoryDir: string, instructionsFile: string = WINTER_BRAND.instructionsFile): string {
+export function renderAutoMemoryContextValue(memoryDir: string, instructionsFile: string = requireBrand().instructionsFile): string {
   return memoryGuidance(memoryDir, instructionsFile);
 }

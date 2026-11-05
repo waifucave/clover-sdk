@@ -5,8 +5,8 @@ import { expect, test } from "bun:test";
 import { query } from "./query.ts";
 import { WinterRpcError } from "./errors.ts";
 import type { SpawnedRuntimeProcess } from "./transport.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
-import type { Provider } from "@yanlinglabs/winter-agent-runtime";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
+import type { Provider } from "@waifucave/clover-agent-runtime";
 
 const provider: Provider = {
   async generate() {

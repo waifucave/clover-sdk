@@ -169,11 +169,11 @@ export async function buildRuntime(opts: BuildRuntimeOptions = {}): Promise<Buil
     // pnpm's node_modules symlinks are RELATIVE, so a plain recursive copy should carry them
     // intact — verified here, never assumed: a broken link is a broken build, and this is exactly
     // the kind of failure a silent fallback could hide.
-    const scopeDir = join(copyRoot, "node_modules", "@yanlinglabs");
+    const scopeDir = join(copyRoot, "node_modules", "@waifucave");
     if (existsSync(scopeDir)) {
       for (const entry of readdirSync(scopeDir)) {
         if (!existsSync(join(scopeDir, entry))) {
-          throw new Error(`build-runtime: the path-neutral copy's node_modules/@yanlinglabs/${entry} symlink did not survive the copy`);
+          throw new Error(`build-runtime: the path-neutral copy's node_modules/@waifucave/${entry} symlink did not survive the copy`);
         }
       }
     }

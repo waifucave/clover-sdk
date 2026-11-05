@@ -1,4 +1,4 @@
-import type { BrandProfile, SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile, SettingSource } from "@waifucave/clover-agent-sdk";
 // Phase 5 Lane W (task 4): the SESSION-SCOPED registration seam the Workflow tool reads.
 //
 // WHY THIS EXISTS. `WorkflowRunHost` (workflows/seam.ts, frozen) bundles four things a run needs:
@@ -19,7 +19,7 @@ import type { BrandProfile, SettingSource } from "@yanlinglabs/winter-agent-sdk"
 // ENGINE WIRING LANDED IN T8 (rider 21): `engine.ts` registers once per run and withdraws at
 // teardown, so the Workflow tool is live rather than inert. What is still owed there is the
 // SESSION KEY -- see `registerWorkflowSession` below.
-import type { RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import type { ContextAccountant } from "../engine.ts";
 import type { StructuredOutputSeam } from "../structured/seam.ts";
 

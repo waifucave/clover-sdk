@@ -9,7 +9,7 @@
 // "version increments on every mode/rule change; every pending decision, hook request, control-RPC
 // payload, and durable approval carries policyVersion; stale answers are discarded and
 // re-evaluated" (WS-04 §3.1, WS-07 §2).
-import type { PermissionMode, PermissionUpdate, RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionUpdate, RuleSource } from "@waifucave/clover-agent-sdk";
 import { applyPermissionUpdate, type SourcedRuleSet } from "./ruleset.ts";
 
 // Task 12 (WS-07 §10.2): relocated to the FULL AutoModeConfig module

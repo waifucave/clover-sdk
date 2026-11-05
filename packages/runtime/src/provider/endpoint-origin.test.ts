@@ -26,10 +26,10 @@
 // flag backwards fails twice, in opposite directions, rather than being half-right.
 import { describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog, stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import { WinterProviderResolutionError, createMemoryCredentialStore, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog, stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import { WinterProviderResolutionError, createMemoryCredentialStore, winterUserAgent } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider, connectionForProvider, generatedConnectionForProvider } from "./session-provider.ts";
 
 const SESSION_KEY = "ENDPOINT-ORIGIN-SESSION-KEY";

@@ -4,6 +4,6 @@
 // settings surface turned out to be a PINNED PUBLIC SDK export and WS-02 §3 forbids the sdk package
 // from importing the runtime (see ./resolve.ts's own header for the full rationale). A lane citing
 // `settings/sources.ts` from its brief lands here and gets the right symbols.
-export { settingsPathFor, SETTING_SOURCES } from "@yanlinglabs/winter-agent-sdk";
+export { settingsPathFor, SETTING_SOURCES } from "@waifucave/clover-agent-sdk";
 export { loadSettingsFile } from "./resolve.ts";
-export type { SettingSource, SettingsPathOptions, LoadedSettingsFile, Settings } from "@yanlinglabs/winter-agent-sdk";
+export type { SettingSource, SettingsPathOptions, LoadedSettingsFile, Settings } from "@waifucave/clover-agent-sdk";

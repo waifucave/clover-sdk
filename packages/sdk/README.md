@@ -1,4 +1,4 @@
-# `@yanlinglabs/winter-agent-sdk`
+# `@waifucave/clover-agent-sdk`
 
 Winter's wrapper: `query()`, the `Options` surface, the session-management API, settings resolution,
 the transcript store and the brand profile. This is the package a host installs by name; it spawns
@@ -14,23 +14,31 @@ This package is published to **two registries**, and which one you want depends 
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-agent-sdk
+npm install @waifucave/clover-agent-sdk
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-agent-sdk` as usual.
+literal in the file. Then `npm install @waifucave/clover-agent-sdk` as usual.
+
+## A brand is required
+
+There is no default brand (0.0.63). Name the one your sessions run under, either per query
+(`Options.brand`, a complete `BrandProfile`) or once for the process (`installBrand(profile)`, before
+the first query). With neither, `query()` throws `BrandRequiredError` before anything is spawned, so a
+host that forgets its brand can never start a session on somebody else's home, environment variables
+or Keychain service. `WINTER_BRAND` is still exported, for a host that means to run as Winter.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
@@ -43,12 +51,12 @@ a patch.
 The main entry is the wrapper surface above. Two subpaths ship beside it, for hosts that compose
 Winter rather than only call it:
 
-**`@yanlinglabs/winter-agent-sdk/messaging`** (since 0.0.2) — the cross-runtime messaging contract
+**`@waifucave/clover-agent-sdk/messaging`** (since 0.0.2) — the cross-runtime messaging contract
 and its router core: addresses, listings, delivery outcomes, the adapter interface, inbound policy,
 the `notify_when_idle` subscription store, and the three orchestration functions a host drives them
 with. It ships no adapter and no process-level singleton; those are host composition.
 
-**`@yanlinglabs/winter-agent-sdk/tools`** (since 0.0.3) — Winter's default tools, declared and
+**`@waifucave/clover-agent-sdk/tools`** (since 0.0.3) — Winter's default tools, declared and
 implemented once:
 
 - `WINTER_DEFAULT_TOOL_DEFINITIONS` — `send_message`, `list_agents`, `read_notifications` and

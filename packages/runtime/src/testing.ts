@@ -1,8 +1,8 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { SpawnedRuntimeProcess, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { encodeFrame, splitFrames, WINTER_BRAND, envName, storeHomeEnvName } from "@yanlinglabs/winter-agent-sdk";
+import type { SpawnedRuntimeProcess, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { encodeFrame, splitFrames, WINTER_BRAND, envName, storeHomeEnvName } from "@waifucave/clover-agent-sdk";
 import { Queue } from "./protocol/channel.ts";
 import type { FrameSource, FrameSink } from "./protocol/channel.ts";
 import { runEngine, type Provider, type ToolExecutor } from "./engine.ts";
@@ -15,7 +15,7 @@ import { registerDefaultChildEngineFactory } from "./subagents/register-default-
 import { buildProductionWiring, withAutoSkillPermissions } from "./production-wiring.ts";
 import { loadResumedChain } from "./provider/session-provider.ts";
 import { restoreChildRoster } from "./subagents/restore.ts";
-import { WinterCompatibilitySessionStore, compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { resolveProjectDirName } from "./paths/project-dir-name.ts";
 // Task 1 (P3, WS-06 §1): test-tool registration goes through the registry. The equivalence corpus
 // (packages/sdk/src/query.test.ts's "tooluse" scenarios, scripts/differential.ts's tool-round/

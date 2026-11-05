@@ -8,7 +8,7 @@ import { inheritSourceObject } from "../sandbox/source-read.ts";
 // MCP servers are RAW configs handed onward to Lane A's `resolveMcpServerSources`, exactly as that
 // function's own header requires ("WHERE the project `mcp.json`/settings actually get read from disk...
 // are integration concerns for whoever assembles `McpServerSource[]`").
-import type { InitPluginInfo } from "@yanlinglabs/winter-agent-sdk";
+import type { InitPluginInfo } from "@waifucave/clover-agent-sdk";
 import type { PluginCommandContribution } from "../commands/resolver.ts";
 import type { PluginSkillContribution } from "../skills/store.ts";
 import type { PluginAgentDefinition } from "../subagents/definitions.ts";

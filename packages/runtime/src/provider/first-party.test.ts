@@ -1,6 +1,6 @@
 // The first-party Anthropic membership, and the ONE table that has to agree with it.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { FIRST_PARTY_ANTHROPIC_PROVIDER_IDS, isFirstPartyAnthropic } from "./first-party.ts";
 import { apiProviderFor } from "./session-provider.ts";
 

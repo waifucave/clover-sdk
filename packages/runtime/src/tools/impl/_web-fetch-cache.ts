@@ -25,7 +25,7 @@
 //     one path where session ids are reused within a process. A resumed session therefore starts with
 //     a COLD cache, which is what a resumed session gets in claude too (a new process).
 
-import { MemoryWebFetchCache, WEB_FETCH_CACHE_MAX_BYTES, WEB_FETCH_CACHE_TTL_MS } from "@yanlinglabs/winter-web";
+import { MemoryWebFetchCache, WEB_FETCH_CACHE_MAX_BYTES, WEB_FETCH_CACHE_TTL_MS } from "@waifucave/clover-web";
 
 export interface WebFetchCacheEntry {
   /** The converted content's own UTF-8 byte length -- the cache's weight unit. */
@@ -42,11 +42,11 @@ export interface WebFetchCacheEntry {
   iconUrl?: string;
 }
 
-export { WEB_FETCH_CACHE_MAX_BYTES, WEB_FETCH_CACHE_TTL_MS } from "@yanlinglabs/winter-web";
+export { WEB_FETCH_CACHE_MAX_BYTES, WEB_FETCH_CACHE_TTL_MS } from "@waifucave/clover-web";
 
 export type ClockFn = () => number;
 
-/** One session's store: the TTL + byte-weighted LRU from `@yanlinglabs/winter-web`. */
+/** One session's store: the TTL + byte-weighted LRU from `@waifucave/clover-web`. */
 type SessionCache = MemoryWebFetchCache<WebFetchCacheEntry>;
 
 export class WebFetchCache {

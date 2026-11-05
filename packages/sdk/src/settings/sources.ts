@@ -9,7 +9,7 @@
 // `<cwd>/.winter/settings.local.json`.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "../brand.ts";
+import { type BrandProfile, requireBrand } from "../brand.ts";
 import { resolveWinterHome, type HomeBrand } from "../paths/home.ts";
 import type { Settings, SettingSource } from "./types.ts";
 
@@ -19,14 +19,15 @@ export interface SettingsPathOptions {
   winterHome?: string;
   env?: Record<string, string | undefined>;
   /**
-   * P7a (D19): the session's resolved brand profile. Omitted means Winter's own
-   * (`WINTER_BRAND`), so every caller predating the profile keeps exactly today's paths.
+   * P7a (D19): the session's resolved brand profile. A1 (fail closed): omitted means the brand
+   * installed for this process (`installBrand`), and with none installed the call throws
+   * `BrandRequiredError`; it never means Winter's.
    */
   brand?: HomeBrand & Pick<BrandProfile, "projectDirName">;
 }
 
 export function settingsPathFor(source: SettingSource, opts: SettingsPathOptions): string {
-  const brand = opts.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts.brand);
   switch (source) {
     case "user":
       return join(opts.winterHome ?? resolveWinterHome(opts.env, brand), "settings.json");

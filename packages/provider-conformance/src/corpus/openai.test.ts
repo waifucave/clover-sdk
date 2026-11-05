@@ -6,9 +6,9 @@
 // directory or the Keychain.
 
 import { describe, expect, test } from "bun:test";
-import { createResponsesAdapter, createChatCompletionsAdapter, createCodexOauthAdapter, createLocalOpenAIAdapter, discoverModels, createMemoryCredentialStore, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
-import type { CredentialRef, ProviderAdapter, ProviderEvent, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import { QuotaManager, FAST_RETRY, descriptor, testContext, testDiscoveryContext, type DescriptorOverrides } from "@yanlinglabs/winter-provider-runtime/testing";
+import { createResponsesAdapter, createChatCompletionsAdapter, createCodexOauthAdapter, createLocalOpenAIAdapter, discoverModels, createMemoryCredentialStore, winterUserAgent } from "@waifucave/clover-provider-runtime";
+import type { CredentialRef, ProviderAdapter, ProviderEvent, TurnRequest } from "@waifucave/clover-provider-runtime";
+import { QuotaManager, FAST_RETRY, descriptor, testContext, testDiscoveryContext, type DescriptorOverrides } from "@waifucave/clover-provider-runtime/testing";
 import { formatCorpusReport, runAdapterCorpus } from "./runner.ts";
 import { FOREIGN_MARKER, OPAQUE_MARKER, SCENARIO, openAiCorpusCases, type CorpusHarness, type HarnessOverrides } from "./openai.ts";
 import { chatCorpusScenarios, responsesCorpusScenarios } from "./openai-scenarios.ts";

@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HELD_INPUT_CAPABILITY, WinterRpcError, query, type Options, type SDKHeldInputsMessage, type SDKHostInputCommittedMessage } from "@yanlinglabs/winter-agent-sdk";
+import { HELD_INPUT_CAPABILITY, WinterRpcError, query, type Options, type SDKHeldInputsMessage, type SDKHostInputCommittedMessage } from "@waifucave/clover-agent-sdk";
 import { checkLinuxHostQueryFrame } from "./linux-host-query-profile.ts";
 import { RUNTIME_EXECUTION_POSTURE_CAPABILITIES } from "./execution-posture.ts";
 import { inMemoryProcess } from "../testing.ts";

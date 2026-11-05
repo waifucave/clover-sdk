@@ -22,7 +22,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { PermissionBehavior, RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionBehavior, RuleSource } from "@waifucave/clover-agent-sdk";
 import { filterEscalatingDefaultMode, resolveSettingsDetailed, applyWorkspaceTrust, OVERLAY_NEVER_KEYS } from "../settings/resolve.ts";
 import { emptyRuleSet, effectiveDirectories, resolveRules, sourceRule, type SourcedRuleEntry, type SourcedRuleSet } from "./ruleset.ts";
 import { findMatchingRuleEntry, NO_OPINION_AUTO_ENGINE, NO_OPINION_HOOK_STAGE, NO_OPINION_PROMPT_STAGE, NO_SPECIAL_CHECKS, type EvaluationContext, type PermissionCall } from "./evaluator.ts";

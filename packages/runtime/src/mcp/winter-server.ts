@@ -17,7 +17,7 @@
 // the standing server's name is RESERVED (registry.ts's own RESERVED_MCP_SERVER_NAMES, which a
 // branded session extends through `rebrandStandingServerTools`), so ANY `registerMcpServerTools`
 // call under it throws unconditionally, for any tool name.
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 
 /** Winter's OWN standing-server name, derived rather than spelled (P7a, D19). */
 export const WINTER_SERVER_NAME = WINTER_BRAND.mcpServerName;

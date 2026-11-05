@@ -1,7 +1,7 @@
 // WS-21 §6.3 item 6 (F17, F20): claude's settings `env` per-tier filters, host-managed and the
 // router-only refused names.
 import { describe, test, expect } from "bun:test";
-import { envName, storeHomeEnvName, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { envName, storeHomeEnvName, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { applyHostManagedSettingsFilter, filterSettingsEnv } from "./env-filter.ts";
 
 const WINTER_HOME_VAR = envName(WINTER_BRAND, "HOME");

@@ -69,7 +69,7 @@
 // are Winter's normative contract"), not a verbatim upstream wire pin — extending it for what real
 // integration needs is in scope; the five numbered PRECEDENCE rules above are what must never be
 // deviated from.
-import type { HookEvent, HookSource, HookPermissionDecision, PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent, HookSource, HookPermissionDecision, PermissionUpdate } from "@waifucave/clover-agent-sdk";
 
 // --- The per-hook outcome vocabulary the runner produces (P2-A's audit outcome set, minus the
 // audit-only bookkeeping — duration/requestId/etc. live on the audit record, hooks/runner.ts) ---

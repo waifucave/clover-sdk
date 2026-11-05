@@ -17,7 +17,7 @@
 // naming something other than what shipped, and both registries refuse a version they already hold.
 //
 // NOTHING HERE CHOOSES A REGISTRY. `actions/setup-node` (`registry-url` + `scope`) wrote a userconfig
-// binding `@yanlinglabs` to npmjs with the matching `_authToken`, and `NPM_CONFIG_USERCONFIG` points
+// binding `@waifucave` to npmjs with the matching `_authToken`, and `NPM_CONFIG_USERCONFIG` points
 // npm at it. Passing `--registry` here would set only `registries.default`, which the scope binding
 // outranks -- the exact trap review C1 documents.
 import { readFileSync } from "node:fs";

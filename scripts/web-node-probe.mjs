@@ -1,10 +1,10 @@
 // THE winter-web PROBE -- plain ESM JavaScript, run against an INSTALLED (or built) copy of
-// `@yanlinglabs/winter-web` under Node and under Bun:
+// `@waifucave/clover-web` under Node and under Bun:
 //
-//   node scripts/web-node-probe.mjs [target]     (default: @yanlinglabs/winter-web)
+//   node scripts/web-node-probe.mjs [target]     (default: @waifucave/clover-web)
 //   bun  scripts/web-node-probe.mjs [target]
 //
-// The target is one of three LITERAL choices -- `@yanlinglabs/winter-web` (the installed package),
+// The target is one of three LITERAL choices -- `@waifucave/clover-web` (the installed package),
 // `packages/web/dist/index.js` (this checkout's build) or `packages/web/src/index.ts` (its source,
 // Bun or a type-stripping Node) -- each its own `import("<literal>")`, never a computed specifier.
 //
@@ -19,9 +19,9 @@ import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const target = process.argv[2] ?? "@yanlinglabs/winter-web";
+const target = process.argv[2] ?? "@waifucave/clover-web";
 const web =
-  target === "@yanlinglabs/winter-web" ? await import("@yanlinglabs/winter-web")
+  target === "@waifucave/clover-web" ? await import("@waifucave/clover-web")
   : target === "packages/web/dist/index.js" ? await import("../packages/web/dist/index.js")
   : target === "packages/web/src/index.ts" ? await import("../packages/web/src/index.ts")
   : (console.error(`unknown probe target "${target}"`), process.exit(2));

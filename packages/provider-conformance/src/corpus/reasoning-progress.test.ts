@@ -6,9 +6,9 @@
 // else, and the kind the block turned out to be. Each family's opaque material (a signature, encrypted
 // content, redacted data) is a named marker in its script, and no progress step may contain it.
 import { describe, expect, test } from "bun:test";
-import { createChatCompletionsAdapter, createResponsesAdapter } from "@yanlinglabs/winter-provider-runtime";
-import type { ProviderAdapter, ProviderContext, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import { FAST_RETRY, descriptor, testContext } from "@yanlinglabs/winter-provider-runtime/testing";
+import { createChatCompletionsAdapter, createResponsesAdapter } from "@waifucave/clover-provider-runtime";
+import type { ProviderAdapter, ProviderContext, TurnRequest } from "@waifucave/clover-provider-runtime";
+import { FAST_RETRY, descriptor, testContext } from "@waifucave/clover-provider-runtime/testing";
 import { foldProviderStream } from "../../../runtime/src/provider/bridge.ts";
 import type { ProviderStreamSink, ReasoningProgress } from "../../../runtime/src/engine.ts";
 import { sseResponse, withFake, type SseFrame } from "../fakes/server.ts";

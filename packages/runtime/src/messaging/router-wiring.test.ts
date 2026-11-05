@@ -1,6 +1,6 @@
 // R-7b-4: the WIRING half of the messaging move, pinned where the wiring lives.
 //
-// The router core moved to `@yanlinglabs/winter-agent-sdk/messaging` and its tests moved with it,
+// The router core moved to `@waifucave/clover-agent-sdk/messaging` and its tests moved with it,
 // which left exactly one behaviour without a home. `deliverEnvelope` used to `instanceof`-check
 // RULING P4-D's `ChildResumeModeIncomparableError` directly; the published core cannot import that
 // class, so classification became an owner-supplied predicate
@@ -18,9 +18,9 @@ import {
   isReservedNotificationKey,
   RESERVED_NOTIFICATION_KEY_PREFIX,
   type MessagingRuntimeDeps,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 import { runEngine } from "../engine.ts";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { ChildResumeModeIncomparableError } from "../permissions/auto/inheritance.ts";
 import { classifyDeliveryError, createDefaultMessagingRuntime } from "./reference-adapter.ts";

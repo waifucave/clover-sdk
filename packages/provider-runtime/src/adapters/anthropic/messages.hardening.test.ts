@@ -6,7 +6,7 @@
 // Hermetic: 127.0.0.1:0 only, an inline `fixture` key, and the compiled catalog's own Claude rows.
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { ANTHROPIC_ROW_DEFAULT_MAX_TOKENS, INTERLEAVED_THINKING_BETA, anthropicErrorMessage, buildRequestBody, createAnthropicMessagesAdapter, findDescriptor, streamErrorFrame } from "./messages.ts";
 import { createMemoryCredentialStore } from "../../credentials/memory.ts";
 import { winterUserAgent } from "../../identity.ts";

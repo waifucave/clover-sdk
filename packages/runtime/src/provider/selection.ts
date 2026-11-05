@@ -15,10 +15,10 @@
 // built-in model, no ambient environment scan, and no substitution of a working provider for a
 // broken one. A session either pins ONE fully-identified provider and model, or it refuses to start
 // and says exactly why -- which R6-F then surfaces on the pinned result shape.
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { ConnectionProfile, CredentialStore, ProviderContext, ProviderRegistry, ResolvedModel } from "@yanlinglabs/winter-provider-runtime";
-import { WinterProviderResolutionError, createRegistry } from "@yanlinglabs/winter-provider-runtime";
-import { DEFAULT_PROVIDER_STALL_TIMEOUT_MS, type CredentialRef, type RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
+import type { ConnectionProfile, CredentialStore, ProviderContext, ProviderRegistry, ResolvedModel } from "@waifucave/clover-provider-runtime";
+import { WinterProviderResolutionError, createRegistry } from "@waifucave/clover-provider-runtime";
+import { DEFAULT_PROVIDER_STALL_TIMEOUT_MS, type CredentialRef, type RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import type { Provider } from "../engine.ts";
 
 /**

@@ -4,7 +4,7 @@
 // byte-identical to what they were before the block existed. The goldens below were captured from
 // origin/main 5183d3a9 (the commit this feature branched from), not computed from the code under test.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createGuestFileSession } from "../guest/file-session.ts";
 import type { GuestProcessPort, GuestProcessRequest } from "../guest/process-helper.ts";
 import { buildRegistryToolExecutor, type RegistryToolExecutorDeps } from "./registry.ts";

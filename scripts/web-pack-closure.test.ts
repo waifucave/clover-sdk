@@ -1,4 +1,4 @@
-// 0.0.58: `@yanlinglabs/winter-web` installs alone. See web-pack-closure.ts for the rule.
+// 0.0.58: `@waifucave/clover-web` installs alone. See web-pack-closure.ts for the rule.
 import { describe, expect, test } from "bun:test";
 import type { PackedView } from "./provider-pack-closure.ts";
 import { packWebClosure, WEB_PACKAGE, webClosureViolations } from "./web-pack-closure.ts";
@@ -18,7 +18,7 @@ describe("webClosureViolations (pure)", () => {
 
   for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) {
     test(`refuses ANY entry in ${field}, a winter package or not`, () => {
-      expect(webClosureViolations(view({ [field]: { "@yanlinglabs/winter-provider-catalog": "0.0.58" } }))).toHaveLength(1);
+      expect(webClosureViolations(view({ [field]: { "@waifucave/clover-provider-catalog": "0.0.58" } }))).toHaveLength(1);
       expect(webClosureViolations(view({ [field]: { undici: "7.0.0" } }))).toHaveLength(1);
     });
   }
@@ -31,7 +31,7 @@ describe("webClosureViolations (pure)", () => {
 
   test("refuses a compiled file importing a bare package, a winter package or a bun: module", () => {
     expect(webClosureViolations(view({}, [{ path: "dist/a.js", head: TEXT, text: 'import x from "undici";' }]))).toHaveLength(1);
-    expect(webClosureViolations(view({}, [{ path: "dist/b.d.ts", head: TEXT, text: 'export type { X } from "@yanlinglabs/winter-agent-sdk";' }]))).toHaveLength(1);
+    expect(webClosureViolations(view({}, [{ path: "dist/b.d.ts", head: TEXT, text: 'export type { X } from "@waifucave/clover-agent-sdk";' }]))).toHaveLength(1);
     expect(webClosureViolations(view({}, [{ path: "dist/c.js", head: TEXT, text: 'const m = await import("bun:sqlite");' }]))).toHaveLength(1);
     expect(webClosureViolations(view({}, [{ path: "dist/d.js", head: TEXT, text: 'const m = require("http");' }]))).toHaveLength(1);
   });

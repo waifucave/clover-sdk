@@ -7,7 +7,7 @@
 // reading names it (`"\timeout" …`): bash runs a program called `\timeout`, not the one the rule's text
 // suggests.
 import { describe, expect, test } from "bun:test";
-import type { PermissionMode, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   NO_OPINION_AUTO_ENGINE,

@@ -35,8 +35,8 @@
 import "../descriptors/web-fetch.ts";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { WINTER_BRAND, type WebPrivateAddressPolicy } from "@yanlinglabs/winter-agent-sdk";
-import { winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
+import { type WebPrivateAddressPolicy, requireBrand } from "@waifucave/clover-agent-sdk";
+import { winterUserAgent } from "@waifucave/clover-provider-runtime";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { webSessionRuntimeFor, type WebSessionRuntime } from "../../web/session-runtime.ts";
 import { isDomainBlocked } from "./_domains.ts";
@@ -44,7 +44,7 @@ import { classifyHostname, classifyHostnameLexically, stripIpv6Brackets, UNRESOL
 import { isPreapprovedUrl } from "../../web/preapproved-hosts.ts";
 import { FETCHABLE_TARGET_SHAPE } from "../../web/fetchable-url.ts";
 import { convertFetchedHtml } from "./_web-fetch-html.ts";
-import { classifyContentType, webFetchDigestPrompt, WEB_FETCH_PERMISSIVE_GUIDELINES as PERMISSIVE_GUIDELINES, WEB_FETCH_STRICT_GUIDELINES as STRICT_GUIDELINES } from "@yanlinglabs/winter-web";
+import { classifyContentType, webFetchDigestPrompt, WEB_FETCH_PERMISSIVE_GUIDELINES as PERMISSIVE_GUIDELINES, WEB_FETCH_STRICT_GUIDELINES as STRICT_GUIDELINES } from "@waifucave/clover-web";
 import { webFetchCache, WebFetchCache, type WebFetchCacheEntry } from "./_web-fetch-cache.ts";
 import { defaultResolveHost, parseFailureMessage, performWebFetch, WEB_FETCH_TIMEOUT_MS, type NormalizedPrivateAddressPolicy, type WebFetchNetDeps } from "./_web-fetch-net.ts";
 import { INNER_MODEL_BUDGET_EXCEEDED_DETAIL, runInnerModel, type InnerModelFailureCode } from "./_inner-model.ts";
@@ -53,7 +53,7 @@ import { collectSiteIcons, pageIconUrl } from "./_site-icons.ts";
 const RESULT_CAP = 50_000;
 
 // The digest prompt (its 100,000-character page cap, both guideline texts) and the content-type
-// reading come from `@yanlinglabs/winter-web`, which builds the identical request for any host.
+// reading come from `@waifucave/clover-web`, which builds the identical request for any host.
 
 // --- input validation --------------------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ function webFetchHostnameOfCached(finalUrl: string): string | undefined {
 }
 
 function brandNameFor(ctx: ToolExecutionContext): string {
-  return ctx.brand?.productName ?? WINTER_BRAND.productName;
+  return requireBrand(ctx.brand).productName;
 }
 
 /** Races `promise` against `signal` aborting; resolves `"aborted"` first if the signal wins. `signal` may be absent (a hand-built test context) -- then this is just `await promise`. */
@@ -124,7 +124,7 @@ function capResult(text: string): string {
   return `${text.slice(0, RESULT_CAP)}\n\n[Result truncated at ${RESULT_CAP.toLocaleString("en-US")} characters.]`;
 }
 
-// Content classification is `@yanlinglabs/winter-web`'s `classifyContentType`. Fidelity #10
+// Content classification is `@waifucave/clover-web`'s `classifyContentType`. Fidelity #10
 // (corrections §4.10): claude converts ONLY when the content type includes `text/html` -- NOT
 // `application/xhtml+xml`, which falls through to the plain "text" branch as raw UTF-8.
 

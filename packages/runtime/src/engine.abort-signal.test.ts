@@ -2,7 +2,7 @@
 // input has already ENDED -- exactly the state a dead host leaves (its stdin closed when it died) --
 // where no `interrupt` frame can reach the engine any more.
 import { expect, test } from "bun:test";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { runEngine, type Provider } from "./engine.ts";
 import { stubExecutor } from "./provider/mock.ts";

@@ -17,9 +17,9 @@
 // this file's `bedrockCorpus` namespace is NO LONGER re-exported from `../index.ts`'s top-level
 // barrel: nothing outside this package's own `.test.ts` files ever imported it by package name, so
 // dropping it from the PUBLISHED surface is a no-op for every real consumer and the only way to make
-// `@yanlinglabs/winter-provider-conformance` (bare) actually install (review r1 Critical Finding 2).
+// `@waifucave/clover-provider-conformance` (bare) actually install (review r1 Critical Finding 2).
 //
-// Everything else below now comes through `@yanlinglabs/winter-provider-runtime`'s own public barrel
+// Everything else below now comes through `@waifucave/clover-provider-runtime`'s own public barrel
 // (main entry) or its `/testing` subpath (`encodeEventStreamMessage`, test-only) -- the frozen-file
 // reach-through this header used to describe no longer applies to any of them.
 import { adapterAsProvider, foldProviderStream } from "../../../runtime/src/provider/bridge.ts";
@@ -35,10 +35,10 @@ import {
   type ProviderMessageLike,
   type TurnRequest,
   type ResolvedModel,
-} from "@yanlinglabs/winter-provider-runtime";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import { encodeEventStreamMessage } from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import { encodeEventStreamMessage } from "@waifucave/clover-provider-runtime/testing";
 import { FAKE_ACCESS_KEY_ID, FAKE_REGION, FAKE_SECRET_ACCESS_KEY, bedrockError, converseStreamEvent, converseStreamException, eventStreamResponse, textTurnFrames } from "../fakes/bedrock.ts";
 import { jsonResponse, type FakeServer, type ScenarioResponder } from "../fakes/server.ts";
 import type { CorpusCaseId, CorpusCaseImpl } from "./runner.ts";

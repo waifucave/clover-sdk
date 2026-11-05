@@ -9,9 +9,9 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { CredentialResolutionError } from "@yanlinglabs/winter-provider-runtime";
-import { TEST_KEYCHAIN_ENV as SDK_TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY as SDK_TEST_KEYCHAIN_MEMORY } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { CredentialResolutionError } from "@waifucave/clover-provider-runtime";
+import { TEST_KEYCHAIN_ENV as SDK_TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY as SDK_TEST_KEYCHAIN_MEMORY } from "@waifucave/clover-agent-sdk";
 import { createKeychainCredentialStore, createKeychainRawStore, createKeychainSecretReader, keychainAccountName, DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type SecretsBackend } from "./keychain-store.ts";
 import { createProductionCredentialStore } from "./session-provider.ts";
 import * as keychainGuard from "../../../../scripts/test-keychain-guard.ts";
@@ -276,11 +276,12 @@ describe("the test Keychain redirect (the Keychain-dialog incident) and the prel
     // A fresh process (this one announced long ago). Spawned through the preload's wrapper, so it carries
     // the redirect and the guard.
     const code = [
-      `const { createKeychainCredentialStore } = await import(${JSON.stringify(join(import.meta.dir, "keychain-store.ts"))});`,
-      `const store = createKeychainCredentialStore();`,
+      `const { createKeychainCredentialStore, DEFAULT_KEYCHAIN_SERVICE } = await import(${JSON.stringify(join(import.meta.dir, "keychain-store.ts"))});`,
+      // A1: no default brand, so a fresh process names the service (here Winter's own, redirected to memory).
+      `const store = createKeychainCredentialStore(DEFAULT_KEYCHAIN_SERVICE);`,
       `await store.set({ kind: "keychain", account: "announce:probe" }, { kind: "api-key", key: ${JSON.stringify(SECRET)} });`,
       `await store.get({ kind: "keychain", account: "announce:probe" });`,
-      `await createKeychainCredentialStore().get({ kind: "keychain", account: "anthropic:default" });`,
+      `await createKeychainCredentialStore(DEFAULT_KEYCHAIN_SERVICE).get({ kind: "keychain", account: "anthropic:default" });`,
       `console.log("done");`,
     ].join("\n");
     const proc = Bun.spawn([process.execPath, "-e", code], { stdout: "pipe", stderr: "pipe" });

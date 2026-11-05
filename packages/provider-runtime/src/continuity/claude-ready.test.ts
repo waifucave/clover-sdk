@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { toClaudeReady, type ProviderStateRecord } from "./claude-ready.ts";
 import { RECOVERED_REASONING_TAG } from "./decoration.ts";
 import type { ContinuityEndpoint } from "./domains.ts";

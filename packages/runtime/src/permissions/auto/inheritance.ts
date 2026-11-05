@@ -2,7 +2,7 @@
 // are P4"): no subagent spawn/resume machinery exists anywhere in this codebase yet. This module
 // only proves the MECHANICS (the forced-mode table, the bypass veto, the stricter-of resume rule)
 // so P4's real child-spawn/resume code has something correct to call.
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 import type { PolicyState } from "../policy-state.ts";
 import { computePolicyHash } from "./caches.ts";
 

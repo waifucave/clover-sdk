@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 interface Citation {
   /**
    * Resolved as a URL relative to THIS file. Phase 7b (R-7b-4) moved the pure messaging modules and
-   * their tests into `@yanlinglabs/winter-agent-sdk/messaging`, so the citations that used to read
+   * their tests into `@waifucave/clover-agent-sdk/messaging`, so the citations that used to read
    * `../messaging/<x>.test.ts` now reach across the package boundary -- the tests did not change,
    * only where they live. The reference adapter's own tests stayed here.
    */

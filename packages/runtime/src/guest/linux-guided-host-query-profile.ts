@@ -1,5 +1,5 @@
 /** Guided parent policy validation only; matching DATA cannot create native admission. */
-import { parseRuntimeContextConfig, type RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import { parseRuntimeContextConfig, type RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import type { GuestFileRoot } from "./file-helper.ts";
 import { assertLinuxHostQueryConfig, assertLinuxHostQueryRoots } from "./linux-host-query-profile.ts";
 import { parseLinuxGuidedReaderRegistration, type LinuxGuidedReaderRegistration } from "./linux-guided-reader-protocol.ts";

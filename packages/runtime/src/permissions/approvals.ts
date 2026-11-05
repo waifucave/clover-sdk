@@ -30,7 +30,7 @@
 import { mkdirSync, lstatSync, chmodSync, openSync, writeSync, fsyncSync, closeSync, readFileSync, constants as fsConstants } from "node:fs";
 import { guardedDurableMethods, type DurableOperationGuard } from "../store/durable-authority.ts";
 import { join, resolve } from "node:path";
-import type { PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@waifucave/clover-agent-sdk";
 // Fix round 1, Ruling P2-K: the SAME symlink-chasing primitive the rest of the permission engine
 // already uses (checkSymlinkBothEnds/matchFileRuleAtBothEnds) — reused, not duplicated, so this
 // store's own "normalized paths" revalidation axis can never silently drift from it. See
@@ -128,7 +128,7 @@ export interface DurableApprovalRecord {
 }
 
 // The constant this runtime stamps into every record it issues (WS-15's own naming: "runtimeKind
-// 'winter-agent' -> @yanlinglabs/winter-agent-sdk -> winter runtime"). Exported so engine.ts never
+// 'winter-agent' -> @waifucave/clover-agent-sdk -> winter runtime"). Exported so engine.ts never
 // hand-copies the string.
 export const WINTER_RUNTIME_KIND = "winter-agent";
 

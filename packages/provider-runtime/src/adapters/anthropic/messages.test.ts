@@ -11,8 +11,8 @@ import { anthropicWireModelId, blockBindingBetaFor, buildHeaders, buildRequestBo
 import { ProviderRequestError } from "../../http.ts";
 import { createEndpointPolicy } from "../../endpoint-policy.ts";
 import type { CredentialMaterial, CredentialRef, ProviderContext, TurnRequest } from "../../types.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog, stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog, stampFamilyFields } from "@waifucave/clover-provider-catalog";
 
 const evidence = <T>(value: T) => ({ value, source: "upstream-static" as const, confidence: "inferred" as const });
 

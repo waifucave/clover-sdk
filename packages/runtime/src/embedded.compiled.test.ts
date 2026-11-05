@@ -24,12 +24,14 @@ test("a compiled host runs one embedded session in a Worker built from its plain
   writeFileSync(
     join(dir, "host.ts"),
     [
-      `import { query } from ${JSON.stringify(SDK_INDEX)};`,
+      `import { query, WINTER_BRAND } from ${JSON.stringify(SDK_INDEX)};`,
       `import { spawnEmbeddedWorker } from ${JSON.stringify(join(RUNTIME_SRC, "embedded-host.ts"))};`,
       `import { RUNTIME_VERSION } from ${JSON.stringify(join(RUNTIME_SRC, "version.ts"))};`,
       `let exit;`,
       `const messages = [];`,
       `for await (const m of query({ prompt: "go", options: {`,
+      // A1: a host names its brand (the SDK has no default); this repository's probes are Winter's own.
+      `  brand: WINTER_BRAND,`,
       `  model: "winter-test/tooluse",`,
       `  cwd: process.env.PROBE_CWD,`,
       `  env: { PATH: process.env.PATH, WINTER_HOME: process.env.PROBE_HOME, WINTER_DISABLE_GIT_INSTRUCTIONS: "1" },`,

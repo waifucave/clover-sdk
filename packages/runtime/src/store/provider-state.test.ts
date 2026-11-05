@@ -10,7 +10,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, rmSync, readFileSync, statSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compatibilityKeys, type SessionKey, type SessionStore, type SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import { compatibilityKeys, type SessionKey, type SessionStore, type SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import {
   PROVIDER_STATE_ENTRY_TYPE,
   PROVIDER_STATE_SUBPATH,
@@ -459,7 +459,7 @@ describe("round 2: a forked CHILD of a persisted parent emits NO continuity warn
       const cwd = mkdtempSync(join(tmpdir(), "winter-p6-child-id-"));
       try {
         const { buildChildTranscriptWriter } = await import("./dialect.ts");
-        const { WinterCompatibilitySessionStore } = await import("@yanlinglabs/winter-agent-sdk");
+        const { WinterCompatibilitySessionStore } = await import("@waifucave/clover-agent-sdk");
         const projectKey = compatibilityKeys(cwd).transcriptProjectKey;
         const store = new WinterCompatibilitySessionStore({ winterHome: home });
 

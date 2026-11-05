@@ -10,10 +10,10 @@
 // catalog-backed registry -- proving the two lanes actually meet, not just that each one
 // independently believes the other does its part.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { ProviderAdapter, ProviderMessageLike } from "@yanlinglabs/winter-provider-runtime";
-import { createRegistry, createHistoryRenderer, RECOVERED_REASONING_TAG, type ProviderRegistry, type HistoryTarget } from "@yanlinglabs/winter-provider-runtime";
-import type { SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import type { ProviderAdapter, ProviderMessageLike } from "@waifucave/clover-provider-runtime";
+import { createRegistry, createHistoryRenderer, RECOVERED_REASONING_TAG, type ProviderRegistry, type HistoryTarget } from "@waifucave/clover-provider-runtime";
+import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { toDialectEntries, rebuildProviderMessages } from "./resume.ts";
 
 function stubAdapter(adapterId: string): ProviderAdapter {

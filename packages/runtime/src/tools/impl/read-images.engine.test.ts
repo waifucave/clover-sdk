@@ -12,12 +12,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { SessionStoreEntry, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStoreEntry, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { assistantEntry, userEntry, type SessionCtx } from "../../store/dialect.ts";
 import { rebuildProviderMessages, toDialectEntries } from "../../store/resume.ts";
 import { createInMemoryChannel } from "../../protocol/channel.ts";
 import { ProviderTurnError, runEngine, type ContentBlock, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest } from "../../engine.ts";
-import { IMAGE_BUDGET_NOTE } from "@yanlinglabs/winter-provider-runtime";
+import { IMAGE_BUDGET_NOTE } from "@waifucave/clover-provider-runtime";
 import { toWireMessages } from "../../../../provider-runtime/src/adapters/anthropic/messages.ts";
 import { MODEL_DOES_NOT_SUPPORT_IMAGES } from "./read.ts";
 

@@ -30,7 +30,7 @@ import { restoredChildHandle } from "./restore.ts";
 import { createScriptedProviderFake } from "./test-fakes.ts";
 import { resetSpawnLimitsForTest } from "./limits.ts";
 import type { RecordedModelEffort } from "./resolution.ts";
-import type { GlobalAgentMessage } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { GlobalAgentMessage } from "@waifucave/clover-agent-sdk/messaging";
 
 const tempDirs: string[] = [];
 function freshSessionRoot(): string {

@@ -4,13 +4,13 @@
 // what is under test is the RESOLUTION ORDER and the refusals, and a fixture bound to the seed
 // catalog's rows would start failing for reasons that have nothing to do with either.
 import { test, expect, describe } from "bun:test";
-import type { ProviderAdapter } from "@yanlinglabs/winter-provider-runtime";
-import { WinterProviderResolutionError, createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { canonicalModelIdOf } from "@yanlinglabs/winter-provider-catalog";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { ProviderAdapter } from "@waifucave/clover-provider-runtime";
+import { WinterProviderResolutionError, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { canonicalModelIdOf } from "@waifucave/clover-provider-catalog";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { createProviderContext, createSelectionRegistry, redactCredentialRef, resolveSessionProvider, resolveStallTimeoutMs, WINTER_TEST_NAMESPACE } from "./selection.ts";
-import { DEFAULT_PROVIDER_STALL_TIMEOUT_MS } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_PROVIDER_STALL_TIMEOUT_MS } from "@waifucave/clover-agent-sdk";
 import type { Provider } from "../engine.ts";
 
 const adapter = (id: string, family: "openai" | "anthropic"): ProviderAdapter => ({

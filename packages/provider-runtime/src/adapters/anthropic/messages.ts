@@ -51,8 +51,8 @@
 //      -- the same order a consumer would have seen, since every retry precedes the stream by
 //      construction.
 import { cacheControlFor, resolveCacheTtls, type CacheTtl } from "../cache-ttl.ts";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { boundedFetch, ProviderRequestError } from "../../http.ts";
 import { isBillingErrorBody, normalizeHttpError, normalizeThrown } from "../../errors.ts";
 import { createRetryPolicy, withRetry, type RetryPolicyOptions } from "../../retry.ts";

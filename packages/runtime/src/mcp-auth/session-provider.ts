@@ -27,7 +27,7 @@
 // NO HOST HANDLER (a standalone SDK user, one process): the host's answer is "no handler registered", and
 // the session refreshes IN-PROCESS through the same `refreshMcpOAuthToken` a host runs -- single-flight
 // and generation-checked within this process.
-import type { McpOAuthRefreshAnswer, McpOAuthRefreshRequest } from "@yanlinglabs/winter-agent-sdk";
+import type { McpOAuthRefreshAnswer, McpOAuthRefreshRequest } from "@waifucave/clover-agent-sdk";
 import { mcpOAuthTokenAccount } from "./account.ts";
 import { MCP_OAUTH_EXPIRY_SKEW_MS, MCP_OAUTH_SESSION_CACHE_MS } from "./constants.ts";
 import type { McpOAuthTokenRecord } from "./records.ts";

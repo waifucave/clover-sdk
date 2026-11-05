@@ -5,7 +5,7 @@
 // switch. A resume onto a model whose source is out of reach compacts on the target, its summarizer
 // bounded to what the target can read.
 import { describe, expect, test } from "bun:test";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { createContextAccountant, runEngine, type ContextAccountant, type EngineOptions, type EngineProviderIdentity, type ModelDescription, type Provider, type ProviderMessage, type ProviderRequest, type ResolveModelSwitch } from "../engine.ts";
 import { createCompactionController } from "../compaction/controller.ts";

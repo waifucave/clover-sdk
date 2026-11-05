@@ -8,7 +8,7 @@
 // `reasoning-progress.test.ts`; this file owns what only the Anthropic adapter decides.
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { THINKING_DISPLAY_UPDATES_BETA, buildRequestBody, createAnthropicMessagesAdapter, findDescriptor, thinkingDisplayUpdatesBetaFor, thinkingProgressMode } from "./messages.ts";
 import { createMemoryCredentialStore } from "../../credentials/memory.ts";
 import type { ProviderContext, ProviderEvent, TurnRequest } from "../../types.ts";

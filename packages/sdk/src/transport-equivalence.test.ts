@@ -41,11 +41,12 @@ import { ResultError, ProcessError, AbortError, CLIConnectionError } from "./err
 import { encodeFrame, splitFrames } from "./protocol/codec.ts";
 import type { WinterFrame, ControlRequestFrame, ControlResponseFrame } from "./protocol/frames.ts";
 import type { RuntimeConfig } from "./protocol/config.ts";
+import { WINTER_BRAND } from "./brand.ts";
 import type { CanUseTool, PermissionMode } from "./permissions/types.ts";
 import { TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type Options, type WinterMcpServerInstance } from "./options.ts";
 import type { ModelInfo } from "./protocol/config.ts";
 import { PROVIDER_STATE_FILE_SUFFIX } from "./store/session-store.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 import {
   echoProvider,
   stubExecutor,
@@ -79,8 +80,8 @@ import {
   recordedProviderSystems,
   resetRecordedProviderSystems,
   type ScenarioFake,
-} from "@yanlinglabs/winter-agent-runtime";
-import { normalizeTrace, compareTraces, type ConformanceTraceEntry } from "@yanlinglabs/winter-conformance/trace";
+} from "@waifucave/clover-agent-runtime";
+import { normalizeTrace, compareTraces, type ConformanceTraceEntry } from "@waifucave/clover-conformance/trace";
 import type { MessagingIdleNoticePayload } from "./protocol/messaging.ts";
 
 // Task 8: every engine run in this file persists by default (RuntimeConfig.persistSession defaults
@@ -610,7 +611,8 @@ function buildRawProc(leg: LegName, testProviderName: TestProviderName | undefin
   // Phase 5 Task 8: `extraConfig` exists because a spawned/compiled leg receives its WHOLE
   // configuration as `--config-json` -- there is no other channel, so a raw-driven scenario that
   // needs a non-default option (checkpointing, a context window) has to put it here.
-  const config: RuntimeConfig = { sessionId, cwd: FIXTURE_CWD, model: FIXTURE_MODEL, ...extraConfig };
+  // A1: a host always sends its brand (the SDK has no default, and a real child installs nothing else).
+  const config: RuntimeConfig = { sessionId, cwd: FIXTURE_CWD, model: FIXTURE_MODEL, brand: WINTER_BRAND, ...extraConfig };
   return hook({
     command: "winter", // placeholder — ignored by both legs' hooks above (matches query.ts's own "winter" placeholder when a custom spawn hook is set)
     args: ["--run", "--config-json", JSON.stringify(config)],

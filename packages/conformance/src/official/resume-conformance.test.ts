@@ -25,7 +25,7 @@ import { fetchAndVerifyUpstream } from "./fetch.ts";
 // never a package.json dependency -- `packages/conformance` publishes independently of
 // `winter-agent-runtime` (which is private, never published), and a devDependency on it created a
 // cyclic workspace-devDependency triangle with packages/sdk (which already devDepends on
-// @yanlinglabs/winter-conformance for ITS OWN tests). This file is never built into conformance's
+// @waifucave/clover-conformance for ITS OWN tests). This file is never built into conformance's
 // own `dist/` (test files are excluded from the package build), so the relative import never
 // reaches a published tarball either -- it exists only for `bun test`/`tsc --noEmit` inside this
 // repository checkout, exactly where the sibling package's source already lives on disk.

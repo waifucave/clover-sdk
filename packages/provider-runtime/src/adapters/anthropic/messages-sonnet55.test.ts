@@ -6,8 +6,8 @@
 import { describe, expect, test } from "bun:test";
 import { blockBindingBetaFor, buildRequestBody, perMessageEffortBetaFor, toolChangesBetaFor } from "./messages.ts";
 import type { ProviderMessageLike, TurnRequest } from "../../types.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 
 const catalog = loadCatalog();
 const compiled = (key: string): WinterModelDescriptor => {

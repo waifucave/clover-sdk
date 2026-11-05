@@ -16,8 +16,8 @@
 // `partitionAdvertisedTools` (never a hand-built ToolDescriptor object asserted against in isolation)
 // so a fixture can never pass by agreeing with itself.
 import { partitionAdvertisedTools, type AdvertisedSetInputs, type DeferralActivation, type ToolDescriptor } from "../tools/registry.ts";
-import { hideAliasExcludedTwins } from "./aliases.ts";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import { hideAliasExcludedTwins, type AliasBrand } from "./aliases.ts";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 
 // The subset of `AdvertisedSetInputs` ToolSearch/WaitForMcpServers need, plus the `DeferralActivation`
 // `partitionAdvertisedTools` itself requires as a second argument. `mode` is taken as a plain value
@@ -42,6 +42,14 @@ export interface ExposureQuery {
   // that supplies nothing here still gets the C2 guarantee for the two canonical twins -- this field
   // only widens the same guarantee to a host-configured alias edge.
   toolAliases?: Record<string, string>;
+  /**
+   * The session's brand (`RuntimeConfig.brand`), whose `mcpServerName` spells the standing server's
+   * canonical twins of `SendMessage`/`ListAgents` (`mcp__<mcpServerName>__send_message`, …). Absent,
+   * the SDK's default brand spells them, which is right only for a host that never set one: a host
+   * with its own brand (Clover's `mcp__clover__…`) must pass it, or the candidate pool would hide the
+   * default brand's twins and list the host's own as loadable while their natives are withheld.
+   */
+  brand?: AliasBrand;
   /**
    * Fix round 21: the run's own scope over the process-wide registry -- engine.ts passes the SAME
    * predicate its advertised partition applies (`computeAdvertisedPartition`: a live server's MCP tool
@@ -92,7 +100,7 @@ export function computeExposurePartition(query: ExposureQuery): DeferredCandidat
   // off (where `partition.deferred` is empty by construction) and change a committed golden's own
   // count. Duplicate suppression is a MODEL-FACING listing concern that `init.tools` owns; exclusion
   // is a security concern both surfaces owe.
-  const partition = hideAliasExcludedTwins(partitionAdvertisedTools(cfg, query.activation), query.toolAliases, query.disallowedTools);
+  const partition = hideAliasExcludedTwins(partitionAdvertisedTools(cfg, query.activation), query.toolAliases, query.disallowedTools, query.brand);
   // Fix round 21: the run's own scope (see `ExposureQuery.toolFilter`), applied to all three lists so
   // `total_deferred_tools` counts only what this run could load.
   const keep = query.toolFilter;

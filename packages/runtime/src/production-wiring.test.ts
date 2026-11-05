@@ -16,8 +16,8 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpath
 import { execFileSync } from "node:child_process";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "./testing.ts";
 import { buildProductionWiring, assertEffectiveSettings, withAutoSkillPermissions } from "./production-wiring.ts";
 import { runCommand } from "./sandbox/spawn.ts";
@@ -26,9 +26,9 @@ import { splitDenyPathsByGlobShape, globDenyEntriesOf } from "./permissions/file
 import { pingFixtureCommand } from "./mcp/test-fixtures.ts";
 // WS-13c (P6.6): the slot resolver probes credentials, so these fixtures inject an in-memory store
 // rather than letting the production composite reach the developer's real Keychain.
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { providerCredentialRef } from "./provider/credential-api.ts";
-import { loadCatalog, rowsForCanonicalId } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog, rowsForCanonicalId } from "@waifucave/clover-provider-catalog";
 import type { DetailedResolvedSettings } from "./settings/resolve.ts";
 import { recordedProviderSystems, resetRecordedProviderSystems, scriptedProvider } from "./provider/mock.ts";
 import type { Provider, ProviderRequest, ProviderTurn } from "./engine.ts";
@@ -2084,7 +2084,7 @@ describe("WS-13c: the wiring's model-family surface", () => {
 });
 
 // WS-21 lane L1b, Task L1b.2 (spec §5.2/§6.3 item 5): the shared plugins root -- both runtimes read
-// the SAME `installed_plugins.json` (`@yanlinglabs/winter-agent-sdk`'s `manage.ts` writes it; this
+// the SAME `installed_plugins.json` (`@waifucave/clover-agent-sdk`'s `manage.ts` writes it; this
 // suite writes it directly, the same shape a real `winter plugin install` would leave behind) and the
 // SAME settings `enabledPlugins` map gates what natively loads.
 describe("WS-21 §5.2/§6.3 item 5: the shared plugins root -- installed + enabled plugins load natively", () => {
@@ -2157,11 +2157,11 @@ describe("WS-21 §5.2/§6.3 item 5: the shared plugins root -- installed + enabl
   });
 
   test("a directory marketplace's plugin loads IN PLACE -- straight from the marketplace's own directory, nothing copied", async () => {
-    // Built with the SDK's own management API (`@yanlinglabs/winter-agent-sdk`'s `manage.ts`) --
+    // Built with the SDK's own management API (`@waifucave/clover-agent-sdk`'s `manage.ts`) --
     // the real `winter plugin marketplace add` + `winter plugin install` path, not a hand-written
     // installed_plugins.json -- so this proves the two modules (the CLI-facing writer, the
     // runtime-facing reader) actually agree on the file.
-    const { addMarketplace, installPlugin } = await import("@yanlinglabs/winter-agent-sdk");
+    const { addMarketplace, installPlugin } = await import("@waifucave/clover-agent-sdk");
     const marketplaceDir = join(home, "local-marketplace");
     mkdirSync(join(marketplaceDir, ".claude-plugin"), { recursive: true });
     writeFileSync(
@@ -2197,7 +2197,7 @@ describe("WS-21 §5.2/§6.3 item 5: the shared plugins root -- installed + enabl
   // editing settings directly (or a host that manages enablement without going through the install
   // flow) rather than running the CLI's install command.
   test("a plugin enabled ONLY in settings.json (no installed_plugins.json record) loads via its directory marketplace, matching real claude (SV-4)", async () => {
-    const { addMarketplace } = await import("@yanlinglabs/winter-agent-sdk");
+    const { addMarketplace } = await import("@waifucave/clover-agent-sdk");
     const marketplaceDir = join(home, "local-marketplace-sv4");
     mkdirSync(join(marketplaceDir, ".claude-plugin"), { recursive: true });
     writeFileSync(

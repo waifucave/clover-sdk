@@ -1,7 +1,7 @@
 // WS-25 §2: the contract the daemon lane builds against -- the account ids, the record codec and the
 // public subpath. Behaviour, not shape: each test pins a rule a host relies on.
 import { describe, expect, test } from "bun:test";
-import * as subpath from "@yanlinglabs/winter-agent-runtime/mcp-auth";
+import * as subpath from "@waifucave/clover-agent-runtime/mcp-auth";
 import { canonicalMcpServerUrl, clientAccountForTokenAccount, mcpOAuthAccountId, mcpOAuthClientAccount, mcpOAuthTokenAccount } from "./account.ts";
 import { McpOAuthError } from "./errors.ts";
 import { decodeMcpOAuthClientRecord, decodeMcpOAuthTokenRecord, encodeMcpOAuthTokenRecord, type McpOAuthTokenRecord } from "./records.ts";

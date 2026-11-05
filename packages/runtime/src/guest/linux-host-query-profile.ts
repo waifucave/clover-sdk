@@ -1,8 +1,8 @@
 /** Pure closed-profile checks. Passing these checks never creates a native admission. */
 import type { GuestFileRoot } from "./file-helper.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE } from "@yanlinglabs/winter-agent-sdk";
-import { isHostMessageSendAnswer, normaliseHostMessageListAnswer } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE } from "@waifucave/clover-agent-sdk";
+import { isHostMessageSendAnswer, normaliseHostMessageListAnswer } from "@waifucave/clover-agent-sdk/messaging";
 
 export const LINUX_HOST_QUERY_PROFILE = "host-query-v1" as const;
 export const LINUX_SESSION_FRAME_BYTES = 1024 * 1024;

@@ -1,11 +1,11 @@
 // 0.0.56 (W9): the values and shapes `winter-defaults.ts` declares are the sdk's own, kept equal here.
 //
-// This is the ONE place in the package that may import `@yanlinglabs/winter-agent-sdk` (a dev
+// This is the ONE place in the package that may import `@waifucave/clover-agent-sdk` (a dev
 // dependency): a test is never published, so it costs a consumer nothing, and it is what turns two
 // declarations into one meaning -- a change to either side fails this file.
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_COMPACTION_THRESHOLD, FIRST_PARTY_ORIGINATORS as SDK_FIRST_PARTY_ORIGINATORS, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
-import type { CredentialRef as SdkCredentialRef, ModelInfo as SdkModelInfo, SessionStoreEntry as SdkSessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_COMPACTION_THRESHOLD, FIRST_PARTY_ORIGINATORS as SDK_FIRST_PARTY_ORIGINATORS, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import type { CredentialRef as SdkCredentialRef, ModelInfo as SdkModelInfo, SessionStoreEntry as SdkSessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { FIRST_PARTY_ORIGINATORS, WINTER_DEFAULT_COMPACTION_THRESHOLD, WINTER_DEFAULT_IDENTITY, WINTER_INSTRUCTIONS_FILE } from "./winter-defaults.ts";
 import type { CredentialRef, ModelInfo, SessionStoreEntry } from "./winter-defaults.ts";
 

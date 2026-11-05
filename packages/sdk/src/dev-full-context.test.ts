@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { query } from "./query.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 import { recognizeEditOperation } from "../../runtime/src/permissions/edit-recognition.ts";
 import { flattenSubcommands } from "../../runtime/src/permissions/shell-structure.ts";
 import { isProtectedWrite } from "../../runtime/src/permissions/protected.ts";

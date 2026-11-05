@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { loadCatalog, stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog, stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter } from "./types.ts";
 import { WinterProviderResolutionError, createRegistry, estimateCostUsd } from "./registry.ts";
 

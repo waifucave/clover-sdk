@@ -14,9 +14,9 @@ import type {
   WinterCatalog,
   WinterModelDescriptor,
   WinterProviderDescriptor,
-} from "@yanlinglabs/winter-provider-catalog";
+} from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter, ProviderEvent, ProviderFamily } from "../types.ts";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 import { readableStateOf } from "./domains.ts";
 
 export const evidence = <T>(value: T, confidence: EvidenceConfidence = "verified"): CapabilityEvidence<T> => ({

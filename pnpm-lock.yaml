@@ -11,25 +11,25 @@ importers:
       '@types/bun':
         specifier: ^1.3.0
         version: 1.4.0
-      '@yanlinglabs/winter-agent-runtime':
+      '@waifucave/clover-agent-runtime':
         specifier: workspace:*
         version: link:packages/runtime
-      '@yanlinglabs/winter-agent-sdk':
+      '@waifucave/clover-agent-sdk':
         specifier: workspace:*
         version: link:packages/sdk
-      '@yanlinglabs/winter-conformance':
+      '@waifucave/clover-conformance':
         specifier: workspace:*
         version: link:packages/conformance
-      '@yanlinglabs/winter-provider-catalog':
+      '@waifucave/clover-provider-catalog':
         specifier: workspace:*
         version: link:packages/provider-catalog
-      '@yanlinglabs/winter-provider-conformance':
+      '@waifucave/clover-provider-conformance':
         specifier: workspace:*
         version: link:packages/provider-conformance
-      '@yanlinglabs/winter-provider-runtime':
+      '@waifucave/clover-provider-runtime':
         specifier: workspace:*
         version: link:packages/provider-runtime
-      '@yanlinglabs/winter-web':
+      '@waifucave/clover-web':
         specifier: workspace:*
         version: link:packages/web
       typescript:
@@ -40,24 +40,28 @@ importers:
 
   packages/platform/darwin-arm64: {}
 
-  packages/provider-catalog: {}
+  packages/provider-catalog:
+    devDependencies:
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
 
   packages/provider-conformance:
     dependencies:
-      '@yanlinglabs/winter-provider-catalog':
+      '@waifucave/clover-provider-catalog':
         specifier: workspace:*
         version: link:../provider-catalog
-      '@yanlinglabs/winter-provider-runtime':
+      '@waifucave/clover-provider-runtime':
         specifier: workspace:*
         version: link:../provider-runtime
 
   packages/provider-runtime:
     dependencies:
-      '@yanlinglabs/winter-provider-catalog':
+      '@waifucave/clover-provider-catalog':
         specifier: workspace:*
         version: link:../provider-catalog
     devDependencies:
-      '@yanlinglabs/winter-agent-sdk':
+      '@waifucave/clover-agent-sdk':
         specifier: workspace:*
         version: link:../sdk
 
@@ -66,16 +70,16 @@ importers:
       '@modelcontextprotocol/client':
         specifier: ^2.1.0
         version: 2.1.0
-      '@yanlinglabs/winter-agent-sdk':
+      '@waifucave/clover-agent-sdk':
         specifier: workspace:*
         version: link:../sdk
-      '@yanlinglabs/winter-provider-catalog':
+      '@waifucave/clover-provider-catalog':
         specifier: workspace:*
         version: link:../provider-catalog
-      '@yanlinglabs/winter-provider-runtime':
+      '@waifucave/clover-provider-runtime':
         specifier: workspace:*
         version: link:../provider-runtime
-      '@yanlinglabs/winter-web':
+      '@waifucave/clover-web':
         specifier: workspace:*
         version: link:../web
       ajv:
@@ -91,21 +95,21 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@yanlinglabs/winter-provider-catalog':
+      '@waifucave/clover-provider-catalog':
         specifier: workspace:*
         version: link:../provider-catalog
     devDependencies:
       '@types/node':
         specifier: ^26.4.0
         version: 26.4.0
-      '@yanlinglabs/winter-agent-runtime':
+      '@waifucave/clover-agent-runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@yanlinglabs/winter-conformance':
+      '@waifucave/clover-conformance':
         specifier: workspace:*
         version: link:../conformance
     optionalDependencies:
-      '@yanlinglabs/winter-agent-sdk-darwin-arm64':
+      '@waifucave/clover-agent-sdk-darwin-arm64':
         specifier: workspace:*
         version: link:../platform/darwin-arm64
 

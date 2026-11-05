@@ -9,8 +9,8 @@ import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { WinterFrame, RuntimeConfig, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
-import { WinterCompatibilitySessionStore, compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame, RuntimeConfig, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
+import { WinterCompatibilitySessionStore, compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { runEngine, createContextAccountant, type Provider } from "../engine.ts";
 import { isCompactionSummaryRequest as isSummaryRequest } from "../compaction/summarizer.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
@@ -33,7 +33,7 @@ import { buildProductionWiring } from "../production-wiring.ts";
 import { registerDefaultChildEngineFactory } from "./register-default-factory.ts";
 // Residual round 2 (R-2): the real entrypoint, because the entrypoint IS the defect.
 import { inMemoryProcess } from "../testing.ts";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
 
 
 
@@ -135,7 +135,7 @@ function registerSpawnAndRegister(): void {
   });
 }
 
-function fakeGlobalMessage(body: string): import("@yanlinglabs/winter-agent-sdk/messaging").GlobalAgentMessage {
+function fakeGlobalMessage(body: string): import("@waifucave/clover-agent-sdk/messaging").GlobalAgentMessage {
   const addr = { objectKind: "session" as const, runtimeKind: "winter-agent" as const, winterSessionId: "s1" };
   return {
     messageId: `m-${randomUUID()}`, from: addr, fromGeneration: 1, to: addr, toGeneration: 1,

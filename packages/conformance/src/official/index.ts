@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-conformance/official` — the pinned-upstream mechanics (WS-02 §6), as an
+// `@waifucave/clover-conformance/official` — the pinned-upstream mechanics (WS-02 §6), as an
 // importable surface rather than a repo-relative script path (P7a Lane C, WS-02 §9 Step 2).
 //
 // Two independent halves, re-exported from their own modules:

@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { PermissionMode, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 import { evaluate, NO_OPINION_AUTO_ENGINE, NO_OPINION_HOOK_STAGE, REAL_SPECIAL_CHECKS, type EvaluationContext, type PermissionCall, type PromptStageMeta } from "./evaluator.ts";
 import { emptyRuleSet, sourceRule, type SourcedRuleEntry } from "./ruleset.ts";
 

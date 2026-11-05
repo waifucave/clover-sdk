@@ -221,7 +221,7 @@ jobs:
     # throwaway project outside the repo, and imports every declared entry point under Node 18.
     #
     # The Node leg asserts only what a package DECLARES: `engines.node` means "a Node consumer may
-    # import this", and `@yanlinglabs/winter-provider-conformance` declares `engines.bun` alone
+    # import this", and `@waifucave/clover-provider-conformance` declares `engines.bun` alone
     # because it stands up loopback servers with `Bun.serve` -- a deliberate design decision
     # `tsconfig.sdk-fence.json` records in prose, which a compiled emit cannot and should not change.
     # A package declaring NEITHER engine is required under both, so a new one cannot opt out by
@@ -244,7 +244,7 @@ jobs:
         run: bun run scripts/smoke-installed.ts --runtime=node
 
   web-node:
-    # 0.0.58: `@yanlinglabs/winter-web` promises Node >= 20 as well as Bun, so it is proven under Node
+    # 0.0.58: `@waifucave/clover-web` promises Node >= 20 as well as Bun, so it is proven under Node
     # here, on the oldest and a current line. Its own suite (node:test + node:assert, real loopback
     # TLS servers, a fake resolver, no network) runs under Node's type stripping (22.18+); the BUILT
     # package is probed under every line (scripts/web-node-probe.mjs: refusals in every literal

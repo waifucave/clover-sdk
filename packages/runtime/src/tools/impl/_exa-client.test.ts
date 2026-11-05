@@ -22,7 +22,7 @@ import {
 } from "./_exa-client.ts";
 import { advancedPayload, basicPayload, tooManyRequests, withExaFixture, type ExaFixtureHttpRequest } from "./_exa-fixture.test-support.ts";
 import { createFakeConnectedMcpClient, withHttpFixture } from "../../mcp/test-fixtures.ts";
-import { resolveWebToolsConfig } from "@yanlinglabs/winter-agent-sdk";
+import { resolveWebToolsConfig } from "@waifucave/clover-agent-sdk";
 
 const KEY = "exa-key-3f9c1b7e-THE-SECRET";
 const found = async () => ({ status: "found" as const, key: KEY });

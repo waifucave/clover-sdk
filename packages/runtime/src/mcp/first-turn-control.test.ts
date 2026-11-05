@@ -4,7 +4,7 @@
 // engine's input pump started, so every control request queued behind it -- up to MCP_TIMEOUT behind a
 // hung explicit server. The pump now reads while the servers connect; a user message still waits for them.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider } from "../engine.ts";
 

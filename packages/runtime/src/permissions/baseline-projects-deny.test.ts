@@ -33,7 +33,7 @@ import {
 } from "./evaluator.ts";
 import { isMemoryCarveOut } from "./protected.ts";
 import { emptyRuleSet, sourceRule, type SourcedRuleEntry } from "./ruleset.ts";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 
 const HOME = "/synthetic/home/tester";
 const CWD = "/synthetic/workspace";

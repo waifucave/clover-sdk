@@ -4,8 +4,8 @@
 // than "builtin", and where duplicate suppression actually happens); everything there applies here
 // unchanged. The schema below byte-mirrors descriptors/list-agents.ts's own, and
 // tools/impl/list-agents.ts installs the IDENTICAL executor object under both names.
-import { WINTER_BRAND, mcpToolName } from "@yanlinglabs/winter-agent-sdk";
-import { LIST_AGENTS_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { WINTER_BRAND, mcpToolName } from "@waifucave/clover-agent-sdk";
+import { LIST_AGENTS_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, definitionFields } from "./_shared.ts";
 

@@ -20,8 +20,8 @@
 // R6-G: an auxiliary generation. `sink` is OMITTED, never set to `undefined` — the engine's own
 // comment on `ProviderRequest.sink` is explicit that absence is what marks a call auxiliary, and
 // `stream_event` frames from a permission review would be frames the pinned runtime does not emit.
-import type { AutoClassifierConfig, CredentialRef } from "@yanlinglabs/winter-agent-sdk";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { AutoClassifierConfig, CredentialRef } from "@waifucave/clover-agent-sdk";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ClassifierContext, ClassifierInterface, ClassifierRawResult } from "../../permissions/auto/engine.ts";
 import type { ActionEnvelope } from "../../permissions/auto/envelope.ts";
 import type { Provider, ProviderRequest, ProviderTurn } from "../../engine.ts";

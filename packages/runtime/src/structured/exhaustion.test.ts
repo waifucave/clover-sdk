@@ -9,7 +9,7 @@
 // exhausted run carries none at all rather than a null one. Capture (6) confirmed all three on the
 // wire. Every one of them is a string literal, so only a fixture can hold them.
 import { test, expect, describe } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

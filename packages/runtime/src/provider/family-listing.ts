@@ -10,9 +10,9 @@
 // somehow missing from `catalog.families` (defensive only — a validated catalog never has a model
 // row's `modelFamily` point at nothing): it renders with the bare id standing in for `displayName`
 // and no slots, rather than crashing a read-only view.
-import type { FamilySlot, ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { OTHER_FAMILY_ID } from "@yanlinglabs/winter-provider-catalog";
-import type { ActiveSlotSet, ModelFamilyListing, ModelRowServable, SlotView } from "@yanlinglabs/winter-agent-sdk";
+import type { FamilySlot, ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { OTHER_FAMILY_ID } from "@waifucave/clover-provider-catalog";
+import type { ActiveSlotSet, ModelFamilyListing, ModelRowServable, SlotView } from "@waifucave/clover-agent-sdk";
 
 export interface FamilyListingInput {
   catalog: WinterCatalog;

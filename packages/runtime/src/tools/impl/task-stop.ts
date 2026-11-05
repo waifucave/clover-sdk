@@ -14,7 +14,7 @@ import { renderAgentNotification, renderTaskStopNotification } from "../../subag
 // inventory the mapping's own header lists.
 import { wireTaskType } from "../background-tasks.ts";
 import { getMessagingRuntime } from "../../messaging/router.ts";
-import { boundedHostNote } from "@yanlinglabs/winter-agent-sdk/messaging";
+import { boundedHostNote } from "@waifucave/clover-agent-sdk/messaging";
 
 interface TaskStopInput {
   task_id?: string;

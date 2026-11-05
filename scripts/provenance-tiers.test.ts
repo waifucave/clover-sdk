@@ -5,8 +5,8 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { WinterCatalog, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { CATALOG_VOCABULARIES, loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { CATALOG_VOCABULARIES, loadCatalog } from "@waifucave/clover-provider-catalog";
 import { BEGIN_MARKER, END_MARKER, PROVENANCE_PATH, renderTierTable, spliceCensus } from "./provenance-tiers.ts";
 
 function providerRow(id: string, tier: WinterProviderDescriptor["admission"]["tier"]): WinterProviderDescriptor {

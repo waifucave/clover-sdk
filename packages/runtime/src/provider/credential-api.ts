@@ -24,7 +24,7 @@
 // A `cause` is likewise not attached: a cause chain is part of the error a host prints. What survives
 // is the redacted ref, the operation, and the typed code — which is what makes the failure
 // actionable in the first place.
-import type { CredentialMaterial, CredentialStatus, CredentialStore, ProviderContext, ProviderRegistry } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialMaterial, CredentialStatus, CredentialStore, ProviderContext, ProviderRegistry } from "@waifucave/clover-provider-runtime";
 import {
   ANTHROPIC_CONSOLE_ACCOUNT_ID,
   CredentialResolutionError,
@@ -32,8 +32,8 @@ import {
   startAnthropicConsoleBrokerLogin,
   startCodexLogin,
   startXaiLogin,
-} from "@yanlinglabs/winter-provider-runtime";
-import type { CredentialRef } from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-provider-runtime";
+import type { CredentialRef } from "@waifucave/clover-agent-sdk";
 import { keychainAccountName } from "./keychain-store.ts";
 import { redactCredentialRef } from "./selection.ts";
 

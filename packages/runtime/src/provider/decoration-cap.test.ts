@@ -3,8 +3,8 @@
 // decoration and all of them together -- keeping the newest. Driven through the real session wiring
 // (`buildSessionProvider`) and the real Responses adapter against a loopback, reading the request body.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { RECOVERED_REASONING_TAG, createMemoryCredentialStore, reasoningBlockItems } from "@yanlinglabs/winter-provider-runtime";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { RECOVERED_REASONING_TAG, createMemoryCredentialStore, reasoningBlockItems } from "@waifucave/clover-provider-runtime";
 import type { ProviderMessage } from "../engine.ts";
 import { DECORATION_CHAR_BUDGET, MAX_DECORATION_CHARS, buildSessionProvider } from "./session-provider.ts";
 import { fakeResponsesCatalog, startResponsesFake, type ResponsesFake } from "./responses-fake.test-support.ts";

@@ -15,7 +15,7 @@
 // called from the ROOT run's own teardown in `engine.ts`, so a resumed session starts at zero -- which
 // is exactly what a resumed session gets in claude, where `--resume` is a new process with a fresh
 // registry. The cap is per session-RUN here, deliberately, not per session-id-for-all-time.
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 type EnvBrand = Pick<BrandProfile, "envPrefix">;
 
@@ -26,7 +26,7 @@ export const DEFAULT_MAX_WEB_SEARCHES_PER_SESSION = 200;
  * is Winter's copy of the MECHANISM (a session-cap override), branded through `envName` like every
  * other product env name in this codebase -- never a literal `WINTER_...` string (brand-gate rule 9/10).
  */
-export function maxWebSearchesPerSessionEnvName(brand: EnvBrand = WINTER_BRAND): string {
+export function maxWebSearchesPerSessionEnvName(brand: EnvBrand = requireBrand()): string {
   return envName(brand, "MAX_WEB_SEARCHES_PER_SESSION");
 }
 
@@ -36,7 +36,7 @@ function parsePositiveIntEnv(raw: string | undefined, fallback: number): number 
   return Number.isInteger(n) && n > 0 ? n : fallback;
 }
 
-export function resolveMaxWebSearchesPerSession(env: Record<string, string | undefined> = process.env, brand: EnvBrand = WINTER_BRAND): number {
+export function resolveMaxWebSearchesPerSession(env: Record<string, string | undefined> = process.env, brand: EnvBrand = requireBrand()): number {
   return parsePositiveIntEnv(env[maxWebSearchesPerSessionEnvName(brand)], DEFAULT_MAX_WEB_SEARCHES_PER_SESSION);
 }
 
@@ -74,7 +74,7 @@ export function webSearchCallsUsed(sessionId: string): number {
  * Winter's branded one. A RESULT, never an error: `durationSeconds:0, searchCount:0` in claude's own
  * structured output, which this runtime does not carry -- the string alone is what reaches the model.
  */
-export function webSearchBudgetRefusalText(used: number, cap: number, brand: EnvBrand = WINTER_BRAND): string {
+export function webSearchBudgetRefusalText(used: number, cap: number, brand: EnvBrand = requireBrand()): string {
   return `Web search was not performed: this session has used its web search budget (${used} of ${cap} WebSearch calls). Continue with the information already gathered instead of issuing more searches. If more searches are genuinely needed, ask the user to raise ${maxWebSearchesPerSessionEnvName(brand)}.`;
 }
 

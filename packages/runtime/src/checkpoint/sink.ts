@@ -10,7 +10,7 @@
 // mechanism class WS-11 §9 pins, not an oversight -- and the honest consequence, fixtured, is that a
 // rewind restores PATHS rather than authorship: a Bash edit to a TRACKED file is undone as
 // collateral, while a Bash-CREATED file is untouched.
-import type { RewindFilesResult } from "@yanlinglabs/winter-agent-sdk";
+import type { RewindFilesResult } from "@waifucave/clover-agent-sdk";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { CheckpointMutation, FileCheckpointSink } from "./seam.ts";

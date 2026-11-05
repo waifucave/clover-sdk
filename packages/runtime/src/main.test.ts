@@ -5,7 +5,7 @@
 // checkpoint), which runs the version-pinned probe against the real `bun build --compile` artifact.
 import { describe, test, expect } from "bun:test";
 import { fileURLToPath } from "node:url";
-import { SDK_VERSION } from "@yanlinglabs/winter-agent-sdk";
+import { SDK_VERSION } from "@waifucave/clover-agent-sdk";
 
 const MAIN_PATH = fileURLToPath(new URL("./main.ts", import.meta.url));
 

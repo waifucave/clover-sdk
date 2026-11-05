@@ -2,7 +2,7 @@
  * No config-json/env/NDJSON can manufacture this fresh native admission. */
 import { runEmbeddedSession } from "../../packages/runtime/src/embedded.ts";
 import { admitFreshLinuxSession, linuxSessionBindings, linuxSessionConfig, closeLinuxSession } from "../../packages/runtime/src/guest/linux-session-admission.ts";
-import type { UserFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { UserFrame } from "@waifucave/clover-agent-sdk";
 
 if (JSON.stringify(process.argv.slice(2)) !== JSON.stringify(["--native-bootstrap-fd", "3", "--native-owner-fd", "4"])) throw new Error("fixed native entry required");
 const admission = admitFreshLinuxSession(3, 4);

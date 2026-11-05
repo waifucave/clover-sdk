@@ -24,7 +24,7 @@
 // directly (never going through a name at all) is untouched by it -- `disallowedTools` remains the
 // thing that actually closes that second door (WS-09 §10, same verdict).
 import { getRegisteredTool, isBareDenied, type AdvertisedPartition, type ToolDescriptor } from "../tools/registry.ts";
-import { WINTER_BRAND, mcpToolName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, mcpToolName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 /** The one brand field this module needs: the standing server's name. */
 export type AliasBrand = Pick<BrandProfile, "mcpServerName">;
@@ -52,14 +52,18 @@ export const WINTER_CANONICAL_ALIAS_SUFFIXES: Readonly<Record<string, string>> =
 
 /** The branch's own canonical pair for a given brand. */
 export function canonicalAliases(brand?: AliasBrand): Record<string, string> {
-  const b = brand ?? WINTER_BRAND;
+  const b = requireBrand(brand);
   const out: Record<string, string> = {};
   for (const [native, suffix] of Object.entries(WINTER_CANONICAL_ALIAS_SUFFIXES)) out[native] = mcpToolName(b, suffix);
   return out;
 }
 
-/** The default profile's pair, for every caller that has not threaded a brand. */
-export const WINTER_CANONICAL_ALIASES: Readonly<Record<string, string>> = canonicalAliases();
+/**
+ * Winter's own pair. A1: NOT a default for a caller that has not threaded a brand (that caller calls
+ * `canonicalAliases()`, which reads the installed brand or refuses); a default computed here, at
+ * module load, would also make importing this module fail in a process with no brand installed.
+ */
+export const WINTER_CANONICAL_ALIASES: Readonly<Record<string, string>> = canonicalAliases(WINTER_BRAND);
 
 // The effective table for a session: the branch defaults with the HOST's own
 // `Options.toolAliases` layered on top (a host that redirects `SendMessage` somewhere else means it).

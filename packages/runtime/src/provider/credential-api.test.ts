@@ -10,14 +10,14 @@
 // be a host's own — so the fixtures hand them stores that deliberately put the secret in their error
 // message and assert it does not come back out.
 import { test, expect, describe } from "bun:test";
-import { createMemoryCredentialStore, createRegistry, CredentialResolutionError, type CredentialMaterial, type CredentialRef, type CredentialStatus, type CredentialStore, type ProviderAdapter, type ProviderContext } from "@yanlinglabs/winter-provider-runtime";
-import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import { createMemoryCredentialStore, createRegistry, CredentialResolutionError, type CredentialMaterial, type CredentialRef, type CredentialStatus, type CredentialStore, type ProviderAdapter, type ProviderContext } from "@waifucave/clover-provider-runtime";
+import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 import { deleteProviderCredential, providerCredentialRef, startProviderLogin, storeProviderCredential, validateProviderCredential } from "./credential-api.ts";
-// BY PACKAGE NAME, as every other runtime test reaches this package (`@yanlinglabs/winter-provider-conformance`
+// BY PACKAGE NAME, as every other runtime test reaches this package (`@waifucave/clover-provider-conformance`
 // is a root devDependency). A deep relative path into another workspace's `src/` is the drift its
 // barrel exists to prevent, and it is what this file did first.
-import { codexFake, startFake, xaiOauthFake } from "@yanlinglabs/winter-provider-conformance";
+import { codexFake, startFake, xaiOauthFake } from "@waifucave/clover-provider-conformance";
 import { createKeychainCredentialStore, DEFAULT_KEYCHAIN_SERVICE, type SecretsBackend } from "./keychain-store.ts";
 
 const SECRET = "test-key-do-not-use-4d9f2a";

@@ -4,7 +4,7 @@
 // This file's job is purely "does the invoker call bridge.request with the right subtype/payload/
 // requestId, and does it pass through resolve/reject faithfully."
 import { test, expect } from "bun:test";
-import { WinterRpcError } from "@yanlinglabs/winter-agent-sdk";
+import { WinterRpcError } from "@waifucave/clover-agent-sdk";
 import { createRpcBridge, type RpcBridge } from "../rpc/bridge.ts";
 import type { FrameSink } from "../protocol/channel.ts";
 import { createBridgeHookInvoker } from "./bridge-invoker.ts";

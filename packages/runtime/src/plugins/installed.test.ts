@@ -1,5 +1,5 @@
 // WS-21 lane L1b, Task L1b.2 (spec §6.3 item 5, Contract B): reads the SAME `installed_plugins.json`
-// `@yanlinglabs/winter-agent-sdk`'s `packages/sdk/src/plugins/manage.ts` writes -- claude's own V2
+// `@waifucave/clover-agent-sdk`'s `packages/sdk/src/plugins/manage.ts` writes -- claude's own V2
 // shape, `{version:2, plugins: {"<key>": [<record>, ...]}}`, an ARRAY per key because the identical
 // id can be installed at more than one scope. SYNCHRONOUS, matching `plugins/loader.ts`'s own file
 // I/O style (this reader feeds directly into `loadPlugins`, called synchronously inside

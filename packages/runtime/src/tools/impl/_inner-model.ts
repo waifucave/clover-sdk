@@ -28,7 +28,7 @@
 //
 // This module imports only TYPES and the session registry (which registers no tool), so importing it from `impl/web-fetch.ts` or `impl/web-search.ts`
 // registers nobody else's tool (`tools/impl-isolation.test.ts`).
-import type { CredentialRef } from "@yanlinglabs/winter-agent-sdk";
+import type { CredentialRef } from "@waifucave/clover-agent-sdk";
 // TYPE-ONLY, and it has to be. `engine.ts` value-imports the advisor's executor (and with it the whole
 // descriptor barrel), so a single VALUE import from it here would make importing this helper -- and
 // therefore either web tool's impl file -- register every tool in the codebase. That is the exact

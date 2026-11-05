@@ -19,7 +19,7 @@
 // `continuity/index.ts` in full, see that barrel's own "UNFROZEN AT CLOSE" section), so the
 // continuity module itself is a package-name import below. `continuity/fixtures.ts` was NOT part of
 // that re-export and still isn't on the main barrel -- it comes through the new
-// `@yanlinglabs/winter-provider-runtime/testing` subpath instead (review r1's one granted manifest
+// `@waifucave/clover-provider-runtime/testing` subpath instead (review r1's one granted manifest
 // edit), since these are generic in-memory catalog/adapter fixtures for testing, not part of the
 // package's production adapter surface.
 import {
@@ -35,8 +35,8 @@ import {
   createRegistry,
   type ProviderMessageLike,
   type ProviderRegistry,
-} from "@yanlinglabs/winter-provider-runtime";
-import { fixtureCatalog, fixtureModel, fixtureProvider, fixtureReasoning, scriptedAdapter } from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime";
+import { fixtureCatalog, fixtureModel, fixtureProvider, fixtureReasoning, scriptedAdapter } from "@waifucave/clover-provider-runtime/testing";
 
 /** The case ids. Stable strings: a report names them and a reader can trace each to its clause of the report. */
 export type ContinuityCaseId =

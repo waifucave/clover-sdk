@@ -20,7 +20,7 @@ import { inheritSourceObject, sourceObjectAllowed } from "../sandbox/source-read
 // `Options.plugins`, a decision made outside the repository (the same reasoning
 // subagents/definitions.ts records for `pluginAgents`), and builtins ship with the runtime.
 import { basename, dirname, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import { DEFAULT_SKILL_BODY_BYTES, capBytes, skillNameError, pluginNameError } from "./frontmatter.ts";
 import { SKILL_METADATA_PREFIX_BYTES, SELF_SUBDIR, projectSkillRoots, readSkillMetadata, scanSkillRoot, scanUserSkillRoot, type DiscoveredSkill, type SkillScanError, type SkillTier } from "./loader.ts";
 import { isStrictPluginOnly, type StrictPluginOnlyCustomization } from "../settings/loaders/strict-plugin-only.ts";
@@ -81,7 +81,7 @@ export interface SkillIndexOptions {
    * ALWAYS explicit -- this module never reads `process.env` (a shared-process `bun test` would race).
    */
   winterHome: string;
-  /** P7a (D19): the session's brand -- the project dot-dir and its qualified-skill prefix. Omitted = `WINTER_BRAND`. */
+  /** P7a (D19): the session's brand -- the project dot-dir and its qualified-skill prefix. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: Pick<BrandProfile, "projectDirName"> | undefined;
   /** Omitted = all three tiers; `[]` = filesystem discovery disabled. */
   settingSources?: SettingSource[] | undefined;
@@ -226,7 +226,7 @@ export class SkillIndex {
         continue;
       }
       if (byName.has(found.name)) continue; // first occurrence wins
-      const projectPluginName = (opts.brand ?? WINTER_BRAND).projectDirName;
+      const projectPluginName = requireBrand(opts.brand).projectDirName;
       const aliases = found.source === "project" ? [`${projectPluginName}:${found.name}`] : [];
       const meta: SkillMeta = {
         name: found.name,
@@ -248,7 +248,7 @@ export class SkillIndex {
       // primary name, the project skill keeps its bare identity and simply has no alias slot.
       for (const alias of aliases) if (!byName.has(alias)) byName.set(alias, meta);
     }
-    return new SkillIndex(entries, byName, opts.bodyBytes ?? DEFAULT_SKILL_BODY_BYTES, errors, syntheticBodies, syntheticInputs, (opts.brand ?? WINTER_BRAND).projectDirName, syntheticMetas);
+    return new SkillIndex(entries, byName, opts.bodyBytes ?? DEFAULT_SKILL_BODY_BYTES, errors, syntheticBodies, syntheticInputs, requireBrand(opts.brand).projectDirName, syntheticMetas);
   }
 
   /**

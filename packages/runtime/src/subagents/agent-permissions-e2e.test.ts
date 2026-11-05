@@ -15,7 +15,7 @@
 // effect) is what makes the REAL Agent tool executor reachable through the default tool executor
 // this file's own `driveParent` uses (no `tools:` override on `runEngine`'s own `EngineOptions`).
 import { describe, test, expect, afterEach } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { runEngine, type Provider, type EngineProviderIdentity, type ResolveModelSwitch } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { registerChildEngineFactory, resetChildEngineFactoryForTest, type SpawnChildRequest } from "./child-handle.ts";

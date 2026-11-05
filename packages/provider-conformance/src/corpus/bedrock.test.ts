@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { createRegistry, createBedrockConverseAdapter, signRequest, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
-import { THINKING_ENABLED_NEEDS_BUDGET } from "@yanlinglabs/winter-provider-runtime/testing";
+import { createRegistry, createBedrockConverseAdapter, signRequest, winterUserAgent } from "@waifucave/clover-provider-runtime";
+import { THINKING_ENABLED_NEEDS_BUDGET } from "@waifucave/clover-provider-runtime/testing";
 // `adapterAsProvider`/`foldProviderStream` stay relative (review r1 Critical-2): `winter-agent-runtime`
 // is `"private": true`, never published -- irrelevant here since `.test.ts` files never ship as
 // reachable code.

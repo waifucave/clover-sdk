@@ -19,9 +19,9 @@ import {
   type DeliveryOutcome,
   type CrossSessionInbound,
   type CallerContext,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 import { createFakeChildHandle } from "../subagents/test-fakes.ts";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 
 function fakePeer(overrides: {
   winterSessionId?: string;

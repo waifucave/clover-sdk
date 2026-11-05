@@ -8,11 +8,11 @@
 // only caller (it constructs `McpLifecycleInternals` and passes it to `createMcpControlSeam` inside
 // `createMcpLifecycle`), so the dependency is genuinely one-directional at RUNTIME despite the
 // mutual TYPE reference -- erased entirely at build time, never a real circular import.
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
+import { requireBrand } from "@waifucave/clover-agent-sdk";
 import type { McpControlSeam, McpSetServersResult } from "./control-seam.ts";
 import type { McpLifecycleInternals, McpConfigSourceOrigin } from "./lifecycle.ts";
 import { validateServerConfig } from "./lifecycle.ts";
-import { WINTER_SERVER_NAME } from "./winter-server.ts";
 
 // derived-shapes-p4.md item (b) (this lane's own shape authority): `setMcpServers`'s doc-asserted
 // scope is narrower than WS-09 §3's own blanket "replaces the configured set live" -- "the method's
@@ -28,8 +28,9 @@ export function createMcpControlSeam(internals: McpLifecycleInternals, opts: { r
   // P7a fix wave (item 5, I-2): the SESSION brand's standing-server name, threaded from
   // `createMcpLifecycle`. `WINTER_SERVER_NAME` is computed from `WINTER_BRAND` at module load, so
   // this door and the registry's per-session reservation disagreed under any rebrand -- see
-  // `resolveMcpServerSources`' own note for the two halves of that. Defaults to today's value.
-  const reservedServerName = opts.reservedServerName ?? WINTER_SERVER_NAME;
+  // `resolveMcpServerSources`' own note for the two halves of that. A1: defaults to the installed
+  // brand's name (`requireBrand()`), never Winter's; with no brand installed it throws.
+  const reservedServerName = opts.reservedServerName ?? requireBrand().mcpServerName;
   return {
     async reconnect(serverName: string): Promise<void> {
       if (!internals.hasSlot(serverName)) {

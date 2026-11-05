@@ -11,11 +11,11 @@
 // NO KEY MATERIAL IS EVER COMMITTED (ruling R6-A, verbatim): the RSA keypair is generated in-test,
 // the service-account JSON is assembled in memory, and the file credential store reads it through an
 // INJECTED reader that never touches a real filesystem.
-import type { ReasoningCapabilities, WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import { createFileCredentialStore, createMemoryCredentialStore, createVertexGeminiAdapter } from "@yanlinglabs/winter-provider-runtime";
-import type { CredentialStore, ProviderAdapter, ProviderContext } from "@yanlinglabs/winter-provider-runtime";
-import { vertexModelPath } from "@yanlinglabs/winter-provider-runtime/testing";
+import type { ReasoningCapabilities, WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import { createFileCredentialStore, createMemoryCredentialStore, createVertexGeminiAdapter } from "@waifucave/clover-provider-runtime";
+import type { CredentialStore, ProviderAdapter, ProviderContext } from "@waifucave/clover-provider-runtime";
+import { vertexModelPath } from "@waifucave/clover-provider-runtime/testing";
 import { assertVertexRequest, generateTestKeyPair, vertexFakeRoutes, vertexTokenUrl, type VerifiedAssertion, type VertexFakeOptions } from "../fakes/vertex.ts";
 import { jsonResponse, type FakeRoute } from "../fakes/server.ts";
 import { GOOGLE_MODELS, googleFamilyCorpusCases, googleScenarioStream } from "./google.ts";

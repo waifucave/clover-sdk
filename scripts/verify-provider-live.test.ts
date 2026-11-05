@@ -13,9 +13,9 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { createEnvCredentialStore, createMemoryCredentialStore, CredentialResolutionError, normalizeHttpError, winterUserAgent, type CredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { errorResponse, startFake, xaiOauthFake } from "@yanlinglabs/winter-provider-conformance";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import { createEnvCredentialStore, createMemoryCredentialStore, CredentialResolutionError, normalizeHttpError, winterUserAgent, type CredentialStore } from "@waifucave/clover-provider-runtime";
+import { errorResponse, startFake, xaiOauthFake } from "@waifucave/clover-provider-conformance";
 import {
   ADAPTERS_MODULE_VAR,
   bearerStore,

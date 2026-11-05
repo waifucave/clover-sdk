@@ -17,7 +17,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ContentBlockLike, MessageOrigin, ProviderMessageLike, ProviderNativeState } from "@yanlinglabs/winter-provider-runtime";
+import type { ContentBlockLike, MessageOrigin, ProviderMessageLike, ProviderNativeState } from "@waifucave/clover-provider-runtime";
 import type { ContentBlock, ProviderMessage, ProviderRequest, ProviderTurn, ProviderStreamSink } from "../engine.ts";
 import { providerMessageContentToText } from "../engine.ts";
 import { redactForSummary } from "../compaction/summarizer.ts";
@@ -304,7 +304,7 @@ describe("R6-4 contract: the bridge (Lanes A / B / N)", () => {
 describe("R6-9 contract: selection (Lanes A / B / D / N)", () => {
   test("a resolution failure is a TYPED `WinterProviderResolutionError`, never a silent default", async () => {
     const { resolveSessionProvider } = await import("./selection.ts");
-    const { WinterProviderResolutionError, createMemoryCredentialStore, createRegistry } = await import("@yanlinglabs/winter-provider-runtime");
+    const { WinterProviderResolutionError, createMemoryCredentialStore, createRegistry } = await import("@waifucave/clover-provider-runtime");
     const registry = createRegistry({ schemaVersion: 2, families: [], catalogVersion: "t", providers: [], models: [] } as never);
     let threw: unknown;
     try {
@@ -321,7 +321,7 @@ describe("R6-9 contract: selection (Lanes A / B / D / N)", () => {
     // against a REAL resolution rather than a hand-written key list, which would only agree with
     // itself.
     const { resolveSessionProvider } = await import("./selection.ts");
-    const { createMemoryCredentialStore, createRegistry } = await import("@yanlinglabs/winter-provider-runtime");
+    const { createMemoryCredentialStore, createRegistry } = await import("@waifucave/clover-provider-runtime");
     const evidence = <T,>(value: T) => ({ value, source: "official-doc" as const, confidence: "verified" as const, observedAt: "2026-09-05" });
     const registry = createRegistry({
       schemaVersion: 2,

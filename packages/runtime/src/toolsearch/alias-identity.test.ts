@@ -24,7 +24,7 @@
 // alternative is a cross-test-file import, which this repo's own createFakeChildHandle relocation
 // item exists to discourage).
 import { test, expect, describe } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ControlRequestFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ControlRequestFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { echoProvider, scriptedProvider } from "../provider/mock.ts";

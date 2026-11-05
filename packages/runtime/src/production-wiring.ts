@@ -1,4 +1,4 @@
-import { parseRuntimeContextConfig } from "@yanlinglabs/winter-agent-sdk";
+import { parseRuntimeContextConfig, requireBrand, installBrand } from "@waifucave/clover-agent-sdk";
 import { createRuntimeContextChannel, type RuntimeContextChannel } from "./context/runtime-context-channel.ts";
 import { linuxGuidedSessionChannel } from "./guest/linux-session-admission.ts";
 import { assertLinuxSession, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
@@ -28,18 +28,18 @@ import { installSourceReadRestrictions } from "./sandbox/source-read.ts";
 // invisibly.
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { InitPluginInfo, RuntimeConfig, SdkPluginConfig, Settings, SettingSource } from "@yanlinglabs/winter-agent-sdk";
-import { OVERLAY_NEVER_KEYS, resolveWinterHome, WINTER_BRAND, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@yanlinglabs/winter-agent-sdk";
+import type { InitPluginInfo, RuntimeConfig, SdkPluginConfig, Settings, SettingSource } from "@waifucave/clover-agent-sdk";
+import { OVERLAY_NEVER_KEYS, resolveWinterHome, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@waifucave/clover-agent-sdk";
 import { applyHostManagedSettingsFilter, filterSettingsEnv, type EnvFilterTier } from "./settings/env-filter.ts";
 // P7a (D19): the two process-level brand surfaces this module installs per session -- see (10b).
 import { rebrandStandingServerTools } from "./tools/registry.ts";
 import { canonicalAliases, WINTER_CANONICAL_ALIASES } from "./toolsearch/aliases.ts";
-import { setWinterIdentity } from "@yanlinglabs/winter-provider-runtime";
+import { installBrandIdentity } from "@waifucave/clover-provider-runtime";
 import { resolveSettingsDetailed, filterEscalatingDefaultMode, providerSettingsFrom } from "./settings/resolve.ts";
 import { sourceRule, rawToRuleValue, type SourcedRuleEntry } from "./permissions/ruleset.ts";
 import { validatePermissionRuleString } from "./permissions/grammar.ts";
 import { resolveFileRuleAbsolutePath, resolveFileRuleAbsoluteGlobText } from "./permissions/file-rules.ts";
-import type { RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { RuleSource } from "@waifucave/clover-agent-sdk";
 import type { DetailedResolvedSettings } from "./settings/resolve.ts";
 import { defaultTrustSource } from "./settings/trust.ts";
 // rn-1 (residual round 2): the child-mirror seam is typed AGAINST the factory's own options, so an
@@ -76,7 +76,7 @@ import type { FileCheckpointSink } from "./checkpoint/seam.ts";
 import { registerPluginAgents, clearPluginAgents } from "./subagents/plugin-agents.ts";
 import type { PluginAgentDefinition } from "./subagents/definitions.ts";
 import type { StrictPluginOnlyCustomization } from "./settings/loaders/strict-plugin-only.ts";
-import { DEFAULT_OUTPUT_STYLE } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_OUTPUT_STYLE } from "@waifucave/clover-agent-sdk";
 // Phase 6 Task 10: the provider half of the same "one function, three legs" argument this module's
 // own header makes. Before this, `main.ts` picked a provider from an env var and `testing.ts` took
 // one as a parameter -- two entrypoints, two policies, and NEITHER of them the catalog-first
@@ -87,16 +87,16 @@ import { createHostBrokeredMcpOAuthStore, mcpOAuthTestStoreEnvName, resolveSessi
 import type { ProviderStateRecordInput } from "./store/provider-state.ts";
 import type { Provider } from "./engine.ts";
 import type { ClassifierInterface } from "./permissions/auto/engine.ts";
-import { WinterProviderResolutionError } from "@yanlinglabs/winter-provider-runtime";
+import { WinterProviderResolutionError } from "@waifucave/clover-provider-runtime";
 import { redactCredentialRef } from "./provider/selection.ts";
 // WS-13c (P6.6): the family layer. `slots.ts` is Lane A's resolver, `family-listing.ts` Lane C's
 // listing builder, `validateModelSlots` Lane B's whole-set validator -- one wiring composes all
 // three, so the Agent tool, `set_model` and the listing can never disagree about a slot.
 import { computeActiveSlotSet, resolveSlotToProvider, type CredentialPresence, type SlotProviderResolution } from "./provider/slots.ts";
 import { buildModelFamilyListing } from "./provider/family-listing.ts";
-import { validateModelSlots, type ModelSlotsLookup } from "@yanlinglabs/winter-agent-sdk";
-import type { ActiveSlotSet, ModelFamilyListing, ModelSlotSetting } from "@yanlinglabs/winter-agent-sdk";
-import { rowsForCanonicalId, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { validateModelSlots, type ModelSlotsLookup } from "@waifucave/clover-agent-sdk";
+import type { ActiveSlotSet, ModelFamilyListing, ModelSlotSetting } from "@waifucave/clover-agent-sdk";
+import { rowsForCanonicalId, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 
 /**
  * The throwaway slot name the listing's `resolvesTo` probe resolves under.
@@ -777,14 +777,18 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
   if (config.requiredRuntimeContext !== undefined) parseRuntimeContextConfig(config.requiredRuntimeContext);
   const freshLinux = opts.linuxSessionAdmission !== undefined;
   if (freshLinux) assertLinuxSession(opts.linuxSessionAdmission, config);
-  // (0) THE BRAND (P7a, D19). THE ONE FALLBACK IN THE RUNTIME, and it is here rather than at each
-  // reader for a reason worth stating: `query()` always puts the resolved profile on the wire, so a
-  // live session's `config.brand` is never absent -- the only configs without one are the ones this
-  // repository hand-builds in tests and scripted doubles. A `?? WINTER_BRAND` at forty call sites
-  // would make "a reader forgot to thread the brand" indistinguishable from "this session is
-  // Winter", which is precisely the failure the profile exists to make impossible. One fallback,
-  // one place, and every consumer below is handed a real profile.
-  const brand = config.brand ?? WINTER_BRAND;
+  // (0) THE BRAND (P7a, D19; A1, fail closed). `query()` always puts the resolved profile on the wire,
+  // so a live session's `config.brand` is never absent. THERE IS NO DEFAULT: a config without one
+  // runs under the brand installed for this process (this repository's test preload installs
+  // Winter's own for Winter's own suites) and, with none installed, is REFUSED here with
+  // `BrandRequiredError` before anything reads a home, an environment variable or a Keychain service.
+  //
+  // The session's brand is then INSTALLED for this process (a spawned runtime, or an embedded
+  // session's own Worker: one realm per session), first install winning. So a reader deeper down
+  // that was never handed the brand (a missed thread) reads THIS session's names through
+  // `requireBrand`, never Winter's.
+  const brand = requireBrand(config.brand);
+  if (config.brand !== undefined) installBrand(config.brand);
   // WS-25: the MCP sign-in test seam is read from the ORIGINAL process env, HERE, before any settings
   // tier's `env` block is merged into `env` below -- a settings file must never be able to move the
   // session's sign-ins (and every tier refuses the name as well, settings/env-filter.ts).
@@ -1137,7 +1141,9 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
     Object.entries(canonicalAliases(brand)).map(([native, target]) => ({ from: WINTER_CANONICAL_ALIASES[native] as string, to: target })),
     brand.mcpServerName,
   );
-  const disposeIdentity = setWinterIdentity({ product: brand.packageName, codexOriginator: brand.codexOriginator, contactUrl: brand.contactUrl });
+  // The brand's whole identity, its `productVersion` included (0.0.63), through the one mapping a host
+  // uses for its own process too (`installBrandIdentity`), so the two never present differently.
+  const disposeIdentity = installBrandIdentity(brand);
 
   // (11) COMPACTION (Lane K). Registered unconditionally: with no controller the engine never
   // auto-compacts and `/compact` answers "no compaction controller", which is a permanent

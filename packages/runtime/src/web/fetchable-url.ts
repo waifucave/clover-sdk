@@ -23,9 +23,9 @@
 // (`127.0.0.1`, four labels) or on a name the URL parser leaves with two or more labels
 // (`printer.local`, `api.localhost`, and -- claude's behaviour too -- a trailing-dot `localhost.`).
 
-// THE RULES THEMSELVES LIVE IN `@yanlinglabs/winter-web` (`url.ts` there): the executor's own hop
+// THE RULES THEMSELVES LIVE IN `@waifucave/clover-web` (`url.ts` there): the executor's own hop
 // walk is that package's, so the permission layer reads the very same predicate it applies.
-import { fetchTimeUrlRefusal, upgradeToHttps } from "@yanlinglabs/winter-web";
+import { fetchTimeUrlRefusal, upgradeToHttps } from "@waifucave/clover-web";
 
 export { fetchTimeUrlRefusal, upgradeToHttps };
 

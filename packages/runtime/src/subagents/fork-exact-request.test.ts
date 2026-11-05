@@ -9,7 +9,7 @@
 // "never a fake ChildHandle" discipline `child-engine.test.ts` already established.
 import { describe, test, expect, afterEach } from "bun:test";
 import { randomUUID } from "node:crypto";
-import type { WinterFrame, RuntimeConfig, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame, RuntimeConfig, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { runEngine, type Provider, type ProviderMessage, type ProviderToolSpec } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { registerTool, unregisterToolForTest, type ToolExecutionContext } from "../tools/registry.ts";

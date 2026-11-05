@@ -4,7 +4,7 @@
 //
 // PHASE 7B (R-7b-4, "move down into it"): this file used to live in the private runtime package and
 // name `ChildHandle` (the runtime's own child-engine handle) directly. It is now published as
-// `@yanlinglabs/winter-agent-sdk/messaging`, consumed by three parties -- the Winter runtime's
+// `@waifucave/clover-agent-sdk/messaging`, consumed by three parties -- the Winter runtime's
 // in-process reference adapter, the router package's two `RuntimeMessagingAdapter`s, and any host
 // that composes them -- so the one runtime-only type it named is replaced by `ChildLike` below: the
 // BOUNDARY interface stating exactly what messaging needs a child to be. The runtime's `ChildHandle`

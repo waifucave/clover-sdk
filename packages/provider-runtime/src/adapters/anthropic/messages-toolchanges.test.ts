@@ -6,8 +6,8 @@ import { describe, expect, test } from "bun:test";
 import { buildRequestBody, toolChangesBetaFor, toWireMessages, withMessageCacheMarker } from "./messages.ts";
 import { ProviderRequestError } from "../../http.ts";
 import type { ProviderMessageLike, TurnRequest } from "../../types.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 
 const evidence = <T,>(value: T) => ({ value, source: "official-doc" as const, confidence: "declared" as const });
 const stampRow = (row: Omit<WinterModelDescriptor, "modelFamily" | "canonicalModelId">): WinterModelDescriptor => stampFamilyFields([row], [])[0]!;

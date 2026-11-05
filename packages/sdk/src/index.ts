@@ -15,7 +15,7 @@ export type { Options } from "./options.ts";
 export { SYSTEM_PROMPT_DYNAMIC_BOUNDARY, DEFAULT_CONTEXT_WINDOW_TOKENS, DEFAULT_COMPACTION_THRESHOLD, DEFAULT_PLANS_DIRECTORY, DEFAULT_OUTPUT_STYLE } from "./options.ts";
 // Phase 6 Task 2 (WS-13): the provider-layer option shapes + their two runtime-side defaults. Note
 // `CredentialRef` in particular — it is declared ONCE, here in the dependency-free sdk, and
-// re-exported by @yanlinglabs/winter-provider-runtime, so a lane importing it from either package
+// re-exported by @waifucave/clover-provider-runtime, so a lane importing it from either package
 // gets the identical type rather than two structurally-similar twins that can drift.
 export { DEFAULT_PROVIDER_STALL_TIMEOUT_MS, DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, MCP_OAUTH_REFRESH_SUBTYPE, CREDENTIAL_RESOLVE_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_MESSAGE_LIST_SUBTYPE, HOST_SESSION_STOP_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HELD_INPUT_CAPABILITY } from "./options.ts";
 export type { HostMessagingHandler } from "./options.ts";
@@ -47,7 +47,10 @@ export type { WireMcpToolDefinition } from "./protocol/config.ts";
 // `WINTER_BRAND` to read a default it is not overriding, `resolveBrand` to validate one before
 // constructing a query, and the three derivation helpers to spell the names its own integration
 // code needs (an env var, an mcp tool name, a User-Agent) exactly the way Winter spells them.
-export { WINTER_BRAND, BRAND_TOKEN_RE, FIRST_PARTY_ORIGINATORS, resolveBrand, envName, mcpToolName, userAgent } from "./brand.ts";
+// A1 (fail closed): there is no default brand. `installBrand` names the one this process serves,
+// `requireBrand` is what a reader handed no brand calls, and `BrandRequiredError` is what it throws
+// when neither exists.
+export { WINTER_BRAND, BRAND_TOKEN_RE, FIRST_PARTY_ORIGINATORS, resolveBrand, envName, mcpToolName, userAgent, installBrand, installedBrand, requireBrand } from "./brand.ts";
 export type { BrandProfile, BrandValidation } from "./brand.ts";
 export {
   WinterSDKError,
@@ -60,6 +63,7 @@ export {
   WinterRpcError,
   WinterRpcTimeoutError,
   InvalidBrandError,
+  BrandRequiredError,
 } from "./errors.ts";
 
 // The pinned process seam (WS-04 §8) — byte-level SpawnedRuntimeProcess handle, shared by the real
@@ -359,9 +363,9 @@ export type {
 // packages/sdk/src/plugins/ and this package's re-export of the catalog's own rename table.
 //
 // Task L1b.1 (spec §8 step 5; F23): the catalog's own derived old-tag -> new-key map, re-exported
-// here so a host (the daemon's `canonicalModelTag`) never depends on `@yanlinglabs/winter-provider-catalog`
+// here so a host (the daemon's `canonicalModelTag`) never depends on `@waifucave/clover-provider-catalog`
 // directly just to read it.
-export { CATALOG_TAG_RENAMES } from "@yanlinglabs/winter-provider-catalog";
+export { CATALOG_TAG_RENAMES } from "@waifucave/clover-provider-catalog";
 
 // Task L1b.3 (spec §6.3 item 7; F15): the plugin-management API matching `claude plugin …`,
 // implemented once here and exported for `winter plugin` (the CLI verb, not shipped in this task).

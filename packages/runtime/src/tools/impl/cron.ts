@@ -62,7 +62,7 @@ import { readSourceFileSync } from "../../sandbox/source-read.ts";
 import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
-import { WINTER_BRAND, disableCronEnvName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { disableCronEnvName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 /** P7a (D19): the one brand field the durable store needs -- the project dot-dir it lives under. */
 type CronBrand = Pick<BrandProfile, "projectDirName">;
@@ -80,7 +80,7 @@ function isTruthyEnv(v: string | undefined): boolean {
 }
 function cronDisabled(ctx: Pick<ToolExecutionContext, "env" | "brand">): boolean {
   const env = ctx.env ?? process.env;
-  return isTruthyEnv(env[disableCronEnvName(ctx.brand ?? WINTER_BRAND)]);
+  return isTruthyEnv(env[disableCronEnvName(requireBrand(ctx.brand))]);
 }
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 // Self-sufficiency (Lane A precedent, read.ts): see task-graph.ts's identical comment.
@@ -233,7 +233,7 @@ interface DurableFile {
 }
 
 function durableFilePath(projectDir: string, brand?: CronBrand): string {
-  return join(projectDir, (brand ?? WINTER_BRAND).projectDirName, "scheduled_tasks.json");
+  return join(projectDir, requireBrand(brand).projectDirName, "scheduled_tasks.json");
 }
 
 function isCronJobRecord(v: unknown): v is CronJobRecord {
@@ -351,7 +351,7 @@ async function executeCreate(rawInput: unknown, ctx: ToolExecutionContext): Prom
 
   if (input.durable) {
     if (cronDisabled(ctx)) {
-      return errorResult(`durable scheduling is disabled for this session (${disableCronEnvName(ctx.brand ?? WINTER_BRAND)} is set); create a non-durable job instead`);
+      return errorResult(`durable scheduling is disabled for this session (${disableCronEnvName(requireBrand(ctx.brand))} is set); create a non-durable job instead`);
     }
     let existing: CronJobRecord[];
     try {

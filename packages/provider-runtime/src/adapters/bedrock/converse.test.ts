@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 import type { ProviderMessageLike, TurnRequest } from "../../types.ts";
 import { bedrockErrorCode, buildConverseBody, mapBedrockEffort, normalizeBedrockError, toBedrockMessages } from "./converse.ts";
 

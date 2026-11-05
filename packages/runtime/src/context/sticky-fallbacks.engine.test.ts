@@ -5,7 +5,7 @@
 // the refusing model, so a resumed session does not spend its first request finding out again. It is
 // read for that provider+model only: another model's row still gets the feature.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { ProviderTurnError, runEngine, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

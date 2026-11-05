@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createRpcBridge } from "../rpc/bridge.ts";
 import type { RuntimeContextChannel } from "../context/runtime-context-channel.ts";
 import {

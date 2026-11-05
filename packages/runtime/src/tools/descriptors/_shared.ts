@@ -5,7 +5,7 @@
 // tool's file" true by construction: a lane's impl file never needs to import, or even know about,
 // this helper. Leading underscore keeps it sorted away from the 56 real tool files in a directory
 // listing without needing a nested folder.
-import type { WinterToolDefinition } from "@yanlinglabs/winter-agent-sdk/tools";
+import type { WinterToolDefinition } from "@waifucave/clover-agent-sdk/tools";
 
 import { registerTool, type JSONSchema, type ToolDescriptor } from "../registry.ts";
 
@@ -16,7 +16,7 @@ export function stub(descriptor: ToolDescriptor): void {
 /**
  * The MODEL-FACING half of a descriptor, taken from the SDK's own definition (user ruling R-8-1).
  *
- * Winter's default tools are declared once, in `@yanlinglabs/winter-agent-sdk/tools`, because three
+ * Winter's default tools are declared once, in `@waifucave/clover-agent-sdk/tools`, because three
  * copies of the same schema is how "both runtime branches present this exact model-facing schema"
  * stops being true. A descriptor that binds one of them spreads THIS and then supplies only the
  * registry POLICY the SDK deliberately does not carry (ruling P-8): `canonicalName`,

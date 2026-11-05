@@ -7,8 +7,8 @@
 // Hermetic by construction: 127.0.0.1:0, closed by the caller in `finally`, holds no credential and
 // records the `authorization` header only so a fixture can assert WHICH key arrived.
 import { serve } from "bun";
-import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 
 export interface RawChatRequest {
   path: string;

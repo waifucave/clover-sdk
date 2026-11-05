@@ -26,7 +26,7 @@ import { readSourceTextWithOrigin, type SourceOrigin, bindSourceObject, sourceOb
 // frontmatter at all is entirely valid -- the whole file is its content, unconditionally.
 import { type Dirent } from "node:fs";
 import { join, resolve } from "node:path";
-import type { BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile } from "@waifucave/clover-agent-sdk";
 import type { AttachmentProducer, ProviderMessage } from "../engine.ts";
 import { matchFileRule } from "../permissions/paths.ts";
 import { parseFrontmatter } from "../subagents/definitions.ts";

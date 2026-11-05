@@ -1,6 +1,6 @@
 /** Closed DATA validators for the future inherited reader channel. These never admit
  * an owner, open a descriptor or discharge native reader debt. */
-import { WINTER_BRAND, parseRuntimeContextConfig, type RuntimeContextConfig } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, parseRuntimeContextConfig, type RuntimeContextConfig } from "@waifucave/clover-agent-sdk";
 import { GUIDED_READER_FRAME_BYTES, type GuidedReaderRequest } from "./guided-parent-bridge.ts";
 
 export const LINUX_GUIDED_READER_LIMITS = Object.freeze({ maxFileBytes: 128 * 1024, maxReadBytes: 256 * 1024, maxReadOccurrences: 256, maxExpandedBytes: 128 * 1024 });

@@ -4,7 +4,7 @@
 // its root's `sessionId`, so the whole agent tree shares it. The engine closes it when the ROOT run
 // ends, and ONLY then: a child's teardown must leave it open for the parent and siblings still using it.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import "../tools/descriptors/index.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider } from "../provider/mock.ts";

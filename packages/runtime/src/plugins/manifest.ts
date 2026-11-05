@@ -18,7 +18,7 @@ import { readSourceFileSync, statSourceSync } from "../sandbox/source-read.ts";
 // posture the settings loader takes toward unknown keys -- accept, preserve, do not invent.
 
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 /** Winter's OWN manifest dir, derived rather than spelled. A session's is `brand.pluginManifestDir`. */
 export const WINTER_PLUGIN_MANIFEST_DIR = WINTER_BRAND.pluginManifestDir;
@@ -30,11 +30,15 @@ export const PLUGIN_MANIFEST_FILE = "plugin.json";
  * as native. `.claude-plugin` is never rebranded -- it is the official runtime's own name (WS-01 §5).
  */
 export function pluginManifestDirs(brand?: Pick<BrandProfile, "pluginManifestDir">): readonly string[] {
-  return [(brand ?? WINTER_BRAND).pluginManifestDir, CLAUDE_PLUGIN_MANIFEST_DIR];
+  return [requireBrand(brand).pluginManifestDir, CLAUDE_PLUGIN_MANIFEST_DIR];
 }
 
-/** The default profile's pair, for every caller that has not threaded a brand. */
-export const PLUGIN_MANIFEST_DIRS: readonly string[] = pluginManifestDirs();
+/**
+ * Winter's own pair. A1: NOT a default for a caller that has not threaded a brand (that caller calls
+ * `pluginManifestDirs()`, which reads the installed brand or refuses); computing a default here, at
+ * module load, would also make importing this module fail in a process with no brand installed.
+ */
+export const PLUGIN_MANIFEST_DIRS: readonly string[] = pluginManifestDirs(WINTER_BRAND);
 
 /**
  * Open-keyed for the same reason `Settings` is: a manifest key Winter does not know about is

@@ -17,7 +17,7 @@
 // start a session over it would be Winter inventing a hard failure the pinned branch does not have;
 // staying silent would leave a caller with a skill list that quietly does nothing. A warning is the
 // only reading that is both honest and non-diverging.
-import type { SkillsOption } from "@yanlinglabs/winter-agent-sdk";
+import type { SkillsOption } from "@waifucave/clover-agent-sdk";
 import { pluginNameError, skillNameError } from "./frontmatter.ts";
 import type { SkillIndex } from "./store.ts";
 

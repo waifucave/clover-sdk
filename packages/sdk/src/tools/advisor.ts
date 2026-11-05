@@ -14,7 +14,6 @@
 // ITS side; this type is never widened to accommodate one.
 import { WinterCompatibilitySessionStore } from "../store/session-store.ts";
 import type { SessionKey, SessionStore, SessionStoreEntry } from "../store/session-store.ts";
-import { resolveWinterHome } from "../paths/home.ts";
 
 import type { WinterToolHandler, WinterToolResult } from "./messaging-handlers.ts";
 
@@ -219,20 +218,33 @@ function toTranscriptEntry(entry: SessionStoreEntry): TranscriptEntry | undefine
 }
 
 /**
+ * Where `transcriptSourceForSessionKey` reads: a store the host already holds, or the home whose
+ * filesystem store holds the transcript. One of the two is REQUIRED — there is no default home.
+ */
+export type TranscriptSourceLocation = { store: SessionStore; winterHome?: never } | { winterHome: string; store?: never };
+
+/**
  * A `TranscriptSource` over the DURABLE transcript of one session.
  *
- * For a host that does not hold the live turn array — the router package, or any consumer wiring the
- * advisor outside an engine's own closure. The Winter runtime keeps its in-memory source (the live
- * `messages` array, captured by reference), because a resumed session's file and its live turns are
- * not the same conversation until the turn ends.
+ * For a host that does not hold the live turn array — any consumer wiring the advisor outside an
+ * engine's own closure. The Winter runtime keeps its in-memory source (the live `messages` array,
+ * captured by reference), because a resumed session's file and its live turns are not the same
+ * conversation until the turn ends.
  *
- * Reads through the pinned `SessionStore` interface so a host may inject an in-memory one; the
- * default is the filesystem store over the resolved Winter home. A missing transcript is NO ENTRIES,
- * never a throw: the advisor's whole posture is that an unavailable reviewer context degrades to an
- * ordinary tool error rather than blocking the turn.
+ * Reads through the pinned `SessionStore` interface, so a host may inject an in-memory one, or names
+ * the home whose filesystem store to read. 0.0.63: the home is no longer resolved for a caller that
+ * names neither — that default was the SDK's own brand's home (`~/.winter/sdk`), the wrong
+ * transcript store for any host with a brand of its own, so the call now refuses (a `TypeError`)
+ * instead of reading it. A missing transcript is still NO ENTRIES, never a throw: the advisor's whole
+ * posture is that an unavailable reviewer context degrades to an ordinary tool error rather than
+ * blocking the turn.
  */
-export function transcriptSourceForSessionKey(key: SessionKey, opts: { store?: SessionStore; winterHome?: string } = {}): TranscriptSource {
-  const store = opts.store ?? new WinterCompatibilitySessionStore({ winterHome: opts.winterHome ?? resolveWinterHome() });
+export function transcriptSourceForSessionKey(key: SessionKey, opts: TranscriptSourceLocation): TranscriptSource {
+  const location = opts as { store?: SessionStore; winterHome?: string } | undefined;
+  if (location?.store === undefined && (typeof location?.winterHome !== "string" || location.winterHome.length === 0)) {
+    throw new TypeError("transcriptSourceForSessionKey needs the store to read or the home it lives in ({ store } or { winterHome }); it never falls back to a default home");
+  }
+  const store = location.store ?? new WinterCompatibilitySessionStore({ winterHome: location.winterHome! });
   return {
     async getEntries(): Promise<TranscriptEntry[]> {
       const entries = await store.load(key);

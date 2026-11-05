@@ -2,7 +2,7 @@
 // BARE NATIVE NAME `advisor` (D29 -- descriptors/advisor.ts's own header carries the full reasoning
 // and pins the identity, output schema and the `winter.reviewer-model` capability gate).
 //
-// SINCE R-8-1 / RULING P-6, THE TOOL ITSELF LIVES IN `@yanlinglabs/winter-agent-sdk/tools`: the
+// SINCE R-8-1 / RULING P-6, THE TOOL ITSELF LIVES IN `@waifucave/clover-agent-sdk/tools`: the
 // handler factory, the transcript assembler, the opaque-state floor and the narrow reviewer types.
 // What stays HERE is the half that is genuinely this runtime's:
 //
@@ -34,7 +34,7 @@ import {
   type AdvisorReviewer,
   type TranscriptEntry,
   type TranscriptSource,
-} from "@yanlinglabs/winter-agent-sdk/tools";
+} from "@waifucave/clover-agent-sdk/tools";
 
 /**
  * D29: the canonical name IS the advertised name, and it is bare. Read off the one definition, so
@@ -45,7 +45,7 @@ export const ADVISOR_TOOL_NAME = ADVISOR_DEFINITION.builtinName ?? ADVISOR_DEFIN
 // The transcript types are the SDK's now; re-exported under their existing names so engine.ts and
 // the tests that already import them from here keep one import site.
 export type { TranscriptEntry, TranscriptSource };
-export { assembleReviewerMessages, ADVISOR_DEFAULT_MAX_CHARS, OPAQUE_MARKERS, stripOpaqueMarkers } from "@yanlinglabs/winter-agent-sdk/tools";
+export { assembleReviewerMessages, ADVISOR_DEFAULT_MAX_CHARS, OPAQUE_MARKERS, stripOpaqueMarkers } from "@waifucave/clover-agent-sdk/tools";
 
 /**
  * Resolves BOTH the provider to call and the model id the result must report, TOGETHER: WS-06 §4's

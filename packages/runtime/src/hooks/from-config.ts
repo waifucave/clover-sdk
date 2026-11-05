@@ -25,7 +25,7 @@
 // untrusted (see that function's own header for why the exclusion is wholesale, not partial, unlike
 // the rule-side precedent it otherwise mirrors). A P5 loader feeding this function's OUTPUT into
 // buildHookRegistry inherits that gate automatically; it must NOT re-implement its own filter here.
-import { HOOK_EVENTS, type HookEvent, type HookSource, type ResolvedSettingSource, type RuntimeHooksConfig } from "@yanlinglabs/winter-agent-sdk";
+import { HOOK_EVENTS, type HookEvent, type HookSource, type ResolvedSettingSource, type RuntimeHooksConfig } from "@waifucave/clover-agent-sdk";
 import type { SourcedHookEntry } from "./registry.ts";
 import { FAIL_CLOSED_EVENTS } from "./runner.ts";
 

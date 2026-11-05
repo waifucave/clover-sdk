@@ -18,10 +18,10 @@
  */
 import { closeSync, constants as fsConstants, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, writeSync } from "node:fs";
 import { createHash } from "node:crypto";
-import type { HeldInputEpoch } from "@yanlinglabs/winter-agent-sdk";
+import type { HeldInputEpoch } from "@waifucave/clover-agent-sdk";
 import { dirname, join } from "node:path";
 
-export { HELD_INPUT_CAPABILITY } from "@yanlinglabs/winter-agent-sdk";
+export { HELD_INPUT_CAPABILITY } from "@waifucave/clover-agent-sdk";
 /** The ledger's own cap per recipient. */
 export const HELD_INPUT_MAX_RECORDS = 256;
 /** The 64 KiB message cap. */

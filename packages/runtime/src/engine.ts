@@ -1,5 +1,5 @@
 import type { RuntimeContextChannel } from "./context/runtime-context-channel.ts";
-import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE } from "@yanlinglabs/winter-agent-sdk";
+import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, requireBrand } from "@waifucave/clover-agent-sdk";
 import { assertLinuxSession, assertRunningLinuxSession, checkLinuxSessionFrame, linuxSessionProfile, linuxSessionBindings, linuxGuidedSessionChannel, FRESH_LINUX_TOOLS, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
 import { LINUX_GUIDED_HOST_QUERY_PROFILE } from "./guest/linux-guided-host-query-profile.ts";
 import { dispatchGuidedParentControl } from "./guest/guided-parent-input.ts";
@@ -59,7 +59,7 @@ import {
   type SettingSource,
   // WS-27: the MCP server identity a tool call's hooks and permission prompt carry.
   type McpServerIdentity,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 // R-7b-4: the per-session messaging facet's wire shapes + the guards this side runs on an incoming
 // request, and the messaging contract the handler answers with.
 import {
@@ -70,7 +70,7 @@ import {
   isMessagingReadNotificationsRequest,
   isMessagingSubscribeIdleRequest,
   resolveFacetTarget,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 import {
   AGENT_MESSAGE_TAG,
   buildChildAddress,
@@ -85,7 +85,7 @@ import {
   type DeliveryOutcome,
   type GlobalAgentMessage,
   type RuntimeAddress,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 import { getMessagingRuntime } from "./messaging/router.ts";
 import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDeliveryError, type PeerSessionHandle } from "./messaging/reference-adapter.ts";
 // Phase 6 Task 3 (R6-3): `MessageOrigin`/`ProviderNativeState` are CANONICAL in provider-runtime's
@@ -94,10 +94,10 @@ import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDelivery
 // types can live down there while `ProviderTurn`/`ProviderMessage`/`ContentBlock` stay up here.
 // `TurnRequest` is imported for its `toolChoice`/`effort`/`thinking` member types, so the engine's
 // request and an adapter's request cannot drift apart on the three fields they share.
-import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@waifucave/clover-provider-runtime";
 // P6 fix wave (Ruling E-2): the two PURE continuity functions the switch point calls. Value imports
 // from the provider-runtime barrel, one direction (runtime -> provider-runtime), same as every adapter.
-import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@yanlinglabs/winter-provider-runtime";
+import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
 export type { MessageOrigin, ProviderNativeState };
 // R6-7: the sidecar record types the persistence seam carries. `store/provider-state.ts` imports
 // NOTHING from this file (its own types come from provider-runtime), so this is not the circular
@@ -1702,7 +1702,7 @@ export interface EngineOptions {
   contextAccountant?: ContextAccountant;
   // Phase 4 Task 3 (MUST 8): called ONCE, synchronously, near the start of the run, handing the
   // caller a live getter over this run's own child roster -- the ONE exposure point
-  // MessagingRouterSeam.children() (@yanlinglabs/winter-agent-sdk/messaging) is meant to be built from. No routing
+  // MessagingRouterSeam.children() (@waifucave/clover-agent-sdk/messaging) is meant to be built from. No routing
   // logic lives in the engine; this is purely "here is where the children actually are."
   onChildRosterReady?: (getChildren: () => readonly ChildHandle[]) => void;
   restoredChildren?: ChildHandle[];
@@ -2264,7 +2264,7 @@ export function buildBaselineDenyRules(resolvedWinterHome?: string, brand?: Pick
   // swap would unprotect all of them to protect one. A resolved root that IS the default emits no
   // duplicate (the two anchors coincide and the dedupe below drops the second).
   const absolute: SourcedRuleEntry[] = [];
-  const defaultHome = resolve(join(homedir(), (brand ?? WINTER_BRAND).homeDirName));
+  const defaultHome = resolve(join(homedir(), requireBrand(brand).homeDirName));
   if (resolvedWinterHome !== undefined && resolve(resolvedWinterHome) !== defaultHome) {
     // `//`-ANCHORED, not a bare absolute path. WS-07 §3.1's own grammar (permissions/paths.ts's
     // `resolveAnchor`) reads a SINGLE leading `/` as "relative to the rule's own settings-file
@@ -2318,7 +2318,7 @@ export function buildBaselineDenyRules(resolvedWinterHome?: string, brand?: Pick
   // nothing, while the reuser's own transcripts, backups and run socket would sit unfenced. The
   // resolved-root branch above still emits its twin whenever `<PREFIX>HOME` points somewhere else,
   // and it emits nothing when the two coincide (the dedupe below drops the duplicate).
-  const homeAnchor = `~/${(brand ?? WINTER_BRAND).homeDirName}`;
+  const homeAnchor = `~/${requireBrand(brand).homeDirName}`;
   return [
     ...absolute,
     // The daemon's own runtime directory -- sockets, pidfiles, credentials-adjacent state.
@@ -2815,11 +2815,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // I1: the same resolved root every other fence in this run uses. `wiredWinterHome` is what
   // `production-wiring.ts` computed (`config.winterHome ?? resolveWinterHome(env)`); the fallback
   // keeps a host that drives `runEngine` directly on exactly its pre-fix behaviour.
-  // P7a (D19): this run's brand. `production-wiring.ts` owns the ONE fallback for a session it
-  // builds; a host driving `runEngine` directly (and every hand-built test config) has no `brand`
-  // on the wire, and Winter's own profile is the correct reading for those -- see that module's
-  // own note on why the fallback is not repeated at each reader.
-  const sessionBrand = config.brand ?? WINTER_BRAND;
+  // P7a (D19): this run's brand. A1 (fail closed): a host driving `runEngine` directly with no
+  // `brand` on the config runs under the brand installed for this process (this repository's test
+  // preload installs Winter's own for its hand-built configs), and with none installed the run is
+  // refused (`BrandRequiredError`); it never defaults to Winter's.
+  const sessionBrand = requireBrand(config.brand);
   const resolvedWinterHome = wiredWinterHome ?? config.winterHome;
   // Spawn-surface parity (R-S5): the fork gate, resolved once per run -- the RuntimeConfig field
   // wins in either direction, the env var is the fallback, and absent-and-unset is off.
@@ -3643,7 +3643,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     }
   };
   // Phase 4 Task 3 (MUST 8): the live child roster this run's own spawns append to -- what
-  // `MessagingRouterSeam.children()` (@yanlinglabs/winter-agent-sdk/messaging) is defined to read from. No routing
+  // `MessagingRouterSeam.children()` (@waifucave/clover-agent-sdk/messaging) is defined to read from. No routing
   // logic lives here (WS-10 §15's own split); `onChildRosterReady` (EngineOptions) is this run's own
   // ONE exposure point, called once below, for whichever host-level code constructs Lane D's own
   // real MessagingRouterSeam to wire its `children()` against.
@@ -5894,6 +5894,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     // returned by `select:` -- one hop from callable. (The Winter-branch DEFAULT canonical pair was
     // never exposed this way: `hideAliasExcludedTwins` applies it unconditionally.)
     ...(config.toolAliases !== undefined ? { toolAliases: config.toolAliases } : {}),
+    // The session's brand, so the candidate pool hides the SAME canonical twins `init.tools` does
+    // (`suppressionAliasTable` above is spelled from it too). Without it a branded host's twins of a
+    // withheld native were listed as loadable (`toolsearch/exposure.ts`'s `brand`).
+    brand: sessionBrand,
     ...(effectiveMcpStateSource !== undefined ? { stateSource: effectiveMcpStateSource } : {}),
   });
 

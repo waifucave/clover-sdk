@@ -27,7 +27,7 @@
 //     `tool_call_*` triple. WS-13 §9 forbids dropping it silently, so it is a typed refusal.
 
 import { isBillingErrorBody } from "../../errors.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { createHash } from "node:crypto";
 import { parseSse } from "../../sse.ts";
 import { isWinterBookkeepingItem } from "../../continuity/reasoning-blocks.ts";

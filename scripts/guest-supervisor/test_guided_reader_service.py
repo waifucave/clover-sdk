@@ -1120,7 +1120,7 @@ class ServiceBoundaryTests(unittest.TestCase):
     def test_the_tool_clients_reader_launcher_header_and_the_ts_protocol_are_byte_identical_to_main(self):
         pinned = {
             'linux-guided-reader-protocol.ts': None, 'linux-instruction-reader-compartment.c': '28aa279d6ecb560424fe24bf8ccc0893ffc61cfbb9ba6ba72d38c66b7b655893',
-            'linux-compartment.h': 'e666d010aab902c84ae86d3eea1fca6baaf75a7d94f55d936e020b30584a7e6b', 'linux-session-admission.ts': 'b003e79d73bc4bc87a587ee4f1f3a9e511377a5f15f026b1f3e92ce4adedb14c',
+            'linux-compartment.h': 'e666d010aab902c84ae86d3eea1fca6baaf75a7d94f55d936e020b30584a7e6b', 'linux-session-admission.ts': '3979c9b27927a88ff115fe28a9ad4709e94bfb05c3cc53f0c188e6d2e19a9fe8',
             'linux-runtime-compartment.c': 'fcb90dba8cf9552b9c10cde4012603ac9471b03f31a09bc408667257f65842fa', 'linux-session-owner.c': '7630cb1f2e9b76be78fb6fb0f0efb6df74d437b39f9e3db69ac8aacc83162372',
             'linux-tool-compartment.c': 'be7bea73c7937978411f3ec211286b5d6d3d2b3b0a8659a457517671a935e23d',
         }

@@ -100,8 +100,8 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import type { RuntimeConfig, WinterFrame, SessionStore, ControlResponseFrame, RuntimeHooksConfig, SandboxSettingsConfig, PermissionMode, BrandProfile } from "@yanlinglabs/winter-agent-sdk";
-import { compatibilityKeys, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, SessionStore, ControlResponseFrame, RuntimeHooksConfig, SandboxSettingsConfig, PermissionMode, BrandProfile } from "@waifucave/clover-agent-sdk";
+import { compatibilityKeys, requireBrand } from "@waifucave/clover-agent-sdk";
 import { runEngine, createContextAccountant, type ContextAccountant, type EngineOptions, type EngineSettingsRuleSeed, type Provider, type ProviderMessage, type ProviderUsage } from "../engine.ts";
 import { createInMemoryChannel, type FrameSink } from "../protocol/channel.ts";
 import { STRUCTURED_OUTPUT_TOOL_NAME } from "../structured/seam.ts";
@@ -120,7 +120,7 @@ import type {
   ChildEngineFactory,
   ChildEngineRunContext,
 } from "./child-handle.ts";
-import type { GlobalAgentMessage, DeliveryOutcome } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { GlobalAgentMessage, DeliveryOutcome } from "@waifucave/clover-agent-sdk/messaging";
 import { checkAndRegisterSpawn, releaseSpawn, resolveMaxSpawnDepth } from "./limits.ts";
 import { applySubagentToolPool } from "./tool-pools.ts";
 import { createStallWatchdog, resolveStallTimeoutMs } from "./watchdog.ts";
@@ -277,7 +277,7 @@ export interface ChildEngineFactoryDeps {
    * A child is a session of the SAME product as its parent -- its worktree lives under the parent's
    * project dot-dir, its spawn limits read the parent's env prefix, and its own `RuntimeConfig`
    * must carry the profile onward so ITS children (and its assembler, and its tool executors) stay
-   * branded. Omitted = `WINTER_BRAND`, which is byte-identical to the behaviour before this field.
+   * branded. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand).
    */
   parentBrand?: BrandProfile;
   /**
@@ -609,14 +609,14 @@ async function validateRestoredWorkspace(record: ChildSessionRecord, snapshot: C
   if ((savedParentReal ?? resolve(savedParent)) !== currentParent) {
     // A parent's EnterWorktree choice survives a cold restart only when it remains an existing,
     // Git-registered worktree inside this current workspace's owned worktree directory.
-    const ownedWorktrees = safeRealpath(join(parentCwd, (deps.parentBrand ?? WINTER_BRAND).projectDirName, "worktrees"));
+    const ownedWorktrees = safeRealpath(join(parentCwd, requireBrand(deps.parentBrand).projectDirName, "worktrees"));
     const childPath = savedParentReal !== undefined && ownedWorktrees !== undefined ? relative(ownedWorktrees, savedParentReal) : undefined;
     if (childPath === undefined || childPath === "" || childPath === ".." || childPath.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute(childPath)) throw new Error("child workspace does not match its current parent workspace");
     const listed = await listWorktrees(parentCwd);
     if (!listed.ok || !listed.worktrees.some((worktree) => worktree.realPath === savedParentReal)) throw new Error("child workspace is not a registered worktree of its current parent workspace");
   }
   const expectedRoot = snapshot.workspace.isolationType === "worktree"
-    ? join(savedParent, (deps.parentBrand ?? WINTER_BRAND).projectDirName, "worktrees", `agent-${record.id}`)
+    ? join(savedParent, requireBrand(deps.parentBrand).projectDirName, "worktrees", `agent-${record.id}`)
     : savedParent;
   if ((safeRealpath(snapshot.workspace.root) ?? resolve(snapshot.workspace.root)) !== (safeRealpath(expectedRoot) ?? resolve(expectedRoot))) throw new Error("child workspace does not match its current parent workspace");
   const rosterKey = readChildExecutionProjectKey(record);

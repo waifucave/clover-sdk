@@ -3,8 +3,8 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, unlinkSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { installHostCodeProtection } from "./host-code-protection.ts";
 import { installSourceReadRestrictions, readSourceText, sourceReadRestrictionGeneration } from "./source-read.ts";
 import { readWhole, readCapped, readCappedLinesAndBytes } from "../context/injection.ts";

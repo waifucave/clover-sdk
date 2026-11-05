@@ -24,8 +24,8 @@
 //
 // This module registers no tool and imports no executor, so either web tool's impl file (and their
 // shared underscore modules) may import it without breaching impl isolation.
-import type { CredentialRef, ResolvedWebToolsConfig } from "@yanlinglabs/winter-agent-sdk";
-import type { MessageOrigin } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialRef, ResolvedWebToolsConfig } from "@waifucave/clover-agent-sdk";
+import type { MessageOrigin } from "@waifucave/clover-provider-runtime";
 import type { Provider, ProviderUsage } from "../engine.ts";
 import type { AuxiliaryModelResolution } from "../provider/session-provider.ts";
 import type { ToolSecretResolver } from "../provider/tool-secret.ts";

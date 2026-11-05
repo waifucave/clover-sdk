@@ -36,7 +36,7 @@ import { join } from "node:path";
 export const NPM_REGISTRY_HOST = "registry.npmjs.org";
 const NPM_REGISTRY_URL = `https://${NPM_REGISTRY_HOST}/`;
 
-const OPEN = Symbol.for("@yanlinglabs/winter-test-network-guard:npm-registry-open");
+const OPEN = Symbol.for("@waifucave/clover-test-network-guard:npm-registry-open");
 
 function openScopes(): number {
   return ((globalThis as Record<symbol, unknown>)[OPEN] as number | undefined) ?? 0;

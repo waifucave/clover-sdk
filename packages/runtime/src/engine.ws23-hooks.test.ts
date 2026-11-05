@@ -3,7 +3,7 @@
 // channel exactly as a host's SDK wrapper answers them). Each test asserts the observable outcome: the
 // provider request's messages, the frames a host sees, or how many generations ran.
 import { test, expect, describe } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, RuntimeHooksConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, RuntimeHooksConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { runEngine, STOP_HOOK_BLOCK_CAP, type ContentBlock, type EngineOptions, type Provider, type ProviderMessage, type ProviderTurn } from "./engine.ts";
 import { stubExecutor } from "./provider/mock.ts";

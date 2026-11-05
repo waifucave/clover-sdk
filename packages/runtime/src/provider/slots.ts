@@ -9,9 +9,9 @@
 // `flash`" are three different problems for the user, and collapsing them into one refusal (or, far
 // worse, into a quiet resolution onto a model nobody asked for) is the exact behaviour the whole
 // spec family forbids.
-import type { FamilySlot, ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { CLAUDE_FAMILY_ID, OTHER_FAMILY_ID, SLOT_NAME_RE, canonicalModelIdOf, familyOfModelKey, resolveSlotName, rowsForCanonicalId } from "@yanlinglabs/winter-provider-catalog";
-import type { ActiveSlotSet, ModelSlotSetting, SlotView } from "@yanlinglabs/winter-agent-sdk";
+import type { FamilySlot, ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { CLAUDE_FAMILY_ID, OTHER_FAMILY_ID, SLOT_NAME_RE, canonicalModelIdOf, familyOfModelKey, resolveSlotName, rowsForCanonicalId } from "@waifucave/clover-provider-catalog";
+import type { ActiveSlotSet, ModelSlotSetting, SlotView } from "@waifucave/clover-agent-sdk";
 
 /**
  * The marker the Agent descriptor's static description carries, and the block it lives in.

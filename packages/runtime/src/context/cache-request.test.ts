@@ -3,7 +3,7 @@
 // diagnostics) and what it reports back on the turn's result. Ground truth is the LIVE provider
 // request and the result frame.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { promptCacheKeyFor, promptCacheTtlFor, runEngine, type EngineOptions, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

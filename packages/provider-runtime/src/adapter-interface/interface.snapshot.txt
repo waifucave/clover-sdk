@@ -1,0 +1,583 @@
+// packages/provider-catalog/src/row.ts CatalogRow
+export type CatalogRow = WinterModelDescriptor;
+
+// packages/provider-catalog/src/types.ts CapabilityEvidence
+export interface CapabilityEvidence<T> {
+    value: T;
+    source: EvidenceSource;
+    sourceRef?: string;
+    observedAt?: string;
+    confidence: EvidenceConfidence;
+}
+
+// packages/provider-catalog/src/types.ts EvidenceConfidence
+export type EvidenceConfidence = "verified" | "declared" | "inferred" | "unknown";
+
+// packages/provider-catalog/src/types.ts EvidenceSource
+export type EvidenceSource = "official-doc" | "live-discovery" | "live-probe" | "upstream-static" | "user-override" | "local-override" | "winter-default";
+
+// packages/provider-catalog/src/types.ts ModelPricing
+export interface ModelPricing {
+    inputPerMTokUsd: number;
+    outputPerMTokUsd: number;
+    cacheReadPerMTokUsd?: number;
+    cacheWritePerMTokUsd?: number;
+    longContextTiers?: PricingTier[];
+}
+
+// packages/provider-catalog/src/types.ts ModelStatus
+export type ModelStatus = "candidate" | "experimental" | "supported" | "deprecated" | "blocked";
+
+// packages/provider-catalog/src/types.ts PerMessageEffortMechanism
+export type PerMessageEffortMechanism = {
+    beta: "mid-conversation-output-config-2026-07-01";
+} | {
+    item: "configuration_update";
+};
+
+// packages/provider-catalog/src/types.ts PricingTier
+export interface PricingTier {
+    minPromptTokens: number;
+    inputPerMTokUsd: number;
+    outputPerMTokUsd: number;
+    cacheReadPerMTokUsd?: number;
+    cacheWritePerMTokUsd?: number;
+}
+
+// packages/provider-catalog/src/types.ts ProviderProtocol
+export type ProviderProtocol = "openai-responses" | "openai-chat-completions" | "anthropic-messages" | "google-generate-content" | "bedrock-converse" | "azure-openai" | "custom";
+
+// packages/provider-catalog/src/types.ts ReasoningCapabilities
+export interface ReasoningCapabilities {
+    supported: CapabilityEvidence<boolean>;
+    efforts: string[];
+    defaultEffort?: string;
+    continuation: "none" | "plaintext" | "opaque-provider-state" | "server-response-handle";
+    readableState?: CapabilityEvidence<"none" | "summary" | "full-exposed">;
+    summaryRequest?: CapabilityEvidence<{
+        field: string;
+        values: string[];
+    }>;
+    replayScope?: CapabilityEvidence<"current-tool-loop" | "current-turn" | "selected-turns" | "all-turns">;
+    continuationDomain?: CapabilityEvidence<string[]>;
+    completionEvent?: CapabilityEvidence<string>;
+    toolLoopRequirement?: CapabilityEvidence<"hard-error" | "silent-degradation" | "not-required">;
+    effortRequest?: CapabilityEvidence<{
+        field: "output_config.effort";
+    }>;
+    blockBinding?: CapabilityEvidence<{
+        beta: "thinking-binding-controls-2026-08-01";
+    }>;
+    perMessageEffort?: CapabilityEvidence<PerMessageEffortMechanism>;
+}
+
+// packages/provider-catalog/src/types.ts ToolCalling
+export type ToolCalling = "native" | "emulated" | "none";
+
+// packages/provider-catalog/src/types.ts WinterModelDescriptor
+export interface WinterModelDescriptor {
+    key: string;
+    providerId: string;
+    upstreamId: string;
+    modelFamily: string;
+    canonicalModelId: string;
+    displayName: string;
+    aliases: string[];
+    endpoints: Array<"chat" | "responses" | "embeddings" | "image" | "audio" | "video">;
+    contextWindow?: CapabilityEvidence<number>;
+    maxInputTokens?: CapabilityEvidence<number>;
+    maxOutputTokens?: CapabilityEvidence<number>;
+    inputModalities: CapabilityEvidence<string[]>;
+    outputModalities: CapabilityEvidence<string[]>;
+    toolCalling: CapabilityEvidence<ToolCalling>;
+    nativeTools: CapabilityEvidence<boolean>;
+    parallelTools?: CapabilityEvidence<boolean>;
+    structuredOutput?: CapabilityEvidence<boolean>;
+    promptCaching?: CapabilityEvidence<boolean>;
+    deferredToolLoading?: CapabilityEvidence<boolean>;
+    midConversationSystem?: CapabilityEvidence<boolean>;
+    promptCacheKey?: CapabilityEvidence<boolean>;
+    midConversationToolChanges?: CapabilityEvidence<{
+        beta: "mid-conversation-tool-changes-2026-07-01";
+    }>;
+    inlineToolDefinitions?: CapabilityEvidence<{
+        beta: "inline-tools-2026-09-15";
+    }>;
+    clientToolSearch?: CapabilityEvidence<boolean>;
+    additionalToolsItem?: CapabilityEvidence<boolean>;
+    allowedToolsChoice?: CapabilityEvidence<boolean>;
+    undeclaredToolCalls?: CapabilityEvidence<boolean>;
+    assistantPrefill?: CapabilityEvidence<boolean>;
+    reasoning?: ReasoningCapabilities;
+    pricing?: CapabilityEvidence<ModelPricing>;
+    classifierEligible?: CapabilityEvidence<boolean>;
+    unsupportedParameters: string[];
+    status: ModelStatus;
+}
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyHeader
+export type KeyHeader = (typeof KEY_HEADERS)[number];
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyPlacement
+export type KeyPlacement = {
+    header: "authorization";
+    scheme?: string;
+} | {
+    header: Exclude<KeyHeader, "authorization">;
+};
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyedAuthEntry
+export interface KeyedAuthEntry {
+    source: KeyedTokenSource;
+    placement?: KeyPlacement;
+}
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyedFetchErrorCode
+export type KeyedFetchErrorCode = "host_not_declared" | "insecure_url" | "redirect_refused" | "unknown_auth" | "ambiguous_auth" | "no_credential" | "credential_header" | "idle_timeout" | "aborted" | "network" | "refused";
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyedToken
+export interface KeyedToken {
+    value: string;
+    generation: number;
+}
+
+// packages/provider-runtime/src/adapter-interface/keyed-fetch.ts KeyedTokenSource
+export interface KeyedTokenSource {
+    current(): Promise<KeyedToken | null>;
+    newer(generation: number): Promise<KeyedToken | null>;
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts AdapterContext
+export interface AdapterContext {
+    connection: ConnectionProfile;
+    fetch: KeyedFetch;
+    secrets?: AdapterSecrets;
+    stallTimeoutMs: number;
+    log: ProviderContext["log"];
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts AdapterDiscoveryContext
+export interface AdapterDiscoveryContext extends AdapterContext {
+    signal?: AbortSignal;
+    limits: DiscoveryContext["limits"];
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts AdapterSecrets
+export interface AdapterSecrets {
+    get(name: string): Promise<CredentialMaterial | null>;
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts KeyedFetch
+export type KeyedFetch = (url: string, init?: KeyedFetchInit, options?: KeyedFetchOptions) => Promise<Response>;
+
+// packages/provider-runtime/src/adapter-interface/types.ts KeyedFetchInit
+export interface KeyedFetchInit {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string | Uint8Array | ReadableStream<Uint8Array> | null;
+    signal?: AbortSignal;
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts KeyedFetchOptions
+export interface KeyedFetchOptions {
+    auth?: string | false;
+    idleTimeoutMs?: number;
+}
+
+// packages/provider-runtime/src/adapter-interface/types.ts ModelAdapter
+export interface ModelAdapter {
+    readonly interfaceVersion: typeof MODEL_ADAPTER_INTERFACE_VERSION;
+    readonly id: string;
+    readonly version: string;
+    readonly family: ProviderFamily;
+    readonly protocol: ProviderProtocol;
+    validateCredential(ctx: AdapterContext): Promise<CredentialStatus>;
+    listModels(ctx: AdapterDiscoveryContext): Promise<ModelCatalogResult>;
+    streamTurn(req: TurnRequest, ctx: AdapterContext): AsyncIterable<ProviderEvent>;
+    countTokens?(req: TurnRequest, ctx: AdapterContext): Promise<number>;
+    mapEffort(effort: TurnRequest["effort"], model: CatalogRow): {
+        ok: true;
+        value: unknown;
+    } | {
+        ok: false;
+        reason: string;
+    };
+    capabilities(model: CatalogRow): {
+        toolCalling: ToolCalling;
+        continuationDomain?: string;
+        readableState: "none" | "summary" | "full-exposed";
+    };
+}
+
+// packages/provider-runtime/src/types.ts ConnectionProfile
+export interface ConnectionProfile {
+    providerId: string;
+    baseUrl?: string;
+    headers?: Record<string, string>;
+    region?: string;
+    project?: string;
+    location?: string;
+    deployment?: string;
+    apiVersion?: string;
+    local?: boolean;
+    endpointOrigin?: "reviewed" | "user";
+}
+
+// packages/provider-runtime/src/types.ts ContentBlockLike
+export type ContentBlockLike = {
+    type: "text";
+    text: string;
+} | {
+    type: "tool_use";
+    id: string;
+    name: string;
+    input: unknown;
+} | {
+    type: "tool_result";
+    tool_use_id: string;
+    content: string | ContentBlockLike[];
+    [k: string]: unknown;
+} | {
+    type: "thinking";
+    thinking: string;
+    signature: string;
+} | {
+    type: "redacted_thinking";
+    data: string;
+} | {
+    type: "image";
+    source: {
+        type: "base64";
+        media_type: string;
+        data: string;
+    };
+} | {
+    type: "tool_reference";
+    tool_names: string[];
+};
+
+// packages/provider-runtime/src/types.ts CredentialMaterial
+export type CredentialMaterial = {
+    kind: "api-key";
+    key: string;
+} | {
+    kind: "bearer";
+    token: string;
+    expiresAt?: number;
+} | {
+    kind: "oauth";
+    accessToken: string;
+    refreshToken?: string;
+    expiresAt?: number;
+    accountId?: string;
+    idToken?: string;
+} | {
+    kind: "aws";
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken?: string;
+} | {
+    kind: "gcp-service-account";
+    clientEmail: string;
+    privateKeyPem: string;
+    tokenUri: string;
+} | {
+    kind: "gcp-access-token";
+    token: string;
+};
+
+// packages/provider-runtime/src/types.ts CredentialStatus
+export type CredentialStatus = {
+    ok: true;
+    accountId?: string;
+    scopes?: string[];
+} | {
+    ok: false;
+    code: "missing" | "invalid" | "expired" | "network" | "unsupported";
+    message: string;
+};
+
+// packages/provider-runtime/src/types.ts CredentialStore
+export interface CredentialStore {
+    get(ref: CredentialRef): Promise<CredentialMaterial | null>;
+    set(ref: Extract<CredentialRef, {
+        kind: "keychain";
+    }>, material: CredentialMaterial): Promise<void>;
+    delete(ref: Extract<CredentialRef, {
+        kind: "keychain";
+    }>): Promise<void>;
+    refresh?(ref: Extract<CredentialRef, {
+        kind: "keychain";
+    }>): Promise<CredentialMaterial>;
+}
+
+// packages/provider-runtime/src/types.ts DiscoveryContext
+export interface DiscoveryContext extends ProviderContext {
+    signal?: AbortSignal;
+    limits: {
+        maxBytes: number;
+        maxItems: number;
+        timeoutMs: number;
+    };
+}
+
+// packages/provider-runtime/src/types.ts MessageOrigin
+export interface MessageOrigin {
+    providerId: string;
+    modelKey: string;
+    family: ProviderFamily | string;
+    continuationDomain?: string;
+}
+
+// packages/provider-runtime/src/types.ts ModelCatalogResult
+export interface ModelCatalogResult {
+    models: Array<{
+        id: string;
+        displayName?: string;
+        contextWindow?: number;
+        inputModalities?: string[];
+    }>;
+    partial: boolean;
+    cached: boolean;
+    warnings: string[];
+}
+
+// packages/provider-runtime/src/types.ts ProviderContext
+export interface ProviderContext {
+    connection: ConnectionProfile;
+    credentials: CredentialStore;
+    authRef: CredentialRef;
+    stallTimeoutMs: number;
+    log: (event: {
+        kind: string;
+        providerId: string;
+        model?: string;
+        bytes?: number;
+        detail?: Record<string, string | number>;
+    }) => void;
+}
+
+// packages/provider-runtime/src/types.ts ProviderError
+export interface ProviderError {
+    code: ProviderErrorCode;
+    message: string;
+    status?: number;
+    providerCode?: string;
+    retryAfterMs?: number;
+    retryable: boolean;
+    contextOverflow?: true;
+    imageOverflow?: true;
+}
+
+// packages/provider-runtime/src/types.ts ProviderErrorCode
+export type ProviderErrorCode = "auth" | "rate_limit" | "billing" | "server" | "network" | "bad_request" | "timeout" | "stall" | "aborted" | "capability";
+
+// packages/provider-runtime/src/types.ts ProviderEvent
+export type ProviderEvent = {
+    type: "message_start";
+    id?: string;
+    model?: string;
+} | {
+    type: "text_delta";
+    text: string;
+} | {
+    type: "thinking_summary_delta";
+    text: string;
+} | {
+    type: "thinking_exposed_delta";
+    text: string;
+} | {
+    type: "native_thinking_block";
+    block: unknown;
+} | {
+    type: "reasoning_progress";
+    block: string;
+    phase: "start" | "delta" | "end";
+    kind: ReasoningProgressKind;
+    text?: string;
+    part?: number;
+} | {
+    type: "tool_call_start";
+    id: string;
+    name: string;
+} | {
+    type: "tool_call_delta";
+    id: string;
+    argumentsJsonDelta: string;
+} | {
+    type: "tool_call_end";
+    id: string;
+} | {
+    type: "native_state";
+    items: unknown[];
+} | {
+    type: "usage";
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens?: number;
+    cacheWriteTokens?: number;
+    cacheWrite1hTokens?: number;
+    cacheMiss?: {
+        type: string;
+        missedInputTokens?: number;
+    };
+    thinkingBlocksDropped?: number;
+    reasoningTokens?: number;
+    reportedCostUsd?: number;
+} | {
+    type: "rate_limit";
+    kind: "subscription-quota";
+    info: Record<string, unknown>;
+} | {
+    type: "retry";
+    attempt: number;
+    maxRetries: number;
+    retryDelayMs: number;
+    errorStatus?: number;
+    error: SdkAssistantMessageError;
+} | {
+    type: "auth_status";
+    isAuthenticating: boolean;
+    output?: string[];
+    error?: string;
+} | {
+    type: "done";
+    stopReason: "end_turn" | "tool_use" | "max_tokens" | "aborted" | "refusal" | "pause_turn" | "model_context_window_exceeded";
+    stopDetails?: {
+        category: string | null;
+        explanation: string | null;
+    };
+} | {
+    type: "error";
+    error: ProviderError;
+};
+
+// packages/provider-runtime/src/types.ts ProviderFamily
+export type ProviderFamily = "openai" | "anthropic" | "google" | "bedrock" | "local-openai" | "custom";
+
+// packages/provider-runtime/src/types.ts ProviderMessageLike
+export interface ProviderMessageLike {
+    role: "user" | "assistant" | "tool" | "system";
+    content: string | ContentBlockLike[];
+    outputConfig?: {
+        effort: string;
+    };
+    toolChanges?: ToolChangeSet;
+    uuid?: string;
+    origin?: MessageOrigin;
+    nativeState?: ProviderNativeState;
+    decoration?: {
+        text: string;
+        door: "tag" | "thinking-channel";
+    };
+    meta?: {
+        attachment: {
+            type: string;
+            [k: string]: unknown;
+        };
+    };
+    isMeta?: true;
+}
+
+// packages/provider-runtime/src/types.ts ProviderNativeState
+export interface ProviderNativeState {
+    family: string;
+    continuationDomain: string;
+    items: unknown[];
+}
+
+// packages/provider-runtime/src/types.ts ReasoningProgressKind
+export type ReasoningProgressKind = "summary" | "update" | "exposed" | "hidden";
+
+// packages/provider-runtime/src/types.ts SdkAssistantMessageError
+export type SdkAssistantMessageError = "authentication_failed" | "oauth_org_not_allowed" | "account_on_hold" | "billing_error" | "rate_limit" | "overloaded" | "invalid_request" | "model_not_found" | "server_error" | "unknown" | "max_output_tokens";
+
+// packages/provider-runtime/src/types.ts SystemPromptBlock
+export interface SystemPromptBlock {
+    text: string;
+    cacheScope: "global" | "org" | null;
+}
+
+// packages/provider-runtime/src/types.ts ToolChangeSet
+export interface ToolChangeSet {
+    remove: string[];
+    add: Array<{
+        type: "reference";
+        name: string;
+    } | {
+        type: "definition";
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+    }>;
+}
+
+// packages/provider-runtime/src/types.ts TurnRequest
+export interface TurnRequest {
+    model: string;
+    system?: string;
+    systemBlocks?: SystemPromptBlock[];
+    messages: ProviderMessageLike[];
+    tools?: Array<{
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+        deferLoading?: true;
+        namespace?: string;
+        toolSearch?: true;
+    }>;
+    toolChoice?: {
+        type: "auto";
+    } | {
+        type: "any";
+    } | {
+        type: "tool";
+        name: string;
+    };
+    effort?: "low" | "medium" | "high" | "xhigh" | "max" | number;
+    thinking?: {
+        type: "disabled";
+    } | {
+        type: "enabled";
+        budgetTokens?: number;
+    } | {
+        type: "adaptive";
+    };
+    maxOutputTokens?: number;
+    signal?: AbortSignal;
+    requestSummary?: boolean;
+    cacheTtl?: "5m" | "1h";
+    messageCacheTtl?: {
+        rolling?: "5m" | "1h";
+        lookback?: "5m" | "1h";
+    };
+    cacheDiagnostics?: {
+        previousMessageId: string | null;
+    };
+    cacheKey?: string;
+    allowedTools?: string[];
+    toolChanges?: true;
+    resumesPausedTurn?: true;
+}
+
+// packages/provider-runtime/src/winter-defaults.ts CredentialRef
+export type CredentialRef = {
+    kind: "keychain";
+    account: string;
+    service?: string;
+} | {
+    kind: "env";
+    name: string;
+} | {
+    kind: "file";
+    path: string;
+    format: "aws-shared-credentials" | "gcp-service-account-json" | "raw";
+    profile?: string;
+} | {
+    kind: "inline";
+    value: string;
+} | {
+    kind: "aws-default-chain";
+} | {
+    kind: "none";
+};

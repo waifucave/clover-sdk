@@ -30,7 +30,7 @@
 // catalog, the REAL registry, the target expression the REAL bridge constructs -- because every
 // hand-built fixture in this lane carried a domain id, which is exactly the fact that hid this.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog, type WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog, type WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { createRegistry, type ProviderRegistry } from "../registry.ts";
 import type { ContentBlockLike, MessageOrigin, ProviderMessageLike } from "../types.ts";
 import { toWireMessages } from "../adapters/anthropic/messages.ts";

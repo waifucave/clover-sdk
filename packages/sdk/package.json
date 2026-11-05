@@ -1,6 +1,6 @@
 {
-  "name": "@yanlinglabs/winter-agent-sdk",
-  "version": "0.0.62",
+  "name": "@waifucave/clover-agent-sdk",
+  "version": "0.0.63",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -65,14 +65,14 @@
     }
   },
   "dependencies": {
-    "@yanlinglabs/winter-provider-catalog": "workspace:*"
+    "@waifucave/clover-provider-catalog": "workspace:*"
   },
   "optionalDependencies": {
-    "@yanlinglabs/winter-agent-sdk-darwin-arm64": "workspace:*"
+    "@waifucave/clover-agent-sdk-darwin-arm64": "workspace:*"
   },
   "devDependencies": {
-    "@yanlinglabs/winter-agent-runtime": "workspace:*",
-    "@yanlinglabs/winter-conformance": "workspace:*",
+    "@waifucave/clover-agent-runtime": "workspace:*",
+    "@waifucave/clover-conformance": "workspace:*",
     "@types/node": "^26.4.0"
   }
 }

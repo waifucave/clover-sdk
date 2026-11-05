@@ -16,9 +16,9 @@ import {
   createMemoryCredentialStore,
   createResponsesAdapter,
   createXaiOauthAdapter,
-} from "@yanlinglabs/winter-provider-runtime";
-import type { CredentialRef, ProviderContext, ProviderEvent, ProviderMessageLike, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import { FAST_RETRY, descriptor, testContext } from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime";
+import type { CredentialRef, ProviderContext, ProviderEvent, ProviderMessageLike, TurnRequest } from "@waifucave/clover-provider-runtime";
+import { FAST_RETRY, descriptor, testContext } from "@waifucave/clover-provider-runtime/testing";
 import { errorResponse, startFake, type FakeServer } from "../fakes/server.ts";
 import { ANTHROPIC_MODELS, testAnthropicAdapter, testContext as anthropicContext } from "./anthropic.ts";
 import { GOOGLE_MODELS, googleContext, testGoogleAdapter } from "./google.ts";

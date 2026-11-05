@@ -425,7 +425,7 @@ describe("GIFs", () => {
 
 describe("no test can reach the real winter home (test-home-guard.ts)", () => {
   test("the preload gave this run a temp WINTER_HOME, and the default winter home resolves there -- never under the real ~/.winter", async () => {
-    const { resolveWinterHome } = await import("@yanlinglabs/winter-agent-sdk");
+    const { resolveWinterHome } = await import("@waifucave/clover-agent-sdk");
     const home = process.env["WINTER_HOME"];
     expect(home).toBeDefined();
     const real = join(homedir(), ".winter");

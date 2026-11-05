@@ -109,11 +109,25 @@ describe("release.yml's trigger is pinned to v* tags and workflow_dispatch only"
     // and exists only on the npm job. Neither has the other's -- which is the whole reason they are
     // separate jobs. P9a-4 adds a THIRD job, `build-platform`, which publishes nothing and therefore
     // carries no elevated permissions at all (the default token grant, unstated here).
+    // A1 adds `npm-token`, which only reports whether the npm secret exists: it gets NO permissions.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
     expect(doc.jobs["build-platform"]?.permissions).toBeUndefined();
     expect(doc.jobs["publish"]?.permissions).toEqual({ packages: "write", contents: "read" });
+    expect(doc.jobs["npm-token"]?.permissions).toEqual({});
     expect(doc.jobs["publish-npm"]?.permissions).toEqual({ "id-token": "write", contents: "read" });
+  });
+
+  test("A1 (review M10): every job on the publish path runs only on a `v*` tag ref, so a dispatch on a branch publishes nothing", () => {
+    // `workflow_dispatch` stays a trigger (the runbook's re-drive at the SAME tag), but on a branch
+    // the version-vs-tag check has no tag to compare, so the jobs that publish must not run there.
+    const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
+    const TAG_ONLY = "startsWith(github.ref, 'refs/tags/v')";
+    for (const jobName of ["publish", "npm-token", "publish-npm"] as const) {
+      expect([jobName, String(doc.jobs[jobName]?.if ?? "")]).toEqual([jobName, expect.stringContaining(TAG_ONLY) as unknown as string]);
+    }
+    // `build-platform` publishes nothing (pinned below), so it may build on any dispatch.
+    expect(doc.jobs["build-platform"]?.if).toBeUndefined();
   });
 
   test("it actually publishes via `pnpm publish -r --no-git-checks`, with NODE_AUTH_TOKEN from secrets.GITHUB_TOKEN", () => {
@@ -349,6 +363,10 @@ interface WorkflowJob {
   permissions?: Record<string, string>;
   /** P7a pre-publish (item 5): the npm job's dependency on the GitHub Packages job. */
   needs?: string | string[];
+  /** A1 (review M10): the publish path's tag-only condition, and the npm job's token gate. */
+  if?: string;
+  /** A1: `npm-token`'s one output, whether the repository has an npm token at all. */
+  outputs?: Record<string, string>;
 }
 interface WorkflowDoc {
   on: unknown;
@@ -424,10 +442,32 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     //
     // P9a-4: a third job, `build-platform`, exists to produce the darwin-arm64 binary -- it publishes
     // nothing (pinned separately below) and BOTH publish jobs now `needs` it too.
+    //
+    // A1: plus `npm-token`, which publishes nothing either. The npm job needs it; the GitHub Packages
+    // job does NOT, so GitHub Packages never waits on anything about npm.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
     expect(doc.jobs["publish"]?.needs).toBe("build-platform");
-    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform"]);
+    expect(doc.jobs["npm-token"]?.needs).toBeUndefined();
+    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform", "npm-token"]);
+    expect(containsPublishCommand(JSON.stringify(doc.jobs["npm-token"]))).toBe(false);
+  });
+
+  test("A1: with no NPM_TOKEN the npm job is skipped AS A WHOLE, and the token's value never reaches a log", () => {
+    // A job-level `if:` cannot read `secrets`, so `npm-token` reads the secret's presence in a step and
+    // hands on `true`/`false`; the npm job's own `if:` tests that output. Nothing else in the npm job
+    // runs without a token, so nothing unrelated to the token can turn a GitHub-Packages-only release red.
+    const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
+    const gate = doc.jobs["npm-token"]!;
+    expect(gate.outputs).toEqual({ present: "${{ steps.check.outputs.present }}" });
+    expect(gate.steps).toHaveLength(1);
+    const check = gate.steps[0]!;
+    expect(JSON.stringify((check as unknown as { env?: unknown }).env ?? {})).toContain("secrets.NPM_TOKEN");
+    // It writes only `present=true` or `present=false`, and never echoes the variable itself.
+    expect(check.run ?? "").toContain('echo "present=true" >> "$GITHUB_OUTPUT"');
+    expect(check.run ?? "").toContain('echo "present=false" >> "$GITHUB_OUTPUT"');
+    expect((check.run ?? "").replace('[ -n "$NPM_TOKEN" ]', "")).not.toContain("$NPM_TOKEN");
+    expect(String(doc.jobs["publish-npm"]?.if ?? "")).toContain("needs.npm-token.outputs.present == 'true'");
   });
 
   test("the npm publish is TOKEN-GATED, so a missing NPM_TOKEN never blocks the GitHub Packages publish", () => {
@@ -467,7 +507,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
 
   test("item 5 / R-7b-5: the npm set is DATA, and it is EXACTLY the closure of {wrapper, runtime} + {harness roots}", () => {
     // npm gets what an out-of-repo consumer installs and nothing else. Two kinds of ROOT:
-    //   * THE WRAPPER -- `npm install @yanlinglabs/winter-agent-sdk` must work;
+    //   * THE WRAPPER -- `npm install @waifucave/clover-agent-sdk` must work;
     //   * THE HARNESS ROOTS (R-7b-5) -- `@yanlinglabs/winter-runtime-sdk` lives in its own repository
     //     and needs both conformance harnesses as dev dependencies; without them on npm its CI would
     //     need a cross-repo `read:packages` token whose only purpose is fetching test fixtures.
@@ -493,25 +533,25 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     // WS-23: the runtime is a ROOT of its own (`NPM_EMBEDDING_ROOT_PACKAGE`) -- an embedding host
     // installs it by name -- and its dependencies were already in the closure, so exactly one more.
     //
-    // 0.0.58: `@yanlinglabs/winter-web` enters BY CLOSURE -- the runtime's WebSearch/WebFetch import it.
+    // 0.0.58: `@waifucave/clover-web` enters BY CLOSURE -- the runtime's WebSearch/WebFetch import it.
     expect(npmExpectedSet()).toEqual([
-      "@yanlinglabs/winter-agent-runtime",
-      "@yanlinglabs/winter-agent-sdk",
-      "@yanlinglabs/winter-agent-sdk-darwin-arm64",
-      "@yanlinglabs/winter-conformance",
-      "@yanlinglabs/winter-provider-catalog",
-      "@yanlinglabs/winter-provider-conformance",
-      "@yanlinglabs/winter-provider-runtime",
-      "@yanlinglabs/winter-web",
+      "@waifucave/clover-agent-runtime",
+      "@waifucave/clover-agent-sdk",
+      "@waifucave/clover-agent-sdk-darwin-arm64",
+      "@waifucave/clover-conformance",
+      "@waifucave/clover-provider-catalog",
+      "@waifucave/clover-provider-conformance",
+      "@waifucave/clover-provider-runtime",
+      "@waifucave/clover-web",
     ]);
     // The two roles stay distinct: `provider-runtime` is on npm BY CLOSURE (provider-conformance
     // imports values from it), never by being a harness.
-    expect(npmHarnessSet()).toEqual(["@yanlinglabs/winter-conformance", "@yanlinglabs/winter-provider-conformance"]);
+    expect(npmHarnessSet()).toEqual(["@waifucave/clover-conformance", "@waifucave/clover-provider-conformance"]);
     // The wrapper's OWN closure (no harness roots) now includes its optionalDependency, sorted.
-    expect(npmRequiredClosure(undefined, ["@yanlinglabs/winter-agent-sdk"])).toEqual([
-      "@yanlinglabs/winter-agent-sdk",
-      "@yanlinglabs/winter-agent-sdk-darwin-arm64",
-      "@yanlinglabs/winter-provider-catalog",
+    expect(npmRequiredClosure(undefined, ["@waifucave/clover-agent-sdk"])).toEqual([
+      "@waifucave/clover-agent-sdk",
+      "@waifucave/clover-agent-sdk-darwin-arm64",
+      "@waifucave/clover-provider-catalog",
     ]);
   });
 
@@ -521,7 +561,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     // NOT on npm; the ruling reversed that, and the property worth keeping is the narrower one: the
     // flag says what a package IS, and only these two are it.
     const harness = npmHarnessSet();
-    expect(harness).toEqual(["@yanlinglabs/winter-conformance", "@yanlinglabs/winter-provider-conformance"]);
+    expect(harness).toEqual(["@waifucave/clover-conformance", "@waifucave/clover-provider-conformance"]);
     for (const name of harness) expect([name, discoverPublishablePackages().some((p) => p.name === name)]).toEqual([name, true]);
     // Every publishable package is now on npm -- which is exactly why the plants below exist: on THIS
     // tree the rule and "all of them" give the same answer, so only a synthetic tree can show it
@@ -532,7 +572,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     // npm ROOT of its own (an embedding host installs it by name), not by some other package's
     // closure. The darwin-arm64 platform package is IN the set too (P9a-3 -- R-7-2's gap is closed,
     // CI can build the binary it needs, P9a-4).
-    expect(discoverPublishablePackages().some((p) => p.name === "@yanlinglabs/winter-agent-runtime")).toBe(true);
+    expect(discoverPublishablePackages().some((p) => p.name === "@waifucave/clover-agent-runtime")).toBe(true);
     expect(npmRequiredClosure(undefined, [NPM_EMBEDDING_ROOT_PACKAGE])).toContain(NPM_EMBEDDING_ROOT_PACKAGE);
     expect(discoverPublishablePackages().some((p) => p.name.endsWith("-darwin-arm64"))).toBe(true);
   });
@@ -680,7 +720,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
   test("item 9: provider-catalog's NOTICE survives and its README points at it", () => {
     // The third-party attribution for the upstream catalog data is a different document from the
     // licence, and the one that would be quietly lost by "we added a LICENSE, done".
-    const dir = discoverPublishablePackages().find((p) => p.name === "@yanlinglabs/winter-provider-catalog")!.dir;
+    const dir = discoverPublishablePackages().find((p) => p.name === "@waifucave/clover-provider-catalog")!.dir;
     expect(readFileSync(join(dir, "NOTICE"), "utf8").length).toBeGreaterThan(0);
     const readme = readFileSync(join(dir, "README.md"), "utf8");
     expect(readme).toContain("## License");
@@ -713,7 +753,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
   test("item 11: the ROOT README documents both registries, the dist-only contract, and the licence", () => {
     const readme = readFileSync(fileURLToPath(new URL("../README.md", import.meta.url)), "utf8");
     expect(readme).toContain("### From public npm");
-    expect(readme).toContain("@yanlinglabs:registry=https://npm.pkg.github.com");
+    expect(readme).toContain("@waifucave:registry=https://npm.pkg.github.com");
     expect(readme).toContain("read:packages");
     expect(readme).toContain("COMPILED OUTPUT ONLY");
     expect(readme).toContain("## License");
@@ -737,7 +777,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
       const readme = readFileSync(join(pkg.dir, "README.md"), "utf8");
       expect([pkg.name, readme.includes("## Install")]).toEqual([pkg.name, true]);
       // GitHub Packages needs the scope pinned AND an authenticated read -- both, in every README.
-      expect([pkg.name, readme.includes("@yanlinglabs:registry=https://npm.pkg.github.com")]).toEqual([pkg.name, true]);
+      expect([pkg.name, readme.includes("@waifucave:registry=https://npm.pkg.github.com")]).toEqual([pkg.name, true]);
       expect([pkg.name, readme.includes("read:packages")]).toEqual([pkg.name, true]);
       // ITEM 11: the DIST-ONLY sentence, and the source pointed at GitHub.
       expect([pkg.name, readme.includes("COMPILED OUTPUT ONLY")]).toEqual([pkg.name, true]);
@@ -1001,7 +1041,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
 
   test("r3 (C1/C2/M3): the committed `.npmrc` pins NO registry and carries NO token line at all", () => {
     // ANOTHER INVERTED ASSERTION, and the same fix. This used to REQUIRE
-    // `@yanlinglabs:registry=https://npm.pkg.github.com` as a "safe default" -- and that line beat the
+    // `@waifucave:registry=https://npm.pkg.github.com` as a "safe default" -- and that line beat the
     // npm job's own `--registry` at both the pnpm and the npm layer (`pickRegistryForPackage` and
     // `pickRegistry` both consult the SCOPE before the default), so every "npm" publish resolved to
     // GitHub Packages. A committed pin is global; there are two registries; each job now binds its own
@@ -1010,7 +1050,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     // The `${NODE_AUTH_TOKEN}` line went with it: it authenticated nothing locally and made every
     // pnpm invocation in the repo print a config WARN (M3).
     const npmrc = readFileSync(fileURLToPath(new URL("../.npmrc", import.meta.url)), "utf8");
-    expect(npmrc).not.toMatch(/^\s*@yanlinglabs:registry=/m);
+    expect(npmrc).not.toMatch(/^\s*@waifucave:registry=/m);
     expect(npmrc).not.toMatch(/^\s*[^#\n]*_authToken=/m);
     expect(npmrc).not.toMatch(/^\s*registry=/m);
     expect(npmrc).not.toMatch(/npm_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}/);
@@ -1035,9 +1075,9 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
       expect([jobName, setupNode !== undefined]).toEqual([jobName, true]);
       const withBlock = (setupNode as unknown as { with?: Record<string, unknown> }).with ?? {};
       expect([jobName, withBlock["registry-url"]]).toEqual([jobName, registryUrl]);
-      // `scope` is what makes setup-node write `@yanlinglabs:registry=<url>` rather than only the
+      // `scope` is what makes setup-node write `@waifucave:registry=<url>` rather than only the
       // default -- without it the binding this whole design rests on is not created.
-      expect([jobName, withBlock["scope"]]).toEqual([jobName, "@yanlinglabs"]);
+      expect([jobName, withBlock["scope"]]).toEqual([jobName, "@waifucave"]);
       // ...and the credential for THAT registry, from THAT job's secret.
       const publishStep = job.steps.find((step) => /pnpm publish|publish-npm-set\.ts/.test(step.run ?? ""))!;
       expect([jobName, JSON.stringify((publishStep as unknown as { env?: unknown }).env ?? {})]).toEqual([

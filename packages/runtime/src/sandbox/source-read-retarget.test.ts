@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { mkdtempSync, realpathSync, mkdirSync, writeFileSync, symlinkSync, unlinkSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { installHostCodeProtection } from "../sandbox/host-code-protection.ts";
 import { loadRules, conditionalRuleAttachmentProducer } from "../context/rules.ts";
 import { loadPlugins } from "../plugins/loader.ts";

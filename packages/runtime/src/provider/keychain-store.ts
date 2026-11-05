@@ -23,13 +23,13 @@
 // `bun test` run sets it (`scripts/test-keychain-guard.ts`), which also replaces the real API with a
 // tripwire in the test process and every `bun` child it spawns, so a path that reaches the real Keychain
 // anyway fails the test that caused it instead of raising a macOS consent dialog.
-import type { CredentialMaterial, CredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { CredentialResolutionError, redactRef } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialMaterial, CredentialStore } from "@waifucave/clover-provider-runtime";
+import { CredentialResolutionError, redactRef } from "@waifucave/clover-provider-runtime";
 // `DEFAULT_KEYCHAIN_SERVICE` is DECLARED in the sdk's `options.ts` and imported here rather than
 // re-declared: this codebase polices one-declaration-per-value everywhere else, and a second copy of
 // a service NAME is the kind of drift that silently splits a user's credentials across two keychain
 // services. Re-exported so a caller reads it from the module it is working in.
-import { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type CredentialRef } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type CredentialRef, requireBrand } from "@waifucave/clover-agent-sdk";
 export { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY };
 
 /**
@@ -129,7 +129,7 @@ export interface KeychainCredentialStoreOptions {
  * (provider-runtime's `createCompositeCredentialStore`) tries each member in turn, and a member that
  * threw on someone else's ref kind would break the composition.
  */
-export function createKeychainCredentialStore(service: string = DEFAULT_KEYCHAIN_SERVICE, opts: KeychainCredentialStoreOptions = {}): CredentialStore {
+export function createKeychainCredentialStore(service: string = requireBrand().keychainService, opts: KeychainCredentialStoreOptions = {}): CredentialStore {
   const backend = (): SecretsBackend => opts.secrets ?? defaultSecretsBackend();
   return {
     async get(ref: CredentialRef): Promise<CredentialMaterial | null> {
@@ -193,7 +193,7 @@ export type KeychainSecretReader = (ref: Extract<CredentialRef, { kind: "keychai
  * never quotes the value; a backend failure is the same typed, ref-redacted `io` error `get` raises.
  * The ref's own `service` wins over the session's, exactly as in `get`.
  */
-export function createKeychainSecretReader(service: string = DEFAULT_KEYCHAIN_SERVICE, opts: KeychainCredentialStoreOptions = {}): KeychainSecretReader {
+export function createKeychainSecretReader(service: string = requireBrand().keychainService, opts: KeychainCredentialStoreOptions = {}): KeychainSecretReader {
   const backend = (): SecretsBackend => opts.secrets ?? defaultSecretsBackend();
   return async (ref) => {
     try {
@@ -227,7 +227,7 @@ export interface KeychainRawStore {
   remove(account: string): Promise<void>;
 }
 
-export function createKeychainRawStore(service: string = DEFAULT_KEYCHAIN_SERVICE, opts: KeychainCredentialStoreOptions = {}): KeychainRawStore {
+export function createKeychainRawStore(service: string = requireBrand().keychainService, opts: KeychainCredentialStoreOptions = {}): KeychainRawStore {
   const backend = (): SecretsBackend => opts.secrets ?? defaultSecretsBackend();
   const failure = (what: string, account: string): CredentialResolutionError => new CredentialResolutionError("io", `keychain ${what} failed for account ${JSON.stringify(account)}`);
   return {

@@ -4,7 +4,7 @@
 // OpenRouter's documented wire, and the whole host loop -- streamTurn, the stream assembler, the history
 // renderer, the next request -- runs as a consumer would run it.
 import { afterEach, describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import fixture from "./__fixtures__/openrouter-reasoning-tool-loop.json" with { type: "json" };
 import { ChatStreamMapper, ReasoningDetailsAccumulator, buildChatBody, chatReasoningParameterFor, createChatCompletionsAdapter, mapChatMessages, openRouterAnthropicCaching, withChatCacheMarkers } from "./chat-completions.ts";
 import { resolveReasoning } from "./shared.ts";

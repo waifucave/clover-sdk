@@ -43,7 +43,7 @@
 //     the seam asked for a summary (`TurnRequest.requestSummary`, which `adapterAsProvider` sets from
 //     the descriptor's own `readableState` evidence). A signature NEVER leaves native state.
 
-import type { ToolCalling, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { ToolCalling, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type {
   ContentBlockLike,
   CredentialRef,

@@ -3,7 +3,7 @@
 // rule sanctions reaches the host (canUseTool) with claude's "Run outside of the sandbox"; and under
 // `allowUnsandboxedCommands: false` the flag removes no sandbox, so it is no escape.
 import { expect, test } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider, stubExecutor } from "../provider/mock.ts";

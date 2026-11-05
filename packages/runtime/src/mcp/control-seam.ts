@@ -8,7 +8,7 @@
 // transport connections) is Lane A's own job — nothing here should be mistaken for that, mirroring
 // mcp/state.ts's own "this file owns the shape + a FAKE... the REAL implementation is Lane A's own
 // job" precedent exactly.
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 
 // Mirrors the pinned official `McpSetServersResult` shape (derived-shapes-p4.md item (b):
 // `{ added: string[]; removed: string[]; errors: Record<string,string> }`) -- WS-09 §3's own

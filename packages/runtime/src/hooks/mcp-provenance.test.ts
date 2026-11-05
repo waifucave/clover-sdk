@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent } from "@waifucave/clover-agent-sdk";
 import { registerMcpServerTools, unregisterMcpServerTools } from "../tools/registry.ts";
 import { mcpServerIdentity, mcpToolProvenance, runHooks, type HookInvocationRequest, type HookInvoker, type RunHooksContext } from "./runner.ts";
 import { commandHookInput, createCommandHookInvoker } from "./command-invoker.ts";

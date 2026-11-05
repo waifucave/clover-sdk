@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-conformance` — the behavioural corpus every adapter must pass.
+// `@waifucave/clover-provider-conformance` — the behavioural corpus every adapter must pass.
 //
 // WS-13 §13 makes a corpus pass, not an adapter's existence, the thing that promotes a catalog row
 // from `candidate` to `supported`: request serialization and headers, streaming order, single /
@@ -22,7 +22,7 @@
 // adapter believed it sent.
 
 /** The package's own identity, so a scenario report can name what produced it. */
-export const PROVIDER_CONFORMANCE_PACKAGE = "@yanlinglabs/winter-provider-conformance";
+export const PROVIDER_CONFORMANCE_PACKAGE = "@waifucave/clover-provider-conformance";
 
 // --- Phase 6 Task 3: the spine's frozen corpus runner, re-exported ---------------------------------
 //
@@ -74,6 +74,13 @@ export type { LiveCaseContext, LiveCaseId, LiveCaseOutcome, LiveCaseSpec, LiveRe
 // site about which family's fold it is.
 export * as azureCorpus from "./corpus/azure.ts";
 
+// --- Clover A-M1: the kit on the model adapter interface ------------------------------------------
+//
+// The keyed fetch's cases (any `net.fetch`: the SDK's reference and the daemon's plugin API) and the
+// model adapter's cases (an adapter on the keyed fetch, or in a process of its own).
+export { CONFORMANCE_CASE_TIMEOUT_MS, KEYED_FETCH_CASES, MODEL_ADAPTER_CASES, formatConformanceReport, runKeyedFetchConformance, runModelAdapterConformance } from "./keyed/index.ts";
+export type { ConformanceCaseSpec, ConformanceOutcome, ConformanceReport, KeyedFetchCaseId, KeyedFetchFactory, ModelAdapterCaseId, RunModelAdapterConformanceOptions } from "./keyed/index.ts";
+
 // `anthropicCorpus`, `bedrockCorpus`, `googleCorpus`, `openaiCorpus`, `vertexCorpus` and
 // `openaiScenarios` are DELIBERATELY NOT re-exported here (review r1 Critical Finding 2's actual
 // fix, not a Phase 6 omission). `corpus/{anthropic,bedrock,google,openai}.ts` import
@@ -88,7 +95,7 @@ export * as azureCorpus from "./corpus/azure.ts";
 // always evaluates the entire target file, so pulling in either one still requires the broken file's
 // own top-level import to resolve. (`azure.ts`'s own reach into `openai.ts` is `import type` only,
 // which Bun/tsc elide entirely -- confirmed the one case that is actually safe to keep.) A bare
-// `import("@yanlinglabs/winter-provider-conformance")` crashed immediately once packed and installed
+// `import("@waifucave/clover-provider-conformance")` crashed immediately once packed and installed
 // standalone (`Cannot find module '../../../runtime/src/provider/bridge.ts'`), reproduced against a
 // real packed tarball via `scripts/smoke-installed.ts` -- which is what caught the vertex/
 // openai-scenarios cases specifically, after fixing the first four made the obvious ones green.
@@ -107,5 +114,5 @@ export * as azureCorpus from "./corpus/azure.ts";
 // Moved out of this file and into `fakes/index.ts` (WS-02 §9 Step 2: "exports maps ./fakes"), which
 // this line re-exports in full so nothing importing a fake from the package's TOP LEVEL (as
 // `verify-provider-live.test.ts` does) needs to change. A consumer who wants ONLY the fakes can
-// import `@yanlinglabs/winter-provider-conformance/fakes` directly instead.
+// import `@waifucave/clover-provider-conformance/fakes` directly instead.
 export * from "./fakes/index.ts";

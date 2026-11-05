@@ -1,4 +1,4 @@
-import { WINTER_BRAND, type BrandProfile, type RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import { type BrandProfile, type RuntimeAgentDefinition, requireBrand } from "@waifucave/clover-agent-sdk";
 import { computeChildPolicy, type ChildPolicyResult } from "../permissions/auto/inheritance.ts";
 import { isPermissionMode, type PolicyState } from "../permissions/policy-state.ts";
 import { findAgentDenyRule } from "../permissions/evaluator.ts";
@@ -48,7 +48,7 @@ export function resolveHostCodeDescendantPolicy(options: HostCodeDescendantPolic
   if (!["Agent", "Task"].some((name) => parentTools.includes(currentToolName(name, options.legacyToolNames)))) {
     throw new Error("Host descendant cannot launch: parent Agent tool is unavailable");
   }
-  const brand = options.brand ?? WINTER_BRAND;
+  const brand = requireBrand(options.brand);
   const env = options.env ?? process.env;
   const builtin = resolveBuiltinAgents({ brand, env, ...(options.forkSubagentEnabled !== undefined ? {
     gates: { ...resolveBuiltinAgentGates(env, brand), forkSubagentEnabled: options.forkSubagentEnabled },

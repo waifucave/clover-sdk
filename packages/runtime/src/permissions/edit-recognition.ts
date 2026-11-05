@@ -45,7 +45,7 @@
 // deliberately simpler tokenizer (no paren-depth tracking; this module never needs to find compound
 // operators, only whitespace-delimited operands within an ALREADY-split-and-stripped subcommand).
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 import { stripWrappers, extractRedirectWrites, shellWords, shellWordReadings, type ShellWord } from "./grammar.ts";
 import { flattenSubcommands, hasProcessSubstitution, naiveCommandPieces } from "./shell-structure.ts";
 
@@ -307,7 +307,7 @@ export function recognizeEditOperation(
   // "silent-allow" cell, evaluator.ts's `evaluateModeStage`).
   if (call.toolName === "CronCreate") {
     if (call.input["durable"] !== true || opts?.sessionRoot === undefined) return null;
-    return { kind: "edit", paths: [join(opts.sessionRoot, (opts.brand ?? WINTER_BRAND).projectDirName, "scheduled_tasks.json")] };
+    return { kind: "edit", paths: [join(opts.sessionRoot, requireBrand(opts.brand).projectDirName, "scheduled_tasks.json")] };
   }
 
   const command = shellCommandOf(call);

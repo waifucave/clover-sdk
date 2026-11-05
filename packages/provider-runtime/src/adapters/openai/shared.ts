@@ -36,7 +36,7 @@
 //      body caps, manual redirects and the no-credential-forwarding rule are all one layer down;
 //      a bare `fetch` in an adapter silently opts out of all five.
 
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { hostHeaders } from "../privileged-headers.ts";
 import { containsImage } from "../content-blocks.ts";
 import { winterIdentityHeaders, winterUserAgent, type IdentityHeaderLookup } from "../../identity.ts";

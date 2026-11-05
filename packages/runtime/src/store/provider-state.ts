@@ -26,9 +26,9 @@
 import { randomUUID } from "node:crypto";
 import { closeSync, constants as fsConstants, fstatSync, fsyncSync, mkdirSync, openSync, readSync, writeSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import type { MessageOrigin, ProviderNativeState, ReasoningBlockAt } from "@yanlinglabs/winter-provider-runtime";
-import { coerceInDialectReasoningBlock, isReasoningBlockItem, isWinterBookkeepingItem, reasoningBlockItems } from "@yanlinglabs/winter-provider-runtime";
-import { PROVIDER_STATE_FILE_SUFFIX } from "@yanlinglabs/winter-agent-sdk";
+import type { MessageOrigin, ProviderNativeState, ReasoningBlockAt } from "@waifucave/clover-provider-runtime";
+import { coerceInDialectReasoningBlock, isReasoningBlockItem, isWinterBookkeepingItem, reasoningBlockItems } from "@waifucave/clover-provider-runtime";
+import { PROVIDER_STATE_FILE_SUFFIX } from "@waifucave/clover-agent-sdk";
 
 /** The `SessionStoreEntry.type` discriminant every record carries. One string, one place. */
 export const PROVIDER_STATE_ENTRY_TYPE = "winter_provider_state" as const;

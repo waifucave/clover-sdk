@@ -14,70 +14,70 @@
     ],
     "allowImportingTsExtensions": true,
     "paths": {
-      "@yanlinglabs/winter-agent-sdk": [
+      "@waifucave/clover-agent-sdk": [
         "./packages/sdk/src/index.ts"
       ],
-      "@yanlinglabs/winter-agent-sdk/messaging": [
+      "@waifucave/clover-agent-sdk/messaging": [
         "./packages/sdk/src/messaging/index.ts"
       ],
-      "@yanlinglabs/winter-agent-sdk/tools": [
+      "@waifucave/clover-agent-sdk/tools": [
         "./packages/sdk/src/tools/index.ts"
       ],
-      "@yanlinglabs/winter-provider-catalog": [
+      "@waifucave/clover-provider-catalog": [
         "./packages/provider-catalog/src/index.ts"
       ],
-      "@yanlinglabs/winter-provider-catalog/families": [
+      "@waifucave/clover-provider-catalog/families": [
         "./packages/provider-catalog/src/families.ts"
       ],
-      "@yanlinglabs/winter-provider-runtime": [
+      "@waifucave/clover-provider-runtime": [
         "./packages/provider-runtime/src/index.ts"
       ],
-      "@yanlinglabs/winter-provider-runtime/testing": [
+      "@waifucave/clover-provider-runtime/testing": [
         "./packages/provider-runtime/src/testing.ts"
       ],
-      "@yanlinglabs/winter-conformance": [
+      "@waifucave/clover-conformance": [
         "./packages/conformance/src/index.ts"
       ],
-      "@yanlinglabs/winter-conformance/trace": [
+      "@waifucave/clover-conformance/trace": [
         "./packages/conformance/src/trace.ts"
       ],
-      "@yanlinglabs/winter-conformance/official": [
+      "@waifucave/clover-conformance/official": [
         "./packages/conformance/src/official/index.ts"
       ],
-      "@yanlinglabs/winter-provider-conformance": [
+      "@waifucave/clover-provider-conformance": [
         "./packages/provider-conformance/src/index.ts"
       ],
-      "@yanlinglabs/winter-provider-conformance/fakes": [
+      "@waifucave/clover-provider-conformance/fakes": [
         "./packages/provider-conformance/src/fakes/index.ts"
       ],
-      "@yanlinglabs/winter-web": [
+      "@waifucave/clover-web": [
         "./packages/web/src/index.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime": [
+      "@waifucave/clover-agent-runtime": [
         "./packages/runtime/src/index.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/testing": [
+      "@waifucave/clover-agent-runtime/testing": [
         "./packages/runtime/src/testing.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/embedded": [
+      "@waifucave/clover-agent-runtime/embedded": [
         "./packages/runtime/src/embedded.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/embedded-host": [
+      "@waifucave/clover-agent-runtime/embedded-host": [
         "./packages/runtime/src/embedded-host.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/embedded-worker": [
+      "@waifucave/clover-agent-runtime/embedded-worker": [
         "./packages/runtime/src/embedded-worker.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/workflow-worker": [
+      "@waifucave/clover-agent-runtime/workflow-worker": [
         "./packages/runtime/src/workflows/subprocess-entry.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/version": [
+      "@waifucave/clover-agent-runtime/version": [
         "./packages/runtime/src/version.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/mcp-client": [
+      "@waifucave/clover-agent-runtime/mcp-client": [
         "./packages/runtime/src/mcp-client.ts"
       ],
-      "@yanlinglabs/winter-agent-runtime/mcp-auth": [
+      "@waifucave/clover-agent-runtime/mcp-auth": [
         "./packages/runtime/src/mcp-auth.ts"
       ]
     }

@@ -6,7 +6,7 @@
 // subagents/child-engine.test.ts beside the other rename tests.
 import { expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider } from "../provider/mock.ts";

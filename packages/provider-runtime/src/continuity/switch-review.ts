@@ -18,7 +18,7 @@
 // See `sameModelFamily` below for the comparison and why it is deliberately its own function rather
 // than a change to `domains.ts`.
 import type { SessionStoreEntry } from "../winter-defaults.ts";
-import { loadCatalog, modelFamilyOf, OTHER_FAMILY_ID, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog, modelFamilyOf, OTHER_FAMILY_ID, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 import type { ProviderStateRecord } from "./claude-ready.ts";
 import type { ContinuityEndpoint } from "./domains.ts";
 import { classifySwitch, type SwitchClassification, type SwitchFacts } from "./warnings.ts";

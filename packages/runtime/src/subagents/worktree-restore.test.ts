@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { WINTER_BRAND, WinterCompatibilitySessionStore } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, WinterCompatibilitySessionStore } from "@waifucave/clover-agent-sdk";
 import { runEngine } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { userMessageText } from "../provider/mock.ts";

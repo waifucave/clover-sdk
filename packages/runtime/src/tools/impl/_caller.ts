@@ -12,7 +12,7 @@
 // This module imports only TYPES (both `import type`, erased at compile time), so it contributes no
 // runtime edge at all — the leading underscore matches `descriptors/_shared.ts`'s own convention for
 // a shared non-tool file.
-import type { WinterToolCaller } from "@yanlinglabs/winter-agent-sdk/tools";
+import type { WinterToolCaller } from "@waifucave/clover-agent-sdk/tools";
 
 import type { ToolExecutionContext } from "../registry.ts";
 

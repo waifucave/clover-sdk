@@ -27,7 +27,7 @@
 // flags, the persistence and the fallbacks. Both attachment types are Winter bookkeeping: their rendered
 // text never reaches a provider (context/request-layout.ts converts or drops them before the merge).
 import type { ProviderMessage, ProviderToolSpec } from "../engine.ts";
-import type { ToolChangeSet } from "@yanlinglabs/winter-provider-runtime";
+import type { ToolChangeSet } from "@waifucave/clover-provider-runtime";
 import type { AttachmentPayload } from "./attachments.ts";
 
 /**

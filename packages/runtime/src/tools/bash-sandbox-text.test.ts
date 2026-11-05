@@ -10,7 +10,7 @@
 // sandboxed session, rendered from the session's REAL sandbox posture, and nothing that is false for
 // Winter.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { runEngine, type Provider, type ProviderRequest } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { stubExecutor } from "../provider/mock.ts";

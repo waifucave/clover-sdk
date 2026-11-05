@@ -4,9 +4,9 @@
 // together silently).
 import { describe, expect, test } from "bun:test";
 import { buildModelFamilyListing } from "./family-listing.ts";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import type { ModelFamilyDescriptor, ModelStatus, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import type { ActiveSlotSet } from "@yanlinglabs/winter-agent-sdk";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import type { ModelFamilyDescriptor, ModelStatus, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import type { ActiveSlotSet } from "@waifucave/clover-agent-sdk";
 
 // --- fixture --------------------------------------------------------------------------------------
 //

@@ -10,7 +10,7 @@
 // §10.3/§10.6-14). Anything here that LOOKS like a security decision (which command names count as
 // "interpreters," which as "package managers") is a placeholder shape proving the mechanism works,
 // explicitly extensible, not a claim of completeness.
-import type { RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { RuleSource } from "@waifucave/clover-agent-sdk";
 import type { ParsedRule } from "../grammar.ts";
 
 // ---------------------------------------------------------------------------------------------

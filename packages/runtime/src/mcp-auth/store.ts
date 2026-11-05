@@ -5,7 +5,7 @@
 // the memory store below. Nothing in `mcp-auth` ever writes a record anywhere else: no file, no env var,
 // no log line.
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
-import { DEFAULT_KEYCHAIN_SERVICE, envName, WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_KEYCHAIN_SERVICE, envName, WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 import { createKeychainRawStore } from "../provider/keychain-store.ts";
 import { resolveFromHost, type HostRequestSender } from "../provider/host-credentials.ts";
 import { McpOAuthError } from "./errors.ts";

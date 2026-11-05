@@ -1,7 +1,7 @@
 // The Chat Completions mapping, as pure functions. The live half is in the conformance package.
 
 import { afterEach, describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { ChatStreamMapper, buildChatBody, createChatCompletionsAdapter, mapChatMessages, mapChatTools, OPENAI_CHAT_BASE_URL } from "./chat-completions.ts";
 import { resolveReasoning } from "./shared.ts";
 import { collect, descriptor, soleError, testContext, testDiscoveryContext } from "./testing.ts";

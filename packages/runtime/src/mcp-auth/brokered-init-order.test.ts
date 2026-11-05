@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeEach, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, splitFrames, type CredentialResolveAnswer, type McpOAuthRefreshAnswer, type SpawnedRuntimeProcess, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { query, splitFrames, type CredentialResolveAnswer, type McpOAuthRefreshAnswer, type SpawnedRuntimeProcess, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import { spawnEmbeddedWorker } from "../embedded-host.ts";
 import { scriptedProvider } from "../provider/mock.ts";

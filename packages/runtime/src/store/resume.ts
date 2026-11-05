@@ -28,7 +28,7 @@ import type { ProviderMessage, ContentBlock } from "../engine.ts";
 // here (it was only forkSession's own parameter/return-construction type; forkSession itself
 // relocated to packages/sdk/src/store/fork-session.ts alongside the store, see this file's own
 // header comment above and task-10-report.md).
-import type { SessionStore, SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStore, SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { attachmentMessage } from "../context/attachments.ts";
 
 // Whole-branch review Minor 1 (extends the T9-nit carry, WS-03 §11): official taxonomy-building

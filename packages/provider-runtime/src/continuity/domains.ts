@@ -17,7 +17,7 @@
 // it would fail on the LIVE path while resumed sessions kept working. So: one derivation, in the
 // registry, read through `resolve()`; this file only ever COMPARES stamped ids.
 
-import type { EvidenceConfidence, ReasoningCapabilities, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { EvidenceConfidence, ReasoningCapabilities, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { WinterProviderResolutionError, type ProviderRegistry } from "../registry.ts";
 import type { MessageOrigin } from "../types.ts";
 

@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, query } from "@waifucave/clover-agent-sdk";
 import { copyHostCodeProtection, currentHostCodeProtectionPaths, hostCodePathAllowed, installHostCodeProtection, type HostCodeProtectionLease } from "./host-code-protection.ts";
 import { runCommand } from "./spawn.ts";
 import { spawnEmbeddedWorker, type EmbeddedWorkerProcess } from "../embedded-host.ts";
@@ -144,7 +144,7 @@ test("pre-start update is retained and initial snapshot mutation cannot weaken h
   const reads = [f.data];
   const proc = spawnEmbeddedWorker({ workerEntry: join(import.meta.dir, "..", "embedded-worker.ts"), startAfter: held,
     hostCodeProtection: { revision: 1, denyReadPaths: reads, denyWritePaths: [] },
-    spawn: { command: "winter", args: ["--run", "--config-json", JSON.stringify({ sessionId: "held-fixture", cwd: f.source, model: "winter-test/readimage", persistSession: false, permissionMode: "bypassPermissions", allowDangerouslySkipPermissions: true })], cwd: f.source,
+    spawn: { command: "winter", args: ["--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, sessionId: "held-fixture", cwd: f.source, model: "winter-test/readimage", persistSession: false, permissionMode: "bypassPermissions", allowDangerouslySkipPermissions: true })], cwd: f.source,
       env: { WINTER_HOME: join(f.dir, "home"), WINTER_DISABLE_GIT_INSTRUCTIONS: "1", WINTER_TEST_READ_IMAGE: f.data } } });
   reads.length = 0;
   let out = "", err = "";

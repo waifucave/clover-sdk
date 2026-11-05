@@ -3,7 +3,7 @@
 //   - item 1: the engine's effort-only `system` marker -> `configuration_update`, gated on the row;
 //   - item 4 (+ addendum): client `tool_search`, namespaces, `additional_tools`, `allowed_tools`.
 import { describe, expect, test } from "bun:test";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { ProviderRequestError } from "../../http.ts";
 import type { ProviderMessageLike, TurnRequest } from "../../types.ts";
 import { assertConfigurationUpdates, assertResponsesToolFeatures, buildResponsesBody, CONFIGURATION_UPDATE_PLACEMENT, mapResponsesInput, ResponsesStreamMapper, responsesStreamTools } from "./responses.ts";

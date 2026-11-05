@@ -1,11 +1,11 @@
-# `@yanlinglabs/winter-conformance`
+# `@waifucave/clover-conformance`
 
 Winter's SDK compatibility corpus: a trace normalizer, a set of committed golden traces, and the
 pinned-upstream ("official SDK") mechanics that back Winter's compatibility claim against
 `@anthropic-ai/claude-agent-sdk@0.3.250`. See this package's own `src/` layout and the
 `winter-agent-sdk` repository's packaging conventions for how the corpus is versioned and published.
 
-This package is published to GitHub Packages under restricted access (`@yanlinglabs` scope). The
+This package is published to GitHub Packages under restricted access (`@waifucave` scope). The
 registry is chosen by the release workflow, not by a committed pin — see
 [RELEASING.md](https://github.com/waifucave/clover-sdk/blob/main/RELEASING.md).
 
@@ -20,23 +20,23 @@ whose only purpose is fetching test fixtures.
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-conformance
+npm install @waifucave/clover-conformance
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-conformance` as usual.
+literal in the file. Then `npm install @waifucave/clover-conformance` as usual.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
@@ -48,9 +48,9 @@ a patch.
 
 | Import | What it is |
 | --- | --- |
-| `@yanlinglabs/winter-conformance` | The full barrel: everything below, in one import. |
-| `@yanlinglabs/winter-conformance/trace` | `normalizeTrace`, `compareTraces`, and the `ConformanceTraceEntry` type — strips volatile fields (session ids, timestamps, durations, costs) from a captured SDK message trace and diffs two normalized traces. |
-| `@yanlinglabs/winter-conformance/official` | The pinned-upstream mechanics: `fetchAndVerifyUpstream` (checksum-verified ephemeral fetch of the pinned official wrapper tarball) and `runCapture` (the `RUN_OFFICIAL_CAPTURE=1`-gated differential-signal harness). |
+| `@waifucave/clover-conformance` | The full barrel: everything below, in one import. |
+| `@waifucave/clover-conformance/trace` | `normalizeTrace`, `compareTraces`, and the `ConformanceTraceEntry` type — strips volatile fields (session ids, timestamps, durations, costs) from a captured SDK message trace and diffs two normalized traces. |
+| `@waifucave/clover-conformance/official` | The pinned-upstream mechanics: `fetchAndVerifyUpstream` (checksum-verified ephemeral fetch of the pinned official wrapper tarball) and `runCapture` (the `RUN_OFFICIAL_CAPTURE=1`-gated differential-signal harness). |
 
 ## Bun-only surface
 
@@ -61,14 +61,14 @@ not the same as runnable on every path — one exported function needs the Bun r
 
 | Function | Import | Needs | Why |
 | --- | --- | --- | --- |
-| `runCapture()` | `@yanlinglabs/winter-conformance`, `@yanlinglabs/winter-conformance/official` | `Bun.spawn`, `Bun.serve` | It installs the pinned official SDK into a throwaway npm prefix and drives it against loopback HTTP fakes. |
+| `runCapture()` | `@waifucave/clover-conformance`, `@waifucave/clover-conformance/official` | `Bun.spawn`, `Bun.serve` | It installs the pinned official SDK into a throwaway npm prefix and drives it against loopback HTTP fakes. |
 
 Called anywhere else it throws `BunRequiredError` (exported from both of those barrels) as its FIRST
 action — before the pinned tarball is fetched and before any listener is bound — naming the function,
 the Bun API and what to do instead. Catch it by identity:
 
 ```ts
-import { runCapture, BunRequiredError } from "@yanlinglabs/winter-conformance";
+import { runCapture, BunRequiredError } from "@waifucave/clover-conformance";
 
 try {
   await runCapture();
@@ -80,7 +80,7 @@ try {
 
 ### `BunRequiredError` is THIS package's own class
 
-`@yanlinglabs/winter-provider-runtime` exports a class with the same name and shape, and the two are
+`@waifucave/clover-provider-runtime` exports a class with the same name and shape, and the two are
 deliberately **not** the same type — the packages share no dependency, so there is no module either
 could import it from. **Catch the one you imported.** Within this package it is one type across every
 subpath: an error thrown by `./official`'s `runCapture` satisfies `instanceof BunRequiredError`
@@ -98,7 +98,7 @@ Goldens (`goldens/*.trace.json`) ship as data alongside the compiled `dist/` —
 package's directory layout by hand.
 
 ```ts
-import { normalizeTrace, compareTraces, loadGolden } from "@yanlinglabs/winter-conformance";
+import { normalizeTrace, compareTraces, loadGolden } from "@waifucave/clover-conformance";
 
 const golden = loadGolden("plain-query.trace.json");
 const fresh = normalizeTrace(await traceMySession());

@@ -11,9 +11,9 @@
 // into a report or a commit message, which makes "identifiers, a verdict, a duration and Winter's
 // own identity — and nothing else" a property worth pinning rather than trusting to review.
 import { test, expect, describe } from "bun:test";
-import { CredentialResolutionError } from "@yanlinglabs/winter-provider-runtime";
+import { CredentialResolutionError } from "@waifucave/clover-provider-runtime";
 import { describeThrown } from "../corpus/classifier-safety.ts";
-import type { ProviderAdapter, ProviderEvent } from "@yanlinglabs/winter-provider-runtime";
+import type { ProviderAdapter, ProviderEvent } from "@waifucave/clover-provider-runtime";
 import { AUTH_DIMENSION_FIELDS, authDimensionsOf, LIVE_CASE_IMPLS, LIVE_CASES, type LiveCaseContext, type LiveCaseResult } from "./cases.ts";
 import { formatLiveRow, liveRowSummary, type LiveReport } from "./index.ts";
 

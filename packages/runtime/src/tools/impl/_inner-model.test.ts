@@ -3,8 +3,8 @@
 // things the advisor's inner call never did: the signal reaches the provider, and the usage reaches
 // the turn's accounting (proved against the REAL engine at the bottom of this file).
 import { afterEach, describe, expect, test } from "bun:test";
-import type { WinterFrame, ProtocolSdkMessage as SdkMessage, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { WinterProviderResolutionError } from "@yanlinglabs/winter-provider-runtime";
+import type { WinterFrame, ProtocolSdkMessage as SdkMessage, RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { WinterProviderResolutionError } from "@waifucave/clover-provider-runtime";
 import { INNER_MODEL_BUDGET_EXCEEDED_DETAIL, INNER_TOOL_LIMIT_NOTICE, runInnerModel, type InnerModelRuntime, type InnerToolSpec } from "./_inner-model.ts";
 import { ProviderTurnError, createContextAccountant, runEngine, type Provider, type ProviderRequest, type ProviderTurn, type ProviderUsage } from "../../engine.ts";
 import { registerTool, unregisterToolForTest, type ToolExecutionContext } from "../registry.ts";

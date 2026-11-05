@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { scanForSecrets } from "@yanlinglabs/winter-provider-catalog";
+import { scanForSecrets } from "@waifucave/clover-provider-catalog";
 import {
   ProviderStallError,
   normalizeHttpError,

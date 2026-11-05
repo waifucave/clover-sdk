@@ -39,7 +39,7 @@
 //   - SESSION END: `dispose()` kills every running job and forgets every undelivered output (the engine's
 //     teardown, beside the background shells' sweep). A job's group is also in the process-group ledger
 //     (process-groups.ts) from spawn to exit, so an embedded host reaps it if the Worker dies first.
-import type { HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent } from "@waifucave/clover-agent-sdk";
 import { capHookText } from "./bounds.ts";
 
 /** Ten minutes: background work (a test run after an edit, a lint of the tree) is minutes, not seconds -- the gating hooks' 60 s would cut it off. */

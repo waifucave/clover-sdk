@@ -4,7 +4,7 @@ import { join } from "node:path";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
 // runtime-private module still needs; reused from there rather than re-implemented, preserving
 // the "one shared blank-env-value rule" this file's own resolveTempBase comment documents.
-import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { isUnset, envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 // P7a (D19): the two brand fields this module needs, as a `Pick` rather than the whole profile --
 // the same shape (and the same reason) as the sdk's `HomeBrand`: a caller holding a partially
@@ -79,7 +79,7 @@ function ensureValidatedDir(path: string): void {
 // brand arrives with `--config-json`, so a module-load read would bake in Winter's own prefix for a
 // reuser and could never be corrected (brand-gate rules 9 and 10 pin both halves of that).
 export function resolveTempBase(env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">): string {
-  const override = (env ?? process.env)[envName(brand ?? WINTER_BRAND, "TMPDIR")];
+  const override = (env ?? process.env)[envName(requireBrand(brand), "TMPDIR")];
   return isUnset(override) ? "/tmp" : (override as string);
 }
 
@@ -87,7 +87,7 @@ export interface SessionTempDirOptions {
   tempProjectKey: string;
   backendUuid: string;
   env?: Record<string, string | undefined>;
-  /** P7a (D19): the session's resolved brand. Omitted = `WINTER_BRAND`, i.e. today's names. */
+  /** P7a (D19): the session's resolved brand. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: TempBrand;
 }
 
@@ -112,7 +112,7 @@ export function sessionTempDir(opts: SessionTempDirOptions): SessionTempDirPaths
   assertSafeSegment(opts.tempProjectKey, "tempProjectKey");
   assertSafeSegment(opts.backendUuid, "backendUuid");
 
-  const brand = opts.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts.brand);
   const base = realpathSync(resolveTempBase(opts.env, brand));
   const uid = realUid();
   const sharedRoot = join(base, `${brand.tempRootName}-${uid}`);

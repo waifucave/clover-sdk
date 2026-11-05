@@ -9,7 +9,7 @@ import { captureSourceOrigin, assertSourceOrigin, type SourceOrigin, bindSourceO
 // broken skill in a checked-in project `skills/` directory must not be able to fail a session's startup.
 import { closeSync, readSync, type Dirent } from "node:fs";
 import { dirname, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 import { parseSkillFile, type ParsedSkillFile } from "./frontmatter.ts";
 
 /** WS-11 §2.1's tier table, and `SkillListing["source"]` (context/seam.ts, R5-17) verbatim. */
@@ -97,7 +97,7 @@ export function findRepoRoot(from: string): string | undefined {
  * P7a (D19): the dot-dir is `brand.projectDirName`; omitted = `WINTER_BRAND`, i.e. today's walk.
  */
 export function projectSkillRoots(cwd: string, brand?: Pick<BrandProfile, "projectDirName">): string[] {
-  const projectDir = (brand ?? WINTER_BRAND).projectDirName;
+  const projectDir = requireBrand(brand).projectDirName;
   const repoRoot = findRepoRoot(cwd);
   const roots: string[] = [];
   let dir = cwd;

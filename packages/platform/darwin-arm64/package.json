@@ -1,6 +1,6 @@
 {
-  "name": "@yanlinglabs/winter-agent-sdk-darwin-arm64",
-  "version": "0.0.62",
+  "name": "@waifucave/clover-agent-sdk-darwin-arm64",
+  "version": "0.0.63",
   "license": "MIT",
   "repository": {
     "type": "git",

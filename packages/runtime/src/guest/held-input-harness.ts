@@ -3,7 +3,7 @@
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { encodeFrame, splitFrames, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import type { Provider, ProviderRequest, ToolExecutor } from "../engine.ts";
 

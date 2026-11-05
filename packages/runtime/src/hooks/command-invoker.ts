@@ -62,7 +62,7 @@
 // kills in `finally` on every path, so an abandoned hook process can never outlive its invocation.
 import { spawn } from "node:child_process";
 import { prepareHostChildLaunch } from "../sandbox/host-child-floor.ts";
-import { envName, type BrandProfile, type HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import { envName, type BrandProfile, type HookEvent } from "@waifucave/clover-agent-sdk";
 import { FAIL_CLOSED_EVENTS, HOOK_PROCESS_OUTPUT, type HookInvocationRequest, type HookInvoker, type HookProcessOutput } from "./runner.ts";
 import { MAX_HOOK_STDOUT_CAPTURE } from "./bounds.ts";
 import type { SourcedHookEntry } from "./registry.ts";

@@ -5,8 +5,8 @@
 // summary request (the redacted, tool-less one, NOT the session's prefix), then the retried round on
 // the compacted history.
 import { expect, test } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { stubExecutor } from "./mock.ts";

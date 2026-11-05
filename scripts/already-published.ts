@@ -55,11 +55,11 @@ export function decidePublishes(
  * job) would silently query the wrong one and get a confident `absent` -- the worst possible wrong
  * answer, since "absent" means "publish".
  *
- * So the scope is bound explicitly too. `--@yanlinglabs:registry=<url>` is the CLI form of the same
+ * So the scope is bound explicitly too. `--@waifucave:registry=<url>` is the CLI form of the same
  * key setup-node writes into its userconfig, and a CLI flag outranks any config file, so the probe
  * asks the registry it was told to ask no matter what `.npmrc` is in scope.
  */
-export const WINTER_SCOPE = "@yanlinglabs";
+export const WINTER_SCOPE = "@waifucave";
 
 export function probeWithNpmView(registry: string): (name: string, version: string) => PublishedProbeResult {
   return (name, version) => {

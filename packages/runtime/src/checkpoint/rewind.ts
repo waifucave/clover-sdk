@@ -13,7 +13,7 @@
 // EVERY FAILURE IS AN ANSWER, NEVER A THROW: `{ canRewind: false, error }`. The pinned method
 // returns a typed result, so a rejected promise would leave a host unable to tell "there is nothing
 // to rewind to" from a transport fault.
-import type { RewindFilesResult } from "@yanlinglabs/winter-agent-sdk";
+import type { RewindFilesResult } from "@waifucave/clover-agent-sdk";
 import { lstatSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { blobName, nearestExistingAncestor, parentRealPathOf, readCheckpointIndex, sessionCheckpointDir, type CheckpointRecord } from "./file-history.ts";

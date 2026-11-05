@@ -651,8 +651,8 @@ Moved here from this package's own `NOTICE` (P7a fix wave r3 (I3)), which now sh
 `NOTICE`'s Apache-2.0 `xai-org/grok-build` attribution byte-for-byte instead — `generated/
 catalog.json` cites that same repository, at the identical pinned commit, as the `sourceRef` for
 several xAI model-catalogue rows (`crates/codegen/xai-grok-models/default_models.json`), so this
-package is a genuine carrier of that derivation alongside `@yanlinglabs/winter-provider-runtime` and
-`@yanlinglabs/winter-provider-conformance`. This register is unrelated to that attribution; it is the
+package is a genuine carrier of that derivation alongside `@waifucave/clover-provider-runtime` and
+`@waifucave/clover-provider-conformance`. This register is unrelated to that attribution; it is the
 WS-13 §13 acceptance requirement that "notices cover copied files", for the OmniRoute corpus.
 
 NO THIRD-PARTY SOURCE CODE. As of this section's writing, this package contains no third-party

@@ -35,7 +35,7 @@
 // now an `SdkError` whose `code` is a STRING `SdkErrorCode` -- the HTTP status moved off `.code` onto
 // `SdkHttpError.status`. `classifyConnectError` below is where that move is absorbed.
 import { Client, InsufficientScopeError, ProtocolError, ProtocolErrorCode, SdkError, SdkErrorCode, SdkHttpError, SseError, UnauthorizedError, UnsupportedProtocolVersionError, type AuthProvider, type Transport, type VersionNegotiationMode } from "@modelcontextprotocol/client";
-import type { McpServerConfigForProcessTransport, McpVersionNegotiation } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport, McpVersionNegotiation } from "@waifucave/clover-agent-sdk";
 import { buildStdioTransport, WinterStdioTransport } from "./transports/stdio.ts";
 import { buildHttpTransport } from "./transports/http.ts";
 import { buildSseTransport } from "./transports/sse.ts";

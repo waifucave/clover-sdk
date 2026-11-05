@@ -17,7 +17,7 @@
 // relative fs read does not survive that — the catalog next door already ships as a static JSON
 // import into the same binary, so this path is proven rather than assumed.
 
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
 import pkg from "../package.json";
 import { FIRST_PARTY_ORIGINATORS, WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";
 
@@ -147,6 +147,39 @@ export function setWinterIdentity(next: WinterIdentity): () => void {
     IDENTITY_FRAMES.splice(at, 1);
     activeIdentity = IDENTITY_FRAMES[IDENTITY_FRAMES.length - 1] ?? DEFAULT_IDENTITY;
   };
+}
+
+/**
+ * The brand fields an identity is made of, structurally (this package never imports the sdk, whose
+ * `BrandProfile` carries them under these names): `packageName` is the product token, and
+ * `productVersion` the host's own release (absent: this package's version, right only for Winter).
+ */
+export interface BrandIdentitySource {
+  packageName: string;
+  codexOriginator: string;
+  contactUrl: string;
+  productVersion?: string;
+}
+
+/** The identity a brand presents: the one mapping from brand fields to identity tokens. */
+export function identityFromBrand(brand: BrandIdentitySource): WinterIdentity {
+  return {
+    product: brand.packageName,
+    codexOriginator: brand.codexOriginator,
+    contactUrl: brand.contactUrl,
+    ...(brand.productVersion === undefined ? {} : { version: brand.productVersion }),
+  };
+}
+
+/**
+ * Install a brand's identity (`setWinterIdentity(identityFromBrand(brand))`), with the same frame and
+ * disposer semantics. What a branded SESSION installs for its run (the runtime's production wiring)
+ * and what a branded HOST installs for its own process, where its own provider calls run outside any
+ * session (Clover's daemon: titles, the bash reviewer, sign-ins) — so the two can never present
+ * differently. Throws `TypeError` for a brand whose identity `setWinterIdentity` would refuse.
+ */
+export function installBrandIdentity(brand: BrandIdentitySource): () => void {
+  return setWinterIdentity(identityFromBrand(brand));
 }
 
 /**

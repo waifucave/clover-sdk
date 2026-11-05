@@ -2,7 +2,7 @@
 // the network. Pins the request (endpoint, header, body, no redirects), the rendering, the caps, the
 // dangerous-domain floor on cited urls, the status vocabulary, and the host-only site icons.
 import { afterEach, describe, expect, test } from "bun:test";
-import { resolveWebToolsConfig, type CredentialRef, type WebToolsConfig } from "@yanlinglabs/winter-agent-sdk";
+import { resolveWebToolsConfig, type CredentialRef, type WebToolsConfig } from "@waifucave/clover-agent-sdk";
 import "./search.ts";
 import { createSearchExecutor, EXA_ANSWER_URL, SEARCH_ANSWER_CHARS, SEARCH_NO_KEY_MESSAGE, SEARCH_TOTAL_OUTPUT_CHARS, searchStatusMessage } from "./search.ts";
 import { getRegisteredTool, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";

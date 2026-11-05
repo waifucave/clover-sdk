@@ -74,7 +74,7 @@ test("P7a r2: the build really is this file's precondition -- with no dist, `com
     // The whole point: the operator is told what to RUN, not handed a TS2307 in a file they did not
     // touch. Named literally so a reworded message that stops saying it fails here.
     expect(r.output).toContain("bun run build:packages");
-    expect(r.output).toContain("@yanlinglabs/winter-provider-catalog");
+    expect(r.output).toContain("@waifucave/clover-provider-catalog");
     expect(r.output).not.toContain("TS2307");
   } finally {
     await buildPackages();
@@ -86,7 +86,7 @@ test("P7a r2: the build really is this file's precondition -- with no dist, `com
 test("P7a pre-publish (item 3): the fixture compiles against the BUILT declarations, not the source", async () => {
   // THE ONE LINK NO OTHER GATE CROSSES. `tsconfig.winter.json` maps `@sdk-under-test` onto the sdk
   // SOURCE, so it proves the fixture type-checks against the sdk's AUTHORED api -- while an installed
-  // consumer resolves `@yanlinglabs/winter-agent-sdk` through `types: ./dist/index.d.ts`, i.e. through
+  // consumer resolves `@waifucave/clover-agent-sdk` through `types: ./dist/index.d.ts`, i.e. through
   // `tsc --emitDeclarationOnly` plus `rewriteDeclarationSpecifiers`. `smoke-installed.ts` proves the
   // emitted JS IMPORTS under both runtimes but type-checks nothing; `conformance:snapshot --check`
   // reads the upstream OFFICIAL tarball's declarations, not winter's own emit.

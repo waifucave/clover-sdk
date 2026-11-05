@@ -1,49 +1,49 @@
-# `@yanlinglabs/winter-provider-runtime`
+# `@waifucave/clover-provider-runtime`
 
 Winter's provider layer: the adapter registry, the shipped provider adapters (OpenAI Responses and
 Chat Completions, Anthropic Messages, Google generateContent, Bedrock Converse, the OAuth-backed
 codex/xAI/Console flows), the credential-ref surface, endpoint policy, retry/stall handling and the
 honest-identity headers every request carries.
 
-This package is published to GitHub Packages under restricted access (`@yanlinglabs` scope). The
+This package is published to GitHub Packages under restricted access (`@waifucave` scope). The
 registry is chosen by the release workflow, not by a committed pin — see [RELEASING.md](https://github.com/waifucave/clover-sdk/blob/main/RELEASING.md).
 
 ## What it ships
 
 | Import | What it is |
 | --- | --- |
-| `@yanlinglabs/winter-provider-runtime` | The full barrel: the registry, the adapters, credential refs and stores, endpoint policy, the error taxonomy, and the identity surface. |
-| `@yanlinglabs/winter-provider-runtime/testing` | Test-support helpers a consumer's own adapter tests need: descriptor/context builders, the SigV4 and event-stream primitives, the loopback OAuth/chat fakes, and the fixture catalog. |
+| `@waifucave/clover-provider-runtime` | The full barrel: the registry, the adapters, credential refs and stores, endpoint policy, the error taxonomy, and the identity surface. |
+| `@waifucave/clover-provider-runtime/testing` | Test-support helpers a consumer's own adapter tests need: descriptor/context builders, the SigV4 and event-stream primitives, the loopback OAuth/chat fakes, and the fixture catalog. |
 
 ## Install
 
 A **supported library** as of 0.0.56: a host with its own agent loop -- in-process, under Node 18+ or
-Bun, on any platform -- installs this package and `@yanlinglabs/winter-provider-catalog` and nothing
-else. It depends on the catalog alone: it does not pull in `@yanlinglabs/winter-agent-sdk` or the
+Bun, on any platform -- installs this package and `@waifucave/clover-provider-catalog` and nothing
+else. It depends on the catalog alone: it does not pull in `@waifucave/clover-agent-sdk` or the
 compiled `winter` runtime binary (a release gate packs both packages, installs them offline, and refuses
-any other package in the tree). The wrapper `@yanlinglabs/winter-agent-sdk` spawns the `winter` runtime
+any other package in the tree). The wrapper `@waifucave/clover-agent-sdk` spawns the `winter` runtime
 rather than importing this package, so a consumer of the wrapper never needs it.
 
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-provider-runtime
+npm install @waifucave/clover-provider-runtime
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-provider-runtime` as usual.
+literal in the file. Then `npm install @waifucave/clover-provider-runtime` as usual.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
@@ -58,8 +58,8 @@ declare, is this package's public API. Anything reached by a deep path (`dist/..
 
 | Entry point | Supported for |
 | --- | --- |
-| `@yanlinglabs/winter-provider-runtime` | Production use. The pieces a host's own agent loop is built from: `createRegistry` / `resolve` and `createShippedAdapters`; `ProviderAdapter.streamTurn` with `TurnRequest` and the `ProviderEvent` stream; the stream assembler `foldProviderStream` (with its `StreamAssemblySink` -- `onTextDelta` for an SSE forwarder), `assembledToMessage`, `stampNativeState` and `ProviderStreamError`; `createHistoryRenderer` and `stripOpaque`; `estimateCostUsd` and `pricingTierFor`; the credential stores (`createEnvCredentialStore`, `createMemoryCredentialStore`, `createFileCredentialStore`, `createCompositeCredentialStore`); `withRetry` / `createRetryPolicy`; the error helpers (`isProviderError`, `normalizeThrown`, `parseRetryAfterMs`, `ProviderRequestError`) and the `ProviderErrorCode` taxonomy (0.0.57: `billing` -- the account cannot pay -- beside `rate_limit`, `auth`, `bad_request` and the rest); and the identity surface (`setWinterIdentity`, `activeWinterIdentity`, `winterUserAgent`, `WINTER_DEFAULT_IDENTITY`). |
-| `@yanlinglabs/winter-provider-runtime/testing` | Tests only. `createFakeProviderAdapter` with `fakeTextTurn` / `fakeToolCallTurn` / `fakeErrorTurn` (runs under Node and Bun), plus the fixture helpers Winter's own conformance harness uses. Supported, but a helper here may change shape in any release that says so. |
+| `@waifucave/clover-provider-runtime` | Production use. The pieces a host's own agent loop is built from: `createRegistry` / `resolve` and `createShippedAdapters`; `ProviderAdapter.streamTurn` with `TurnRequest` and the `ProviderEvent` stream; the stream assembler `foldProviderStream` (with its `StreamAssemblySink` -- `onTextDelta` for an SSE forwarder), `assembledToMessage`, `stampNativeState` and `ProviderStreamError`; `createHistoryRenderer` and `stripOpaque`; `estimateCostUsd` and `pricingTierFor`; the credential stores (`createEnvCredentialStore`, `createMemoryCredentialStore`, `createFileCredentialStore`, `createCompositeCredentialStore`); `withRetry` / `createRetryPolicy`; the error helpers (`isProviderError`, `normalizeThrown`, `parseRetryAfterMs`, `ProviderRequestError`) and the `ProviderErrorCode` taxonomy (0.0.57: `billing` -- the account cannot pay -- beside `rate_limit`, `auth`, `bad_request` and the rest); and the identity surface (`setWinterIdentity`, `activeWinterIdentity`, `winterUserAgent`, `WINTER_DEFAULT_IDENTITY`). |
+| `@waifucave/clover-provider-runtime/testing` | Tests only. `createFakeProviderAdapter` with `fakeTextTurn` / `fakeToolCallTurn` / `fakeErrorTurn` (runs under Node and Bun), plus the fixture helpers Winter's own conformance harness uses. Supported, but a helper here may change shape in any release that says so. |
 
 **How versions move.** Both provider packages are released in lockstep with the rest of this repository,
 from one `VERSION`, and every release has a `CHANGELOG.md` entry. While versions are `0.0.x`:
@@ -76,7 +76,7 @@ from one `VERSION`, and every release has a `CHANGELOG.md` entry. While versions
 - catalog DATA (prices, limits, efforts) tracks the vendors and changes in any release; the row KEYS a
   host stores are covered by the rules above.
 
-Pin an exact version (`"@yanlinglabs/winter-provider-runtime": "0.0.56"`) and read the CHANGELOG entry
+Pin an exact version (`"@waifucave/clover-provider-runtime": "0.0.56"`) and read the CHANGELOG entry
 before moving it. The two packages must be the same version.
 
 **`stripOpaque`** is part of the supported surface: `stripOpaque(message)` returns the message's content
@@ -88,9 +88,9 @@ travels past the conversation it was minted for.
 ## A host's agent loop, in brief
 
 ```ts
-import { createRegistry, createShippedAdapters, createHistoryRenderer, createEnvCredentialStore, foldProviderStream, assembledToMessage, estimateCostUsd, setWinterIdentity } from "@yanlinglabs/winter-provider-runtime";
-import type { ProviderContext, ProviderMessageLike } from "@yanlinglabs/winter-provider-runtime";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { createRegistry, createShippedAdapters, createHistoryRenderer, createEnvCredentialStore, foldProviderStream, assembledToMessage, estimateCostUsd, setWinterIdentity } from "@waifucave/clover-provider-runtime";
+import type { ProviderContext, ProviderMessageLike } from "@waifucave/clover-provider-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 
 setWinterIdentity({ product: "example-host", codexOriginator: "example-host", contactUrl: "https://example.com/contact", version: "1.0.0" });
 const catalog = loadCatalog();
@@ -132,12 +132,12 @@ not the same as runnable on every path — these exports need the Bun runtime:
 
 | Function | Import | Needs | Why |
 | --- | --- | --- | --- |
-| `startCodexLogin()` | `@yanlinglabs/winter-provider-runtime` | `Bun.serve` | The authorization-code flow receives the vendor's redirect on `127.0.0.1`, which needs a real HTTP listener. |
-| `startXaiOauthFake()` | `@yanlinglabs/winter-provider-runtime/testing` | `Bun.serve` | Binds a loopback server on `127.0.0.1:0` to stand in for the vendor. |
-| `startXaiChatFake()` | `@yanlinglabs/winter-provider-runtime/testing` | `Bun.serve` | Same. |
-| `startAnthropicConsoleBrokerLogin()` | `@yanlinglabs/winter-provider-runtime` | `Bun.spawn` | Spawns Anthropic's own `ant` binary (`auth login`) and pipes its stdin/stdout/stderr for the host-brokered Console login (P10a-1 amendment) — never a loopback listener, since this SDK is not itself a party to the OAuth exchange. |
-| `refreshAnthropicBearer()` | `@yanlinglabs/winter-provider-runtime` | `Bun.spawn` | Spawns `ant auth print-credentials` to mint the native provider's bearer token from the profile the login above wrote. |
-| `logoutAnthropicConsole()` | `@yanlinglabs/winter-provider-runtime` | `Bun.spawn` | Spawns `ant auth logout`. |
+| `startCodexLogin()` | `@waifucave/clover-provider-runtime` | `Bun.serve` | The authorization-code flow receives the vendor's redirect on `127.0.0.1`, which needs a real HTTP listener. |
+| `startXaiOauthFake()` | `@waifucave/clover-provider-runtime/testing` | `Bun.serve` | Binds a loopback server on `127.0.0.1:0` to stand in for the vendor. |
+| `startXaiChatFake()` | `@waifucave/clover-provider-runtime/testing` | `Bun.serve` | Same. |
+| `startAnthropicConsoleBrokerLogin()` | `@waifucave/clover-provider-runtime` | `Bun.spawn` | Spawns Anthropic's own `ant` binary (`auth login`) and pipes its stdin/stdout/stderr for the host-brokered Console login (P10a-1 amendment) — never a loopback listener, since this SDK is not itself a party to the OAuth exchange. |
+| `refreshAnthropicBearer()` | `@waifucave/clover-provider-runtime` | `Bun.spawn` | Spawns `ant auth print-credentials` to mint the native provider's bearer token from the profile the login above wrote. |
+| `logoutAnthropicConsole()` | `@waifucave/clover-provider-runtime` | `Bun.spawn` | Spawns `ant auth logout`. |
 
 (`startCodexLogin()` and the two loopback fakes go through one `runLoginFlow`/`Bun.serve` seam, which
 is not on either barrel and which a consumer cannot call. The Console-broker trio is a SEPARATE
@@ -154,7 +154,7 @@ call, file write or credential read — naming the function, the Bun API and wha
 it by identity:
 
 ```ts
-import { startCodexLogin, BunRequiredError } from "@yanlinglabs/winter-provider-runtime";
+import { startCodexLogin, BunRequiredError } from "@waifucave/clover-provider-runtime";
 
 try {
   await startCodexLogin(store, options);
@@ -168,7 +168,7 @@ try {
 
 ### `BunRequiredError` is THIS package's own class
 
-`@yanlinglabs/winter-conformance` exports a class with the same name and shape, and the two are
+`@waifucave/clover-conformance` exports a class with the same name and shape, and the two are
 deliberately **not** the same type — the packages share no dependency, so there is no module either
 could import it from. **Catch the one you imported.** Within this package it is one type across every
 subpath: an error thrown by `./testing`'s fakes satisfies `instanceof BunRequiredError` imported from

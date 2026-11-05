@@ -17,7 +17,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderTurn } from "../engine.ts";
 import { scriptedProvider, stubExecutor } from "../provider/mock.ts";
@@ -227,7 +227,7 @@ describe("B-H1(d): the hook-audit journal can be READ back", () => {
       host.output.write({ type: "control_response", requestId: req.requestId, ok: true, payload: req.subtype === "permission" ? { behavior: "allow" } : {} } as WinterFrame);
     }
     await done;
-    const projectKey = (await import("@yanlinglabs/winter-agent-sdk")).compatibilityKeys(cwd).transcriptProjectKey;
+    const projectKey = (await import("@waifucave/clover-agent-sdk")).compatibilityKeys(cwd).transcriptProjectKey;
     const entries = readHookAuditJournal({ winterHome: home, projectKey, sessionId });
     expect(entries.length, "the runner journalled at least the PreToolUse invocation").toBeGreaterThan(0);
     expect(entries.every((e) => typeof e.hookEvent === "string" && typeof e.outcome === "string")).toBe(true);

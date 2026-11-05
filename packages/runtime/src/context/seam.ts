@@ -18,7 +18,7 @@
 // (`recordedProviderSystems()`, or a recording double), never on what an assembler intended to
 // produce -- an assembler that returns the right string and an engine that drops it look identical
 // from the assembler's own tests.
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import type { ContextEntry } from "./request-layout.ts";
 import type { PlanModeInput } from "./plan-mode.ts";
 import type { RequiredContextSource } from "./required-context.ts";

@@ -24,7 +24,7 @@
 // the request's own `ctx.connection.providerId`, and a row is found in THAT provider's rows only --
 // exactly the rule the Anthropic and Google families' `findDescriptor(catalog, providerId, model)`
 // already followed.
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter } from "../types.ts";
 import { identityHeaderLookup } from "../identity.ts";
 import { createAnthropicMessagesAdapter } from "./anthropic/index.ts";

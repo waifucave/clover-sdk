@@ -4,7 +4,7 @@
 // full stage-1 integration (deny stops before rules, allow+later-deny-rule still denies, transform
 // visible to rules) using a REAL HookStage built here, per the task brief's own Step 3.
 import { describe, test, expect } from "bun:test";
-import type { HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent } from "@waifucave/clover-agent-sdk";
 import { createHookStage } from "./hook-stage.ts";
 import type { HookInvoker, HookAuditRecorder } from "./runner.ts";
 import type { SourcedHookEntry, HookRegistry } from "./registry.ts";

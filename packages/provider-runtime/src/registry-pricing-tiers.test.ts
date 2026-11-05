@@ -1,7 +1,7 @@
 // 0.0.56 (W4, W5): estimateCostUsd prices a request at the long-context tier its whole prompt reaches,
 // and carries the provider's reported cost beside the estimate.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { estimateCostUsd, pricingTierFor } from "./registry.ts";
 
 const catalog = loadCatalog();

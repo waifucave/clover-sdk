@@ -17,7 +17,7 @@ import { sourceObjectPath, sourceObjectAllowed, readSourceFileSync, readSourceDi
 // pre-parsed from the wire.
 
 import { join } from "node:path";
-import { WINTER_BRAND, type AgentInfo, type BrandProfile, type RuntimeAgentDefinition, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { type AgentInfo, type BrandProfile, type RuntimeAgentDefinition, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import { resolveBuiltinAgents, resolveBuiltinAgentGates, type BuiltinAgentGates } from "./builtin-agents.ts";
 
 export type AgentDefinitionSource = "programmatic" | "project" | "user" | "plugin" | "builtin";
@@ -364,7 +364,7 @@ export interface LoadAgentDefinitionsOptions {
   /**
    * P7a (D19): the session's brand -- the home and project dot-dir names, PLUS (spawn-surface
    * parity) `envPrefix`/`productName`, which `resolveBuiltinAgents` below needs for the kill-switch
-   * env names and the built-in prompts' own product-noun interpolation. Omitted = `WINTER_BRAND`.
+   * env names and the built-in prompts' own product-noun interpolation. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand).
    */
   brand?: Pick<BrandProfile, "homeDirName" | "projectDirName" | "envPrefix" | "productName">;
   /**
@@ -439,7 +439,7 @@ export interface LoadAgentDefinitionsOptions {
 // file's own header for why.
 export function loadAgentDefinitions(opts: LoadAgentDefinitionsOptions): Map<string, SourcedAgentDefinition> {
   const out = new Map<string, SourcedAgentDefinition>();
-  const brand = opts.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts.brand);
   const builtins =
     opts.builtinAgents ??
     resolveBuiltinAgents({

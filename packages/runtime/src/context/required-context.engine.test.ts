@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { runEngine, type EngineOptions, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { stubExecutor } from "../provider/mock.ts";

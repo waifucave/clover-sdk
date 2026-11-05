@@ -103,7 +103,7 @@ describe("validateModelSlots — WHOLE-SET semantics", () => {
 
 // --- The CURRENCY_RE widening (P6.6 addendum) ------------------------------------------------------
 //
-// `CURRENCY_RE` (`@yanlinglabs/winter-provider-catalog`) is the brief's verbatim regex and is
+// `CURRENCY_RE` (`@waifucave/clover-provider-catalog`) is the brief's verbatim regex and is
 // deliberately PARTIAL for the reviewed `overlay/families.json` text it was written to gate. A
 // custom slot's `description` is unreviewed end-user input, so this module widens the check with
 // exactly the four additions the addendum names (EUR, ¥, ¢, "cent(s)") rather than accepting the

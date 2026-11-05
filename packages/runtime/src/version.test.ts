@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { SDK_VERSION } from "@yanlinglabs/winter-agent-sdk";
+import { SDK_VERSION } from "@waifucave/clover-agent-sdk";
 import { RUNTIME_VERSION } from "./version.ts";
 import { RUNTIME_ENGINE_VERSION } from "./store/dialect.ts";
 

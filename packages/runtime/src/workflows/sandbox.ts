@@ -17,7 +17,7 @@
 //    place a worker command becomes a spawn, so the value is threaded through exactly one call site.
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { buildWorkflowWorkerSeatbeltProfile, type SandboxBrand } from "../sandbox/profile.ts";
 import { isSandboxAvailable } from "../sandbox/spawn.ts";
 import { currentHostChildFloorProfile } from "../sandbox/host-child-floor.ts";

@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, decodeFrame, type Options } from "@yanlinglabs/winter-agent-sdk";
+import { query, decodeFrame, type Options } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import type { Provider, ToolExecutor } from "../engine.ts";
 

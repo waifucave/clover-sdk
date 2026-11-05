@@ -24,7 +24,7 @@
 // is claude's own interface text, unchanged (spawn-surface-scope R-S10): the agent-listing section
 // headers, the ambient sentence, the concurrency sentence, the skill-listing header and the
 // date-change line.
-import { DEFAULT_PLANS_DIRECTORY } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_PLANS_DIRECTORY } from "@waifucave/clover-agent-sdk";
 import type { ProviderMessage } from "../engine.ts";
 import { neutralizeReminderTags } from "./injection.ts";
 import { renderPlanModeBlock } from "./plan-mode.ts";

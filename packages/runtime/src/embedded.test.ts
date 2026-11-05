@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, splitFrames, type Options, type SdkMessage, type SpawnedRuntimeProcess, type SpawnRuntimeOptions, type WinterFrame, type WinterMcpServerInstance } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, query, splitFrames, type Options, type SdkMessage, type SpawnedRuntimeProcess, type SpawnRuntimeOptions, type WinterFrame, type WinterMcpServerInstance } from "@waifucave/clover-agent-sdk";
 import { Queue } from "./protocol/channel.ts";
 import { runEmbeddedSession } from "./embedded.ts";
 import { EMBEDDED_KILL_GRACE_MS, spawnEmbeddedWorker } from "./embedded-host.ts";
@@ -43,8 +43,10 @@ function sessionEnv(extra: Record<string, string> = {}): Record<string, string> 
   };
 }
 
+/** A1: a host always sends its brand (the SDK has no default, and a Worker installs only the one its config
+ *  names), so every config here carries Winter's own unless a test names another. */
 function configArgv(config: Record<string, unknown>): string[] {
-  return ["--run", "--config-json", JSON.stringify(config)];
+  return ["--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, ...config })];
 }
 
 /** Decode a stdout transcript back into frames (the one shared codec). */

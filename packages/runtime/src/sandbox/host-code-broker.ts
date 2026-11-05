@@ -1,7 +1,7 @@
 import type { HostOutputTransportFactory, HostOutputTransport } from "./host-output.ts";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
-import { HOST_CODE_PROCESS_SUBTYPES, buildMandatoryFloorProfile, hasMandatoryFloor, type HostCodeDrainEvidence, type HostCodeProcessRegistration, type HostCodeProcessStart, type HostCodeProcessScope, type HostCodeProcessHandle, type HostCodeProcessEvent, type HostCodeProcessPollReply, type HostExecutionFloor } from "@yanlinglabs/winter-agent-sdk";
+import { HOST_CODE_PROCESS_SUBTYPES, buildMandatoryFloorProfile, hasMandatoryFloor, type HostCodeDrainEvidence, type HostCodeProcessRegistration, type HostCodeProcessStart, type HostCodeProcessScope, type HostCodeProcessHandle, type HostCodeProcessEvent, type HostCodeProcessPollReply, type HostExecutionFloor } from "@waifucave/clover-agent-sdk";
 import { runCommandLocally, resolveExecutionPath, type RunCommandOptions } from "./spawn.ts";
 import { buildWorkerSpawn, type WorkerCommand } from "../workflows/sandbox.ts";
 

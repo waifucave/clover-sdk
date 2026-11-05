@@ -1,4 +1,4 @@
-import type { RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import { getRegisteredTool, registeredNameForMcpSpelling } from "./registry.ts";
 
 /** A registered name wins over a legacy alias, as it does in the running engine. */

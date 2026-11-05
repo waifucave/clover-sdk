@@ -87,7 +87,7 @@ FROZEN = {
     GUEST + '/linux-instruction-reader-compartment.c': '28aa279d6ecb560424fe24bf8ccc0893ffc61cfbb9ba6ba72d38c66b7b655893',
     GUEST + '/linux-instruction-reader-dependency-probe.c': '77ce6f1cdc02cef122eb2806e9df06514fdc7a2f9191d107a897df62d045b20a',
     GUEST + '/linux-session-owner.c': '7630cb1f2e9b76be78fb6fb0f0efb6df74d437b39f9e3db69ac8aacc83162372',
-    GUEST + '/linux-session-admission.ts': 'b003e79d73bc4bc87a587ee4f1f3a9e511377a5f15f026b1f3e92ce4adedb14c',
+    GUEST + '/linux-session-admission.ts': '3979c9b27927a88ff115fe28a9ad4709e94bfb05c3cc53f0c188e6d2e19a9fe8',
     GUEST + '/file-worker.c': '93e784e46461caceb7bae2ead02ccf96fcf0a3ff53b0138f84c189aabc70a1a0',
     GUEST + '/process-worker.c': '2c4514e2a267c1634cb90abe97a2471dd36057d9d2ba050fb3540703d11bed11',
 }

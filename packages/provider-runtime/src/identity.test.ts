@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { activeWinterIdentity, identityRefusal, setWinterIdentity, winterIdentityHeaders, winterUserAgent } from "./identity.ts";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { activeWinterIdentity, identityFromBrand, identityRefusal, installBrandIdentity, setWinterIdentity, winterIdentityHeaders, winterUserAgent } from "./identity.ts";
+import { WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import pkg from "../package.json";
 
 describe("WS-13b honest identity", () => {
@@ -122,5 +123,42 @@ describe("0.0.56: setWinterIdentity from a host", () => {
 
   test("every value the sdk's brand profile accepts is accepted here (Winter's own wiring still installs)", () => {
     expect(identityRefusal({ product: WINTER_BRAND.packageName, codexOriginator: WINTER_BRAND.codexOriginator, contactUrl: WINTER_BRAND.contactUrl })).toBeUndefined();
+  });
+});
+
+// --- 0.0.63: a brand's identity, through one mapping -------------------------------------------------
+//
+// A branded session's wiring and a branded HOST (Clover's daemon, whose titles, bash reviewer and
+// sign-ins run outside any session) install the identity from the same brand fields. Before this the
+// host spelled `setWinterIdentity({ product, codexOriginator, contactUrl })` by hand, and the brand's
+// own release had no field to ride in, so a host's User-Agent carried this package's version.
+describe("0.0.63: identityFromBrand / installBrandIdentity", () => {
+  const brand = { packageName: "example-host", codexOriginator: "example-host", contactUrl: "https://example.test/contact", productVersion: "1.2.3" };
+
+  test("the one mapping: packageName is the product token, productVersion the version", () => {
+    expect(identityFromBrand(brand)).toEqual({ product: "example-host", codexOriginator: "example-host", contactUrl: "https://example.test/contact", version: "1.2.3" });
+    const { productVersion: _omitted, ...noVersion } = brand;
+    // No productVersion: no `version` key at all (the package's own version applies), never `undefined`.
+    expect(identityFromBrand(noVersion)).toEqual({ product: "example-host", codexOriginator: "example-host", contactUrl: "https://example.test/contact" });
+    expect("version" in identityFromBrand(noVersion)).toBe(false);
+  });
+
+  test("Winter's own brand maps to Winter's own default identity", () => {
+    expect(identityFromBrand(WINTER_BRAND)).toEqual(WINTER_DEFAULT_IDENTITY);
+  });
+
+  test("installBrandIdentity installs a frame (the host's product AND release on the User-Agent) and its disposer gives it back", () => {
+    const dispose = installBrandIdentity(brand);
+    expect(activeWinterIdentity()).toEqual(identityFromBrand(brand));
+    expect(winterUserAgent()).toBe("example-host/1.2.3");
+    dispose();
+    dispose();
+    expect(winterUserAgent()).toBe(`winter-agent-sdk/${pkg.version}`);
+  });
+
+  test("a brand whose identity would be refused throws TypeError and installs nothing", () => {
+    expect(() => installBrandIdentity({ ...brand, codexOriginator: "codex" })).toThrow(TypeError);
+    expect(() => installBrandIdentity({ ...brand, productVersion: "1.2 beta" })).toThrow(TypeError);
+    expect(winterUserAgent()).toBe(`winter-agent-sdk/${pkg.version}`);
   });
 });

@@ -1,9 +1,9 @@
 // P7a pre-publish round 3 (review C1 + C2): WHERE DOES EACH PUBLISH ACTUALLY GO?
 //
 // THE FINDING THIS EXISTS FOR. `--registry https://registry.npmjs.org` on the command line does NOT
-// decide where a `@yanlinglabs/*` package is published: `--registry` sets `registries.default`, and
+// decide where a `@waifucave/*` package is published: `--registry` sets `registries.default`, and
 // both pnpm (`pickRegistryForPackage`) and npm (`npm-registry-fetch`'s `pickRegistry`) consult the
-// SCOPE binding first. With `@yanlinglabs:registry=https://npm.pkg.github.com` committed in the
+// SCOPE binding first. With `@waifucave:registry=https://npm.pkg.github.com` committed in the
 // project `.npmrc` -- as it was -- every "npm" publish went to GitHub Packages. Nothing reached npm,
 // and no test could see it, because every assertion read the workflow's YAML text.
 //
@@ -45,7 +45,7 @@ const NPMJS = "https://registry.npmjs.org";
  * mechanism binds the scope to a registry AND supplies that registry's credential, per job. A
  * committed `.npmrc` can only ever pin one, globally, and there are two registries.
  */
-function setupNodeUserconfig(dir: string, registryUrl: string, scope = "@yanlinglabs"): string {
+function setupNodeUserconfig(dir: string, registryUrl: string, scope = "@waifucave"): string {
   // BYTE-FAITHFUL to `actions/setup-node@v4` (review N1). Its `auth-util` normalises the registry to a
   // TRAILING SLASH, writes the scope line first, then `always-auth=false`, then the auth line keyed on
   // the slash-terminated URL with the token as the literal `${NODE_AUTH_TOKEN}` for npm to expand from
@@ -112,7 +112,7 @@ describe.skipIf(!ENABLED)("publish routing: each job reaches its own registry (r
   test("r4 (I1): the npm set publishes in TOPOLOGICAL order -- the dependency's line comes first", async () => {
     // The finding: the plan was alphabetical, so `winter-agent-sdk` reached npm BEFORE
     // `winter-provider-catalog`, the dependency its own packed manifest pins at that exact version --
-    // and for that interval `npm install @yanlinglabs/winter-agent-sdk` 404'd on the dependency, on a
+    // and for that interval `npm install @waifucave/clover-agent-sdk` 404'd on the dependency, on a
     // registry from which the version can never be withdrawn.
     //
     // Asserted on the ORDER OF THE DRY-RUN LINES, not on the array: this is the sequence a real run
@@ -146,19 +146,19 @@ describe.skipIf(!ENABLED)("publish routing: each job reaches its own registry (r
 
     // winter-web is a dependency of the runtime, so its line must come first -- named here as well as
     // covered by the loop above, the same way the sdk/catalog pair is below.
-    expect(indexOf("@yanlinglabs/winter-web")).toBeGreaterThanOrEqual(0);
-    expect(indexOf("@yanlinglabs/winter-web")).toBeLessThan(indexOf("@yanlinglabs/winter-agent-runtime"));
+    expect(indexOf("@waifucave/clover-web")).toBeGreaterThanOrEqual(0);
+    expect(indexOf("@waifucave/clover-web")).toBeLessThan(indexOf("@waifucave/clover-agent-runtime"));
 
     // ...and the sdk really does pin the catalog at this exact version in its PACKED manifest, which
     // is what makes the order load-bearing rather than cosmetic. (The loop above already proves this
     // for every edge; this keeps the ORIGINAL finding's own pair named, since it is the one that
     // actually 404'd.)
     const dirSdk = mkdtempSync(join(scratch, "manifest-"));
-    const sdk = packed.find((p) => p.name === "@yanlinglabs/winter-agent-sdk")!;
+    const sdk = packed.find((p) => p.name === "@waifucave/clover-agent-sdk")!;
     const proc = Bun.spawn(["tar", "-xzf", sdk.tarballPath, "-C", dirSdk], { stdout: "pipe", stderr: "pipe" });
     expect(await proc.exited).toBe(0);
     const manifest = JSON.parse(readFileSync(join(dirSdk, "package", "package.json"), "utf8")) as { dependencies?: Record<string, string> };
-    expect(Object.keys(manifest.dependencies ?? {})).toContain("@yanlinglabs/winter-provider-catalog");
+    expect(Object.keys(manifest.dependencies ?? {})).toContain("@waifucave/clover-provider-catalog");
   }, 300_000);
 
   test("job 2's config sends the npm set -- and only it -- to npmjs, with public access", async () => {
@@ -177,15 +177,15 @@ describe.skipIf(!ENABLED)("publish routing: each job reaches its own registry (r
   }, 300_000);
 
   test("THE NEGATIVE: a scope pin in the project `.npmrc` HIJACKS the npm job -- which is why there is none", async () => {
-    // The measured cause of C1, reproduced. A project-level `@yanlinglabs:registry` pointing at
+    // The measured cause of C1, reproduced. A project-level `@waifucave:registry` pointing at
     // GitHub Packages beats the job's own npmjs binding, and every "npm" publish silently lands on
     // the wrong registry with the wrong credential. Run from a directory carrying such a file, with
     // the SAME userconfig the passing case above uses -- the only difference is the project file.
     const dir = mkdtempSync(join(scratch, "hijack-"));
     const userconfig = setupNodeUserconfig(dir, NPMJS);
     const projectDir = mkdtempSync(join(scratch, "project-"));
-    writeFileSync(join(projectDir, ".npmrc"), `@yanlinglabs:registry=${GITHUB_PACKAGES}\n`);
-    const sdk = packed.find((p) => p.name === "@yanlinglabs/winter-agent-sdk")!;
+    writeFileSync(join(projectDir, ".npmrc"), `@waifucave:registry=${GITHUB_PACKAGES}\n`);
+    const sdk = packed.find((p) => p.name === "@waifucave/clover-agent-sdk")!;
 
     const proc = Bun.spawn(["npm", "publish", sdk.tarballPath, "--dry-run", "--offline", "--access", "public"], { // --offline: see dryRunTarget
       cwd: projectDir,
@@ -204,7 +204,7 @@ describe.skipIf(!ENABLED)("publish routing: each job reaches its own registry (r
     // re-adds a scope line to `.npmrc`, this flips and names the file.
     const dir = mkdtempSync(join(scratch, "repo-"));
     const userconfig = setupNodeUserconfig(dir, NPMJS);
-    const sdk = packed.find((p) => p.name === "@yanlinglabs/winter-agent-sdk")!;
+    const sdk = packed.find((p) => p.name === "@waifucave/clover-agent-sdk")!;
     const proc = Bun.spawn(["npm", "publish", sdk.tarballPath, "--dry-run", "--offline", "--access", "public"], { // --offline: see dryRunTarget
       cwd: fileURLToPath(new URL("..", import.meta.url)),
       stdout: "pipe",
@@ -213,6 +213,6 @@ describe.skipIf(!ENABLED)("publish routing: each job reaches its own registry (r
     });
     const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
     const line = (stdout + stderr).split("\n").find((l) => l.includes("Publishing to")) ?? "";
-    expect(line, "the project .npmrc must not pin the @yanlinglabs scope -- see its own header").toContain(NPMJS);
+    expect(line, "the project .npmrc must not pin the @waifucave scope -- see its own header").toContain(NPMJS);
   }, 120_000);
 });

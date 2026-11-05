@@ -24,7 +24,7 @@
 // can see both is closer than this one. `provider-catalog` cannot import the runtime.
 import { describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import { createMemoryCredentialStore, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
+import { createMemoryCredentialStore, winterUserAgent } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider } from "./session-provider.ts";
 import { chatCatalog, chatModel, chatProvider, startRawChatFake } from "./raw-chat-fake.test-support.ts";
 
@@ -135,7 +135,7 @@ describe("WS-13b §2: `defaultEndpoints.api` is the API ROOT, because the adapte
     // The structural half. The test above proves what the adapter does; this one proves the
     // committed catalog obeys it -- including the overlay, which the extractor's own rule cannot
     // reach. A hand-authored overlay row is exactly where this class comes back.
-    const { loadCatalog } = await import("@yanlinglabs/winter-provider-catalog");
+    const { loadCatalog } = await import("@waifucave/clover-provider-catalog");
     const catalog = loadCatalog();
     const appending = new Set(["winter.openai-chat-completions", "winter.openai-responses", "winter.local-openai", "winter.codex-oauth", "winter.anthropic-messages", "winter.azure-openai"]);
     const offenders = catalog.providers

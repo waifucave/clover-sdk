@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-runtime` — the provider seam every adapter lane builds against.
+// `@waifucave/clover-provider-runtime` — the provider seam every adapter lane builds against.
 //
 // FROZEN as of P6 T2's merge (R6-12): lanes ADD files under their own directories and never edit
 // `types.ts`, `registry.ts`, `http.ts`, `sse.ts`, `retry.ts`, `errors.ts`, `endpoint-policy.ts`,
@@ -60,9 +60,16 @@ export { renderIdentityHeaders } from "./identity.ts";
 // `activeWinterIdentity` is what the two originator sites read. See identity.ts's own header for
 // why this is process-level state and not a threaded parameter.
 export { setWinterIdentity, activeWinterIdentity } from "./identity.ts";
+// 0.0.63: the brand-to-identity mapping, once: a session and a host install the same identity from the
+// same brand (`productVersion` puts the host's own release after its product token).
+export { identityFromBrand, installBrandIdentity } from "./identity.ts";
+export type { BrandIdentitySource } from "./identity.ts";
 // 0.0.56 (W9): Winter's own default identity, now declared in this package (it used to be read off the
 // sdk's brand profile, which made the sdk -- and its optional native binary -- a runtime dependency).
 export { WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";
+// Clover A-M1: the model adapter interface on the keyed fetch (spec §3.3, §5.2, §5.4), which a model
+// plugin's adapter implements, its reference keyed fetch, and a process of an adapter's own.
+export * from "./adapter-interface/index.ts";
 export type { WinterIdentity } from "./identity.ts";
 export type { IdentityRenderContext } from "./identity.ts";
 

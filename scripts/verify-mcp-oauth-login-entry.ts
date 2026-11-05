@@ -1,5 +1,5 @@
 // WS-25 -- `verify:mcp-oauth`'s LOGIN leg, as its own compiled entry: the host's sign-in door
-// (`@yanlinglabs/winter-agent-runtime/mcp-auth`'s `startMcpOAuthLogin`) run from a `bun build --compile`d
+// (`@waifucave/clover-agent-runtime/mcp-auth`'s `startMcpOAuthLogin`) run from a `bun build --compile`d
 // binary, so the MCP client package's `auth()` (discovery, registration, PKCE, the code exchange) is
 // proved to survive `$bunfs` exactly as a host that compiles it (Winter's daemon) would run it.
 //
@@ -8,7 +8,7 @@
 // is hermetic and never touches a Keychain.
 //
 // Usage: <binary> --server <mcp url> --store <file>
-import { startMcpOAuthLogin } from "@yanlinglabs/winter-agent-runtime/mcp-auth";
+import { startMcpOAuthLogin } from "@waifucave/clover-agent-runtime/mcp-auth";
 import { createTestFileMcpOAuthStore } from "../packages/runtime/src/mcp-auth/store.ts";
 
 function arg(name: string): string {

@@ -23,7 +23,7 @@
 // claude built-in's structure, rules and approximate length -- never a transcription of the real
 // text (none of which is in the research file, and this lane's own brief forbids sourcing it from
 // anywhere else).
-import { WINTER_BRAND, envName, type BrandProfile, type RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import { envName, type BrandProfile, type RuntimeAgentDefinition, requireBrand } from "@waifucave/clover-agent-sdk";
 import { BUBBLE_PERMISSION_MODE } from "../permissions/policy-state.ts";
 
 /** The one brand slice every reader/prompt-builder in this module needs. */
@@ -54,11 +54,11 @@ function isTruthyEnv(v: string | undefined): boolean {
  * pulling in the rest of `BuiltinAgentGates` or re-deriving the env read.
  */
 export function resolveForkSubagentEnabled(env: Record<string, string | undefined> = process.env, brand?: BuiltinAgentBrand): boolean {
-  return isTruthyEnv(env[envName(brand ?? WINTER_BRAND, "FORK_SUBAGENT")]);
+  return isTruthyEnv(env[envName(requireBrand(brand), "FORK_SUBAGENT")]);
 }
 
 export function resolveBuiltinAgentGates(env: Record<string, string | undefined> = process.env, brand?: BuiltinAgentBrand): BuiltinAgentGates {
-  const b = brand ?? WINTER_BRAND;
+  const b = requireBrand(brand);
   return {
     allBuiltinsDisabled: isTruthyEnv(env[envName(b, "AGENT_SDK_DISABLE_BUILTIN_AGENTS")]),
     explorePlanDisabled: isTruthyEnv(env[envName(b, "DISABLE_EXPLORE_PLAN_AGENTS")]),
@@ -235,7 +235,7 @@ export type BuiltinAgentName = (typeof BUILTIN_AGENT_NAMES)[number];
  * never needs to know about, the other three sources).
  */
 export function resolveBuiltinAgents(opts?: { env?: Record<string, string | undefined>; brand?: BuiltinAgentBrand; gates?: BuiltinAgentGates }): Record<string, RuntimeAgentDefinition> {
-  const brand = opts?.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts?.brand);
   const gates = opts?.gates ?? resolveBuiltinAgentGates(opts?.env, brand);
   if (gates.allBuiltinsDisabled) return {};
 

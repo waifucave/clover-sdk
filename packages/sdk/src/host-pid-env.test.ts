@@ -4,7 +4,7 @@
 import { expect, test } from "bun:test";
 import { defaultSpawn, type SpawnRuntimeOptions } from "./transport.ts";
 import { query } from "./query.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 
 test("defaultSpawn puts THIS process's pid in the named variable of the child's environment", async () => {
   const proc = defaultSpawn({ command: "/usr/bin/env", args: [], cwd: process.cwd(), env: { PATH: "/usr/bin:/bin" }, hostPidEnv: "SOME_HOST_PID" });

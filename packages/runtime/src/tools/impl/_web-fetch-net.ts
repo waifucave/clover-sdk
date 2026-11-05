@@ -3,7 +3,7 @@
 // whatever claude does," so this module does the identical thing, never through a third-party relay.
 // Registers nothing (see `_domains.ts`'s header for why that convention exists).
 //
-// THE WALK ITSELF LIVES IN `@yanlinglabs/winter-web` (`fetchWebResource`): per hop the https upgrade,
+// THE WALK ITSELF LIVES IN `@waifucave/clover-web` (`fetchWebResource`): per hop the https upgrade,
 // the fetch-time URL rejects, the domain floor, the private-address policy on the LEXICAL host and on
 // EVERY resolved address, then a connection PINNED to the address that was classified (the logical
 // name rides only as `Host` and the TLS server name -- the M6 rebinding fix), the per-hop timeout
@@ -17,11 +17,11 @@
 // PROXIES: Bun's `fetch` honours `HTTPS_PROXY`; the proxy is handed the PINNED address (`CONNECT
 // [<ip>]:443`, measured), never the hostname, so it cannot re-resolve it. A proxy that allowlists by
 // hostname may refuse that CONNECT, and its 502 then reads as WebFetch's generic HTTP-error text.
-import { fetchWebResource, reasonPhrase, WEB_FETCH_MAX_BYTES, WEB_FETCH_MAX_ENCODED_BYTES, WEB_FETCH_MAX_REDIRECTS, WEB_FETCH_TIMEOUT_MS, type WebFetchTransport } from "@yanlinglabs/winter-web";
+import { fetchWebResource, reasonPhrase, WEB_FETCH_MAX_BYTES, WEB_FETCH_MAX_ENCODED_BYTES, WEB_FETCH_MAX_REDIRECTS, WEB_FETCH_TIMEOUT_MS, type WebFetchTransport } from "@waifucave/clover-web";
 import { preapprovedScopeOf, staysWithinScope, type PreapprovedMatch } from "../../web/preapproved-hosts.ts";
 import { FETCH_TIME_INVALID_URL } from "../../web/fetchable-url.ts";
 
-export { defaultResolveHost, reasonPhrase, WEB_FETCH_MAX_BYTES, WEB_FETCH_MAX_ENCODED_BYTES, WEB_FETCH_MAX_REDIRECTS, WEB_FETCH_TIMEOUT_MS } from "@yanlinglabs/winter-web";
+export { defaultResolveHost, reasonPhrase, WEB_FETCH_MAX_BYTES, WEB_FETCH_MAX_ENCODED_BYTES, WEB_FETCH_MAX_REDIRECTS, WEB_FETCH_TIMEOUT_MS } from "@waifucave/clover-web";
 
 /** The three-value policy AFTER `web-fetch.ts`'s own fail-closed coercion -- this module trusts it verbatim. */
 export type NormalizedPrivateAddressPolicy = "allow" | "deny" | "ask";

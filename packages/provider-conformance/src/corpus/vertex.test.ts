@@ -10,7 +10,7 @@ import { noRequestContains, requestsTo, withFake } from "../fakes/server.ts";
 import { geminiBody, geminiContents } from "../fakes/gemini.ts";
 import { VERTEX_TEST_ACCESS_TOKEN, assertVertexRequest, generateTestKeyPair } from "../fakes/vertex.ts";
 import { verifyRs256Jwt } from "../fakes/jwt-verify.ts";
-import { VERTEX_ADAPTER_ID, createVertexGeminiAdapter, vertexEndpointUrl, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
+import { VERTEX_ADAPTER_ID, createVertexGeminiAdapter, vertexEndpointUrl, winterUserAgent } from "@waifucave/clover-provider-runtime";
 import {
   GCP_CLOUD_PLATFORM_SCOPE,
   createServiceAccountTokenSource,
@@ -18,7 +18,7 @@ import {
   pkcs8DerFromPem,
   signRs256Jwt,
   vertexModelPath,
-} from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime/testing";
 // `foldProviderStream` stays relative (review r1 Critical-2): `winter-agent-runtime` is
 // `"private": true`, never published -- irrelevant here since `.test.ts` files never ship as
 // reachable code.
@@ -187,7 +187,7 @@ describe("Vertex Gemini: the ADC service-account flow", () => {
       // An api key is a perfectly good credential -- for another transport.
       for await (const event of adapter.streamTurn(
         { model: GOOGLE_MODELS.main, messages: [{ role: "user", content: "a" }] },
-        vertexContext(harness, fake.url, { credentials: (await import("@yanlinglabs/winter-provider-runtime")).createMemoryCredentialStore(), authRef: { kind: "inline", value: "test-key-not-gcp" } }),
+        vertexContext(harness, fake.url, { credentials: (await import("@waifucave/clover-provider-runtime")).createMemoryCredentialStore(), authRef: { kind: "inline", value: "test-key-not-gcp" } }),
       )) {
         events.push(event);
       }

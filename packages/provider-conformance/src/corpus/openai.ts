@@ -20,11 +20,11 @@
 //      spelling could ever be resolved by an external installer -- which is why this file's
 //      `openaiCorpus` namespace is NO LONGER re-exported from `../index.ts` (see
 //      `corpus/anthropic.ts`'s header for the full reasoning). `DescriptorOverrides` now comes
-//      through `@yanlinglabs/winter-provider-runtime/testing`, the one new subpath review r1 grants.
+//      through `@waifucave/clover-provider-runtime/testing`, the one new subpath review r1 grants.
 
 import { foldProviderStream } from "../../../runtime/src/provider/bridge.ts";
-import type { DiscoveryCache, ModelCatalogResult, ProviderEvent, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import type { DescriptorOverrides } from "@yanlinglabs/winter-provider-runtime/testing";
+import type { DiscoveryCache, ModelCatalogResult, ProviderEvent, TurnRequest } from "@waifucave/clover-provider-runtime";
+import type { DescriptorOverrides } from "@waifucave/clover-provider-runtime/testing";
 import type { CorpusCaseId, CorpusCaseImpl } from "./runner.ts";
 import type { FakeServer, RecordedRequest } from "../fakes/server.ts";
 import { startFake } from "../fakes/server.ts";

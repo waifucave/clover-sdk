@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { Provider, ProviderMessage, ProviderTurn } from "../../engine.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { runEngine } from "../../engine.ts";
 import { createInMemoryChannel } from "../../protocol/channel.ts";
 import { createSessionReadState } from "../read-state.ts";
@@ -40,7 +40,9 @@ describe("advisor (task-7 brief, R3-2/R3-3)", () => {
     const result = await registered!.executor!.execute({}, makeCtx());
     expect(result.isError).toBe(true);
     expect(result.output).toContain("unavailable");
-  });
+    // The default executor's first call loads what it resolves a reviewer from; under a loaded machine (the
+    // suite in parallel shards) that has taken more than bun's 5 s default.
+  }, 30_000);
 
   test("no reviewer resolvable -> ordinary tool error, never throws", async () => {
     const executor = createAdvisorExecutor({

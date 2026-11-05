@@ -24,8 +24,8 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "./testing.ts";
 import type { Provider, ProviderTurn } from "./engine.ts";
 

@@ -5,8 +5,8 @@
 // Run against the COMPILED rows, never a hand-built descriptor.
 import { describe, expect, test } from "bun:test";
 import { buildRequestBody } from "./messages.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 
 const catalog = loadCatalog();
 const compiled = (key: string): WinterModelDescriptor => {

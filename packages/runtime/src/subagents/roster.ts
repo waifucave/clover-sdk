@@ -7,7 +7,7 @@
 //
 // Data-only discovery; restore.ts creates lazy handles and child-engine.ts rebinds their
 // durable execution snapshots to a new parent run when SendMessage requests continuation.
-import type { SessionStore } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStore } from "@waifucave/clover-agent-sdk";
 import { listChildAgentIds, childTranscriptSubpath } from "../store/dialect.ts";
 import type { ChildSessionRecord } from "./child-handle.ts";
 
