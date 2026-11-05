@@ -157,7 +157,7 @@ export const WINTER_BRAND: Readonly<BrandProfile> = Object.freeze({
   codexOriginator: "winter",
   tempRootName: "winter",
   pluginManifestDir: ".winter-plugin",
-  contactUrl: "https://github.com/yanlingLabs/winter-agent-sdk",
+  contactUrl: "https://github.com/waifucave/clover-sdk",
 });
 
 /** A refusal carries WHICH field and WHY, never a bare boolean — the host has to fix something. */

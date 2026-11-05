@@ -41,7 +41,7 @@ export const WEB_FETCH_MAX_REDIRECTS_CEILING = 20;
 /** How long one resolved address gets to connect before the next one is tried. */
 export const WEB_FETCH_CONNECT_BUDGET_MS = 10_000;
 export const WEB_FETCH_ACCEPT = "text/markdown, text/html, */*";
-export const WEB_FETCH_DEFAULT_USER_AGENT = "winter-web (+https://github.com/yanlingLabs/winter-agent-sdk)";
+export const WEB_FETCH_DEFAULT_USER_AGENT = "winter-web (+https://github.com/waifucave/clover-sdk)";
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const RETRY_AFTER_RE = /^[0-9]{1,6}$/;

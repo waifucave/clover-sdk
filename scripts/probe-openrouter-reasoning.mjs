@@ -165,7 +165,7 @@ const catalog = loadCatalog();
 const registry = createRegistry(catalog);
 for (const adapter of createShippedAdapters(catalog)) registry.register(adapter);
 const renderer = createHistoryRenderer(registry);
-const disposeIdentity = setWinterIdentity({ product: "winter-openrouter-probe", codexOriginator: "winter-openrouter-probe", contactUrl: "https://github.com/yanlingLabs/winter-agent-sdk" });
+const disposeIdentity = setWinterIdentity({ product: "winter-openrouter-probe", codexOriginator: "winter-openrouter-probe", contactUrl: "https://github.com/waifucave/clover-sdk" });
 
 const ctx = {
   connection: { providerId: "openrouter" },

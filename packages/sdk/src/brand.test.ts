@@ -44,7 +44,7 @@ describe("WINTER_BRAND: WS-01 §2's values, byte for byte", () => {
       codexOriginator: "winter",
       tempRootName: "winter",
       pluginManifestDir: ".winter-plugin",
-      contactUrl: "https://github.com/yanlingLabs/winter-agent-sdk",
+      contactUrl: "https://github.com/waifucave/clover-sdk",
     });
   });
 

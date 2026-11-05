@@ -6,7 +6,7 @@ codex/xAI/Console flows), the credential-ref surface, endpoint policy, retry/sta
 honest-identity headers every request carries.
 
 This package is published to GitHub Packages under restricted access (`@yanlinglabs` scope). The
-registry is chosen by the release workflow, not by a committed pin — see [RELEASING.md](https://github.com/yanlingLabs/winter-agent-sdk/blob/main/RELEASING.md).
+registry is chosen by the release workflow, not by a committed pin — see [RELEASING.md](https://github.com/waifucave/clover-sdk/blob/main/RELEASING.md).
 
 ## What it ships
 
@@ -48,7 +48,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-provider-runtime` as 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
 files, `README.md` and `LICENSE`. It does **not** ship `src/`: the TypeScript sources live at
-<https://github.com/yanlingLabs/winter-agent-sdk>, which is where to read them, file an issue, or send
+<https://github.com/waifucave/clover-sdk>, which is where to read them, file an issue, or send
 a patch.
 
 ## Supported public API and versioning (0.0.56)

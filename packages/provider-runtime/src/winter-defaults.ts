@@ -22,7 +22,7 @@
 export const WINTER_DEFAULT_IDENTITY: Readonly<{ product: string; codexOriginator: string; contactUrl: string }> = Object.freeze({
   product: "winter-agent-sdk",
   codexOriginator: "winter",
-  contactUrl: "https://github.com/yanlingLabs/winter-agent-sdk",
+  contactUrl: "https://github.com/waifucave/clover-sdk",
 });
 
 /** The sdk's `WINTER_BRAND.instructionsFile`: Winter's own instructions file name. */

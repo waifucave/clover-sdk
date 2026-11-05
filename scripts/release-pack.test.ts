@@ -379,7 +379,7 @@ describe("releasePack: the real, hermetic, mkdtemp-destined pack (WS-02 §9 Step
         }
         // Item 9 + 10, on the artifact a registry actually receives -- every publishable package alike.
         expect([p.name, packed.license]).toEqual([p.name, "MIT"]);
-        expect([p.name, packed.repository?.url]).toEqual([p.name, "git+https://github.com/yanlingLabs/winter-agent-sdk.git"]);
+        expect([p.name, packed.repository?.url]).toEqual([p.name, "git+https://github.com/waifucave/clover-sdk.git"]);
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }
