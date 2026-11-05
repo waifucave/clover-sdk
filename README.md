@@ -45,9 +45,11 @@ refused by current confined Linux profiles and does not admit Cowork children.
 npm install @waifucave/clover-agent-sdk
 ```
 
-Nothing else is needed: the `@waifucave` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm. (For now the packages are published to
+GitHub Packages only, the owner's choice: the npm job runs once the repository has an npm token. Until
+then, install from GitHub Packages below.)
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:

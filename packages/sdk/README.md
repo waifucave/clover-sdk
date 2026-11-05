@@ -19,7 +19,7 @@ npm install @waifucave/clover-agent-sdk
 
 Nothing else is needed: the `@waifucave` scope is public on npm.
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:
@@ -31,6 +31,14 @@ In your project's `.npmrc`:
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
 literal in the file. Then `npm install @waifucave/clover-agent-sdk` as usual.
+
+## A brand is required
+
+There is no default brand (0.0.63). Name the one your sessions run under, either per query
+(`Options.brand`, a complete `BrandProfile`) or once for the process (`installBrand(profile)`, before
+the first query). With neither, `query()` throws `BrandRequiredError` before anything is spawned, so a
+host that forgets its brand can never start a session on somebody else's home, environment variables
+or Keychain service. `WINTER_BRAND` is still exported, for a host that means to run as Winter.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data

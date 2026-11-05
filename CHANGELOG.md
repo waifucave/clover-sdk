@@ -14,31 +14,63 @@ package is renamed: `@yanlinglabs/winter-agent-sdk` is `@waifucave/clover-agent-
 `clover-provider-conformance`, `clover-conformance`, `clover-web` and the platform package
 `clover-agent-sdk-darwin-arm64`. Both release jobs bind `scope: "@waifucave"`; a consumer's `.npmrc`
 line is `@waifucave:registry=https://npm.pkg.github.com`. See RELEASING.md for what the first release
-under the new scope needs. Nothing else about the packages changed name: the default brand is still
-Winter's, so the default identity is still `winter-agent-sdk/<version>`.
+under the new scope needs. Nothing else about the packages changed name.
+
+Published to GitHub Packages only, for now (the owner's choice): the npm job is skipped as a whole
+when the repository has no `NPM_TOKEN`, and the publish jobs run only on a `v*` tag ref, so a
+`workflow_dispatch` on a branch publishes nothing.
+
+### There is no default brand (breaking)
+
+Nothing falls back to `WINTER_BRAND` any more, so a missed brand thread can never land on Winter's
+home (`~/.winter`), its `WINTER_*` variables or its Keychain service. A session runs under the brand
+its host names: `Options.brand`, or the brand installed for the process with the new
+`installBrand(profile)` (first install wins; `installedBrand()` reads it). `query()` with neither, or
+with a partial profile and nothing installed to complete it from, throws `BrandRequiredError`
+(`brand_required`) before anything is spawned; `resolveBrand()` completes a partial profile from the
+installed brand, never from Winter's, and otherwise refuses with the fields it is missing. The
+runtime's production wiring refuses a config without a brand the same way and installs the session's
+brand in its own process or Worker, so a reader deeper down that was not handed the brand
+(`requireBrand(explicit?)`) reads that session's names. Winter's own profile is still exported as
+`WINTER_BRAND`, for a host that means to run as Winter.
 
 ### The model adapter interface on the keyed fetch
 
 `@waifucave/clover-provider-runtime`. `ModelAdapter` and `AdapterContext` (`MODEL_ADAPTER_INTERFACE_VERSION`
 1): an adapter is handed a keyed fetch (Clover's `net.fetch`) instead of a credential store, and never
-holds a key. `createKeyedFetch` is the reference: declared hosts only, the key added in the placement
-the adapter names, redirects followed by hand, an idle watchdog and no total limit, one retry after a
-401 with a newer token. `providerAdapterFromModelAdapter` runs a model adapter in today's runtime. An
-adapter that signs with its secret runs in a process of its own (`spawnModelAdapterProcess`,
-`serveModelAdapterProcess`), reading the secret with `secrets.get`; the Bedrock adapter runs there and
-signs SigV4 there (`spawnBedrockAdapterProcess`).
+holds a key. `createKeyedFetch` is the reference: declared hosts only (a wildcard needs a real domain:
+no `*.com`, no `*.1`); the key added where its AUTH ENTRY says, from a closed list (`authorization`
+with a scheme, `x-api-key`, `api-key`, `x-goog-api-key`), never where a request asks; every response
+header that carries the key removed; redirects followed by hand; an idle watchdog (settable per
+request) and no total limit; one retry after a 401 with a newer token, never replaying a streamed
+body; the caller's abort honoured at every wait, the token source's included; and every failure a
+`KeyedFetchError` with a closed code. `providerAdapterFromModelAdapter` runs a model adapter in
+today's runtime. An adapter that signs with its secret runs in a process of its own
+(`spawnModelAdapterProcess`, `serveModelAdapterProcess`), reading the secret with `secrets.get`; the
+process presents its host's identity (sent in `init`), reports `exited`, fails at once and not
+retryably when it dies before it is ready (with its stderr) or is already gone, gives every call a
+cancel path or deadline, and exits on its own after stdin closes. The fetch limit inside that process
+is best effort (spec §5.3: host code is not held to the list). The Bedrock adapter runs there and signs
+SigV4 there (`spawnBedrockAdapterProcess`), reaching only `bedrock-runtime.<region>` and
+`bedrock.<region>` (`bedrockNetworkHosts`). The interface's whole declaration closure is pinned by a
+committed snapshot; the frozen signature uses `CatalogRow`.
 
 ### The catalog row schema, pinned
 
 `@waifucave/clover-provider-catalog`. `CATALOG_ROW_SCHEMA` (version 1, `urn:waifucave:clover:catalog-row:1`)
 is what one model row of a model plugin's catalog is, derived from the catalog schema with its hash
-pinned; `validateCatalogRows` checks a plugin's rows. Every shipped row validates.
+pinned; `validateCatalogRows` checks a plugin's rows. Every shipped row validates, by
+`validateCatalogRows` and by a stock JSON Schema validator. The schema is necessary, not sufficient:
+the rules no schema can state (the key, the provider, duplicates, credential-shaped values) are
+`validateCatalogRows`'s, so a host validates with it.
 
 ### The conformance kit on the interface
 
 `@waifucave/clover-provider-conformance`. `runKeyedFetchConformance` asks any keyed fetch the same
-questions; `runModelAdapterConformance` asks a model adapter whether it reads only its context, sends
-only through `ctx.fetch`, sets no credential header and stops when aborted.
+questions (the placement list, a key never echoed, the abort during the token wait, no replay of a
+streamed body and a cross-origin hop without the key among them); `runModelAdapterConformance` asks a
+model adapter whether it reads only its context, sends only through `ctx.fetch` (every direct request
+counted, headers read in any form), sets no credential header and stops when aborted.
 
 ### The brand carries the host's release; identity follows the brand
 

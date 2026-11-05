@@ -18,7 +18,7 @@ npm install @waifucave/clover-agent-runtime
 
 Nothing else is needed: the `@waifucave` scope is public on npm.
 
-### From GitHub Packages (the `yanlingLabs` org)
+### From GitHub Packages (the `waifucave` org)
 
 GitHub Packages needs the scope pointed at it and an authenticated read, even for a public package.
 In your project's `.npmrc`:
