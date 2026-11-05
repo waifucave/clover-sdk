@@ -9,8 +9,8 @@ import { resolveRuntimeExecutable, defaultSpawn, type SpawnedRuntimeProcess } fr
 import { WinterSDKError, CLIConnectionError, ProcessError, ProtocolDecodeError, AbortError } from "./errors.ts";
 import { encodeFrame } from "./protocol/codec.ts";
 import { PROTOCOL_VERSION } from "./protocol/frames.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
-import type { ProviderTurn } from "@yanlinglabs/winter-agent-runtime";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
+import type { ProviderTurn } from "@waifucave/clover-agent-runtime";
 
 // --- test doubles -----------------------------------------------------------------------------
 // Hand-scripted SpawnedRuntimeProcess doubles: emit exact byte chunks (encoded frames) so
@@ -65,7 +65,7 @@ const systemFrame = () =>
 // os-gated optional dependency on.
 const PLATFORM_PACKAGE_RESOLVABLE = (() => {
   try {
-    createRequire(import.meta.url).resolve("@yanlinglabs/winter-agent-sdk-darwin-arm64/package.json");
+    createRequire(import.meta.url).resolve("@waifucave/clover-agent-sdk-darwin-arm64/package.json");
     return true;
   } catch {
     return false;

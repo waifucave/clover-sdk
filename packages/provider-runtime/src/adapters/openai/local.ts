@@ -21,7 +21,7 @@
 //     here" — and never on an auth or server failure, which would turn a real problem into a
 //     confusing second request.
 
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { boundedFetch } from "../../http.ts";
 import type { CredentialRef, CredentialStatus, DiscoveryContext, ModelCatalogResult, ProviderAdapter, ProviderContext, ProviderEvent, TurnRequest } from "../../types.ts";
 import { chatTurn, type ChatTurnOptions } from "./chat-completions.ts";

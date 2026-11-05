@@ -1,4 +1,4 @@
-# `@yanlinglabs/winter-web`
+# `@waifucave/clover-web`
 
 Web search and web fetching for agents, with the SSRF guard built in: Winter's own `WebSearch` and
 `WebFetch` internals as a standalone library. It is what Winter's runtime itself uses, so there is one
@@ -21,10 +21,10 @@ built-ins (`http`, `https`, `dns`, `zlib`, `stream`, `os`).
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-web
+npm install @waifucave/clover-web
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
 ### From GitHub Packages (the `yanlingLabs` org)
 
@@ -32,12 +32,12 @@ GitHub Packages needs the scope pointed at it and an authenticated read, even fo
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-web` as usual.
+literal in the file. Then `npm install @waifucave/clover-web` as usual.
 
 **The published package contains COMPILED OUTPUT ONLY.** The tarball ships `dist/` — the bundled
 JavaScript and the `.d.ts` declarations — plus `README.md` and `LICENSE`. The TypeScript sources live
@@ -46,7 +46,7 @@ at <https://github.com/waifucave/clover-sdk> (`packages/web`).
 ## Fetching a page
 
 ```ts
-import { fetchWebPage, MemoryWebFetchCache } from "@yanlinglabs/winter-web";
+import { fetchWebPage, MemoryWebFetchCache } from "@waifucave/clover-web";
 
 const cache = new MemoryWebFetchCache(); // optional; one per tenant
 const page = await fetchWebPage(urlFromAUser, { signal, timeoutMs: 20_000, maxBytes: 2 * 1024 * 1024, cache });
@@ -172,7 +172,7 @@ and the cached final host (lexically and by resolution).
 ## The digest request
 
 ```ts
-import { buildWebFetchDigestRequest } from "@yanlinglabs/winter-web";
+import { buildWebFetchDigestRequest } from "@waifucave/clover-web";
 
 const { system, messages } = buildWebFetchDigestRequest({ text: page.text, prompt: "What does this page say about pricing?" });
 // system is undefined (the digest pass has no system prompt); messages is one user message.
@@ -186,7 +186,7 @@ include it.
 ## Searching (Exa)
 
 ```ts
-import { createExaSearchClient, createExaBackendState } from "@yanlinglabs/winter-web";
+import { createExaSearchClient, createExaBackendState } from "@waifucave/clover-web";
 
 const search = createExaSearchClient({
   resolveKey: async () => process.env.EXA_API_KEY, // asked only when the free tier is exhausted
@@ -228,7 +228,7 @@ await search.close();
 
 ## Supported public API and versioning
 
-**What is supported.** Every name exported from `@yanlinglabs/winter-web`, with the types it declares.
+**What is supported.** Every name exported from `@waifucave/clover-web`, with the types it declares.
 The core is `fetchWebPage`, `fetchWebResource`, the `WebFetchFailure` codes, `WebFetchCache` /
 `MemoryWebFetchCache`, `buildWebFetchDigestRequest`, `createExaSearchClient` with its result and
 failure codes, and `createExaBackendState` / `sharedExaBackendState`. The rule helpers

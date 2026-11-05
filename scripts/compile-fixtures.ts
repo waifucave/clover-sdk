@@ -7,7 +7,7 @@
 // `tsconfig.winter.json` maps `@sdk-under-test` onto the sdk's SOURCE, and in doing so REPLACES the
 // repo-wide `paths` it inherits from `tsconfig.base.json` (a tsconfig `extends` merges
 // `compilerOptions` shallowly, so a `paths` block overrides the whole map rather than adding to it).
-// Every OTHER workspace specifier the sdk source reaches -- `@yanlinglabs/winter-provider-catalog/families`
+// Every OTHER workspace specifier the sdk source reaches -- `@waifucave/clover-provider-catalog/families`
 // is the live one -- therefore resolves the ordinary way, through node_modules to that package's own
 // `types` condition, which since the compiled emit is `./dist/*.d.ts`.
 //
@@ -83,7 +83,7 @@ export function missingDistPackages(root: string = REPO_ROOT): string[] {
  */
 export async function compile(tsconfig: string, opts: { requireDist?: boolean } = {}): Promise<{ ok: boolean; output: string }> {
   // Checked BEFORE spawning tsc: the failure it produces otherwise is
-  // `TS2307: Cannot find module '@yanlinglabs/winter-provider-catalog/families'`, pointed at a line
+  // `TS2307: Cannot find module '@waifucave/clover-provider-catalog/families'`, pointed at a line
   // in `packages/sdk/src` -- which reads as a broken import in the sdk rather than as a missing build.
   const missing = opts.requireDist === true ? missingDistPackages() : [];
   if (missing.length > 0) {

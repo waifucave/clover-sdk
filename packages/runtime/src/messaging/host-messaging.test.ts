@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, spyOn, test } from "
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, type HostMessageListRequest, type HostMessageSendAnswer, type HostMessageSendRequest, type HostMessagingHandler, type Options, type SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import { query, type HostMessageListRequest, type HostMessageSendAnswer, type HostMessageSendRequest, type HostMessagingHandler, type Options, type SdkMessage } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import { spawnEmbeddedWorker } from "../embedded-host.ts";
 import { testProviderForNamespace } from "../provider/mock.ts";

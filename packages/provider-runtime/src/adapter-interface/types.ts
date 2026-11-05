@@ -19,7 +19,7 @@
 // VERSIONED. `MODEL_ADAPTER_INTERFACE_VERSION` is the contract number; a change that is not purely
 // additive bumps it, and `interface.test.ts` pins the shape (member names and kinds) so an accidental
 // change fails a test before it reaches a plugin.
-import type { ProviderProtocol, ToolCalling, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { ProviderProtocol, ToolCalling, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ConnectionProfile, CredentialMaterial, CredentialStatus, DiscoveryContext, ModelCatalogResult, ProviderContext, ProviderEvent, ProviderFamily, TurnRequest } from "../types.ts";
 
 /** The contract number of this interface. A plugin states the one it was built against. */

@@ -7,9 +7,9 @@
 // with the reason it is left out -- a new reasoning row with no evidence fails here and has to be
 // decided, not silently left unable to show its thinking.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog, type WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { createGoogleGenerateContentAdapter, createResponsesAdapter } from "@yanlinglabs/winter-provider-runtime";
-import { FAST_RETRY, testContext } from "@yanlinglabs/winter-provider-runtime/testing";
+import { loadCatalog, type WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { createGoogleGenerateContentAdapter, createResponsesAdapter } from "@waifucave/clover-provider-runtime";
+import { FAST_RETRY, testContext } from "@waifucave/clover-provider-runtime/testing";
 import { foldProviderStream } from "../../../runtime/src/provider/bridge.ts";
 import { sseResponse, withFake } from "../fakes/server.ts";
 import { geminiBody, geminiFakeRoutes, geminiStreamResponse } from "../fakes/gemini.ts";

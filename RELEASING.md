@@ -12,7 +12,7 @@ condition, so the published manifest names only `dist/`. npm **ignores** it.
 An `npm pack` or `npm publish` of these packages therefore produces a tarball whose manifest still
 says `"bun": "./src/index.ts"` while `files` ships no `src/`. Measured: such a tarball installs
 cleanly and imports fine **under Node**, and dies under **Bun** with
-`Cannot find module '@yanlinglabs/winter-provider-catalog'` — a package that looks healthy everywhere
+`Cannot find module '@waifucave/clover-provider-catalog'` — a package that looks healthy everywhere
 except the runtime this SDK is built for. The three packages carrying workspace dependencies are
 worse still: `workspace:*` survives into the manifest and `npm install` of the tarball is impossible.
 
@@ -33,15 +33,41 @@ pnpm strips `scripts` from the packed manifest, so the published package carries
 | public npm | `publish-npm` | the closure of the wrapper + the two harness roots + the wrapper's `optionalDependency` — all six today | `secrets.NPM_TOKEN`, `id-token: write` for provenance |
 
 Neither registry is chosen on a command line. `--registry` sets only `registries.default`, and both
-pnpm and npm consult the **scope** binding first — a committed `@yanlinglabs:registry` line would
+pnpm and npm consult the **scope** binding first — a committed `@waifucave:registry` line would
 therefore beat it, which is why the project `.npmrc` pins nothing. Each job binds its own scope *and*
 credential with `actions/setup-node` (`registry-url` + `scope`), and
 `scripts/publish-routing.test.ts` proves the routing with real `npm publish --dry-run` runs.
 
+## The scope is the repository owner's (0.0.63)
+
+GitHub Packages binds an npm scope to the account that owns the repository: a workflow's
+`GITHUB_TOKEN` can publish `@<owner>/*` from a repository that `<owner>` owns, and nothing else. This
+repository moved from `yanlingLabs` to `waifucave`, so its packages moved with it: from 0.0.63 they
+are `@waifucave/clover-*` (`clover-agent-sdk`, `clover-agent-runtime`, `clover-provider-catalog`,
+`clover-provider-runtime`, `clover-provider-conformance`, `clover-conformance`, `clover-web`, and the
+platform package `clover-agent-sdk-darwin-arm64`), and both publish jobs bind `scope: "@waifucave"`.
+Publishing `@yanlinglabs/*` from here is refused by GitHub Packages, and the npm job, which waits on
+it, never runs.
+
+What the owner provides before the first `@waifucave` release:
+
+- **npm:** the `waifucave` organization (or user) on npmjs.com owning the `@waifucave` scope, and an
+  automation token with publish rights on it, stored as the repository secret `NPM_TOKEN`. The
+  packages are new names on npm, so the first publish creates them (public, as the job publishes).
+- **GitHub Packages:** nothing beyond the repository's own `GITHUB_TOKEN` (`packages: write`, already
+  in the job), since `waifucave` owns the repository. A consumer's `.npmrc` line becomes
+  `@waifucave:registry=https://npm.pkg.github.com`.
+
+The `@yanlinglabs/winter-*` versions already published stay where they are; they are Winter's. A fix
+Winter's hand-over release needs ships from a branch of the last `@yanlinglabs` release (`v0.0.62`,
+before the C0 rename), with that branch's own names and scope, from a repository `yanlingLabs` owns (or
+by npm alone, with a token that has publish rights on `@yanlinglabs`); this repository's workflow
+cannot publish it.
+
 ## The darwin-arm64 platform package (P9a-3/P9a-4)
 
-`@yanlinglabs/winter-agent-sdk-darwin-arm64` ships the compiled `winter` runtime binary — the
-artifact the wrapper spawns — as an `optionalDependency` of `@yanlinglabs/winter-agent-sdk`. It is
+`@waifucave/clover-agent-sdk-darwin-arm64` ships the compiled `winter` runtime binary — the
+artifact the wrapper spawns — as an `optionalDependency` of `@waifucave/clover-agent-sdk`. It is
 bin-only: no `main`, no `types`, no `exports` at all, just `bin: { winter: "bin/winter" }`, gated on
 `os: ["darwin"]` / `cpu: ["arm64"]` so a package manager that honours those fields (npm; `bun install`
 partially — see below) simply does not fetch it on any other platform.

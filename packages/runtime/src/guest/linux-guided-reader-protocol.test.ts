@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { WINTER_BRAND, type RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { assertLinuxGuidedHostQueryConfig, assertLinuxGuidedHostQueryRoots } from "./linux-guided-host-query-profile.ts";
 import { assertLinuxHostQueryConfig } from "./linux-host-query-profile.ts";
 import { decodeLinuxGuidedReaderFrame, linuxGuidedReaderStart, linuxGuidedReaderCancel, LINUX_GUIDED_READER_BODY_BYTES, LINUX_GUIDED_READER_LIMITS,

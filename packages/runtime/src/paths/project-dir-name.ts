@@ -12,7 +12,7 @@
 // session so a LATER resume re-applies the SAME name even if the env var has since changed, or is
 // unset, is explicitly Task 9's obligation, not this helper's — see task-7-report.md's seam note.
 // home.ts moved to the sdk package (Task 10, WS-05 §6); temp.ts stays runtime-private.
-import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 import { WinterPathsError } from "./temp.ts";
 
 // Re-declared rather than imported from temp.ts: assertSafeSegment there is private (this task's

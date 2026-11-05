@@ -7,26 +7,26 @@ const MACHO64 = new Uint8Array([0xcf, 0xfa, 0xed, 0xfe]);
 const TEXT = new Uint8Array([0x2f, 0x2f, 0x20, 0x61]);
 
 function view(manifest: Record<string, unknown>, files: PackedView["files"] = []): PackedView {
-  return { manifest: { name: "@yanlinglabs/winter-provider-runtime", ...manifest }, files };
+  return { manifest: { name: "@waifucave/clover-provider-runtime", ...manifest }, files };
 }
 
 describe("closureViolations (pure)", () => {
   test("a clean provider manifest passes: the catalog is the only dependency", () => {
-    expect(closureViolations(view({ dependencies: { "@yanlinglabs/winter-provider-catalog": "0.0.56" } }, [{ path: "dist/index.js", head: TEXT, text: 'import { x } from "@yanlinglabs/winter-provider-catalog";' }]))).toEqual([]);
+    expect(closureViolations(view({ dependencies: { "@waifucave/clover-provider-catalog": "0.0.56" } }, [{ path: "dist/index.js", head: TEXT, text: 'import { x } from "@waifucave/clover-provider-catalog";' }]))).toEqual([]);
   });
 
   for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) {
     test(`refuses the sdk in ${field}`, () => {
-      expect(closureViolations(view({ [field]: { "@yanlinglabs/winter-agent-sdk": "0.0.56" } })).join("\n")).toContain("carries the winter runtime binary");
+      expect(closureViolations(view({ [field]: { "@waifucave/clover-agent-sdk": "0.0.56" } })).join("\n")).toContain("carries the winter runtime binary");
     });
   }
 
   test("refuses the platform package even on its own", () => {
-    expect(closureViolations(view({ optionalDependencies: { "@yanlinglabs/winter-agent-sdk-darwin-arm64": "0.0.56" } }))).toHaveLength(1);
+    expect(closureViolations(view({ optionalDependencies: { "@waifucave/clover-agent-sdk-darwin-arm64": "0.0.56" } }))).toHaveLength(1);
   });
 
   test("refuses bundled dependencies written as an array", () => {
-    expect(closureViolations(view({ bundleDependencies: ["@yanlinglabs/winter-agent-sdk"] }))).toHaveLength(1);
+    expect(closureViolations(view({ bundleDependencies: ["@waifucave/clover-agent-sdk"] }))).toHaveLength(1);
   });
 
   test("refuses any other dependency (the install would grow)", () => {
@@ -40,13 +40,13 @@ describe("closureViolations (pure)", () => {
   });
 
   test("refuses compiled JS or a declaration that still imports the sdk", () => {
-    expect(closureViolations(view({}, [{ path: "dist/identity.js", head: TEXT, text: 'import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";' }]))).toHaveLength(1);
-    expect(closureViolations(view({}, [{ path: "dist/types.d.ts", head: TEXT, text: 'export type { CredentialRef } from "@yanlinglabs/winter-agent-sdk";' }]))).toHaveLength(1);
-    expect(closureViolations(view({}, [{ path: "dist/x.js", head: TEXT, text: 'const m = await import("@yanlinglabs/winter-agent-sdk/tools");' }]))).toHaveLength(1);
+    expect(closureViolations(view({}, [{ path: "dist/identity.js", head: TEXT, text: 'import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";' }]))).toHaveLength(1);
+    expect(closureViolations(view({}, [{ path: "dist/types.d.ts", head: TEXT, text: 'export type { CredentialRef } from "@waifucave/clover-agent-sdk";' }]))).toHaveLength(1);
+    expect(closureViolations(view({}, [{ path: "dist/x.js", head: TEXT, text: 'const m = await import("@waifucave/clover-agent-sdk/tools");' }]))).toHaveLength(1);
   });
 
   test("a prose mention of the sdk's name is not an import", () => {
-    expect(closureViolations(view({}, [{ path: "dist/x.js", head: TEXT, text: '// replaces what @yanlinglabs/winter-agent-sdk used to provide; product "winter-agent-sdk"' }]))).toEqual([]);
+    expect(closureViolations(view({}, [{ path: "dist/x.js", head: TEXT, text: '// replaces what @waifucave/clover-agent-sdk used to provide; product "winter-agent-sdk"' }]))).toEqual([]);
   });
 });
 
@@ -61,7 +61,7 @@ describe.skipIf(!PACK_SMOKE_ENABLED)("the packed provider pair", () => {
     async () => {
       const result = await packProviderClosure();
       expect(result.violations).toEqual([]);
-      expect(result.installed).toEqual(["@yanlinglabs/winter-provider-catalog", "@yanlinglabs/winter-provider-runtime"]);
+      expect(result.installed).toEqual(["@waifucave/clover-provider-catalog", "@waifucave/clover-provider-runtime"]);
     },
     240_000,
   );

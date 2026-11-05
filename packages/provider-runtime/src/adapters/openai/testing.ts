@@ -7,8 +7,8 @@
 // `Bun.secrets` is never reachable from this package at all (the Keychain-backed store is a
 // runtime-side file, deliberately).
 
-import type { CapabilityEvidence, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { CapabilityEvidence, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 import { createMemoryCredentialStore } from "../../credentials/memory.ts";
 import type { ConnectionProfile, CredentialRef, DiscoveryContext, ProviderContext, ProviderEvent } from "../../types.ts";
 

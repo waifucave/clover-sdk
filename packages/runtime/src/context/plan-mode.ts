@@ -17,7 +17,7 @@
 // the same value `hostPlanBody` (context/seam.ts). One value, two names, mapped where the two
 // layers meet -- T8's wiring, noted in the task-6 report.
 
-import { DEFAULT_PLANS_DIRECTORY } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_PLANS_DIRECTORY } from "@waifucave/clover-agent-sdk";
 
 /**
  * FIXED. States the restriction the permission engine enforces, so a denial is never a surprise.

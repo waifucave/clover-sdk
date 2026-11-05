@@ -17,7 +17,7 @@
 // so a fixture can never pass by agreeing with itself.
 import { partitionAdvertisedTools, type AdvertisedSetInputs, type DeferralActivation, type ToolDescriptor } from "../tools/registry.ts";
 import { hideAliasExcludedTwins, type AliasBrand } from "./aliases.ts";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 
 // The subset of `AdvertisedSetInputs` ToolSearch/WaitForMcpServers need, plus the `DeferralActivation`
 // `partitionAdvertisedTools` itself requires as a second argument. `mode` is taken as a plain value

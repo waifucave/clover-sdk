@@ -1,7 +1,7 @@
-// WS-24 (cross-lane): `@yanlinglabs/winter-agent-runtime/mcp-client` resolves by its PUBLIC specifier and
+// WS-24 (cross-lane): `@waifucave/clover-agent-runtime/mcp-client` resolves by its PUBLIC specifier and
 // is the real client -- a host connects a stdio server and calls a tool through it.
 import { expect, test } from "bun:test";
-import { connectMcpServer, createElicitationAsker, McpConnectError, type ConnectedMcpClient, type ConnectMcpServerOptions } from "@yanlinglabs/winter-agent-runtime/mcp-client";
+import { connectMcpServer, createElicitationAsker, McpConnectError, type ConnectedMcpClient, type ConnectMcpServerOptions } from "@waifucave/clover-agent-runtime/mcp-client";
 import * as internal from "./mcp/client.ts";
 import { pingFixtureCommand } from "./mcp/test-fixtures.ts";
 

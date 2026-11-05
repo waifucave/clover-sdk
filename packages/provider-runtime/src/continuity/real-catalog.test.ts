@@ -15,7 +15,7 @@
 // it is deliberately written to keep passing when Lane X raises those entries to `declared`, because
 // a probe that only holds for today's evidence is a snapshot, not a guard.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { createRegistry, type ProviderRegistry } from "../registry.ts";
 import type { ProviderMessageLike } from "../types.ts";
 import { createEndpointResolver } from "./domains.ts";

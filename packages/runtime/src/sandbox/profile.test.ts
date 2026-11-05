@@ -15,7 +15,7 @@ import {
   caseFoldSegment,
   type SeatbeltProfileInput,
 } from "./profile.ts";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { recursiveGlobToSbplRegexSource } from "../permissions/file-rules.ts";
 
 function realTmp(): string {

@@ -31,7 +31,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, mkdirSync, symlinkSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { PermissionMode, PermissionRuleValue, PermissionUpdate, RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue, PermissionUpdate, RuleSource } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   probeReadAccess,

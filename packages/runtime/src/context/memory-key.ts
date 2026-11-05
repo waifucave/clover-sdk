@@ -21,7 +21,7 @@
 // it IS wider than the helper's own comment claims, and is called out in the task-6 report.
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve, sep } from "node:path";
-import { compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { resolveProjectDirName } from "../paths/project-dir-name.ts";
 
 /**

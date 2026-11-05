@@ -4,6 +4,49 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.63
+
+### The packages are `@waifucave/clover-*`
+
+The repository's owner is `waifucave`, and GitHub Packages publishes only the owner's scope, so every
+package is renamed: `@yanlinglabs/winter-agent-sdk` is `@waifucave/clover-agent-sdk`, and likewise
+`clover-agent-runtime`, `clover-provider-catalog`, `clover-provider-runtime`,
+`clover-provider-conformance`, `clover-conformance`, `clover-web` and the platform package
+`clover-agent-sdk-darwin-arm64`. Both release jobs bind `scope: "@waifucave"`; a consumer's `.npmrc`
+line is `@waifucave:registry=https://npm.pkg.github.com`. See RELEASING.md for what the first release
+under the new scope needs. Nothing else about the packages changed name: the default brand is still
+Winter's, so the default identity is still `winter-agent-sdk/<version>`.
+
+### The model adapter interface on the keyed fetch
+
+`@waifucave/clover-provider-runtime`. `ModelAdapter` and `AdapterContext` (`MODEL_ADAPTER_INTERFACE_VERSION`
+1): an adapter is handed a keyed fetch (Clover's `net.fetch`) instead of a credential store, and never
+holds a key. `createKeyedFetch` is the reference: declared hosts only, the key added in the placement
+the adapter names, redirects followed by hand, an idle watchdog and no total limit, one retry after a
+401 with a newer token. `providerAdapterFromModelAdapter` runs a model adapter in today's runtime. An
+adapter that signs with its secret runs in a process of its own (`spawnModelAdapterProcess`,
+`serveModelAdapterProcess`), reading the secret with `secrets.get`; the Bedrock adapter runs there and
+signs SigV4 there (`spawnBedrockAdapterProcess`).
+
+### The catalog row schema, pinned
+
+`@waifucave/clover-provider-catalog`. `CATALOG_ROW_SCHEMA` (version 1, `urn:waifucave:clover:catalog-row:1`)
+is what one model row of a model plugin's catalog is, derived from the catalog schema with its hash
+pinned; `validateCatalogRows` checks a plugin's rows. Every shipped row validates.
+
+### The conformance kit on the interface
+
+`@waifucave/clover-provider-conformance`. `runKeyedFetchConformance` asks any keyed fetch the same
+questions; `runModelAdapterConformance` asks a model adapter whether it reads only its context, sends
+only through `ctx.fetch`, sets no credential header and stops when aborted.
+
+### The brand carries the host's release; identity follows the brand
+
+`BrandProfile.productVersion` (optional) is the host's own release. `identityFromBrand` and
+`installBrandIdentity` map a brand to the process identity once, for a session's wiring and a host's
+own process alike. ToolSearch spells the standing `send_message`/`list_agents` twins from the
+session's brand, and `transcriptSourceForSessionKey` needs the store or home it reads (no default home).
+
 ## 0.0.62
 
 ### Reasoning continuation, audited per provider against the vendors' own docs

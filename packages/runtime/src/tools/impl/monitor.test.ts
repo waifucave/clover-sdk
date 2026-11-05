@@ -3,7 +3,7 @@ import { mkdtempSync, realpathSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Server, ServerWebSocket } from "bun";
-import type { BackgroundTaskMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import "./monitor.ts";
 import { getRegisteredTool } from "../registry.ts";
 import type { ToolExecutionContext } from "../registry.ts";

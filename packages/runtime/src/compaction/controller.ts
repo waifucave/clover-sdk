@@ -12,7 +12,7 @@
 // reading has not moved since the last compaction (`lastCompactionTokens`, pinned by the seam
 // contract test's re-entrancy case). A second guard here would stack with that one and silently skip
 // the legitimate second compaction of a turn that genuinely grew past the threshold twice.
-import { DEFAULT_COMPACTION_THRESHOLD } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_COMPACTION_THRESHOLD } from "@waifucave/clover-agent-sdk";
 import { preTokensFor, type CompactionController, type CompactionInput, type CompactionResult } from "./seam.ts";
 import { isProviderTurnError, type ContextAccountant, type ProviderMessage } from "../engine.ts";
 import { DEFAULT_RETAINED_PAIRS, evidencedToolNames, selectRetention } from "./retention.ts";

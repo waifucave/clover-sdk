@@ -1,10 +1,10 @@
 // Durable identities are discovered before runEngine. Live execution is rebound lazily after
 // the new parent has established its host stream, policy and tool context.
-import type { SessionStore } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStore } from "@waifucave/clover-agent-sdk";
 import type { ChildHandle, ChildResult, ChildSessionRecord } from "./child-handle.ts";
 import { rebuildChildRoster, successfulRecords, type RosterKey } from "./roster.ts";
 import { ensureDefaultMessagingRuntimeRegistered } from "../messaging/reference-adapter.ts";
-import type { GlobalAgentMessage, DeliveryOutcome } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { GlobalAgentMessage, DeliveryOutcome } from "@waifucave/clover-agent-sdk/messaging";
 import type { RecordedModelEffort } from "./resolution.ts";
 import { bindChildExecutionProjectKey } from "./execution-snapshot.ts";
 

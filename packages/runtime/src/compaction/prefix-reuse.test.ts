@@ -3,7 +3,7 @@
 // appended as the last user message, so the largest request of a session reads its prefix from the
 // prompt cache. Ground truth is the request the provider receives.
 import { describe, expect, test } from "bun:test";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { createContextAccountant, ProviderTurnError, runEngine, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

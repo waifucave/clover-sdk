@@ -22,7 +22,7 @@ import {
 import { globDenyEntriesOf, splitDenyPathsByGlobShape, type GlobDenyEntry } from "../permissions/file-rules.ts";
 import { currentHostCodeProtectionPaths } from "./host-code-protection.ts";
 import { trackProcessGroup } from "../process-groups.ts";
-import { buildMandatoryFloorProfile, hasMandatoryFloor, type HostExecutionFloor, type HostCodeProcessScope, type HostCodeProcessHandle } from "@yanlinglabs/winter-agent-sdk";
+import { buildMandatoryFloorProfile, hasMandatoryFloor, type HostExecutionFloor, type HostCodeProcessScope, type HostCodeProcessHandle } from "@waifucave/clover-agent-sdk";
 import { currentHostCodeProcessClient, hostCodeProcessBrokerRequired, requireBoundHandle } from "./host-code-process.ts";
 import { currentHostChildFloorProfile, prepareHostChildLaunch } from "./host-child-floor.ts";
 import { dirname } from "node:path";

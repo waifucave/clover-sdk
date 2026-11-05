@@ -15,7 +15,7 @@
 // already looked rows up by `ctx.connection.providerId` + model (`findDescriptor`); every adapter now does.
 import { describe, expect, test } from "bun:test";
 import { serve } from "bun";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { ProviderEvent, TurnRequest } from "../types.ts";
 import { SHIPPED_ADAPTER_IDS, createShippedAdapters, descriptorLookupForAdapter } from "./index.ts";
 import { testContext } from "./openai/testing.ts";

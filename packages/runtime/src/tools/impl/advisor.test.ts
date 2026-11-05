@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { Provider, ProviderMessage, ProviderTurn } from "../../engine.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { runEngine } from "../../engine.ts";
 import { createInMemoryChannel } from "../../protocol/channel.ts";
 import { createSessionReadState } from "../read-state.ts";

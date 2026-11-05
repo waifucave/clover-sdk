@@ -28,10 +28,10 @@
 // credential stores, and `test-token-…` literals.
 
 import { describe, expect, test } from "bun:test";
-import { loadCatalog, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { CredentialRef, CredentialMaterial } from "@yanlinglabs/winter-provider-runtime";
-import { activeWinterIdentity, createMemoryCredentialStore, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
+import type { CredentialRef, CredentialMaterial } from "@waifucave/clover-provider-runtime";
+import { activeWinterIdentity, createMemoryCredentialStore, winterUserAgent } from "@waifucave/clover-provider-runtime";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 // `buildSessionProvider` stays relative (review r1 Critical-2): `winter-agent-runtime` is
 // `"private": true`, never published -- irrelevant here since `.test.ts` files never ship as
 // reachable code.

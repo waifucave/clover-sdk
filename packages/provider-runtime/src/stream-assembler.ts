@@ -135,7 +135,7 @@ export interface StreamAssemblySink {
 /** The longest a provider's own message may be in a `ProviderStreamError`. A provider error body can be arbitrarily long, and this string reaches a log. */
 export const MAX_STREAM_ERROR_MESSAGE_CHARS = 400;
 
-const STREAM_ERROR_BRAND = Symbol.for("@yanlinglabs/winter-provider-runtime:ProviderStreamError");
+const STREAM_ERROR_BRAND = Symbol.for("@waifucave/clover-provider-runtime:ProviderStreamError");
 
 /**
  * The assembler's default failure: the normalized `ProviderError` and whether the stream had begun.

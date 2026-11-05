@@ -20,7 +20,7 @@ import { inheritSourceObject, sourceObjectAllowed } from "../sandbox/source-read
 // `Options.plugins`, a decision made outside the repository (the same reasoning
 // subagents/definitions.ts records for `pluginAgents`), and builtins ship with the runtime.
 import { basename, dirname, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
 import { DEFAULT_SKILL_BODY_BYTES, capBytes, skillNameError, pluginNameError } from "./frontmatter.ts";
 import { SKILL_METADATA_PREFIX_BYTES, SELF_SUBDIR, projectSkillRoots, readSkillMetadata, scanSkillRoot, scanUserSkillRoot, type DiscoveredSkill, type SkillScanError, type SkillTier } from "./loader.ts";
 import { isStrictPluginOnly, type StrictPluginOnlyCustomization } from "../settings/loaders/strict-plugin-only.ts";

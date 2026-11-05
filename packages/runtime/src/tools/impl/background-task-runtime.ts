@@ -35,7 +35,7 @@ import type {
   BackgroundTaskMessage,
   SDKTaskNotificationMessage,
   SDKTaskUpdatedMessage,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 import { wireTaskType } from "../background-tasks.ts";
 import { enqueueTaskNotification, renderShellNotification } from "../../subagents/notification-queue.ts";
 import type { RunCommandResult } from "../../sandbox/spawn.ts";

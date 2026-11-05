@@ -37,7 +37,7 @@ import { readSourceTextWithOrigin, bindSourceObject, inheritSourceObject, source
 // one-line change in tools/impl/skill.ts and the two doors converge.
 import { type Dirent } from "node:fs";
 import { basename, join } from "node:path";
-import type { BrandProfile, SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile, SettingSource } from "@waifucave/clover-agent-sdk";
 import { escapeRegExpLiteral, shellWords } from "../permissions/grammar.ts";
 import { isUserInvocable, type SkillOverrides } from "../skills/listing.ts";
 import { projectSkillRoots } from "../skills/loader.ts";

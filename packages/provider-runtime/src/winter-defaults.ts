@@ -1,11 +1,11 @@
-// 0.0.56 (W9): the few values and shapes this package used to IMPORT from `@yanlinglabs/winter-agent-sdk`.
+// 0.0.56 (W9): the few values and shapes this package used to IMPORT from `@waifucave/clover-agent-sdk`.
 //
-// WHY THEY ARE DECLARED HERE NOW. `@yanlinglabs/winter-agent-sdk` carries the compiled `winter` runtime
-// binary as an `optionalDependency` (`@yanlinglabs/winter-agent-sdk-darwin-arm64`, ~71 MB). While this
+// WHY THEY ARE DECLARED HERE NOW. `@waifucave/clover-agent-sdk` carries the compiled `winter` runtime
+// binary as an `optionalDependency` (`@waifucave/clover-agent-sdk-darwin-arm64`, ~71 MB). While this
 // package listed the sdk as a runtime dependency, every host that used only the provider layer -- an
 // in-process agent loop over `streamTurn`, under Node, on any platform -- installed the wrapper and,
 // on darwin-arm64, the binary, for four constants and three type shapes. This package now depends on
-// `@yanlinglabs/winter-provider-catalog` alone; `scripts/provider-pack-closure.test.ts` packs it and
+// `@waifucave/clover-provider-catalog` alone; `scripts/provider-pack-closure.test.ts` packs it and
 // refuses a manifest that names the sdk (or the platform package) as a dependency again.
 //
 // ONE MEANING, TWO DECLARATIONS, AND A GATE THAT KEEPS THEM ONE. The sdk stays the owner of these

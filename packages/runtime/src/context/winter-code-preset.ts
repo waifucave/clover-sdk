@@ -22,7 +22,7 @@
 // P7a (D19): the preset TEXT is unchanged by a rebrand -- only its NAME follows the profile. The
 // version stamp below deliberately keeps Winter's own token: it attributes WHICH authored text a
 // conformance run compared, and that text is Winter's whoever is running it.
-import { WINTER_BRAND, type BrandProfile, type SystemPromptPreset } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SystemPromptPreset } from "@waifucave/clover-agent-sdk";
 import presetText from "./presets/winter-code.md" with { type: "text" };
 
 /**

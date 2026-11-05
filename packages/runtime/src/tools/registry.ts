@@ -36,8 +36,8 @@ import { bindGuestFileSession, type GuestFileSession, guestFileError } from "../
 // "correctly-absent (v1)"). Per-tool ground truth (§2/§3) is treated as authoritative over §1.1's
 // introductory type sketch; `ToolDisposition` below widens to 5 members rather than silently
 // mis-filing those two tools under an existing value.
-import type { PermissionMode, BackgroundTaskMessage, BrandProfile, SettingSource } from "@yanlinglabs/winter-agent-sdk";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, BackgroundTaskMessage, BrandProfile, SettingSource } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { parseRule } from "../permissions/grammar.ts";
 // Fix round 1, RULING P3-B: probeReadWouldPrompt's boolean widened to this named 3-state result --
 // imported (type-only, erased at build time; no runtime cycle since evaluator.ts never imports this

@@ -34,10 +34,10 @@
 //      fixture that pins it.
 //   4. NO AMBIENT CREDENTIAL SCAN (R6-10). The composite store below can serve `env` refs, but only
 //      ones a host NAMED. Nothing here reads `ANTHROPIC_API_KEY` because it happened to be exported.
-import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { CredentialRef, ProviderConnectionConfig, ProviderSelection, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import type { CredentialStore, ModelInfo, ProviderContext, ProviderRegistry, ResolvedModel, StickyDecoration, StickyDecorations } from "@yanlinglabs/winter-provider-runtime";
+import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import type { CredentialRef, ProviderConnectionConfig, ProviderSelection, RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import type { CredentialStore, ModelInfo, ProviderContext, ProviderRegistry, ResolvedModel, StickyDecoration, StickyDecorations } from "@waifucave/clover-provider-runtime";
 import {
   ANTHROPIC_CONSOLE_ACCOUNT_ID,
   CredentialResolutionError,
@@ -54,8 +54,8 @@ import {
   createMemoryCredentialStore,
   createRegistry,
   createShippedAdapters,
-} from "@yanlinglabs/winter-provider-runtime";
-import type { MessageOrigin } from "@yanlinglabs/winter-provider-runtime";
+} from "@waifucave/clover-provider-runtime";
+import type { MessageOrigin } from "@waifucave/clover-provider-runtime";
 import { createKeychainCredentialStore, createKeychainSecretReader, type KeychainSecretReader } from "./keychain-store.ts";
 import { createToolSecretResolver, type ToolSecretResolver } from "./tool-secret.ts";
 import { providerCredentialRef } from "./credential-api.ts";

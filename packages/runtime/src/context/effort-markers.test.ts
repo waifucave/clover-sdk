@@ -3,7 +3,7 @@
 // row whose catalog evidence documents per-message effort, and `set_effort` moves the live level at
 // the quiescent boundary. Ground truth is the LIVE provider request the engine builds.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { ProviderTurnError, runEngine, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

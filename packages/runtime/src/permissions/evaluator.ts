@@ -35,7 +35,7 @@
 //   - The standing-exception (critical-removal/protected-write/plan-write) "mustPrompt" null branch
 //     was ALSO already deny-on-null (T7) — also unchanged by this ruling.
 import { resolve } from "node:path";
-import type { McpServerIdentity, PermissionBehavior, PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerIdentity, PermissionBehavior, PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@waifucave/clover-agent-sdk";
 import { FILE_RULE_TOOLS, matchesRule, isRecognizedReadOnly, leadingWord, shellWords, stripWrappers, type ParsedRule } from "./grammar.ts";
 import { checkSymlinkBothEnds, resolveRealTarget, resolveSymlinkTargetChain, resolveTargetPath } from "./paths.ts";
 import {
@@ -67,7 +67,7 @@ import { flattenSubcommands, naiveCommandPieces } from "./shell-structure.ts";
 import { isProtectedWrite as isProtectedPath, isCriticalRemoval as classifyCriticalRemoval, isWorkflowScriptCarveOut, isMemoryCarveOut, isCarvableOutputsDir, type ProtectedBrand } from "./protected.ts";
 // P7a fix r1 (Important-2): the reading for an evaluation context that carries no brand -- every
 // hand-built one in this package's tests, and a host driving the evaluator directly.
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 // Task 12 (WS-07 §10.1 step 2 / §6.5): the two auto/config.ts primitives evaluator.ts's own `auto`
 // mode arm and plan's classifier borrow need. This is the ONLY dependency evaluator.ts takes on
 // the auto/ package — the concrete AutoEngine implementation (auto/engine.ts) is never imported

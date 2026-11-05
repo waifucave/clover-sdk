@@ -31,7 +31,7 @@
 import type { ContentBlock, ProviderMessage, ProviderToolSpec } from "../engine.ts";
 import { isSystemRoleAttachment } from "./attachments.ts";
 import { isToolBookkeeping, isToolChangesMessage, toolChangeReferences, toolChangesWireMessage } from "./tool-epoch.ts";
-import type { SystemPromptBlock } from "@yanlinglabs/winter-provider-runtime";
+import type { SystemPromptBlock } from "@waifucave/clover-provider-runtime";
 
 /** One userContext / systemContext entry, in the order it is rendered. */
 export type ContextEntry = readonly [key: string, value: string];

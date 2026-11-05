@@ -1,5 +1,5 @@
 import { RUNTIME_CONTEXT_SUBTYPE, parseRuntimeContextConfig, parseRuntimeContextRequest, parseRuntimeContextSnapshot,
-  type RuntimeContextConfig } from "@yanlinglabs/winter-agent-sdk";
+  type RuntimeContextConfig } from "@waifucave/clover-agent-sdk";
 import type { RpcBridge } from "../rpc/bridge.ts";
 import { RequiredContextError, type RequiredContextSource } from "./required-context.ts";
 

@@ -10,7 +10,7 @@
 // requirement on top: an escape no allow rule sanctions ALWAYS reaches the host's canUseTool -- in
 // auto and plan too, never the classifier -- because the host's own reviewer clears it there.
 import { describe, expect, test } from "bun:test";
-import type { PermissionMode, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   NO_OPINION_HOOK_STAGE,

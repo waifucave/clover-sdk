@@ -18,7 +18,7 @@ import { readSourceFileSync, statSourceSync } from "../sandbox/source-read.ts";
 // posture the settings loader takes toward unknown keys -- accept, preserve, do not invent.
 
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /** Winter's OWN manifest dir, derived rather than spelled. A session's is `brand.pluginManifestDir`. */
 export const WINTER_PLUGIN_MANIFEST_DIR = WINTER_BRAND.pluginManifestDir;

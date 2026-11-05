@@ -5,7 +5,7 @@
 // makeHookHandler/makePermissionHandler posture one layer over: every failure mode is a structured
 // `{ok:false, error:{code,message}}`, never a thrown exception -- WS-04 §3.1's own "a structured
 // error, never a dropped request."
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import type { McpServerState, McpServerStateKind, McpServerStateSource } from "../mcp/state.ts";
 import type { McpControlSeam } from "../mcp/control-seam.ts";
 

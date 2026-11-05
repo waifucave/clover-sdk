@@ -27,7 +27,7 @@ import {
   type HookAuditJournalRecord,
 } from "./ruleset.ts";
 import { MAX_DOUBLE_STARS, MAX_STARS_PER_SEGMENT } from "./paths.ts";
-import type { PermissionUpdate, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionUpdate, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 // Task 8 (P3 close-out): "structural FILE_RULE_TOOLS routing enforcement -- registry classes make
 // misrouting a typed error." The descriptor barrel import (side-effect only) is what makes the four
 // real WS-06 file-rule tools genuinely registered for this file's own "Task 8" describe block below

@@ -77,7 +77,7 @@ jobs:
   publish:
     needs: build-platform
     runs-on: ubuntu-latest
-    # R-7-1: GitHub Packages, scope @yanlinglabs. `contents: read` is the default job permission
+    # R-7-1: GitHub Packages, scope @waifucave. `contents: read` is the default job permission
     # this repeats explicitly; `packages: write` is the one elevated grant a publish needs and the
     # only reason this job's token differs from every other job in this repository's CI.
     permissions:
@@ -97,14 +97,14 @@ jobs:
       #
       # `registry-url` + `scope` make setup-node write a throwaway userconfig
       # (`$RUNNER_TEMP/.npmrc`, pointed at by `NPM_CONFIG_USERCONFIG`) carrying BOTH
-      # `@yanlinglabs:registry=<url>` and `//<url>/:_authToken=${NODE_AUTH_TOKEN}` -- one mechanism
+      # `@waifucave:registry=<url>` and `//<url>/:_authToken=${NODE_AUTH_TOKEN}` -- one mechanism
       # choosing the registry and the credential together, per job. That is why the committed
       # `.npmrc` now pins neither: a committed pin is global, and there are two registries.
       - uses: actions/setup-node@v4
         with:
           node-version: 18
           registry-url: "https://npm.pkg.github.com"
-          scope: "@yanlinglabs"
+          scope: "@waifucave"
       - run: pnpm install
       # P9a-4: restore the darwin-arm64 binary `build-platform` produced, and VERIFY it before this
       # job's own gates or the publish step ever run -- a downloaded GitHub Actions artifact loses its
@@ -211,7 +211,7 @@ jobs:
   # untouched, which is why this is a separate job rather than two steps in one.
   #
   # `--registry https://registry.npmjs.org` OVERRIDES `.npmrc`'s scope pin for this command only: that
-  # file makes GitHub Packages the default for `@yanlinglabs` precisely so nothing reaches npm by
+  # file makes GitHub Packages the default for `@waifucave` precisely so nothing reaches npm by
   # accident, and this is the one place that is deliberate.
   #
   # `--access public` is EXPLICIT: `publishConfig.access` stays `restricted` (it is GitHub Packages'
@@ -251,13 +251,13 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       # Same mechanism as job 1, different registry and different credential -- `scope` is what makes
-      # it bind `@yanlinglabs` to npmjs for THIS job only (review C1: a committed scope pin beat
+      # it bind `@waifucave` to npmjs for THIS job only (review C1: a committed scope pin beat
       # `--registry` at both the pnpm and the npm layer, so nothing ever reached npm).
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
-          scope: "@yanlinglabs"
+          scope: "@waifucave"
       - run: pnpm install
       # P9a-4: same restore + verify as job 1 -- BEFORE this job's own gates or its publish step.
       - uses: actions/download-artifact@v4

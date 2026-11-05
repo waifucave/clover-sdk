@@ -23,7 +23,7 @@
 // claude built-in's structure, rules and approximate length -- never a transcription of the real
 // text (none of which is in the research file, and this lane's own brief forbids sourcing it from
 // anywhere else).
-import { WINTER_BRAND, envName, type BrandProfile, type RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile, type RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import { BUBBLE_PERMISSION_MODE } from "../permissions/policy-state.ts";
 
 /** The one brand slice every reader/prompt-builder in this module needs. */

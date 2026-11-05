@@ -2,7 +2,7 @@
 // logic: the session's `McpSessionOAuth` (the store plus the host's `mcp_oauth_refresh` door over the
 // session's own control bridge), the needs-auth hint for a call to a withdrawn tool, and the persisted
 // notice that tells the model which servers need the user to sign in.
-import { MCP_OAUTH_REFRESH_SUBTYPE, WinterRpcError, type McpOAuthRefreshAnswer, type McpOAuthRefreshRequest } from "@yanlinglabs/winter-agent-sdk";
+import { MCP_OAUTH_REFRESH_SUBTYPE, WinterRpcError, type McpOAuthRefreshAnswer, type McpOAuthRefreshRequest } from "@waifucave/clover-agent-sdk";
 import { attachmentsIn, registerAttachmentRenderer, type AttachmentPayload } from "../context/attachments.ts";
 import type { ProviderMessage } from "../engine.ts";
 import type { McpServerState } from "../mcp/state.ts";

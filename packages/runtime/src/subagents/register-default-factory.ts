@@ -26,7 +26,7 @@
 // context (engine.ts), read fresh at resume time, which is why WS-10 §9's stricter-of comparison is
 // live even though these mirrors are not.
 import type { Provider } from "../engine.ts";
-import type { RuntimeConfig, SessionStore } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, SessionStore } from "@waifucave/clover-agent-sdk";
 import { registerChildEngineFactory } from "./child-handle.ts";
 import { createChildEngineFactory, type ChildEngineFactoryDeps } from "./child-engine.ts";
 import type { SystemPromptAssembler } from "../context/seam.ts";

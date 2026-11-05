@@ -28,14 +28,14 @@ import { currentHostCodeProcessClient, hostCodeProcessBrokerRequired } from "../
 import { brokeredWorkflowWorker } from "./host-code-worker.ts";
 import type { SandboxBrand } from "../sandbox/profile.ts";
 import { trackProcessGroup } from "../process-groups.ts";
-import type { BrandProfile, SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile, SettingSource } from "@waifucave/clover-agent-sdk";
 import { persistWorkflowScript, workflowTranscriptDir, workflowRunsDir, resolveWorkflowByName } from "./store.ts";
 import { encodeNdjson, splitNdjson, type BridgeRequest, type BridgeResponse, type WorkerInit, type WorkflowRef } from "./bridge.ts";
 import type { WorkflowSessionRuntime } from "./host-registry.ts";
 import { matchPhaseGroup, type WorkflowMeta, type WorkflowMetaPhase } from "./meta.ts";
 import type { AgentOpts, WorkflowRunView, WorkflowStatus } from "./types.ts";
 import type { WorkflowRunHost, WorkflowTaskHandle } from "./seam.ts";
-import type { RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import type { ChildHandle, SpawnChildRequest } from "../subagents/child-handle.ts";
 import type { JsonSchema } from "../structured/seam.ts";
 

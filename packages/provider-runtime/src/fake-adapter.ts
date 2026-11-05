@@ -7,8 +7,8 @@
 // renderer can be tested end to end with no network, no credentials and no Bun. Plain `async`
 // generators and `setTimeout`, nothing else.
 //
-// Exported from `@yanlinglabs/winter-provider-runtime/testing`, never from the main barrel.
-import type { ProviderProtocol, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+// Exported from `@waifucave/clover-provider-runtime/testing`, never from the main barrel.
+import type { ProviderProtocol, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { CredentialStatus, ModelCatalogResult, ProviderAdapter, ProviderError, ProviderEvent, ProviderFamily, TurnRequest } from "./types.ts";
 
 /** One scripted turn: the events `streamTurn` yields, or a function computing them from the request. */

@@ -1,4 +1,4 @@
-import { HELD_INPUT_CAPABILITY, type RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import { HELD_INPUT_CAPABILITY, type RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { assertLinuxSession, type LinuxSessionAdmission } from "./linux-session-admission.ts";
 /** Negotiated capability of this runtime image; does not assert an OS sandbox exists. */
 export const RUNTIME_EXECUTION_POSTURE_CAPABILITIES = Object.freeze({

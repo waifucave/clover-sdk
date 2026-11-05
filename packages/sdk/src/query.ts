@@ -1139,7 +1139,7 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
   const command = (preparation !== undefined ? preparation.spawn : options.spawnClaudeCodeProcess)
     // `"winter"` here is the PUBLISHED ARTIFACT's executable name (WS-02 §4: the platform package
     // ships exactly one binary called `winter`), NOT the host's `brand.processLabel` — review r1,
-    // Minor-1. A reuser installing @yanlinglabs/winter-agent-sdk-darwin-arm64 gets a binary with
+    // Minor-1. A reuser installing @waifucave/clover-agent-sdk-darwin-arm64 gets a binary with
     // that name whatever they brand their own product, so deriving it from the profile would look
     // up an executable nobody ships. `processLabel` is for argv0 on a supervised spawn (D12), a
     // surface this package does not have; it is inert here BY DESIGN, not by omission.

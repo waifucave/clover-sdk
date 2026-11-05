@@ -31,8 +31,8 @@
 // `modelFamily` (WS-13c) for this one decision instead; see its own header for why that comparison is
 // a separate function rather than a change to `domains.ts`'s `sameFamily`.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { createRegistry, type ProviderRegistry } from "../registry.ts";
 import type { MessageOrigin, ProviderAdapter, ProviderMessageLike } from "../types.ts";
 import { createEndpointResolver, type ContinuityEndpoint } from "./domains.ts";

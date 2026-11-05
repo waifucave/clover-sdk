@@ -1,6 +1,6 @@
 import { realpathSync } from "node:fs";
-import { WinterCompatibilitySessionStore } from "@yanlinglabs/winter-agent-sdk";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore } from "@waifucave/clover-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 
 type LeaseOptions = NonNullable<ConstructorParameters<typeof WinterCompatibilitySessionStore>[0]["leaseIdentity"]>;
 type ProcessIdentity = NonNullable<ReturnType<NonNullable<LeaseOptions["identityProbe"]>>>;

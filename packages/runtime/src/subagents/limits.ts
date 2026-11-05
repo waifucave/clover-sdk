@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /** The one brand field every env-name derivation in this module needs. */
 type EnvBrand = Pick<BrandProfile, "envPrefix">;

@@ -11,7 +11,7 @@
 //
 // Ground truth is the LIVE provider request (`tools`), the host-facing frames and the `sdk_mcp_call`s.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type EngineOptions, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { getRegisteredTool, replaceExecutor } from "./registry.ts";

@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { query, type SdkMessage as SDKMessage } from "./query.ts";
 import { defaultSpawn, type SpawnClaudeCodeProcess } from "./transport.ts";
 import { TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type Options } from "./options.ts";
-import { SCENARIO_MODELS, startScenarioFake, type ScenarioFake } from "@yanlinglabs/winter-agent-runtime";
+import { SCENARIO_MODELS, startScenarioFake, type ScenarioFake } from "@waifucave/clover-agent-runtime";
 import { keychainGuardChildPreload } from "../../../scripts/test-keychain-guard.ts";
 
 const mainPath = fileURLToPath(new URL("../../runtime/src/main.ts", import.meta.url));

@@ -1,7 +1,7 @@
 /** Internal injected parent protocol. No native admission, profile activation or read authority. */
 import { randomUUID } from "node:crypto";
 import { parseRuntimeContextConfig, parseRuntimeContextRequest, parseRuntimeContextSnapshot,
-  RUNTIME_CONTEXT_SUBTYPE, type ControlResponseFrame, type RuntimeContextConfig } from "@yanlinglabs/winter-agent-sdk";
+  RUNTIME_CONTEXT_SUBTYPE, type ControlResponseFrame, type RuntimeContextConfig } from "@waifucave/clover-agent-sdk";
 import type { FrameSink } from "../protocol/channel.ts";
 import type { RpcBridge } from "../rpc/bridge.ts";
 import { RequiredContextError } from "../context/required-context.ts";

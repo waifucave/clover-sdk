@@ -6,7 +6,7 @@
 // and the dependency runs conformance -> provider-runtime, never the other way. Putting it here and
 // importing it from a provider-runtime test would be a package cycle.
 //
-// review r1 (Critical-2): reached via the new `@yanlinglabs/winter-provider-runtime/testing`
+// review r1 (Critical-2): reached via the new `@waifucave/clover-provider-runtime/testing`
 // subpath rather than a relative path that escapes this package's own boundary -- the relative form
 // threw `Cannot find module` the moment this package was packed and installed standalone (the
 // tarball never contains `../../../provider-runtime`), reproduced against a real packed tarball.
@@ -15,5 +15,5 @@
 // imports every other fake from `../fakes/`, and a reader looking for "where is the xAI fake" finds
 // it beside the other twelve rather than having to know about the dependency direction.
 
-export { startXaiOauthFake } from "@yanlinglabs/winter-provider-runtime/testing";
-export type { XaiOauthFake, XaiOauthFakeOptions, XaiRecordedRequest } from "@yanlinglabs/winter-provider-runtime/testing";
+export { startXaiOauthFake } from "@waifucave/clover-provider-runtime/testing";
+export type { XaiOauthFake, XaiOauthFakeOptions, XaiRecordedRequest } from "@waifucave/clover-provider-runtime/testing";

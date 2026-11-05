@@ -62,7 +62,7 @@ import { readSourceFileSync } from "../../sandbox/source-read.ts";
 import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
-import { WINTER_BRAND, disableCronEnvName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, disableCronEnvName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /** P7a (D19): the one brand field the durable store needs -- the project dot-dir it lives under. */
 type CronBrand = Pick<BrandProfile, "projectDirName">;

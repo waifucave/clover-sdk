@@ -1,5 +1,5 @@
 // WS-24 (cross-lane, for the Winter daemon): the runtime's ONE MCP client, as a public subpath --
-// `@yanlinglabs/winter-agent-runtime/mcp-client`.
+// `@waifucave/clover-agent-runtime/mcp-client`.
 //
 // WHY. A host that talks to MCP servers itself (Winter's daemon keeps a hand-written 2024-11-05 stdio
 // client behind its `McpManager`) should use the client its sessions already use -- the v2 TS SDK behind
@@ -13,7 +13,7 @@
 //
 // `elicitationAsk` is required by `connectMcpServer`: pass `createElicitationAsker(undefined)` for "no
 // host UI" (every elicitation is declined deterministically, never left hanging).
-import { WINTER_BRAND, type McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import { connectMcpServer as connectInternal, type ConnectedMcpClient } from "./mcp/client.ts";
 import type { ElicitationAsker } from "./mcp/elicitation.ts";
 import { createSessionAuthProvider, mcpSignInHint } from "./mcp-auth/session-provider.ts";
@@ -47,7 +47,7 @@ export {
  * (`type: "sdk"`) server (a host that has the server object in hand does not need a protocol client to
  * reach it), no redirect refusal (the runtime's web search backend's concern) and no list-changed hook
  * (the runtime's lifecycle owns re-registration). Everything it references is exported from here or from
- * `@yanlinglabs/winter-agent-sdk` (WS-25's `McpOAuthStore` is re-exported here for `oauthStore`), so this
+ * `@waifucave/clover-agent-sdk` (WS-25's `McpOAuthStore` is re-exported here for `oauthStore`), so this
  * subpath's declarations reach into nothing private.
  */
 export interface ConnectMcpServerOptions {
@@ -63,7 +63,7 @@ export interface ConnectMcpServerOptions {
   cwd?: string;
   /**
    * WS-25 (MCP OAuth), narrow: the HOST's sign-in store. Present, an `http`/`sse` server without a static
-   * `Authorization` header connects with the stored bearer (from `@yanlinglabs/winter-agent-runtime/mcp-auth`'s
+   * `Authorization` header connects with the stored bearer (from `@waifucave/clover-agent-runtime/mcp-auth`'s
    * records), and a dead sign-in rejects `needs_auth` without a request. A host IS the refresher, so an
    * expired token with a refresh token is refreshed IN THIS PROCESS (single-flight, generation-checked).
    */

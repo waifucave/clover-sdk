@@ -1,4 +1,4 @@
-# `@yanlinglabs/winter-provider-conformance`
+# `@waifucave/clover-provider-conformance`
 
 The provider-layer conformance harness: the shared corpus every OpenAI-, Anthropic-, Google- and
 Bedrock-family adapter is asked the same questions through, the continuity and classifier-safety
@@ -18,10 +18,10 @@ whose only purpose is fetching test fixtures.
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-provider-conformance
+npm install @waifucave/clover-provider-conformance
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
 ### From GitHub Packages (the `yanlingLabs` org)
 
@@ -29,12 +29,12 @@ GitHub Packages needs the scope pointed at it and an authenticated read, even fo
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-provider-conformance` as usual.
+literal in the file. Then `npm install @waifucave/clover-provider-conformance` as usual.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data

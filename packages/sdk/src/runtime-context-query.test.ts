@@ -9,8 +9,8 @@ import { PROTOCOL_VERSION, type ControlRequestFrame, type ControlResponseFrame, 
 import type { RuntimeConfig } from "./protocol/config.ts";
 import type { Options } from "./options.ts";
 import type { SpawnedRuntimeProcess } from "./transport.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
-import type { ProviderRequest } from "@yanlinglabs/winter-agent-runtime";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
+import type { ProviderRequest } from "@waifucave/clover-agent-runtime";
 import { Queue } from "../../runtime/src/protocol/channel.ts";
 const snapshot = { revision: "r1", facts: "host facts", instructions: "current guidance" };
 const request = (config: RuntimeConfig) => ({ bindingId: config.requiredRuntimeContext!.bindingId, sessionId: config.sessionId,

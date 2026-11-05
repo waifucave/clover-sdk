@@ -11,7 +11,7 @@
 // frames, no subagent transcripts, no resume (Task 9).
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import type { RuntimeConfig, PermissionUpdate, RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, PermissionUpdate, RuleSource } from "@waifucave/clover-agent-sdk";
 // Task 10 (WS-05 §6): the store, path-key helpers, and the store-level fork primitive all moved to
 // the sdk package — this file imports them from there now, same dependency direction as the
 // Task-1 protocol inversion (runtime -> sdk, never the reverse). forkSessionByKey is the relocated
@@ -31,7 +31,7 @@ import {
   type SessionKey,
   type SessionStore,
   type SessionStoreEntry,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 import type { ContentBlock, ProviderMessage, SessionPersistence } from "../engine.ts";
 import { assertProtectedStoreConfig, createProtectedRuntimeStore, type OpenedProtectedStoreBootstrap } from "../guest/store-bootstrap.ts";
 import { durableOperationGuard, guardedDurableMethods, type DurableOperationGuard } from "./durable-authority.ts";
@@ -1107,7 +1107,7 @@ export class TranscriptWriter implements SessionPersistence {
 // `bun test` — never compiled — so a real fs read there is safe) gets the same drift protection
 // without touching the compiled path at all. verify:compiled is the proof this constant survives
 // the real compiled binary unchanged.
-export const RUNTIME_ENGINE_VERSION = "0.0.62";
+export const RUNTIME_ENGINE_VERSION = "0.0.63";
 
 // Task 9: what runEngine actually needs once resume/continue/fork/resumeSessionAt (or none of them)
 // have been resolved — a persistence sink (or none, when persistSession:false), the prior

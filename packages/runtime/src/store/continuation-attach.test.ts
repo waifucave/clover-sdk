@@ -4,7 +4,7 @@
 // filesystem store -- that is what proves the two halves find each other on disk. These prove the
 // DECISION TABLE, whose four outcomes are otherwise only reachable by arranging four sessions.
 import { test, expect, describe } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { attachContinuationChain, type AttachableMessage, type ContinuationChainSource } from "./continuation-attach.ts";
 import { toProviderStateRecord, type ProviderStateRecord } from "./provider-state.ts";
 

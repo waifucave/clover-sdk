@@ -42,16 +42,16 @@ describe("copyCheckoutExcludingGit (P9a-7's path-neutral copy)", () => {
     temps.push(src);
     mkdirSync(join(src, "node_modules", ".pnpm", "some-pkg@1.0.0", "node_modules", "some-pkg"), { recursive: true });
     writeFileSync(join(src, "node_modules", ".pnpm", "some-pkg@1.0.0", "node_modules", "some-pkg", "index.js"), "module.exports = 1;\n");
-    mkdirSync(join(src, "node_modules", "@yanlinglabs"), { recursive: true });
-    spawnSync("ln", ["-s", "../.pnpm/some-pkg@1.0.0/node_modules/some-pkg", join(src, "node_modules", "@yanlinglabs", "some-pkg")]);
+    mkdirSync(join(src, "node_modules", "@waifucave"), { recursive: true });
+    spawnSync("ln", ["-s", "../.pnpm/some-pkg@1.0.0/node_modules/some-pkg", join(src, "node_modules", "@waifucave", "some-pkg")]);
 
     const dest = mkdtempSync(join(tmpdir(), "build-runtime-copydest2-"));
     temps.push(dest);
     copyCheckoutExcludingGit(src, dest);
 
-    const linked = join(dest, "node_modules", "@yanlinglabs", "some-pkg");
+    const linked = join(dest, "node_modules", "@waifucave", "some-pkg");
     expect(existsSync(linked)).toBe(true); // existsSync follows the symlink — proves it resolves
-    expect(readdirSync(join(dest, "node_modules", "@yanlinglabs"))).toContain("some-pkg");
+    expect(readdirSync(join(dest, "node_modules", "@waifucave"))).toContain("some-pkg");
   });
 });
 

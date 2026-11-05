@@ -11,7 +11,7 @@ import type { FrameSink } from "../protocol/channel.ts";
 import { dlopen, FFIType } from "bun:ffi";
 import { fstatSync } from "node:fs";
 import { createConnection } from "node:net";
-import type { HeldInputEpoch, RuntimeConfig, UserFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { HeldInputEpoch, RuntimeConfig, UserFrame } from "@waifucave/clover-agent-sdk";
 import type { ToolExecutionContext } from "../tools/registry.ts";
 import { createLinuxSupervisorSession } from "./supervisor-client.ts";
 import type { GuestFileSession } from "./file-session.ts";

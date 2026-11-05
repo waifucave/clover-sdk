@@ -16,9 +16,9 @@
 // THE VALUE IS NEVER LOGGED AND NEVER QUOTED. Every message below is built from the redacted ref
 // (`redactCredentialRef`: a locator, with an inline value replaced) and a reason; an underlying
 // store's own error text is withheld, because it may quote the record it failed on.
-import type { CredentialRef } from "@yanlinglabs/winter-agent-sdk";
-import type { CredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { CredentialResolutionError } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialRef } from "@waifucave/clover-agent-sdk";
+import type { CredentialStore } from "@waifucave/clover-provider-runtime";
+import { CredentialResolutionError } from "@waifucave/clover-provider-runtime";
 import type { KeychainSecretReader } from "./keychain-store.ts";
 import { redactCredentialRef } from "./selection.ts";
 

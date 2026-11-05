@@ -10,8 +10,8 @@
 // credential store is in-memory, and the access token is a `test-token-…` literal.
 
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import type { CredentialRef, ProviderEvent, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import type { CredentialRef, ProviderEvent, TurnRequest } from "@waifucave/clover-provider-runtime";
 import {
   createXaiOauthAdapter,
   XAI_OAUTH,
@@ -22,13 +22,13 @@ import {
   createMemoryCredentialStore,
   winterUserAgent,
   WinterProviderResolutionError,
-} from "@yanlinglabs/winter-provider-runtime";
-import { FAST_RETRY, descriptor, testContext } from "@yanlinglabs/winter-provider-runtime/testing";
+} from "@waifucave/clover-provider-runtime";
+import { FAST_RETRY, descriptor, testContext } from "@waifucave/clover-provider-runtime/testing";
 import { startOpenAiChatFake } from "../fakes/openai-chat.ts";
 import { crossVendorViolationsIn } from "./cross-vendor-headers.ts";
 import { chatCorpusScenarios } from "./openai-scenarios.ts";
 import { SCENARIO, bodyOf, turnRequests } from "./openai.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 // `createSelectionRegistry`/`resolveSessionProvider` stay relative (review r1 Critical-2):
 // `winter-agent-runtime` is `"private": true`, never published -- irrelevant here since `.test.ts`
 // files never ship as reachable code.

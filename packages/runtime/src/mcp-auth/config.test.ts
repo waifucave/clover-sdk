@@ -3,7 +3,7 @@
 import { describe, expect, test } from "bun:test";
 import { validateServerConfig } from "../mcp/lifecycle.ts";
 import { validateMcpOAuthConfig } from "./config.ts";
-import { DEFAULT_KEYCHAIN_SERVICE, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_KEYCHAIN_SERVICE, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { filterSettingsEnv } from "../settings/env-filter.ts";
 import { MCP_OAUTH_TEST_STORE_ENV, mcpOAuthTestStoreEnvName, resolveSessionMcpOAuthStore } from "./store.ts";
 

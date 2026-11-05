@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
-import { MandatoryFloorUnavailableError, query, type HostExecutionFloor } from "@yanlinglabs/winter-agent-sdk";
+import { MandatoryFloorUnavailableError, query, type HostExecutionFloor } from "@waifucave/clover-agent-sdk";
 import { installHostChildFloor, prepareHostChildLaunch, currentHostChildFloorProfile } from "./host-child-floor.ts";
 import { createCommandHookInvoker } from "../hooks/command-invoker.ts";
 import { WinterStdioTransport } from "../mcp/transports/stdio.ts";

@@ -28,8 +28,8 @@
 // A case that cannot run on this model REPORTS ITSELF SKIPPED with the descriptor fact that makes it
 // inapplicable, exactly as the adapter corpus does: a skip is then a fact about the model rather than
 // a case quietly declining a question it found hard.
-import type { DiscoveryContext, ProviderAdapter, ProviderContext, ProviderEvent, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { DiscoveryContext, ProviderAdapter, ProviderContext, ProviderEvent, TurnRequest } from "@waifucave/clover-provider-runtime";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { describeThrown } from "../corpus/classifier-safety.ts";
 
 /**

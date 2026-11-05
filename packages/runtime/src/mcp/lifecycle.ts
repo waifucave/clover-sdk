@@ -24,7 +24,7 @@ import { guestToolUnsupported } from "../guest/file-session.ts";
 // from every source, the same way `registerMcpServerTools` itself refuses it, so a host that
 // (accidentally or otherwise) configures a server named "winter" gets a typed rejection long before
 // this file would ever try to connect to it.
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import { registerMcpServerTools, unregisterMcpServerTools, replaceExecutor, type McpToolDefinition, type ToolExecutionContext, type ToolResultPayload } from "../tools/registry.ts";
 import { imagePrepWorkRoot, resultBlocksForModel, type RawResultPart } from "../tools/image-prep.ts";
 import { WINTER_SERVER_NAME } from "./winter-server.ts";

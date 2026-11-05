@@ -229,7 +229,7 @@ export interface McpOAuthSecretRef {
  * WS-25, WINTER-OWNED: how Winter signs in to ONE remote (http/sse) MCP server over OAuth. Every field is
  * optional, and so is the block: a server whose authorization server supports Client ID Metadata
  * Documents or Dynamic Client Registration needs none of it. Tokens NEVER live here -- they live in the
- * host's Keychain, keyed by the server's canonical URL (`@yanlinglabs/winter-agent-runtime/mcp-auth`'s
+ * host's Keychain, keyed by the server's canonical URL (`@waifucave/clover-agent-runtime/mcp-auth`'s
  * `mcpOAuthAccountId`).
  *
  * - `clientId` -- a PRE-REGISTERED client (preferred over CIMD and DCR when present).
@@ -1276,7 +1276,7 @@ export interface AccountInfo {
 // get the identical type rather than two structurally-similar twins that drift on an optional field.
 //
 // Note what is NOT here: `ModelFamilyDescriptor`/`FamilySlot` are CATALOG DATA and live in
-// `@yanlinglabs/winter-provider-catalog`. These are the VIEW a host renders — a slot plus where it
+// `@waifucave/clover-provider-catalog`. These are the VIEW a host renders — a slot plus where it
 // actually resolved, which is a runtime fact the catalog cannot know.
 
 /**

@@ -9,10 +9,10 @@
 // (TS6059, every runtime file "not under rootDir"). A type is not a reason to depend on a package,
 // and the barrel's own self-containment is what makes the published `.d.ts` possible at all.
 //
-// Nothing here reaches outside `@yanlinglabs/winter-provider-runtime` and this package's own fakes,
+// Nothing here reaches outside `@waifucave/clover-provider-runtime` and this package's own fakes,
 // which is the property that has to stay true.
-import type { DiscoveryCache, ModelCatalogResult, ProviderEvent, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import type { DescriptorOverrides } from "@yanlinglabs/winter-provider-runtime/testing";
+import type { DiscoveryCache, ModelCatalogResult, ProviderEvent, TurnRequest } from "@waifucave/clover-provider-runtime";
+import type { DescriptorOverrides } from "@waifucave/clover-provider-runtime/testing";
 import type { RecordedRequest } from "../fakes/server.ts";
 
 export interface HarnessOverrides {

@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 // WS-10 §6, RULING R4-9: the progress-stall watchdog. Parity target is Norma's shipped
 // `packages/core/src/agent/subagents.ts` (WS-10 §6's own citation): a progress-INACTIVITY watchdog,
 // on by default at 600_000ms, that aborts with a typed "stalled: no progress" error -- distinct from

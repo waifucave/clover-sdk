@@ -34,8 +34,8 @@
 // session. claude builds them into the userContext ONCE per session context and rebuilds it after a
 // compaction; the engine memoizes `userContext()` the same way (see engine.ts's session-context
 // memo), so an edit is seen after the next compaction or in a new session.
-import type { RuntimeConfig, Settings, SystemPromptPreset } from "@yanlinglabs/winter-agent-sdk";
-import { DEFAULT_OUTPUT_STYLE, WINTER_BRAND, envName, resolveWinterHome, SYSTEM_PROMPT_DYNAMIC_BOUNDARY } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, Settings, SystemPromptPreset } from "@waifucave/clover-agent-sdk";
+import { DEFAULT_OUTPUT_STYLE, WINTER_BRAND, envName, resolveWinterHome, SYSTEM_PROMPT_DYNAMIC_BOUNDARY } from "@waifucave/clover-agent-sdk";
 import { join } from "node:path";
 import type { AssembledPrompt, SystemPromptAssembler, SystemPromptInput } from "./seam.ts";
 import { renderEnvironmentContextValue, renderEnvironmentSection, renderStaticEnvironmentSection, type EnvironmentInput } from "./dynamic-sections.ts";

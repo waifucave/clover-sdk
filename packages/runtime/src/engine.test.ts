@@ -12,15 +12,15 @@ import type {
   PermissionUpdate,
   PermissionResult,
   PermissionMode,
-} from "@yanlinglabs/winter-agent-sdk";
-import { WinterCompatibilitySessionStore, splitFrames, encodeFrame, compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
-import type { SpawnedRuntimeProcess } from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
+import { WinterCompatibilitySessionStore, splitFrames, encodeFrame, compatibilityKeys } from "@waifucave/clover-agent-sdk";
+import type { SpawnedRuntimeProcess } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { runEngine, providerMessageContentToText, type Provider, type ProviderMessage, type ContentBlock, type ProviderToolSpec, type ToolExecutor, type SessionPersistence, type ResolveModelSwitch } from "./engine.ts";
 import { enqueueTaskNotification, clearNotificationQueue, renderAgentNotification } from "./subagents/notification-queue.ts";
 // WS-13c §3 (P6.6): the pinned Claude names and the public active-set shape the Agent tool renders from.
-import { CLAUDE_RESERVED_SLOT_NAMES } from "@yanlinglabs/winter-provider-catalog";
-import type { ActiveSlotSet } from "@yanlinglabs/winter-agent-sdk";
+import { CLAUDE_RESERVED_SLOT_NAMES } from "@waifucave/clover-provider-catalog";
+import type { ActiveSlotSet } from "@waifucave/clover-agent-sdk";
 import type { SlotProviderResolution } from "./provider/slots.ts";
 import { getRegisteredTool, registerMcpServerTools, unregisterMcpServerTools, replaceExecutor, registerTool, unregisterToolForTest } from "./tools/registry.ts";
 import { ADVISOR_TOOL_NAME } from "./tools/impl/advisor.ts";

@@ -42,7 +42,7 @@
 //     `decision: "block"` of UserPromptSubmit/Stop/SubagentStop/PostToolUse now have readers
 //     (`applyEnvelope`, the dedicated interpreters below) instead of falling through to "no opinion".
 import { randomUUID } from "node:crypto";
-import type { HookEvent, HookPermissionDecision, McpServerIdentity, PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent, HookPermissionDecision, McpServerIdentity, PermissionUpdate } from "@waifucave/clover-agent-sdk";
 import { MATCHER_SUBJECT_FIELD, type HookRegistry, type SourcedHookEntry } from "./registry.ts";
 import { reduceHookOutcomes, type HookComposite, type HookOutcome, type HookOutcomeEntry } from "./reducer.ts";
 import { capHookText } from "./bounds.ts";

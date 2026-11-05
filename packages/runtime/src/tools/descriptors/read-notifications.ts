@@ -14,7 +14,7 @@
 // `{ notifications: Array<{notification_id, origin, queued_at, content}>, remaining: number }` --
 // an ARRAY of drained notifications per call, not one. Corrected to match; zero behavioral risk
 // (no executor consumes this schema yet -- WS-10 owns building the real thing).
-import { READ_NOTIFICATIONS_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { READ_NOTIFICATIONS_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, ALWAYS_AVAILABLE, builtinNameOf, definitionFields } from "./_shared.ts";
 

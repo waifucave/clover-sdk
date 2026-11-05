@@ -19,8 +19,8 @@ import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { encodeFrame, splitFrames } from "@yanlinglabs/winter-agent-sdk";
-import type { RuntimeConfig, WinterFrame, SpawnedRuntimeProcess } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames } from "@waifucave/clover-agent-sdk";
+import type { RuntimeConfig, WinterFrame, SpawnedRuntimeProcess } from "@waifucave/clover-agent-sdk";
 
 import {
   findContinueTarget,
@@ -39,9 +39,9 @@ import type { HookAuditRecord } from "../hooks/runner.ts";
 // its unit tests moved alongside it into packages/sdk/src/store/fork-session.test.ts, so this file
 // no longer imports or exercises it directly (its own "forkSession on resume" end-to-end test
 // below only configures RuntimeConfig.forkSession, a same-named but unrelated boolean option).
-import { WinterCompatibilitySessionStore, type SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
-import type { PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
-import { compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, type SessionStoreEntry } from "@waifucave/clover-agent-sdk";
+import type { PermissionUpdate } from "@waifucave/clover-agent-sdk";
+import { compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import { scriptedProvider, stubExecutor, echoProvider } from "../provider/mock.ts";
 import type { ContentBlock, Provider, ProviderMessage, ToolExecutor } from "../engine.ts";

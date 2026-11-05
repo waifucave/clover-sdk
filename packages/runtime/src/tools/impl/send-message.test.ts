@@ -4,8 +4,8 @@ import { getRegisteredTool, type ToolExecutionContext } from "../registry.ts";
 import { SEND_MESSAGE_TOOL_NAME, sendMessageExecutor } from "./send-message.ts";
 import { registerMessagingRuntime, resetMessagingRuntimeForTest } from "../../messaging/router.ts";
 import { createDefaultMessagingRuntime, type PeerSessionHandle } from "../../messaging/reference-adapter.ts";
-import type { GlobalAgentMessage } from "@yanlinglabs/winter-agent-sdk/messaging";
-import { MAX_GLOBAL_MESSAGE_SIZE } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { GlobalAgentMessage } from "@waifucave/clover-agent-sdk/messaging";
+import { MAX_GLOBAL_MESSAGE_SIZE } from "@waifucave/clover-agent-sdk/messaging";
 
 function makeCtx(overrides: Partial<ToolExecutionContext> = {}): ToolExecutionContext {
   return {

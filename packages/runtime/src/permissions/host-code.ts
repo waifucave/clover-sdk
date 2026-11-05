@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { BrandProfile, HostCodeProcessScope, PermissionResult, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile, HostCodeProcessScope, PermissionResult, RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { buildBaselineDenyRules, type EngineSettingsRuleSeed } from "../engine.ts";
 import { DEFAULT_SANDBOX_SETTINGS } from "../sandbox/profile.ts";
 import { isSandboxAvailable, resolveExecutionPath } from "../sandbox/spawn.ts";

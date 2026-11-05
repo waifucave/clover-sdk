@@ -14,7 +14,7 @@
 // resolver. What this module guarantees is that a resolution either produces a fully-identified
 // model or a TYPED refusal — never a silent default (WS-13 §9: no routing, no substitution).
 
-import type { ModelPricing, PricingTier, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { ModelPricing, PricingTier, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter } from "./types.ts";
 
 export interface ResolvedModel {

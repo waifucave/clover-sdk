@@ -56,7 +56,7 @@ import type {
   PermissionUpdate,
   PermissionUpdateDestination,
   RuleSource,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 
 // ---------------------------------------------------------------------------------------------
 // SourcedRuleSet

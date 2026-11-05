@@ -23,13 +23,13 @@
 // `bun test` run sets it (`scripts/test-keychain-guard.ts`), which also replaces the real API with a
 // tripwire in the test process and every `bun` child it spawns, so a path that reaches the real Keychain
 // anyway fails the test that caused it instead of raising a macOS consent dialog.
-import type { CredentialMaterial, CredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { CredentialResolutionError, redactRef } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialMaterial, CredentialStore } from "@waifucave/clover-provider-runtime";
+import { CredentialResolutionError, redactRef } from "@waifucave/clover-provider-runtime";
 // `DEFAULT_KEYCHAIN_SERVICE` is DECLARED in the sdk's `options.ts` and imported here rather than
 // re-declared: this codebase polices one-declaration-per-value everywhere else, and a second copy of
 // a service NAME is the kind of drift that silently splits a user's credentials across two keychain
 // services. Re-exported so a caller reads it from the module it is working in.
-import { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type CredentialRef } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type CredentialRef } from "@waifucave/clover-agent-sdk";
 export { DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY };
 
 /**

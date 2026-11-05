@@ -15,7 +15,7 @@
 // (context/assembler.ts). Both are built once per session context: an edit to MEMORY.md is seen after
 // the next compaction or in a new session, which is claude's behaviour too.
 import { join } from "node:path";
-import { WINTER_BRAND, type Settings } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type Settings } from "@waifucave/clover-agent-sdk";
 import { readCappedLinesAndBytes } from "./injection.ts";
 
 export const MEMORY_INDEX_BASENAME = "MEMORY.md";

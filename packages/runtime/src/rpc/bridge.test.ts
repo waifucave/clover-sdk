@@ -1,6 +1,6 @@
 import { test, expect, spyOn } from "bun:test";
-import type { WinterFrame, ControlRequestFrame } from "@yanlinglabs/winter-agent-sdk";
-import { WinterRpcError, WinterRpcTimeoutError } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame, ControlRequestFrame } from "@waifucave/clover-agent-sdk";
+import { WinterRpcError, WinterRpcTimeoutError } from "@waifucave/clover-agent-sdk";
 import type { FrameSink } from "../protocol/channel.ts";
 import { createRpcBridge } from "./bridge.ts";
 

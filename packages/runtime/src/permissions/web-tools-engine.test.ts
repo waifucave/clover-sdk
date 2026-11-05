@@ -6,7 +6,7 @@
 // decision's `explicitApproval` reaches the executor's `ToolExecutionContext.permission` -- through
 // the fallback-wrapped registry adapter, which is the one a production session actually runs.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import type { ControlRequestFrame, PermissionRequestPayload, PermissionResult, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, PermissionRequestPayload, PermissionResult, RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import "../tools/descriptors/index.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider, stubExecutor } from "../provider/mock.ts";

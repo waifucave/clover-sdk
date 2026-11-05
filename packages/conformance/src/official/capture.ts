@@ -1,7 +1,7 @@
 // P7a Lane C (WS-02 §9 Step 2): moved here verbatim from `scripts/capture-official-golden.ts`, which
 // is now a thin caller: it imports `runCapture` below and keeps only the RUN_OFFICIAL_CAPTURE=1 gate
 // and the `bun run scripts/capture-official-golden.ts` CLI entry point, both byte-for-byte unchanged
-// by the move. Living inside `@yanlinglabs/winter-conformance` (re-exported from `./index.ts`) makes
+// by the move. Living inside `@waifucave/clover-conformance` (re-exported from `./index.ts`) makes
 // the capture harness an IMPORTABLE function for any consumer of the pinned-upstream mechanics, not
 // only a script invoked by path.
 //

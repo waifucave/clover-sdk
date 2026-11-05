@@ -6,14 +6,14 @@
 // visible from a unit test of any single function. So each fixture below drives the real engine and
 // asserts on what the PROVIDER received or what the HOST saw.
 import { test, expect, describe } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, DEFAULT_MAX_PROVIDER_MESSAGE_BYTES, ProviderTurnError, type Provider, type ProviderRequest, type ProviderTurn, type ToolExecutor } from "../engine.ts";
 import { stubExecutor } from "./mock.ts";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider } from "./session-provider.ts";
 import { foldProviderStream } from "./bridge.ts";
-import type { ProviderEvent } from "@yanlinglabs/winter-provider-runtime";
+import type { ProviderEvent } from "@waifucave/clover-provider-runtime";
 import { chatCatalog, chatModel, chatProvider, startRawChatFake } from "./raw-chat-fake.test-support.ts";
 
 async function drain(source: AsyncIterable<WinterFrame>): Promise<WinterFrame[]> {
@@ -732,7 +732,7 @@ describe("R6-F: a resolution refusal lands on the result shape too", () => {
     // R6-9: "no model + no provider -> a typed WinterProviderResolutionError surfaced in the captured
     // failure shape". It has no HTTP status, so `api_error_status` is null -- exactly capture (I)'s
     // run (i), which failed closed without making a request at all.
-    const { WinterProviderResolutionError } = await import("@yanlinglabs/winter-provider-runtime");
+    const { WinterProviderResolutionError } = await import("@waifucave/clover-provider-runtime");
     const provider: Provider = {
       async generate() {
         throw new WinterProviderResolutionError("no-provider-for-bare-model", "a bare model id needs a provider");

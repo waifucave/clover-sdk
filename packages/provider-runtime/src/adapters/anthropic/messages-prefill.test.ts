@@ -3,7 +3,7 @@
 // on claude-opus-5-5. The adapter refuses it typed for a row recording `assistantPrefill: false`, except the
 // one legitimate trailing assistant turn: a `pause_turn` resend.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { buildRequestBody } from "./messages.ts";
 import type { ProviderMessageLike } from "../../types.ts";
 

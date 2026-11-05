@@ -5,7 +5,7 @@
 // and no invoker/audit doubles at all (per the task brief's own Step 1 instruction).
 import { describe, test, expect } from "bun:test";
 import { reduceHookOutcomes, type HookOutcome, type HookParticipant } from "./reducer.ts";
-import type { PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionUpdate } from "@waifucave/clover-agent-sdk";
 
 function participant(overrides: Partial<HookParticipant> & Pick<HookParticipant, "id" | "event" | "source">): HookParticipant {
   return { ...overrides };

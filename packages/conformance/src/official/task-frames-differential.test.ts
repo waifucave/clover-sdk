@@ -49,7 +49,7 @@ import {
 } from "./task-frames-script.ts";
 // Same relative-import discipline as resume-conformance.test.ts's own `dialect.ts` import in this
 // file family: `packages/conformance` has NO package.json dependencies at all (it publishes
-// independently of both `@yanlinglabs/winter-agent-sdk` and the private `winter-agent-runtime`, and
+// independently of both `@waifucave/clover-agent-sdk` and the private `winter-agent-runtime`, and
 // `packages/sdk` already devDepends on THIS package for its own tests -- a package.json dependency
 // edge the other way would be a cycle). A relative path straight to each package's own source is the
 // established door; this file is never built into conformance's own `dist/` (test files are excluded

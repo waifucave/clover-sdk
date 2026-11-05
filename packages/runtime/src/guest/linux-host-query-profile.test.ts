@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { assertLinuxHostQueryConfig, assertLinuxHostQueryRoots, checkLinuxHostQueryFrame, LINUX_SESSION_CHUNK_BYTES, LINUX_SESSION_FRAME_BYTES } from "./linux-host-query-profile.ts";
 import { boundedLinuxSessionInput, boundedLinuxSessionOutput, runAdmittedLinuxSession } from "./linux-session-entry.ts";
 import { admitHostQueryLinuxSession, linuxSessionProfile, checkLinuxSessionFrame, type LinuxSessionAdmission } from "./linux-session-admission.ts";

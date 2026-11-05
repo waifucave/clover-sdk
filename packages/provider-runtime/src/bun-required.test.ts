@@ -15,8 +15,8 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BunRequiredError, hasBunRuntime, requireBunRuntime } from "@yanlinglabs/winter-provider-runtime";
-import { BunRequiredError as ConformanceBunRequiredError } from "@yanlinglabs/winter-conformance";
+import { BunRequiredError, hasBunRuntime, requireBunRuntime } from "@waifucave/clover-provider-runtime";
+import { BunRequiredError as ConformanceBunRequiredError } from "@waifucave/clover-conformance";
 import { buildPackages } from "../../../scripts/build-packages.ts";
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
@@ -41,7 +41,7 @@ describe("BunRequiredError / requireBunRuntime (the predicate)", () => {
   });
 
   test("the two packages' errors are SEPARATE types -- catching one is not catching the other", () => {
-    // Deliberate: `@yanlinglabs/winter-conformance` has no dependencies at all, so there is no module
+    // Deliberate: `@waifucave/clover-conformance` has no dependencies at all, so there is no module
     // both packages can reach, and a dependency edge added to share one eight-line class would be the
     // larger change. They are different packages' limits and a consumer catches the one they import.
     expect(new ConformanceBunRequiredError("runCapture", "Bun.spawn", "d")).not.toBeInstanceOf(BunRequiredError);
@@ -68,7 +68,7 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
 
   test("provider-runtime: `startCodexLogin` refuses with BunRequiredError, naming Bun.serve", async () => {
     const r = await underNode(`
-      const m = await import("@yanlinglabs/winter-provider-runtime");
+      const m = await import("@waifucave/clover-provider-runtime");
       try {
         await m.startCodexLogin({}, {});
         console.log("NO-THROW");
@@ -127,7 +127,7 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
 
   test("provider-runtime: the console-broker trio all refuse with BunRequiredError, naming Bun.spawn", async () => {
     const r = await underNode(`
-      const m = await import("@yanlinglabs/winter-provider-runtime");
+      const m = await import("@waifucave/clover-provider-runtime");
       const out = [];
       const store = { get: async () => null, set: async () => {}, delete: async () => {} };
       const opts = { claudeExecutable: "/bin/true", anthropicConfigDir: "/tmp/does-not-matter", claudeConfigDir: "/tmp/does-not-matter" };
@@ -149,7 +149,7 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
 
   test("provider-runtime/testing: both loopback fakes refuse", async () => {
     const r = await underNode(`
-      const t = await import("@yanlinglabs/winter-provider-runtime/testing");
+      const t = await import("@waifucave/clover-provider-runtime/testing");
       const out = [];
       for (const fn of ["startXaiOauthFake", "startXaiChatFake"]) {
         try { await t[fn](); out.push([fn, "NO-THROW"]); }
@@ -168,7 +168,7 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
     // Ordering is the assertion that matters here: the guard runs first, so nothing has been
     // downloaded, no npm prefix exists and no port is bound when the caller is told.
     const r = await underNode(`
-      const m = await import("@yanlinglabs/winter-conformance/official");
+      const m = await import("@waifucave/clover-conformance/official");
       try { await m.runCapture(); console.log("NO-THROW"); }
       catch (e) { console.log(JSON.stringify({ name: e?.name, isTyped: e instanceof m.BunRequiredError, fn: e?.functionName, api: e?.bunApi, msg: String(e?.message ?? "") })); }
     `);
@@ -207,8 +207,8 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
       const isClass = (v) => typeof v === "function" && /^class\\s/.test(Function.prototype.toString.call(v));
       const out = [];
       for (const [a, b] of [
-        ["@yanlinglabs/winter-conformance", "@yanlinglabs/winter-conformance/official"],
-        ["@yanlinglabs/winter-provider-runtime", "@yanlinglabs/winter-provider-runtime/testing"],
+        ["@waifucave/clover-conformance", "@waifucave/clover-conformance/official"],
+        ["@waifucave/clover-provider-runtime", "@waifucave/clover-provider-runtime/testing"],
       ]) {
         const A = await import(a), B = await import(b);
         const shared = Object.keys(A).filter((k) => isClass(A[k]) && isClass(B[k]));
@@ -227,10 +227,10 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
 
     // The set really is the one the review measured -- three on conformance, one on provider-runtime.
     expect(rows.map(([pkg, cls]) => `${pkg}#${cls}`).sort()).toEqual([
-      "@yanlinglabs/winter-conformance#BunRequiredError",
-      "@yanlinglabs/winter-conformance#ChecksumMismatchError",
-      "@yanlinglabs/winter-conformance#OfficialCompatUnavailableError",
-      "@yanlinglabs/winter-provider-runtime#BunRequiredError",
+      "@waifucave/clover-conformance#BunRequiredError",
+      "@waifucave/clover-conformance#ChecksumMismatchError",
+      "@waifucave/clover-conformance#OfficialCompatUnavailableError",
+      "@waifucave/clover-provider-runtime#BunRequiredError",
     ]);
     for (const [pkg, cls, sameObject, crossEntry, ownEntry] of rows) {
       // ONE OBJECT, since `--splitting`: the shared chunk is evaluated once and both entries import
@@ -246,10 +246,10 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
     // The end-to-end statement, not a constructed instance: the error really thrown by a guarded
     // function imported from one subpath, matched against the class imported from the other.
     const r = await underNode(`
-      const main = await import("@yanlinglabs/winter-conformance");
-      const official = await import("@yanlinglabs/winter-conformance/official");
-      const prMain = await import("@yanlinglabs/winter-provider-runtime");
-      const prTesting = await import("@yanlinglabs/winter-provider-runtime/testing");
+      const main = await import("@waifucave/clover-conformance");
+      const official = await import("@waifucave/clover-conformance/official");
+      const prMain = await import("@waifucave/clover-provider-runtime");
+      const prTesting = await import("@waifucave/clover-provider-runtime/testing");
       const out = {};
       try { await official.runCapture(); } catch (e) { out.captureViaMainBarrel = e instanceof main.BunRequiredError; }
       try { await prTesting.startXaiOauthFake(); } catch (e) { out.fakeViaMainBarrel = e instanceof prMain.BunRequiredError; }
@@ -284,8 +284,8 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
     // no bundler can help. Asserted through a hand-made object carrying only the brand, so it tests
     // the `Symbol.hasInstance` path rather than prototype identity.
     const r = await underNode(`
-      const m = await import("@yanlinglabs/winter-provider-runtime");
-      const brand = Symbol.for("@yanlinglabs/winter-provider-runtime:BunRequiredError");
+      const m = await import("@waifucave/clover-provider-runtime");
+      const brand = Symbol.for("@waifucave/clover-provider-runtime:BunRequiredError");
       const foreign = { [brand]: true };              // a "copy from another bundle or realm"
       const unbranded = Object.create(Error.prototype); // same shape, no brand
       console.log(JSON.stringify({ branded: foreign instanceof m.BunRequiredError, unbranded: unbranded instanceof m.BunRequiredError }));
@@ -298,8 +298,8 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
     // The property the fix must not break, asserted where it was previously only asserted in-process
     // under Bun: a `Symbol.for` key naming one package cannot be satisfied by the other's.
     const r = await underNode(`
-      const c = await import("@yanlinglabs/winter-conformance");
-      const p = await import("@yanlinglabs/winter-provider-runtime");
+      const c = await import("@waifucave/clover-conformance");
+      const p = await import("@waifucave/clover-provider-runtime");
       console.log(JSON.stringify({
         conformanceInstanceVsProviderRuntimeClass: new c.BunRequiredError("f", "a", "d") instanceof p.BunRequiredError,
         providerRuntimeInstanceVsConformanceClass: new p.BunRequiredError("f", "a", "d") instanceof c.BunRequiredError,
@@ -313,8 +313,8 @@ describe("the guards fire under a REAL Node process, against the built dist", ()
     // The control. Without it every assertion above would pass just as happily against a package that
     // threw `BunRequiredError` from everything, which is a different (and worse) bug.
     const r = await underNode(`
-      const pr = await import("@yanlinglabs/winter-provider-runtime");
-      const c = await import("@yanlinglabs/winter-conformance");
+      const pr = await import("@waifucave/clover-provider-runtime");
+      const c = await import("@waifucave/clover-conformance");
       const ref = pr.anthropicCredentialRef("acct-1");
       const goldens = c.listGoldens();
       console.log(JSON.stringify({ refKind: ref.kind, goldens: goldens.length > 0 }));
@@ -433,7 +433,7 @@ describe("every Bun API use in a Node-declaring publishable package is accounted
     for (const [file, why] of Object.entries(ACCOUNTED)) expect([file, why.length > 30]).toEqual([file, true]);
   });
 
-  test("`@yanlinglabs/winter-provider-conformance` needs no guards -- it declares `engines.bun` and nothing else", () => {
+  test("`@waifucave/clover-provider-conformance` needs no guards -- it declares `engines.bun` and nothing else", () => {
     // The package that stands up loopback servers with `Bun.serve` throughout is Bun-only WHOLE: its
     // manifest says so, and `scripts/smoke-installed.ts`'s `runtimesFor` skips it under Node on that
     // declaration. Guarding functions in a package a Node consumer is never told they can import

@@ -1,4 +1,4 @@
-// 0.0.58: `@yanlinglabs/winter-web` INSTALLS ALONE -- no other package at all, winter or third-party.
+// 0.0.58: `@waifucave/clover-web` INSTALLS ALONE -- no other package at all, winter or third-party.
 //
 // A host that only wants web search and an SSRF-guarded fetch (a Node app with its own agents)
 // installs this one package. This script is the gate that keeps it that way:
@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 import { installedPackages, readPackedView, type PackedView } from "./provider-pack-closure.ts";
 import { discoverPublishablePackages, extractTarball, packOne, type PackedPackage } from "./release-pack.ts";
 
-export const WEB_PACKAGE = "@yanlinglabs/winter-web";
+export const WEB_PACKAGE = "@waifucave/clover-web";
 const DEPENDENCY_FIELDS = ["dependencies", "optionalDependencies", "peerDependencies", "bundleDependencies", "bundledDependencies"] as const;
 
 /** Every module specifier a compiled file names (static imports/exports, dynamic imports, requires). */

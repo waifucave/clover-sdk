@@ -5,7 +5,7 @@
 // was dead in production once stayed green. Nothing calls a grammar function directly either; the
 // grammar has its own unit file, and what THIS file pins is the decision a session actually gets.
 import { describe, expect, test } from "bun:test";
-import type { PermissionMode, PermissionRequestPayload, PermissionResult, PermissionRuleValue, RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRequestPayload, PermissionResult, PermissionRuleValue, RuleSource } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   NO_OPINION_HOOK_STAGE,

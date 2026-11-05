@@ -1,7 +1,7 @@
 // Phase 5 Task 3 (R5-2): the SEAM AUTHORITY for `commands/seam.ts`. Lane S keeps this green against
 // its real filesystem resolver; the engine keeps it green against its consumption.
 import { test, expect, describe } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderRequest } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

@@ -21,7 +21,7 @@ import { sourceObjectOrigin, readSourceTextWithOrigin, type SourceOrigin, bindSo
 // (skills/store.ts's own header) rather than the project tier's R4-7 trust gate.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
 import { parseWorkflowMeta, type WorkflowMetaPhase } from "./meta.ts";
 
 /**

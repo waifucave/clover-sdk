@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { WinterRpcError, WinterRpcTimeoutError, type ControlRequestFrame, type ControlResponseFrame } from "@yanlinglabs/winter-agent-sdk";
+import { WinterRpcError, WinterRpcTimeoutError, type ControlRequestFrame, type ControlResponseFrame } from "@waifucave/clover-agent-sdk";
 import type { FrameSink } from "../protocol/channel.ts";
 
 export interface RpcBridge {

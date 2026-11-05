@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { mkdtempSync, realpathSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { applyMandatoryFloorToSpawnOptions, createMandatoryFloorSpawn, MandatoryFloorUnavailableError, query, type SpawnRuntimeOptions } from "@yanlinglabs/winter-agent-sdk";
+import { applyMandatoryFloorToSpawnOptions, createMandatoryFloorSpawn, MandatoryFloorUnavailableError, query, type SpawnRuntimeOptions } from "@waifucave/clover-agent-sdk";
 import { spawnEmbeddedWorker } from "../embedded-host.ts";
 import { runEmbeddedSession } from "../embedded.ts";
 import { requireHostCodeProcessBroker, hostCodeProcessBrokerRequired, installHostCodeProcessClient, type HostCodeProcessClient } from "./host-code-process.ts";

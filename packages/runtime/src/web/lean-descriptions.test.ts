@@ -5,7 +5,7 @@
 // `sessionLeanModel` rule the Agent tool's listing already follows. Read here off the REAL advertised
 // tool list -- the `tools` array of the request the provider actually receives.
 import { afterEach, describe, expect, setSystemTime, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import "../tools/descriptors/index.ts";
 import { runEngine, type EngineOptions, type Provider, type ProviderRequest } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";

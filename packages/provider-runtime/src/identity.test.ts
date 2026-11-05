@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { activeWinterIdentity, identityFromBrand, identityRefusal, installBrandIdentity, setWinterIdentity, winterIdentityHeaders, winterUserAgent } from "./identity.ts";
 import { WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import pkg from "../package.json";
 
 describe("WS-13b honest identity", () => {

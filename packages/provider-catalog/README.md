@@ -1,4 +1,4 @@
-# `@yanlinglabs/winter-provider-catalog`
+# `@waifucave/clover-provider-catalog`
 
 Winter's provider and model catalog as inert, validated DATA: 218 provider rows and 1404 model rows
 with their endpoints, auth kinds, pricing evidence, admission tier and provenance, plus the validator
@@ -10,10 +10,10 @@ evidence; `bun run provenance:tiers -- --check` regenerates its census from the 
 
 ## Supported public API (0.0.56)
 
-Every name exported from `@yanlinglabs/winter-provider-catalog` and `@yanlinglabs/winter-provider-catalog/families`
+Every name exported from `@waifucave/clover-provider-catalog` and `@waifucave/clover-provider-catalog/families`
 is supported: `loadCatalog`, `validateCatalog`, the descriptor types (`WinterCatalog`,
 `WinterModelDescriptor`, `WinterProviderDescriptor`, `ModelPricing`, `PricingTier`, `CapabilityEvidence`,
-...) and the family helpers. It follows the same versioning rules as `@yanlinglabs/winter-provider-runtime`
+...) and the family helpers. It follows the same versioning rules as `@waifucave/clover-provider-runtime`
 (its README, "Supported public API and versioning"): the two packages move in lockstep and must be the
 same version; additive changes (rows, optional fields) can come in any release; anything that can break a
 host -- a removed or renamed export or row key, a field made required -- ships only under a "Breaking for
@@ -24,7 +24,7 @@ limits, efforts, evidence) follows the vendors and changes in any release.
 whole prompt (input + cache reads + cache writes) reaches a tier's `minPromptTokens` (inclusive) is priced
 entirely at that tier -- Claude Haiku 5.5's "over 100,000 tokens" prices, OpenRouter's
 `min_prompt_tokens` overrides. A row without tiers is flat-priced, as before.
-`@yanlinglabs/winter-provider-runtime`'s `estimateCostUsd` applies them.
+`@waifucave/clover-provider-runtime`'s `estimateCostUsd` applies them.
 
 ## Install
 
@@ -33,10 +33,10 @@ This package is published to **two registries**, and which one you want depends 
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-provider-catalog
+npm install @waifucave/clover-provider-catalog
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
 ### From GitHub Packages (the `yanlingLabs` org)
 
@@ -44,12 +44,12 @@ GitHub Packages needs the scope pointed at it and an authenticated read, even fo
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 …with `GITHUB_TOKEN` in the environment — a personal access token carrying `read:packages`, never a
-literal in the file. Then `npm install @yanlinglabs/winter-provider-catalog` as usual.
+literal in the file. Then `npm install @waifucave/clover-provider-catalog` as usual.
 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data

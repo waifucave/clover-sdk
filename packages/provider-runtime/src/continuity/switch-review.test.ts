@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { reviewModelSwitch, switchFactsFor } from "./switch-review.ts";
 import type { ProviderStateRecord } from "./claude-ready.ts";
 import type { ContinuityEndpoint } from "./domains.ts";

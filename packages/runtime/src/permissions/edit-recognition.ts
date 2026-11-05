@@ -45,7 +45,7 @@
 // deliberately simpler tokenizer (no paren-depth tracking; this module never needs to find compound
 // operators, only whitespace-delimited operands within an ALREADY-split-and-stripped subcommand).
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 import { stripWrappers, extractRedirectWrites, shellWords, shellWordReadings, type ShellWord } from "./grammar.ts";
 import { flattenSubcommands, hasProcessSubstitution, naiveCommandPieces } from "./shell-structure.ts";
 

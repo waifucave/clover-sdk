@@ -6,7 +6,7 @@
 // shape for this caller; what v2 changes AROUND it -- the `'auto'` era probe it may carry, the
 // `SdkHttpError` it throws on a non-OK answer -- is absorbed in mcp/client.ts.
 import { StreamableHTTPClientTransport, type AuthProvider, type Transport } from "@modelcontextprotocol/client";
-import type { McpHttpServerConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { McpHttpServerConfig } from "@waifucave/clover-agent-sdk";
 
 /**
  * WS-25: the network an AUTHENTICATED transport (one with an `authProvider`) uses -- the platform `fetch`

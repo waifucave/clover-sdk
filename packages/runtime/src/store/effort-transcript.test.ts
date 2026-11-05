@@ -3,7 +3,7 @@
 // markers at exactly the positions the live session sent them -- which is what keeps the cached
 // prefix matching across a resume. Old transcripts without the fields replay unchanged.
 import { describe, expect, test } from "bun:test";
-import type { SessionStoreEntry, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { SessionStoreEntry, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { assistantEntry, userEntry, type SessionCtx } from "./dialect.ts";
 import { rebuildProviderMessages, toDialectEntries } from "./resume.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";

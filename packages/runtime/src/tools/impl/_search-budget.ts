@@ -15,7 +15,7 @@
 // called from the ROOT run's own teardown in `engine.ts`, so a resumed session starts at zero -- which
 // is exactly what a resumed session gets in claude, where `--resume` is a new process with a fresh
 // registry. The cap is per session-RUN here, deliberately, not per session-id-for-all-time.
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 type EnvBrand = Pick<BrandProfile, "envPrefix">;
 

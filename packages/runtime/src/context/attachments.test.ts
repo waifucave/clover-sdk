@@ -1,6 +1,6 @@
 // SDK 0.0.16 Lane C: the persisted-attachment renderers and folds. Texts are claude's interface strings.
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_PLANS_DIRECTORY } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_PLANS_DIRECTORY } from "@waifucave/clover-agent-sdk";
 import type { ProviderMessage } from "../engine.ts";
 import { PLAN_MODE_ENFORCEMENT, PLAN_MODE_PROTOCOL } from "./plan-mode.ts";
 import {

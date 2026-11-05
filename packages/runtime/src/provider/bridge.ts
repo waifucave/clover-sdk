@@ -26,7 +26,7 @@
 //   4. **Errors are typed and redacted.** Everything that goes wrong becomes a `ProviderTurnError`
 //      carrying the provider's status and structured code -- never a raw body, never credential
 //      material, never opaque state.
-import type { ProviderAdapter, ProviderContext, ProviderError, ProviderEvent, ProviderMessageLike, ResolvedModel, StreamAssemblySink, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import type { ProviderAdapter, ProviderContext, ProviderError, ProviderEvent, ProviderMessageLike, ResolvedModel, StreamAssemblySink, TurnRequest } from "@waifucave/clover-provider-runtime";
 import {
   foldProviderStream as assembleProviderStream,
   imageBudgetFor,
@@ -35,7 +35,7 @@ import {
   stampNativeState as stampAssembledNativeState,
   stripOpaque,
   withinImageBudget,
-} from "@yanlinglabs/winter-provider-runtime";
+} from "@waifucave/clover-provider-runtime";
 import { ProviderTurnError, type MessageOrigin, type Provider, type ProviderMessage, type ProviderRequest, type ProviderStreamSink, type ProviderTurn } from "../engine.ts";
 import type { ContinuationChain } from "../store/provider-state.ts";
 

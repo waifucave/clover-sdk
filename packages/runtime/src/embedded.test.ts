@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, splitFrames, type Options, type SdkMessage, type SpawnedRuntimeProcess, type SpawnRuntimeOptions, type WinterFrame, type WinterMcpServerInstance } from "@yanlinglabs/winter-agent-sdk";
+import { query, splitFrames, type Options, type SdkMessage, type SpawnedRuntimeProcess, type SpawnRuntimeOptions, type WinterFrame, type WinterMcpServerInstance } from "@waifucave/clover-agent-sdk";
 import { Queue } from "./protocol/channel.ts";
 import { runEmbeddedSession } from "./embedded.ts";
 import { EMBEDDED_KILL_GRACE_MS, spawnEmbeddedWorker } from "./embedded-host.ts";

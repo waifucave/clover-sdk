@@ -10,8 +10,8 @@
 // of what the tests say they prove — the credential filter, the vendor order and the typed refusals
 // are the resolver's, and the route is only correct if it inherits them unchanged.
 import { describe, expect, test } from "bun:test";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import type { ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import type { ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
 import { resolveAdvisorRoute, selectAdvisorCandidate } from "./advisor-route.ts";
 import { computeActiveSlotSet, resolveSlotToProvider, type CredentialPresence } from "./slots.ts";
 

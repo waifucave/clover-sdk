@@ -1,4 +1,4 @@
-import { WinterCompatibilitySessionStore, type SessionKey, type SessionStore } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, type SessionKey, type SessionStore } from "@waifucave/clover-agent-sdk";
 
 /** Decoration of existing state implementations, not another store or authority source. */
 export interface DurableOperationGuard { run<T>(operation: () => T): T }

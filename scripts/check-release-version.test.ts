@@ -134,7 +134,7 @@ describe("checkReleaseVersion", () => {
     expect(r.ok, r.ok ? "" : r.reason).toBe(true);
     if (r.ok) {
       expect(r.packages).toHaveLength(8); // WS-23: the runtime joined the publishable set; 0.0.58: winter-web
-      expect(r.packages.map((p) => p.name)).toContain("@yanlinglabs/winter-agent-sdk-darwin-arm64");
+      expect(r.packages.map((p) => p.name)).toContain("@waifucave/clover-agent-sdk-darwin-arm64");
       expect(checkReleaseVersion({ ref: `refs/tags/v${r.version}` }).ok).toBe(true);
     }
   });

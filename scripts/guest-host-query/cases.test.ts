@@ -37,7 +37,7 @@ test("host SDK options never derive native config authority from environment or 
 });
 
 test("actual local SDK query/engine callback routing matches fixed allow/deny/plan/bypass cases", async () => {
-  const { query, splitFrames } = await import("@yanlinglabs/winter-agent-sdk");
+  const { query, splitFrames } = await import("@waifucave/clover-agent-sdk");
   const { inMemoryProcess } = await import("../../packages/runtime/src/testing.ts");
   const { mkdtempSync, mkdirSync, rmSync } = await import("node:fs"), { tmpdir } = await import("node:os"), { join } = await import("node:path");
   for (const kind of CASES) {
@@ -90,7 +90,7 @@ test("host failure diagnostics retain only closed classes/reasons and known errn
 });
 
 test("actual SDK error diagnostics preserve only bounded process facts and closed result subtypes", async () => {
-  const { CLIConnectionError, ProcessError, ProtocolDecodeError, ResultError, AbortError } = await import("@yanlinglabs/winter-agent-sdk");
+  const { CLIConnectionError, ProcessError, ProtocolDecodeError, ResultError, AbortError } = await import("@waifucave/clover-agent-sdk");
   for (const error of [new CLIConnectionError("secret /path"), new ProtocolDecodeError("foreign frame"), new AbortError("secret abort")]) expect(hostFailure(error)).toEqual({ class: error.name, code: "host_failure" });
   expect(hostFailure(new ProcessError("foreign output", 77, "SIGTRAP"))).toEqual({ class: "ProcessError", code: "host_failure", processCode: 77, signal: "SIGTRAP" });
   expect(hostFailure(new ProcessError("foreign output", null, null))).toEqual({ class: "ProcessError", code: "host_failure", processCode: null, signal: null });

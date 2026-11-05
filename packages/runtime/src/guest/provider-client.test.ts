@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { createGuestProviderClient, guestProviderFor, assertGuestProviderRoute, type GuestProviderScope } from "./provider-client.ts";
 import { buildSessionProvider } from "../provider/session-provider.ts";
 import { assertRuntimeExecutionPosture } from "./execution-posture.ts";
-import type { ResolvedModel } from "@yanlinglabs/winter-provider-runtime";
+import type { ResolvedModel } from "@waifucave/clover-provider-runtime";
 const scope: GuestProviderScope = { homeId: "home", workspaceId: "workspace", sessionId: "logical", backendSessionId: "backend", taskId: "task", incarnationId: "incarnation", bootId: "boot", leaseEpoch: 1, grantRevision: 1, accountRevision: 1, modelRevision: 1 };
 const selection = { providerId: "openai", modelKey: "openai/fixture", providerModelId: "fixture", family: "openai" as const, protocol: "openai-responses" as const, continuationDomain: "openai/fixture-domain", capabilities: { toolCalling: "native" as const, readableState: "summary" as const } };
 const resolved = { providerId: "openai", modelKey: selection.modelKey, providerModelId: selection.providerModelId, continuationDomain: selection.continuationDomain, adapter: { family: "openai" } } as ResolvedModel;

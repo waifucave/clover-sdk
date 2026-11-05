@@ -8,7 +8,7 @@
 // looking hostname that resolves to `127.0.0.1` (DNS rebinding) is the classic bypass a
 // lexical-only check misses entirely.
 //
-// IP-RANGE CLASSIFICATION ITSELF IS NOT REBUILT HERE. `@yanlinglabs/winter-web` carries the
+// IP-RANGE CLASSIFICATION ITSELF IS NOT REBUILT HERE. `@waifucave/clover-web` carries the
 // classifier its own fetcher enforces on every hop (bytes, not spellings: every IPv4 notation, the
 // IPv4-embedding IPv6 forms, cloud metadata, multicast, this machine's own interface addresses), so
 // this module is a THIN layer over it: the verdict shape the permission layer and the cache-hit gate
@@ -16,7 +16,7 @@
 //
 // This module registers no tool and has no dependency on anything under `tools/`.
 import { isIP } from "node:net";
-import { classifyAddress, classifyHostnameLexically as classifyLexically, isReservedPrivateName } from "@yanlinglabs/winter-web";
+import { classifyAddress, classifyHostnameLexically as classifyLexically, isReservedPrivateName } from "@waifucave/clover-web";
 
 export type AddressVerdict = "public" | "private";
 
@@ -36,7 +36,7 @@ export function stripIpv6Brackets(hostname: string): string {
 
 /**
  * Classifies a literal IP address -- `undefined` when `address` is not one (`net.isIP` decides, as
- * before). The class and its reason are `@yanlinglabs/winter-web`'s.
+ * before). The class and its reason are `@waifucave/clover-web`'s.
  */
 export function classifyIpLiteral(address: string): PrivateAddressFinding | undefined {
   if (isIP(address) === 0) return undefined;

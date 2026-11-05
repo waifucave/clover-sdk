@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
-import type { BackgroundTaskMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import {
   startTracking,
   getTask,

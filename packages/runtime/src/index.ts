@@ -114,10 +114,10 @@ export { registerTool } from "./tools/registry.ts";
 // re-exported here unchanged (pass-through) so existing runtime-side imports of
 // `winter-agent-runtime` (e.g. packages/sdk/src/transport-equivalence.test.ts) keep compiling.
 // temp.ts/project-dir-name.ts stay runtime-private, unaffected.
-export { resolveWinterHome } from "@yanlinglabs/winter-agent-sdk";
-export { transcriptProjectKey } from "@yanlinglabs/winter-agent-sdk";
-export { compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
-export type { CompatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+export { resolveWinterHome } from "@waifucave/clover-agent-sdk";
+export { transcriptProjectKey } from "@waifucave/clover-agent-sdk";
+export { compatibilityKeys } from "@waifucave/clover-agent-sdk";
+export type { CompatibilityKeys } from "@waifucave/clover-agent-sdk";
 export { sessionTempDir, ensureTasksDir, WinterPathsError } from "./paths/temp.ts";
 export type { SessionTempDirOptions, SessionTempDirPaths } from "./paths/temp.ts";
 // Controller Ruling P1-N: WINTER_PROJECT_DIR_NAME override for the PERSISTENT transcript-project
@@ -136,8 +136,8 @@ export {
   WinterStoreError,
   WinterStoreLeaseError,
   DIALECT_RECORD_ENTRY_TYPE,
-} from "@yanlinglabs/winter-agent-sdk";
-export type { SessionKey, SessionStoreEntry, SessionSummaryEntry, SessionStore } from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
+export type { SessionKey, SessionStoreEntry, SessionSummaryEntry, SessionStore } from "@waifucave/clover-agent-sdk";
 
 // The Claude-dialect transcript writer/reader (Task 8, WS-05 §5.2): converts engine turn content
 // into Claude-transcript-compatible JSONL entries and appends them through the store above.
@@ -179,7 +179,7 @@ export {
   decodeFrame,
   splitFrames,
   ProtocolError,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 
 export type {
   ProtocolVersion,
@@ -192,7 +192,7 @@ export type {
   ControlResponseFrame,
   UnknownFrame,
   RuntimeConfig,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 
 // --- Phase 6 Task 8 (Lane D): the credential host doors and the model classifier ------------------
 //

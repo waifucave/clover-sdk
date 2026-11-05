@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { resolveMcpServerSources } from "../../mcp/lifecycle.ts";
 import { loadPlugins } from "../../plugins/loader.ts";
 import type { PluginBundle } from "../../plugins/bundle.ts";
-import { globalConfigFileName, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { globalConfigFileName, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { loadGlobalConfigMcp, loadProjectMcpConfig, settingsMcpServerSources, PROJECT_MCP_CONFIG_RELATIVE } from "./mcp-config.ts";
 import { pluginMcpServerSources } from "./plugin-mcp.ts";
 

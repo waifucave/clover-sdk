@@ -7,8 +7,8 @@
 // `stampFamilyFields` the build pipeline uses, so `modelFamily`/`canonicalModelId` in this file
 // cannot drift from what a real catalog carries.
 import { describe, expect, test } from "bun:test";
-import { SLOT_NAME_RE, stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
-import type { ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import { SLOT_NAME_RE, stampFamilyFields } from "@waifucave/clover-provider-catalog";
+import type { ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
 import { computeActiveSlotSet, renderAgentModelSchema, resolveSlotToProvider, type CredentialPresence } from "./slots.ts";
 
 // --- the fixture --------------------------------------------------------------------------------

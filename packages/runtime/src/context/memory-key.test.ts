@@ -3,7 +3,7 @@ import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { join } from "node:path";
-import { compatibilityKeys } from "@yanlinglabs/winter-agent-sdk";
+import { compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import { memoryDirFor, memoryProjectKeyFor, RESERVED_MEMORY_KEYS, _clearMemoryKeyCacheForTests } from "./memory-key.ts";
 import { makeGitFixture, type GitFixture } from "./git-fixture.ts";
 

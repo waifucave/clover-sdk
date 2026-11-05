@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-catalog` — the inert provider catalog and its validator.
+// `@waifucave/clover-provider-catalog` — the inert provider catalog and its validator.
 //
 // FROZEN BETWEEN PHASES (R6-12): only a phase's SPINE task edits `src/` or `schema/` (P6.6's did,
 // WS-13c §1); lanes ADD files (overlay rows, the upstream layer under `generated/`), never edit them.

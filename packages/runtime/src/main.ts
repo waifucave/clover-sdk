@@ -12,7 +12,7 @@
 // executable. Every import below is a static, literal specifier resolved at BUILD time; nothing
 // here touches the filesystem to find its own code.
 import { fstatSync } from "node:fs";
-import { SDK_VERSION, WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { SDK_VERSION, WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 // WS-23: the whole session -- config parse, store resolution, production wiring, child-engine factory,
 // roster restore, runEngine -- lives in `runEmbeddedSession`, which an embedded host also runs (one per
 // Worker). This file hands it the REAL process: argv, `process.env`, stdin, stdout, stderr. One body,

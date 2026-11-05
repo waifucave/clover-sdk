@@ -12,7 +12,7 @@
 // and here there is not even a reserved field to be tolerant about.
 import "../descriptors/read-notifications.ts";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
-import { acceptNativeReadNotificationsArgs, createMessagingToolHandlers, messagingToolPortFromRuntimeDeps, READ_NOTIFICATIONS_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { acceptNativeReadNotificationsArgs, createMessagingToolHandlers, messagingToolPortFromRuntimeDeps, READ_NOTIFICATIONS_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 import { getMessagingRuntime } from "../../messaging/router.ts";
 // Side-effect-free (types only): importing THIS executor must not also register SendMessage and
 // its canonical twin, which is what importing it from `./send-message.ts` did (SB review r1).

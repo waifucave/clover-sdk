@@ -25,7 +25,7 @@
 // convention is intentionally mirrored -- see paths.test.ts).
 import { realpathSync, readlinkSync } from "node:fs";
 import { dirname, basename, join, resolve, isAbsolute, normalize } from "node:path";
-import type { PermissionBehavior } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionBehavior } from "@waifucave/clover-agent-sdk";
 
 // ---------------------------------------------------------------------------------------------
 // matchFileRule

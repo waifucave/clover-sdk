@@ -5,7 +5,7 @@
 // `bun` -> the source, `default` -> the compiled JS). `paths` is what THIS repository's own tsc
 // resolves, and it exists because the `types` condition names a file that does not exist until
 // `build:packages` has run -- without the mapping, `bun run typecheck` on a fresh clone fails with
-// "Cannot find module '@yanlinglabs/winter-provider-catalog'" (measured when the emit landed).
+// "Cannot find module '@waifucave/clover-provider-catalog'" (measured when the emit landed).
 //
 // WHY THEY MUST AGREE, and what goes wrong when they do not. They are two answers to "what is this
 // specifier", and only one of them is checked by anything a consumer runs:
@@ -62,7 +62,7 @@ function expectedFromExports(): Map<string, string> {
  *
  * EMPTY since WS-23: its one entry was the runtime package, which was private until an embedding host
  * (Winter's daemon, one Worker per chat/dispatch session) needed to install it -- it is
- * `@yanlinglabs/winter-agent-runtime` now, publishable, and its `paths` are checked like every other
+ * `@waifucave/clover-agent-runtime` now, publishable, and its `paths` are checked like every other
  * package's. Kept as the place a future private package records why it needs a mapping. Keyed with a
  * rationale for the same reason every other allowlist in this repo is: an entry nobody can explain
  * is an entry nobody can remove.
@@ -114,14 +114,14 @@ describe("P7a pre-publish (item 4): tsconfig `paths` and package `exports` agree
 
   test("the parity is not vacuous: it covers every EXPORTS-BEARING publishable package and all twenty-two subpaths", () => {
     const expected = expectedFromExports();
-    // 12 since SDK 0.0.3's `@yanlinglabs/winter-agent-sdk/tools` (R-8-1: Winter's default tools,
+    // 12 since SDK 0.0.3's `@waifucave/clover-agent-sdk/tools` (R-8-1: Winter's default tools,
     // declared once for both hosts); 19 since WS-23 made the runtime publishable (`.`, `./testing`,
     // `./embedded`, `./embedded-host`, `./embedded-worker`, `./workflow-worker`, `./version`); 20 since
     // WS-24's `./mcp-client` (the runtime's MCP client, for a host that talks to MCP servers itself); 21
     // since WS-25's `./mcp-auth` (MCP OAuth sign-in, refresh and revoke, for the host that owns them). The
     // literal is the tripwire -- a subpath added to `exports` with no `paths` entry, or vice versa, is
     // caught by the two tests above only if this one keeps counting what they cover. 22 since 0.0.58's
-    // `@yanlinglabs/winter-web` (one entry point, `.`).
+    // `@waifucave/clover-web` (one entry point, `.`).
     expect(expected.size).toBe(22);
     // P9a-3: the darwin-arm64 platform package is publishable but BIN-ONLY -- no `exports` map, so it
     // contributes zero specifiers here and must not be counted on the RHS (this test's own denominator

@@ -2,7 +2,7 @@
 // message breakpoints may be written at 1 hour as well as the system ones, and a request that would put a
 // 1-hour breakpoint after a 5-minute one is refused before it is sent.
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { ProviderRequestError } from "../../http.ts";
 import type { ProviderMessageLike, TurnRequest } from "../../types.ts";
 import { resolveCacheTtls } from "../cache-ttl.ts";

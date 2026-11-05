@@ -21,7 +21,7 @@ const QUERY = "packages/sdk/src/query.ts";
 const OPTIONS = "packages/sdk/src/options.ts";
 const INDEX = "packages/sdk/src/index.ts";
 const ENTRIES = [INDEX, "packages/sdk/src/messaging/index.ts", "packages/sdk/src/tools/index.ts"];
-const SDK_PACKAGE = "@yanlinglabs/winter-agent-sdk";
+const SDK_PACKAGE = "@waifucave/clover-agent-sdk";
 /** Built at run time so this file never contains the name as a literal: the scan below runs over this file too. */
 const ISSUER = ["claim", "Guided", "Guest", "Issuer"].join("");
 /** The EXACT files that may claim the issuer or import the module freely. Nothing is exempt by file name. */

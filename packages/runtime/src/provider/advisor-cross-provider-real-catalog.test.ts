@@ -11,9 +11,9 @@
 // fixture catalog; this file pins the route on the real rows the daemon names, so a host can rely on
 // it without a second spelling of the same fact on the config.
 import { describe, expect, test } from "bun:test";
-import type { CredentialRef, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { WinterProviderResolutionError, createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialRef, RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import { WinterProviderResolutionError, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider } from "./session-provider.ts";
 
 const SESSION_REF: CredentialRef = { kind: "keychain", account: "deepseek-anthropic:default", service: "com.example.test-only" };

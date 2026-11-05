@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-conformance` goldens loader (P7a Lane C, WS-02 §9 Step 2).
+// `@waifucave/clover-conformance` goldens loader (P7a Lane C, WS-02 §9 Step 2).
 //
 // `scripts/differential.ts` (the app repo's own comparator/regenerator) reads its committed goldens
 // directly by `new URL(...)`, scenario by scenario, and that stays untouched here — it is not this
@@ -10,7 +10,7 @@
 // R-7a-12: `packages/conformance/goldens/*.trace.json` are Winter-produced normalized traces and ARE
 // publishable — the package manifest's `files` allowlist (`["src", "goldens"]`) ships this directory
 // verbatim, so `GOLDENS_DIR` below resolves correctly both inside this repo and inside an installed
-// `node_modules/@yanlinglabs/winter-conformance`.
+// `node_modules/@waifucave/clover-conformance`.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";

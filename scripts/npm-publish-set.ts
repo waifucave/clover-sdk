@@ -7,11 +7,11 @@
 //     the transitive workspace `dependencies` CLOSURE of the ROOTS,
 //     where the roots are: the wrapper, the runtime (WS-23), plus every package flagged as a HARNESS
 //
-// which today is seven: `@yanlinglabs/winter-agent-sdk` and `@yanlinglabs/winter-provider-catalog`
-// (what `npm install @yanlinglabs/winter-agent-sdk` needs at run time), its darwin-arm64 platform
-// package (an optionalDependency, P9a-3), the runtime `@yanlinglabs/winter-agent-runtime` (WS-23's
-// embedding root), the two harness roots `@yanlinglabs/winter-conformance` +
-// `@yanlinglabs/winter-provider-conformance`, and `@yanlinglabs/winter-provider-runtime`, which the
+// which today is seven: `@waifucave/clover-agent-sdk` and `@waifucave/clover-provider-catalog`
+// (what `npm install @waifucave/clover-agent-sdk` needs at run time), its darwin-arm64 platform
+// package (an optionalDependency, P9a-3), the runtime `@waifucave/clover-agent-runtime` (WS-23's
+// embedding root), the two harness roots `@waifucave/clover-conformance` +
+// `@waifucave/clover-provider-conformance`, and `@waifucave/clover-provider-runtime`, which the
 // runtime and the second harness genuinely import.
 //
 // WHY THE HARNESSES ARE ROOTS (R-7b-5). P7a ruled "EXACTLY the wrapper's closure, no exceptions
@@ -28,7 +28,7 @@
 //
 // WHY IT IS A CLOSURE AND NOT A UNION (the correction to R-7b-5's own arithmetic, which said four).
 // A published package's manifest pins its `dependencies` at the exact version -- measured:
-// `winter-provider-conformance`'s packed manifest carries `"@yanlinglabs/winter-provider-runtime":
+// `winter-provider-conformance`'s packed manifest carries `"@waifucave/clover-provider-runtime":
 // "<version>"`, because `corpus/{bedrock,google,openai,continuity}.ts` import VALUES from it. Four
 // targets would put a harness on npm whose install 404s on a dependency that is not there, which is
 // exactly the C1/I1 failure the routing gate was built to catch, one package over -- and it would
@@ -48,7 +48,7 @@ import { discoverPublishablePackages, type PublishablePackage } from "./release-
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 /** The published wrapper -- the one package a public consumer installs by name. */
-export const NPM_ROOT_PACKAGE = "@yanlinglabs/winter-agent-sdk";
+export const NPM_ROOT_PACKAGE = "@waifucave/clover-agent-sdk";
 
 /**
  * WS-23: the runtime package, the SECOND package a host installs by name -- an embedding host (Winter's
@@ -58,7 +58,7 @@ export const NPM_ROOT_PACKAGE = "@yanlinglabs/winter-agent-sdk";
  * anything outside that closure is still a refusal. Its own dependencies (the wrapper, the catalog, the
  * provider runtime) are already in the closure, so this adds exactly one package to npm.
  */
-export const NPM_EMBEDDING_ROOT_PACKAGE = "@yanlinglabs/winter-agent-runtime";
+export const NPM_EMBEDDING_ROOT_PACKAGE = "@waifucave/clover-agent-runtime";
 
 /** Packages whose manifest declares `winter.publish.npm: true`, sorted. */
 export function npmPublishSet(root: string = REPO_ROOT): PublishablePackage[] {
@@ -71,10 +71,10 @@ export function npmPublishSet(root: string = REPO_ROOT): PublishablePackage[] {
  *
  * `dependencies` alone was the P7a rule, and P9a-3 widens it by exactly one edge type: the question
  * is what a consumer needs (required OR optional) at RUN TIME after `npm install <root>`. The
- * platform binary package (`@yanlinglabs/winter-agent-sdk-darwin-arm64`) is the wrapper's own
+ * platform binary package (`@waifucave/clover-agent-sdk-darwin-arm64`) is the wrapper's own
  * `optionalDependency` and was correctly outside this set while R-7-2 left it unpublished -- but
  * once it publishes (P9a-3), excluding it here is M3's exact bug: the npm publish would filter it
- * out of the set it never walks, so `npm install @yanlinglabs/winter-agent-sdk` would name an
+ * out of the set it never walks, so `npm install @waifucave/clover-agent-sdk` would name an
  * `optionalDependency` that never exists on the registry, and a darwin-arm64 consumer silently never
  * gets the binary -- forever, since npm treats a missing optional dependency as "skip it", not a
  * failure loud enough for anyone to notice. `devDependencies` stays excluded: that edge answers a
@@ -112,7 +112,7 @@ export function npmRequiredClosure(root: string = REPO_ROOT, roots: readonly str
  * npm job published the WRAPPER before the catalog it depends on -- the dependency its own
  * packed manifest pins at that exact version. For the interval between the two uploads, npm served
  * the one package a public consumer installs by name declaring a dependency that did not exist, and
- * `npm install @yanlinglabs/winter-agent-sdk` 404'd on it. If the second upload then failed, that
+ * `npm install @waifucave/clover-agent-sdk` 404'd on it. If the second upload then failed, that
  * state persisted on a registry from which the version can never be withdrawn or re-published, until
  * a re-drive landed the dependency.
  *

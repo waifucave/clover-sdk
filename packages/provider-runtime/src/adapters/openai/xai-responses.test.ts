@@ -13,7 +13,7 @@
 // NO REAL CREDENTIALS: the key is `testing.ts`'s `test-key-openai-0000`.
 
 import { afterEach, describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter, ProviderEvent, ProviderMessageLike, TurnRequest } from "../../types.ts";
 import { classifySwitch } from "../../continuity/warnings.ts";
 import { createShippedAdapters } from "../index.ts";

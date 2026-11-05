@@ -1,6 +1,6 @@
 // THIN CALLER (P7a Lane C, WS-02 §9 Step 2): the real implementation moved to
 // `packages/conformance/src/official/fetch.ts` so it is importable from the published
-// `@yanlinglabs/winter-conformance` package rather than only reachable by a repo-relative script
+// `@waifucave/clover-conformance` package rather than only reachable by a repo-relative script
 // path. This file keeps the `bun run conformance:fetch` CLI entry point and re-exports every name a
 // consumer previously imported from here (`gen-declaration-snapshot.ts`, `compile-official-fixture.ts`,
 // `capture-official-golden.ts`, `check-derived-shapes.ts` all still `import ... from "./fetch-upstream.ts"`

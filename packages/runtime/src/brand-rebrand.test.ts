@@ -28,16 +28,16 @@ import { test, expect, describe, afterEach } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { resolveBrand, WINTER_BRAND, envName, mcpToolName, type BrandProfile, type RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { activeWinterIdentity, renderIdentityHeaders, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
+import { resolveBrand, WINTER_BRAND, envName, mcpToolName, type BrandProfile, type RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import { activeWinterIdentity, renderIdentityHeaders, winterUserAgent } from "@waifucave/clover-provider-runtime";
 // DEEP RELATIVE IMPORTS, and only into TEST-facing surfaces. The codex adapter, its quota manager
-// and the Responses scenario table are not on `@yanlinglabs/winter-provider-runtime`'s or
+// and the Responses scenario table are not on `@waifucave/clover-provider-runtime`'s or
 // `…/winter-provider-conformance`'s public index -- the corpus test that already drives this exact
 // adapter reaches them the same way (`corpus/openai.test.ts`). Widening a package's PUBLIC surface
 // so one test can import from it would be the worse trade.
-import { codexFake } from "@yanlinglabs/winter-provider-conformance";
+import { codexFake } from "@waifucave/clover-provider-conformance";
 import { createCodexOauthAdapter } from "../../provider-runtime/src/adapters/openai/codex-oauth.ts";
 import { QuotaManager } from "../../provider-runtime/src/adapters/openai/quota.ts";
 import { responsesCorpusScenarios } from "../../provider-conformance/src/corpus/openai-scenarios.ts";

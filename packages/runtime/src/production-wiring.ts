@@ -1,4 +1,4 @@
-import { parseRuntimeContextConfig } from "@yanlinglabs/winter-agent-sdk";
+import { parseRuntimeContextConfig } from "@waifucave/clover-agent-sdk";
 import { createRuntimeContextChannel, type RuntimeContextChannel } from "./context/runtime-context-channel.ts";
 import { linuxGuidedSessionChannel } from "./guest/linux-session-admission.ts";
 import { assertLinuxSession, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
@@ -28,18 +28,18 @@ import { installSourceReadRestrictions } from "./sandbox/source-read.ts";
 // invisibly.
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { InitPluginInfo, RuntimeConfig, SdkPluginConfig, Settings, SettingSource } from "@yanlinglabs/winter-agent-sdk";
-import { OVERLAY_NEVER_KEYS, resolveWinterHome, WINTER_BRAND, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@yanlinglabs/winter-agent-sdk";
+import type { InitPluginInfo, RuntimeConfig, SdkPluginConfig, Settings, SettingSource } from "@waifucave/clover-agent-sdk";
+import { OVERLAY_NEVER_KEYS, resolveWinterHome, WINTER_BRAND, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@waifucave/clover-agent-sdk";
 import { applyHostManagedSettingsFilter, filterSettingsEnv, type EnvFilterTier } from "./settings/env-filter.ts";
 // P7a (D19): the two process-level brand surfaces this module installs per session -- see (10b).
 import { rebrandStandingServerTools } from "./tools/registry.ts";
 import { canonicalAliases, WINTER_CANONICAL_ALIASES } from "./toolsearch/aliases.ts";
-import { installBrandIdentity } from "@yanlinglabs/winter-provider-runtime";
+import { installBrandIdentity } from "@waifucave/clover-provider-runtime";
 import { resolveSettingsDetailed, filterEscalatingDefaultMode, providerSettingsFrom } from "./settings/resolve.ts";
 import { sourceRule, rawToRuleValue, type SourcedRuleEntry } from "./permissions/ruleset.ts";
 import { validatePermissionRuleString } from "./permissions/grammar.ts";
 import { resolveFileRuleAbsolutePath, resolveFileRuleAbsoluteGlobText } from "./permissions/file-rules.ts";
-import type { RuleSource } from "@yanlinglabs/winter-agent-sdk";
+import type { RuleSource } from "@waifucave/clover-agent-sdk";
 import type { DetailedResolvedSettings } from "./settings/resolve.ts";
 import { defaultTrustSource } from "./settings/trust.ts";
 // rn-1 (residual round 2): the child-mirror seam is typed AGAINST the factory's own options, so an
@@ -76,7 +76,7 @@ import type { FileCheckpointSink } from "./checkpoint/seam.ts";
 import { registerPluginAgents, clearPluginAgents } from "./subagents/plugin-agents.ts";
 import type { PluginAgentDefinition } from "./subagents/definitions.ts";
 import type { StrictPluginOnlyCustomization } from "./settings/loaders/strict-plugin-only.ts";
-import { DEFAULT_OUTPUT_STYLE } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_OUTPUT_STYLE } from "@waifucave/clover-agent-sdk";
 // Phase 6 Task 10: the provider half of the same "one function, three legs" argument this module's
 // own header makes. Before this, `main.ts` picked a provider from an env var and `testing.ts` took
 // one as a parameter -- two entrypoints, two policies, and NEITHER of them the catalog-first
@@ -87,16 +87,16 @@ import { createHostBrokeredMcpOAuthStore, mcpOAuthTestStoreEnvName, resolveSessi
 import type { ProviderStateRecordInput } from "./store/provider-state.ts";
 import type { Provider } from "./engine.ts";
 import type { ClassifierInterface } from "./permissions/auto/engine.ts";
-import { WinterProviderResolutionError } from "@yanlinglabs/winter-provider-runtime";
+import { WinterProviderResolutionError } from "@waifucave/clover-provider-runtime";
 import { redactCredentialRef } from "./provider/selection.ts";
 // WS-13c (P6.6): the family layer. `slots.ts` is Lane A's resolver, `family-listing.ts` Lane C's
 // listing builder, `validateModelSlots` Lane B's whole-set validator -- one wiring composes all
 // three, so the Agent tool, `set_model` and the listing can never disagree about a slot.
 import { computeActiveSlotSet, resolveSlotToProvider, type CredentialPresence, type SlotProviderResolution } from "./provider/slots.ts";
 import { buildModelFamilyListing } from "./provider/family-listing.ts";
-import { validateModelSlots, type ModelSlotsLookup } from "@yanlinglabs/winter-agent-sdk";
-import type { ActiveSlotSet, ModelFamilyListing, ModelSlotSetting } from "@yanlinglabs/winter-agent-sdk";
-import { rowsForCanonicalId, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { validateModelSlots, type ModelSlotsLookup } from "@waifucave/clover-agent-sdk";
+import type { ActiveSlotSet, ModelFamilyListing, ModelSlotSetting } from "@waifucave/clover-agent-sdk";
+import { rowsForCanonicalId, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 
 /**
  * The throwaway slot name the listing's `resolvesTo` probe resolves under.

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ControlRequestFrame, RuntimeHooksConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeHooksConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { runEngine, type ContentBlock, type EngineOptions, type ProviderRequest } from "./engine.ts";
 import { MAX_TOOL_CONCURRENCY, createToolLaneTails, enterToolLane, schedulingForCall, type ToolLaneTails } from "./tools/concurrency.ts";

@@ -100,8 +100,8 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import type { RuntimeConfig, WinterFrame, SessionStore, ControlResponseFrame, RuntimeHooksConfig, SandboxSettingsConfig, PermissionMode, BrandProfile } from "@yanlinglabs/winter-agent-sdk";
-import { compatibilityKeys, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, SessionStore, ControlResponseFrame, RuntimeHooksConfig, SandboxSettingsConfig, PermissionMode, BrandProfile } from "@waifucave/clover-agent-sdk";
+import { compatibilityKeys, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { runEngine, createContextAccountant, type ContextAccountant, type EngineOptions, type EngineSettingsRuleSeed, type Provider, type ProviderMessage, type ProviderUsage } from "../engine.ts";
 import { createInMemoryChannel, type FrameSink } from "../protocol/channel.ts";
 import { STRUCTURED_OUTPUT_TOOL_NAME } from "../structured/seam.ts";
@@ -120,7 +120,7 @@ import type {
   ChildEngineFactory,
   ChildEngineRunContext,
 } from "./child-handle.ts";
-import type { GlobalAgentMessage, DeliveryOutcome } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { GlobalAgentMessage, DeliveryOutcome } from "@waifucave/clover-agent-sdk/messaging";
 import { checkAndRegisterSpawn, releaseSpawn, resolveMaxSpawnDepth } from "./limits.ts";
 import { applySubagentToolPool } from "./tool-pools.ts";
 import { createStallWatchdog, resolveStallTimeoutMs } from "./watchdog.ts";

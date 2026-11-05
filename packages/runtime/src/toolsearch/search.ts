@@ -4,7 +4,7 @@
 // `../tools/impl/tool-search.ts`, as a thin ctx-adapter over `executeToolSearch` below (never a
 // second copy of this algorithm) -- see this file's own "Session runtime registry" section for why
 // that split exists and what it still needs from engine.ts.
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 import { registeredNameForMcpSpelling, type DeferralActivation, type ToolDescriptor } from "../tools/registry.ts";
 import type { McpServerStateSource } from "../mcp/state.ts";
 import { computeExposurePartition } from "./exposure.ts";

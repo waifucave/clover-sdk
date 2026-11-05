@@ -4,9 +4,9 @@
 // fixture drives the REAL engine on a REAL catalog-resolved wiring against a loopback fake and reads
 // the ground truth off the result frames, the store double's identity stamps and the fake's log.
 import { describe, expect, test } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { loadCatalog, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { buildSessionProvider } from "./session-provider.ts";
 import { runEngine, type ProviderUsage } from "../engine.ts";
 import { stubExecutor } from "./mock.ts";

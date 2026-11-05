@@ -4,7 +4,7 @@
 // canUseTool callback. The Winter child used to abandon the request silently: the host's callback
 // (and the daemon's approval card) kept waiting for an answer nobody would read.
 import { expect, test } from "bun:test";
-import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { scriptedProvider, stubExecutor } from "../provider/mock.ts";

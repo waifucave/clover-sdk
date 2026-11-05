@@ -9,7 +9,7 @@ import { captureSourceOrigin, assertSourceOrigin, type SourceOrigin, bindSourceO
 // broken skill in a checked-in project `skills/` directory must not be able to fail a session's startup.
 import { closeSync, readSync, type Dirent } from "node:fs";
 import { dirname, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 import { parseSkillFile, type ParsedSkillFile } from "./frontmatter.ts";
 
 /** WS-11 §2.1's tier table, and `SkillListing["source"]` (context/seam.ts, R5-17) verbatim. */

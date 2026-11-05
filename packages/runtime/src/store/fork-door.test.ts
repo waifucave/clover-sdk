@@ -11,7 +11,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { forkSession, getSessionInfo } from "@yanlinglabs/winter-agent-sdk";
+import { forkSession, getSessionInfo } from "@waifucave/clover-agent-sdk";
 import { resolveEngineSession } from "./dialect.ts";
 import { runEngine } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";

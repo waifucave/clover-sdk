@@ -19,7 +19,7 @@ import { taskOutputExecutor } from "./task-output.ts";
 import { resetBackgroundTaskRuntimeForTest } from "./background-task-runtime.ts";
 import type { SessionTempDirPaths } from "../../paths/temp.ts";
 import type { ChildHandle, ChildResult, ChildSessionRecord, ChildTaskProgress, SpawnChildRequest } from "../../subagents/child-handle.ts";
-import { resolveBrand, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { resolveBrand, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 function fakeRecord(overrides: Partial<ChildSessionRecord> = {}): ChildSessionRecord {
   return {

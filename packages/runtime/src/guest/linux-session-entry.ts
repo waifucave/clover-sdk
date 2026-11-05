@@ -1,5 +1,5 @@
 /** Reusable admitted entry. No argv/env/options/config authority enters this API. */
-import { decodeFrame } from "@yanlinglabs/winter-agent-sdk";
+import { decodeFrame } from "@waifucave/clover-agent-sdk";
 import { runEmbeddedSession } from "../embedded.ts";
 import { linuxSessionBindings, linuxSessionConfig, closeLinuxSession, type LinuxSessionAdmission } from "./linux-session-admission.ts";
 import { LINUX_SESSION_CHUNK_BYTES, LINUX_SESSION_FRAME_BYTES } from "./linux-host-query-profile.ts";

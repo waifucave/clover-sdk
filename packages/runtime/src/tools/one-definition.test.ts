@@ -1,6 +1,6 @@
 // ONE DEFINITION, ONE IMPLEMENTATION (user ruling R-8-1) — the tripwire.
 //
-// Winter's four default tools are declared once, in `@yanlinglabs/winter-agent-sdk/tools`, and this
+// Winter's four default tools are declared once, in `@waifucave/clover-agent-sdk/tools`, and this
 // runtime BINDS them. Six registry entries reference those four definitions: the native
 // `SendMessage`/`ListAgents`/`ReadNotifications`/`advisor`, plus the two canonical standing-server
 // twins the official branch's `toolAliases` redirect into (WS-09 §10: "an alias target MUST accept
@@ -19,7 +19,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { ADVISOR_DEFINITION, LIST_AGENTS_DEFINITION, READ_NOTIFICATIONS_DEFINITION, SEND_MESSAGE_DEFINITION, type WinterToolDefinition } from "@yanlinglabs/winter-agent-sdk/tools";
+import { ADVISOR_DEFINITION, LIST_AGENTS_DEFINITION, READ_NOTIFICATIONS_DEFINITION, SEND_MESSAGE_DEFINITION, type WinterToolDefinition } from "@waifucave/clover-agent-sdk/tools";
 
 import "./descriptors/index.ts";
 import { getRegisteredTool, resolveDeferral, type DeferralActivation, type JSONSchema, type ToolDescriptor } from "./registry.ts";

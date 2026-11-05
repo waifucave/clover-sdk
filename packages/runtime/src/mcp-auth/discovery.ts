@@ -10,7 +10,7 @@
 // read-only -- every request rides the caller's policy fetch, and nothing here registers a client, writes
 // a store or opens a listener.
 import { buildDiscoveryUrls, checkResourceAllowed, discoverAuthorizationServerMetadata, discoverOAuthProtectedResourceMetadata, discoverOAuthServerInfo, resourceUrlFromServerUrl, type AuthorizationServerMetadata } from "@modelcontextprotocol/client";
-import type { McpOAuthConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { McpOAuthConfig } from "@waifucave/clover-agent-sdk";
 import { boundedReason, McpOAuthError } from "./errors.ts";
 import { createMcpAuthFetch, evaluateMcpAuthUrl, isLoopbackMcpServer, type McpAuthFetch } from "./fetch-policy.ts";
 import { sameIssuer } from "./records.ts";

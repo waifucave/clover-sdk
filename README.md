@@ -18,20 +18,20 @@ refuse that stronger requirement. See the
 
 | Package | What it is | Registries |
 | --- | --- | --- |
-| [`@yanlinglabs/winter-agent-sdk`](packages/sdk) | The wrapper: `query()`, the `Options` surface, session management, settings, the transcript store, the brand profile. | npm + GitHub Packages |
-| [`@yanlinglabs/winter-provider-catalog`](packages/provider-catalog) | The provider/model catalog as inert validated data — 213 providers, 1000 models, with provenance. | npm + GitHub Packages |
-| [`@yanlinglabs/winter-provider-runtime`](packages/provider-runtime) | The provider layer: adapters, credential refs, endpoint policy, retry and identity headers. | npm + GitHub Packages |
-| [`@yanlinglabs/winter-conformance`](packages/conformance) | The drop-in conformance corpus: trace normalizer, goldens, pinned-upstream mechanics. | npm + GitHub Packages |
-| [`@yanlinglabs/winter-provider-conformance`](packages/provider-conformance) | The provider-layer conformance harness and its loopback fakes. Bun only. | npm + GitHub Packages |
-| [`@yanlinglabs/winter-web`](packages/web) | Web search (Exa) and SSRF-guarded web fetching for agents -- what the runtime's WebSearch/WebFetch use. No dependencies; Node >= 20 and Bun. | npm + GitHub Packages |
+| [`@waifucave/clover-agent-sdk`](packages/sdk) | The wrapper: `query()`, the `Options` surface, session management, settings, the transcript store, the brand profile. | npm + GitHub Packages |
+| [`@waifucave/clover-provider-catalog`](packages/provider-catalog) | The provider/model catalog as inert validated data — 213 providers, 1000 models, with provenance. | npm + GitHub Packages |
+| [`@waifucave/clover-provider-runtime`](packages/provider-runtime) | The provider layer: adapters, credential refs, endpoint policy, retry and identity headers. | npm + GitHub Packages |
+| [`@waifucave/clover-conformance`](packages/conformance) | The drop-in conformance corpus: trace normalizer, goldens, pinned-upstream mechanics. | npm + GitHub Packages |
+| [`@waifucave/clover-provider-conformance`](packages/provider-conformance) | The provider-layer conformance harness and its loopback fakes. Bun only. | npm + GitHub Packages |
+| [`@waifucave/clover-web`](packages/web) | Web search (Exa) and SSRF-guarded web fetching for agents -- what the runtime's WebSearch/WebFetch use. No dependencies; Node >= 20 and Bun. | npm + GitHub Packages |
 
 Public npm carries the **closure of two kinds of root**: the wrapper — what
-`npm install @yanlinglabs/winter-agent-sdk` needs at run time — and the two conformance harnesses,
+`npm install @waifucave/clover-agent-sdk` needs at run time — and the two conformance harnesses,
 which are the org's own test tooling but are consumed out of this repository by the router package
 `@yanlinglabs/winter-runtime-sdk`, whose CI would otherwise need a cross-repo token solely to fetch
-test fixtures. `@yanlinglabs/winter-provider-runtime` follows by closure: the provider-conformance
+test fixtures. `@waifucave/clover-provider-runtime` follows by closure: the provider-conformance
 harness imports it, and a published manifest pins its dependencies at an exact version.
-`@yanlinglabs/winter-web` follows by closure too: the runtime's WebSearch and WebFetch import it.
+`@waifucave/clover-web` follows by closure too: the runtime's WebSearch and WebFetch import it.
 
 The opt-in [required current-context RPC](docs/runtime-context.md) transports
 trusted host-resolved guidance through ordinary query transports. It remains
@@ -42,10 +42,10 @@ refused by current confined Linux profiles and does not admit Cowork children.
 ### From public npm (anyone)
 
 ```sh
-npm install @yanlinglabs/winter-agent-sdk
+npm install @waifucave/clover-agent-sdk
 ```
 
-Nothing else is needed: the `@yanlinglabs` scope is public on npm.
+Nothing else is needed: the `@waifucave` scope is public on npm.
 
 ### From GitHub Packages (the `yanlingLabs` org)
 
@@ -53,7 +53,7 @@ GitHub Packages needs the scope pointed at it and an authenticated read, even fo
 In your project's `.npmrc`:
 
 ```
-@yanlinglabs:registry=https://npm.pkg.github.com
+@waifucave:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
@@ -102,10 +102,10 @@ publishable package whose source (or, for `winter-provider-catalog`, whose gener
 derives from that repository ships an identical copy of it, byte-for-byte (`scripts/release-
 gates.test.ts`'s r3 (I3) derives the carrier set from the source rather than a hand-kept list):
 
-- `@yanlinglabs/winter-provider-runtime` — the xAI OAuth provider's client id, endpoints, scope set
+- `@waifucave/clover-provider-runtime` — the xAI OAuth provider's client id, endpoints, scope set
   and request field names;
-- `@yanlinglabs/winter-provider-conformance` — its xAI OAuth fake mirrors the same flow;
-- `@yanlinglabs/winter-provider-catalog` — several xAI model-catalogue rows in `generated/
+- `@waifucave/clover-provider-conformance` — its xAI OAuth fake mirrors the same flow;
+- `@waifucave/clover-provider-catalog` — several xAI model-catalogue rows in `generated/
   catalog.json` cite the same pinned commit as their `sourceRef`.
 
 `winter-provider-catalog`'s OTHER upstream dependency — the OmniRoute corpus its catalog **data** is

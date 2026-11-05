@@ -4,7 +4,7 @@
 // `additionalContext` lands in a request, Stop continuing a turn) is pinned in
 // `engine.ws23-hooks.test.ts`.
 import { describe, test, expect } from "bun:test";
-import type { HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent } from "@waifucave/clover-agent-sdk";
 import { buildHookRegistry, type SourcedHookEntry } from "./registry.ts";
 import { runHooks, type HookInvoker, type RunHooksContext } from "./runner.ts";
 import { buildHookEntriesFromConfig, buildHookEntriesFromSettings } from "./from-config.ts";

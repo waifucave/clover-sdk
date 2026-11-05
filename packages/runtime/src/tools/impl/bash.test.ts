@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, mkdirSync, realpathSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { BackgroundTaskMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import "./bash.ts"; // triggers replaceExecutor("Bash", ...) at module load
 import { getRegisteredTool } from "../registry.ts";
 import type { ToolExecutionContext } from "../registry.ts";

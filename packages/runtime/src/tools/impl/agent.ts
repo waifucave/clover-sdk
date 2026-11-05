@@ -14,7 +14,7 @@
 // child-engine.ts's own header still discloses the remaining subsystem-level seams.
 import { randomUUID } from "node:crypto";
 import { writeFileSync, appendFileSync } from "node:fs";
-import { WINTER_BRAND, envName, type RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { AGENT_TOOL_CANONICAL_NAME } from "../../provider/slots.ts";
 import { OMITTED_TYPE_REQUIRED_PREFIX } from "../descriptors/agent.ts"; // also self-sufficiency: guarantees the "Agent" stub is registered before replaceExecutor runs below.

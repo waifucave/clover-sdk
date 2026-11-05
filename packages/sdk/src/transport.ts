@@ -51,7 +51,7 @@ export type SpawnClaudeCodeProcess = (opts: SpawnRuntimeOptions) => SpawnedRunti
 
 // The one platform package this arc ships (WS-02 §4); additional platform packages arrive with
 // later packaging work, at which point this lookup grows a process.platform/arch switch.
-const PLATFORM_PACKAGE = "@yanlinglabs/winter-agent-sdk-darwin-arm64";
+const PLATFORM_PACKAGE = "@waifucave/clover-agent-sdk-darwin-arm64";
 
 // Resolution order (WS-02 §4): explicit option → platform package's `bin` field → typed throw.
 // Never require.resolve from inside a compiled $bunfs — this function only ever runs in the

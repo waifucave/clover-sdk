@@ -49,7 +49,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
-import { encodeFrame, splitFrames, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 // The runtime's own 2026-07-28 fixture (a dev dependency of that package, resolved from its file).
 import { withModernHttpFixture } from "../packages/runtime/src/mcp/test-fixtures.ts";
 import { isolateKeychain, keychainIsolatedEnv } from "./test-keychain-env.ts";

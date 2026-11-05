@@ -1,6 +1,6 @@
 import { accessSync, constants, existsSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-import { buildMandatoryFloorProfile, hasMandatoryFloor, MandatoryFloorUnavailableError, type HostExecutionFloor } from "@yanlinglabs/winter-agent-sdk";
+import { buildMandatoryFloorProfile, hasMandatoryFloor, MandatoryFloorUnavailableError, type HostExecutionFloor } from "@waifucave/clover-agent-sdk";
 
 let registration: { readonly profile: string } | undefined;
 

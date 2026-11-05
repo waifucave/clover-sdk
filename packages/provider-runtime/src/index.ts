@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-runtime` — the provider seam every adapter lane builds against.
+// `@waifucave/clover-provider-runtime` — the provider seam every adapter lane builds against.
 //
 // FROZEN as of P6 T2's merge (R6-12): lanes ADD files under their own directories and never edit
 // `types.ts`, `registry.ts`, `http.ts`, `sse.ts`, `retry.ts`, `errors.ts`, `endpoint-policy.ts`,

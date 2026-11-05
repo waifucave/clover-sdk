@@ -16,7 +16,7 @@ import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts"
 // trust is which ORIGIN it tags a source with -- and that is exactly the judgment call below.
 
 import { join, normalize, resolve } from "node:path";
-import { globalConfigFileName, WINTER_BRAND, type BrandProfile, type McpServerConfig, type ResolvedSettingSource, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { globalConfigFileName, WINTER_BRAND, type BrandProfile, type McpServerConfig, type ResolvedSettingSource, type SettingSource } from "@waifucave/clover-agent-sdk";
 import type { McpConfigSourceOrigin, McpServerSource } from "../../mcp/lifecycle.ts";
 
 /**

@@ -16,7 +16,7 @@
 // turns), the real runtime over the in-memory leg (`main.ts`'s own wiring), the fixture authorization
 // server, and a host store serving the sign-in over `credential_resolve`.
 import { afterEach, beforeEach, expect, spyOn, test } from "bun:test";
-import { query, type CredentialResolveAnswer } from "@yanlinglabs/winter-agent-sdk";
+import { query, type CredentialResolveAnswer } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import { scriptedProvider } from "../provider/mock.ts";
 import { mcpOAuthTokenAccount } from "./account.ts";

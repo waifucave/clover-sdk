@@ -2,8 +2,8 @@
 // trigger's own `window x threshold` (I-1), images and documents cost a fixed amount per item (I-2), and
 // non-ASCII text counts about a token per character (M-6).
 import { describe, expect, test } from "bun:test";
-import type { SessionStoreEntry } from "@yanlinglabs/winter-agent-sdk";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { DOCUMENT_PAGE_TOKENS, IMAGE_TOKENS, estimateTextTokens, estimateValueTokens, fitBudgetTokens, fitVerdict } from "./fit.ts";
 import { reviewModelSwitch } from "./switch-review.ts";
 import type { ContinuityEndpoint } from "./domains.ts";

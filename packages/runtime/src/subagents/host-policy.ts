@@ -1,4 +1,4 @@
-import { WINTER_BRAND, type BrandProfile, type RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import { computeChildPolicy, type ChildPolicyResult } from "../permissions/auto/inheritance.ts";
 import { isPermissionMode, type PolicyState } from "../permissions/policy-state.ts";
 import { findAgentDenyRule } from "../permissions/evaluator.ts";

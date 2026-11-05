@@ -8,7 +8,7 @@
 // only caller (it constructs `McpLifecycleInternals` and passes it to `createMcpControlSeam` inside
 // `createMcpLifecycle`), so the dependency is genuinely one-directional at RUNTIME despite the
 // mutual TYPE reference -- erased entirely at build time, never a real circular import.
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import type { McpControlSeam, McpSetServersResult } from "./control-seam.ts";
 import type { McpLifecycleInternals, McpConfigSourceOrigin } from "./lifecycle.ts";
 import { validateServerConfig } from "./lifecycle.ts";

@@ -12,7 +12,7 @@
 // what a Node caller should do instead. `BunRequiredError` is exported from this package's own
 // barrel so a consumer can `catch` it by identity rather than by matching a message.
 //
-// WHY IT IS DUPLICATED IN `@yanlinglabs/winter-conformance`. That package has NO dependencies at all
+// WHY IT IS DUPLICATED IN `@waifucave/clover-conformance`. That package has NO dependencies at all
 // (`"dependencies": {}` — deliberately: it is the drop-in-surface conformance harness), so there is
 // no module both packages can already reach. Two eight-line classes with the same shape and message
 // is a smaller cost than a dependency edge introduced to share one of them.
@@ -52,7 +52,7 @@ export function brandedInstanceOf(brand: symbol) {
 }
 
 /** The cross-bundle identity of THIS package's `BunRequiredError`. Package-scoped on purpose. */
-const BUN_REQUIRED_BRAND = Symbol.for("@yanlinglabs/winter-provider-runtime:BunRequiredError");
+const BUN_REQUIRED_BRAND = Symbol.for("@waifucave/clover-provider-runtime:BunRequiredError");
 
 export class BunRequiredError extends Error {
   readonly name = "BunRequiredError";

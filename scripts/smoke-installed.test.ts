@@ -208,10 +208,10 @@ describe.skipIf(!PACK_SMOKE_ENABLED)("runSmoke: the real pack -> install -> impo
 
   test("specifically covers the two packages review r1 found broken: winter-conformance (+ ./official) and winter-provider-conformance (+ ./fakes)", () => {
     const specifiers = result.results.flatMap((r) => (r.kind === "import" ? [r.specifier] : []));
-    expect(specifiers).toContain("@yanlinglabs/winter-conformance");
-    expect(specifiers).toContain("@yanlinglabs/winter-conformance/official");
-    expect(specifiers).toContain("@yanlinglabs/winter-provider-conformance");
-    expect(specifiers).toContain("@yanlinglabs/winter-provider-conformance/fakes");
+    expect(specifiers).toContain("@waifucave/clover-conformance");
+    expect(specifiers).toContain("@waifucave/clover-conformance/official");
+    expect(specifiers).toContain("@waifucave/clover-provider-conformance");
+    expect(specifiers).toContain("@waifucave/clover-provider-conformance/fakes");
   });
 });
 
@@ -239,14 +239,14 @@ describe.skipIf(!PACK_SMOKE_ENABLED)("runSmoke: the Node leg is GREEN since the 
     // declare `engines.node`, so all eight of their targets must appear in the Node results.
     const attempted = new Set(result.results.flatMap((r) => (r.kind === "import" && r.runtime === "node" ? [r.specifier] : [])));
     for (const specifier of [
-      "@yanlinglabs/winter-agent-sdk",
-      "@yanlinglabs/winter-provider-catalog",
-      "@yanlinglabs/winter-provider-catalog/families",
-      "@yanlinglabs/winter-provider-runtime",
-      "@yanlinglabs/winter-provider-runtime/testing",
-      "@yanlinglabs/winter-conformance",
-      "@yanlinglabs/winter-conformance/trace",
-      "@yanlinglabs/winter-conformance/official",
+      "@waifucave/clover-agent-sdk",
+      "@waifucave/clover-provider-catalog",
+      "@waifucave/clover-provider-catalog/families",
+      "@waifucave/clover-provider-runtime",
+      "@waifucave/clover-provider-runtime/testing",
+      "@waifucave/clover-conformance",
+      "@waifucave/clover-conformance/trace",
+      "@waifucave/clover-conformance/official",
     ]) {
       expect([specifier, attempted.has(specifier)]).toEqual([specifier, true]);
     }
@@ -258,7 +258,7 @@ describe.skipIf(!PACK_SMOKE_ENABLED)("runSmoke: the Node leg is GREEN since the 
     // `runtimesFor` is what turns that declaration into the skip -- so a package that ACQUIRES a
     // Node engine is gated the moment it says so.
     const attempted = new Set(result.results.flatMap((r) => (r.kind === "import" && r.runtime === "node" ? [r.specifier] : [])));
-    expect(attempted.has("@yanlinglabs/winter-provider-conformance")).toBe(false);
+    expect(attempted.has("@waifucave/clover-provider-conformance")).toBe(false);
     expect(runtimesFor({ engines: { bun: ">=1.2" } })).toEqual(["bun"]);
     expect(runtimesFor({ engines: { node: ">=18" } })).toEqual(["node", "bun"]);
     // FAIL CLOSED: a package declaring neither engine is required under both.
@@ -323,12 +323,12 @@ describe("assertInstalledTreeIsDistOnly", () => {
 // `--offline` install cannot resolve from tarballs -- the smoke primes npm's cache with exactly those
 // first. Hermetic: this reads manifests only.
 describe("thirdPartyRuntimeDependencies (WS-23)", () => {
-  test("names every non-workspace runtime dependency of the set, and never an @yanlinglabs package", () => {
+  test("names every non-workspace runtime dependency of the set, and never an @waifucave package", () => {
     const specs = thirdPartyRuntimeDependencies(discoverPublishablePackages());
-    expect(specs.some((s) => s.startsWith("@yanlinglabs/"))).toBe(false);
+    expect(specs.some((s) => s.startsWith("@waifucave/"))).toBe(false);
     const runtime = JSON.parse(readFileSync(new URL("../packages/runtime/package.json", import.meta.url), "utf8")) as { dependencies: Record<string, string> };
     for (const [name, range] of Object.entries(runtime.dependencies)) {
-      if (name.startsWith("@yanlinglabs/")) continue;
+      if (name.startsWith("@waifucave/")) continue;
       expect(specs).toContain(`${name}@${range}`);
     }
     expect([...specs].sort()).toEqual(specs);

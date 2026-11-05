@@ -4,7 +4,7 @@
 // changes when a tool loads. Everywhere, the list is sorted by name. Ground truth is the LIVE provider
 // request.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type ContentBlock, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { registerMcpServerTools, registerTool, replaceExecutor, unregisterMcpServerTools, unregisterToolForTest } from "../tools/registry.ts";

@@ -1,7 +1,7 @@
 /** Trusted immutable-bootstrap provider proxy. Not RuntimeConfig/env/NDJSON authority.
  * The native supervisor must supply an authenticated task-scoped private channel. */
 import { randomUUID } from "node:crypto";
-import type { ProviderAdapter, ProviderContext, ProviderEvent, ResolvedModel, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import type { ProviderAdapter, ProviderContext, ProviderEvent, ResolvedModel, TurnRequest } from "@waifucave/clover-provider-runtime";
 import { adapterAsProvider, type AdapterProvider, type AdapterProviderOptions } from "../provider/bridge.ts";
 
 export const GUEST_PROVIDER_LIMITS = Object.freeze({ requestBytes: 2 * 1024 * 1024, eventBytes: 256 * 1024, responseHeadroom: 4096, exchangeMs: 6000, cancelMs: 1000, activeInvocations: 8 });

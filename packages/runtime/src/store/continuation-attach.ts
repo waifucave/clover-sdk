@@ -7,7 +7,7 @@
 // message, the entry's own uuid -- and nothing else. The provider-state records that say WHICH
 // provider produced each of those messages, and what opaque continuation state it left behind, live
 // in the sidecar. This is where the two halves are put back together.
-import type { SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { SdkMessage } from "@waifucave/clover-agent-sdk";
 import { buildContinuationChain, type ContinuationChain, type ProviderStateRecord } from "./provider-state.ts";
 
 /** The half of `SessionPersistence` this needs. Narrowed so a caller can hand it a two-method double. */

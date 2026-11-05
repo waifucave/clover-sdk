@@ -1,7 +1,7 @@
 // The kit on the model adapter interface, run against what the SDK ships: the reference keyed fetch,
 // and the Bedrock adapter in a process of its own -- SigV4 signed THERE, checked by the fake.
 import { describe, expect, test } from "bun:test";
-import { createKeyedFetch, spawnBedrockAdapterProcess, type AdapterContext, type CredentialMaterial, type ProviderEvent } from "@yanlinglabs/winter-provider-runtime";
+import { createKeyedFetch, spawnBedrockAdapterProcess, type AdapterContext, type CredentialMaterial, type ProviderEvent } from "@waifucave/clover-provider-runtime";
 import { FAKE_ACCESS_KEY_ID, FAKE_REGION, FAKE_SECRET_ACCESS_KEY, eventStreamResponse, startBedrockFake, textTurnFrames } from "../fakes/bedrock.ts";
 import { stalledResponse } from "../fakes/server.ts";
 import { KEYED_FETCH_CASES, MODEL_ADAPTER_CASES, formatConformanceReport, runKeyedFetchConformance, runModelAdapterConformance } from "./index.ts";

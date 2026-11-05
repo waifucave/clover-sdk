@@ -5,9 +5,9 @@
 import { describe, expect, test } from "bun:test";
 import { noRequestContains, requestsTo, withFake } from "../fakes/server.ts";
 import { assertGeminiRequest, geminiBody, geminiContents, geminiFakeRoutes, geminiStreamResponse } from "../fakes/gemini.ts";
-import { createGoogleGenerateContentAdapter, GOOGLE_ADAPTER_ID, GOOGLE_DEFAULT_BASE_URL, mapGoogleEffort, toContents, winterUserAgent } from "@yanlinglabs/winter-provider-runtime";
-import { THINKING_ENABLED_NEEDS_BUDGET } from "@yanlinglabs/winter-provider-runtime/testing";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { createGoogleGenerateContentAdapter, GOOGLE_ADAPTER_ID, GOOGLE_DEFAULT_BASE_URL, mapGoogleEffort, toContents, winterUserAgent } from "@waifucave/clover-provider-runtime";
+import { THINKING_ENABLED_NEEDS_BUDGET } from "@waifucave/clover-provider-runtime/testing";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { formatCorpusReport, runAdapterCorpus } from "./runner.ts";
 import { GOOGLE_MODELS, GOOGLE_SIGNATURE, GOOGLE_TEST_KEY, foldTurn, googleContext, googleCorpusCases, googleCorpusRoutes, testGoogleAdapter, testGoogleCatalog } from "./google.ts";
 
@@ -49,9 +49,9 @@ describe("Google GenerateContent: the live request", () => {
   });
 
   test("`hostHeaders`: a CREDENTIAL name is dropped on BOTH endpoint kinds; a non-credential identity name only on a user one (F-3 / M-4)", async () => {
-    const { createEndpointPolicy, CREDENTIAL_HEADER_NAMES } = await import("@yanlinglabs/winter-provider-runtime");
-    const { hostHeaders } = await import("@yanlinglabs/winter-provider-runtime/testing");
-    const { PRIVILEGED_IDENTITY_HEADERS } = await import("@yanlinglabs/winter-provider-runtime");
+    const { createEndpointPolicy, CREDENTIAL_HEADER_NAMES } = await import("@waifucave/clover-provider-runtime");
+    const { hostHeaders } = await import("@waifucave/clover-provider-runtime/testing");
+    const { PRIVILEGED_IDENTITY_HEADERS } = await import("@waifucave/clover-provider-runtime");
     const generated = createEndpointPolicy(GOOGLE_DEFAULT_BASE_URL, { generated: true });
     const user = createEndpointPolicy("https://example.invalid", { generated: false });
     expect(generated.ok && user.ok).toBe(true);
@@ -87,7 +87,7 @@ describe("Google GenerateContent: the live request", () => {
   });
 
   test("the privileged header IS built for a generated endpoint", async () => {
-    const { applyPrivilegedHeaders, createEndpointPolicy } = await import("@yanlinglabs/winter-provider-runtime");
+    const { applyPrivilegedHeaders, createEndpointPolicy } = await import("@waifucave/clover-provider-runtime");
     const generated = createEndpointPolicy(GOOGLE_DEFAULT_BASE_URL, { generated: true });
     expect(generated.ok).toBe(true);
     if (!generated.ok) return;
@@ -293,7 +293,7 @@ describe("Google GenerateContent: a thought part's signature is never re-keyed (
     // "I do not know what this row meant" and "I know and cannot honour it safely" are different
     // states. The first gets the default -- which can only ever capture LATER, never earlier -- and
     // Lane A's own row carries exactly such a value (`response.completed`) for a different family.
-    const { googleCompletionMarker } = await import("@yanlinglabs/winter-provider-runtime/testing");
+    const { googleCompletionMarker } = await import("@waifucave/clover-provider-runtime/testing");
     const row = testGoogleCatalog().models.find((m) => m.upstreamId === GOOGLE_MODELS.main)!;
     const unrecognised = { ...row, reasoning: { ...row.reasoning!, completionEvent: { value: "response.completed", source: "upstream-static" as const, confidence: "declared" as const } } };
     expect(googleCompletionMarker(unrecognised)).toEqual({ ok: true, marker: "finish-reason" });

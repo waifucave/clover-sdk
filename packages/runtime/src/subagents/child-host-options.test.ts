@@ -13,7 +13,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { runEngine, type EngineOptions, type Provider, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { registerTool, unregisterToolForTest, type ToolExecutionContext } from "../tools/registry.ts";

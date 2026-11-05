@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { mkdtempSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { BackgroundTaskMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import "./task-stop.ts";
 import { getRegisteredTool } from "../registry.ts";
 import type { ToolExecutionContext } from "../registry.ts";

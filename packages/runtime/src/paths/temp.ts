@@ -4,7 +4,7 @@ import { join } from "node:path";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
 // runtime-private module still needs; reused from there rather than re-implemented, preserving
 // the "one shared blank-env-value rule" this file's own resolveTempBase comment documents.
-import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 // P7a (D19): the two brand fields this module needs, as a `Pick` rather than the whole profile --
 // the same shape (and the same reason) as the sdk's `HomeBrand`: a caller holding a partially

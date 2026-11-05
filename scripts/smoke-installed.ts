@@ -2,8 +2,8 @@
 // the install-from-tarball smoke test, generalized to cover EVERY publishable package's bare entry
 // point AND every declared `exports` subpath -- derived at RUN TIME from each package's own
 // package.json, so a new subpath can never be silently left unchecked the way review r1's Critical
-// Findings 1-2 were (the pre-fix smoke legs checked only `@yanlinglabs/winter-agent-sdk` bare and
-// `@yanlinglabs/winter-conformance/trace` -- 2 of 5 packages' 10 total entry points).
+// Findings 1-2 were (the pre-fix smoke legs checked only `@waifucave/clover-agent-sdk` bare and
+// `@waifucave/clover-conformance/trace` -- 2 of 5 packages' 10 total entry points).
 //
 // Both `.github/workflows/ci.yml` (the Bun leg in `pack-smoke`, the Node-18 leg in
 // `pack-smoke-node18`) and `.github/workflows/release.yml` (the publish-gate smoke, both runtimes,
@@ -32,7 +32,7 @@ export type SmokeRuntime = "node" | "bun";
 
 export interface ImportTarget {
   kind: "import";
-  /** The exact specifier to import, e.g. "@yanlinglabs/winter-agent-sdk" or "@yanlinglabs/winter-conformance/trace". */
+  /** The exact specifier to import, e.g. "@waifucave/clover-agent-sdk" or "@waifucave/clover-conformance/trace". */
   specifier: string;
   packageName: string;
   /** The runtimes this target must import under, from its package's own `engines` (see `runtimesFor`). */
@@ -79,7 +79,7 @@ interface ExportsField {
  *
  * Before the compiled emit, EVERY package failed under Node and the Node leg was carried as a
  * disclosed advisory (R-7a-16). It is blocking now -- but "every target under both runtimes" is not
- * the right assertion either, and never was: `@yanlinglabs/winter-provider-conformance` stands up
+ * the right assertion either, and never was: `@waifucave/clover-provider-conformance` stands up
  * loopback servers with `Bun.serve` (`fakes/server.ts` imports `serve` from `"bun"`), which is a
  * DELIBERATE design decision `tsconfig.sdk-fence.json` already records in prose. A compiled emit
  * cannot change that and should not try.
@@ -279,7 +279,7 @@ export function thirdPartyRuntimeDependencies(packages: ReadonlyArray<Pick<Packe
     if (pkg === undefined) continue;
     const manifest = JSON.parse(readFileSync(pkg.packageJsonPath, "utf8")) as { dependencies?: Record<string, string> };
     for (const [name, range] of Object.entries(manifest.dependencies ?? {})) {
-      if (name.startsWith("@yanlinglabs/")) continue;
+      if (name.startsWith("@waifucave/")) continue;
       specs.add(`${name}@${range}`);
     }
   }
@@ -329,7 +329,7 @@ export async function runSmoke(opts: { runtimes?: readonly SmokeRuntime[] } = {}
     // WS-23: the runtime is the first publishable package with THIRD-PARTY runtime dependencies
     // (`@modelcontextprotocol/sdk`, `ajv`, `ignore`), and an `--offline` install cannot resolve those
     // from tarballs. They are fetched into npm's cache FIRST, in a separate throwaway project, by
-    // their own manifest ranges -- never an `@yanlinglabs` package -- so the install below stays
+    // their own manifest ranges -- never an `@waifucave` package -- so the install below stays
     // `--offline` and every workspace package in it still comes ONLY from the tarballs just packed.
     primeThirdPartyCache(thirdPartyRuntimeDependencies(installable));
     const install = Bun.spawnSync(["npm", "install", "--offline", ...installable.map((p) => p.tarballPath)], { cwd: probeDir, stdout: "pipe", stderr: "pipe" });

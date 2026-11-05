@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query } from "@yanlinglabs/winter-agent-sdk";
+import { query } from "@waifucave/clover-agent-sdk";
 import { copyHostCodeProtection, currentHostCodeProtectionPaths, hostCodePathAllowed, installHostCodeProtection, type HostCodeProtectionLease } from "./host-code-protection.ts";
 import { runCommand } from "./spawn.ts";
 import { spawnEmbeddedWorker, type EmbeddedWorkerProcess } from "../embedded-host.ts";

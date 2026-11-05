@@ -2,7 +2,7 @@
 // against its real ajv-backed seam; the engine keeps it green against registration, the turn-ending
 // rule, the attempt counter and the exhaustion shape.
 import { test, expect, describe } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

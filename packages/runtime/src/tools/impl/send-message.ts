@@ -12,7 +12,7 @@
 //
 // The user's ruling R-8-1 settles ownership — Winter owns its default tools; the router only binds
 // them — and ruling P-4 settled each divergence. Both now live in
-// `@yanlinglabs/winter-agent-sdk/tools`, and this file does three things: name the caller, resolve
+// `@waifucave/clover-agent-sdk/tools`, and this file does three things: name the caller, resolve
 // the process-level messaging runtime, and translate `{ text, isError? }` into this registry's
 // `{ output, isError }`.
 //
@@ -28,8 +28,8 @@
 import "../descriptors/send-message.ts";
 import "../descriptors/winter-send-message.ts"; // rider 15: the canonical alias-target descriptor this file also installs an executor for.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
-import { WINTER_BRAND, mcpToolName } from "@yanlinglabs/winter-agent-sdk";
-import { acceptNativeSendMessageArgs, createMessagingToolHandlers, messagingToolPortFromRuntimeDeps, SEND_MESSAGE_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { WINTER_BRAND, mcpToolName } from "@waifucave/clover-agent-sdk";
+import { acceptNativeSendMessageArgs, createMessagingToolHandlers, messagingToolPortFromRuntimeDeps, SEND_MESSAGE_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 import { getMessagingRuntime } from "../../messaging/router.ts";
 // Side-effect-free (types only), so importing this executor does not register anyone else's tool --
 // see impl/_caller.ts's own header (SB review r1).

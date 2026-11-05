@@ -81,18 +81,18 @@ describe("npmPublishOrder (review I1)", () => {
     // the provider runtime -- so it publishes after all three, and never before the wrapper its own
     // packed manifest pins exactly.
     //
-    // 0.0.58 adds an eighth: `@yanlinglabs/winter-web`, a dependency of the runtime with none of its
+    // 0.0.58 adds an eighth: `@waifucave/clover-web`, a dependency of the runtime with none of its
     // own, so it publishes before the runtime.
     const { npmPublishOrder } = await import("./npm-publish-set.ts");
     expect(npmPublishOrder().map((p) => p.name)).toEqual([
-      "@yanlinglabs/winter-provider-catalog",
-      "@yanlinglabs/winter-agent-sdk-darwin-arm64",
-      "@yanlinglabs/winter-agent-sdk",
-      "@yanlinglabs/winter-provider-runtime",
-      "@yanlinglabs/winter-web",
-      "@yanlinglabs/winter-agent-runtime",
-      "@yanlinglabs/winter-conformance",
-      "@yanlinglabs/winter-provider-conformance",
+      "@waifucave/clover-provider-catalog",
+      "@waifucave/clover-agent-sdk-darwin-arm64",
+      "@waifucave/clover-agent-sdk",
+      "@waifucave/clover-provider-runtime",
+      "@waifucave/clover-web",
+      "@waifucave/clover-agent-runtime",
+      "@waifucave/clover-conformance",
+      "@waifucave/clover-provider-conformance",
     ]);
   });
 
@@ -103,11 +103,11 @@ describe("npmPublishOrder (review I1)", () => {
     // position is decided by its own (unplanted) edges.
     const { npmPublishOrder } = await import("./npm-publish-set.ts");
     const reversed = npmPublishOrder(undefined, (pkg) =>
-      pkg.name === "@yanlinglabs/winter-provider-catalog"
-        ? { dependencies: { "@yanlinglabs/winter-agent-sdk": "workspace:*" } }
+      pkg.name === "@waifucave/clover-provider-catalog"
+        ? { dependencies: { "@waifucave/clover-agent-sdk": "workspace:*" } }
         : {},
     ).map((p) => p.name);
-    expect(reversed.indexOf("@yanlinglabs/winter-agent-sdk")).toBeLessThan(reversed.indexOf("@yanlinglabs/winter-provider-catalog"));
+    expect(reversed.indexOf("@waifucave/clover-agent-sdk")).toBeLessThan(reversed.indexOf("@waifucave/clover-provider-catalog"));
     expect(reversed).toHaveLength(8);
   });
 
@@ -130,9 +130,9 @@ describe("npmPublishOrder (review I1)", () => {
     expect(() =>
       npmPublishOrder(undefined, (pkg) => ({
         dependencies:
-          pkg.name === "@yanlinglabs/winter-agent-sdk"
-            ? { "@yanlinglabs/winter-provider-catalog": "workspace:*" }
-            : { "@yanlinglabs/winter-agent-sdk": "workspace:*" },
+          pkg.name === "@waifucave/clover-agent-sdk"
+            ? { "@waifucave/clover-provider-catalog": "workspace:*" }
+            : { "@waifucave/clover-agent-sdk": "workspace:*" },
       })),
     ).toThrow(/cycle/);
   });
@@ -155,7 +155,7 @@ describe("probeWithNpmView (review M4)", () => {
         return { exitCode: 1, stdout: new TextEncoder().encode(""), stderr: new TextEncoder().encode("npm error code E404") };
       }) as unknown as typeof Bun.spawnSync;
       const probe = probeWithNpmView("https://registry.npmjs.org");
-      expect(probe("@yanlinglabs/winter-agent-sdk", "0.0.1")).toEqual({ kind: "absent" });
+      expect(probe("@waifucave/clover-agent-sdk", "0.0.1")).toEqual({ kind: "absent" });
     } finally {
       (Bun as unknown as { spawnSync: unknown }).spawnSync = originalSpawnSync;
     }

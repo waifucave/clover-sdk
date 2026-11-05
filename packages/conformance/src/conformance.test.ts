@@ -970,7 +970,7 @@ const PHASE_7A_ROWS: ConformanceRow[] = [
       { file: `${SCRIPTS}/smoke-installed.test.ts`, testName: "every target imports cleanly -- this is the exact check that would have caught review r1's two Criticals" },
       { file: `${SCRIPTS}/build-packages.test.ts`, testName: "every entry emits BOTH a .js and a .d.ts, at the path its manifest condition names (bin-only packages emit none)" },
     ],
-    note: "The last citation is the fix wave's item 1 (R-7a-16 reversed): every manifest now points its `default` condition at a compiled emit, so `pack-smoke-node18` is a BLOCKING gate rather than the advisory carry it shipped as. The Node leg asserts what each package DECLARES through `engines` -- `@yanlinglabs/winter-provider-conformance` is Bun-only by construction (`Bun.serve` loopback fakes) and declares `engines.bun` alone.",
+    note: "The last citation is the fix wave's item 1 (R-7a-16 reversed): every manifest now points its `default` condition at a compiled emit, so `pack-smoke-node18` is a BLOCKING gate rather than the advisory carry it shipped as. The Node leg asserts what each package DECLARES through `engines` -- `@waifucave/clover-provider-conformance` is Bun-only by construction (`Bun.serve` loopback fakes) and declares `engines.bun` alone.",
   },
   {
     id: "WS7a-7",

@@ -39,8 +39,8 @@
 //      is looked up from the assistant `tool_use` that minted the id. A lookup that fails is a
 //      typed error, never a dropped result -- a silently missing tool response is indistinguishable
 //      to the model from a tool that was never called.
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { boundedFetch, ProviderRequestError } from "../../http.ts";
 import { normalizeHttpError, normalizeThrown } from "../../errors.ts";
 import { createRetryPolicy, withRetry, type RetryPolicyOptions } from "../../retry.ts";

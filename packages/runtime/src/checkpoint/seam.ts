@@ -18,7 +18,7 @@
 // longer resolves where it did at checkpoint time, or whose backup cannot be safely read, is REFUSED
 // rather than restored. The counter is populated on REAL rewinds only -- never on a `dryRun`, whose
 // preview counts therefore do not reflect refusals.
-import type { RewindFilesResult } from "@yanlinglabs/winter-agent-sdk";
+import type { RewindFilesResult } from "@waifucave/clover-agent-sdk";
 
 /** The three mutating tools checkpointing intercepts, as one exported set so the engine's check and a lane's own fixtures cannot drift. */
 export const CHECKPOINTED_TOOLS = ["Write", "Edit", "NotebookEdit"] as const;

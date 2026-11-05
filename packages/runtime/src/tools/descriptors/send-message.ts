@@ -1,6 +1,6 @@
 // WS-06 §3.3 "SendMessage" -- implement-now, captured, verbatim schema. [WS-10] owns the global
 // router/executor; T1 registers the descriptor only.
-import { SEND_MESSAGE_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { SEND_MESSAGE_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, ALWAYS_AVAILABLE, builtinNameOf, definitionFields } from "./_shared.ts";
 

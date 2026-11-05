@@ -1,5 +1,5 @@
 import type { RuntimeContextChannel } from "./context/runtime-context-channel.ts";
-import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE } from "@yanlinglabs/winter-agent-sdk";
+import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE } from "@waifucave/clover-agent-sdk";
 import { assertLinuxSession, assertRunningLinuxSession, checkLinuxSessionFrame, linuxSessionProfile, linuxSessionBindings, linuxGuidedSessionChannel, FRESH_LINUX_TOOLS, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
 import { LINUX_GUIDED_HOST_QUERY_PROFILE } from "./guest/linux-guided-host-query-profile.ts";
 import { dispatchGuidedParentControl } from "./guest/guided-parent-input.ts";
@@ -59,7 +59,7 @@ import {
   type SettingSource,
   // WS-27: the MCP server identity a tool call's hooks and permission prompt carry.
   type McpServerIdentity,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 // R-7b-4: the per-session messaging facet's wire shapes + the guards this side runs on an incoming
 // request, and the messaging contract the handler answers with.
 import {
@@ -70,7 +70,7 @@ import {
   isMessagingReadNotificationsRequest,
   isMessagingSubscribeIdleRequest,
   resolveFacetTarget,
-} from "@yanlinglabs/winter-agent-sdk";
+} from "@waifucave/clover-agent-sdk";
 import {
   AGENT_MESSAGE_TAG,
   buildChildAddress,
@@ -85,7 +85,7 @@ import {
   type DeliveryOutcome,
   type GlobalAgentMessage,
   type RuntimeAddress,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 import { getMessagingRuntime } from "./messaging/router.ts";
 import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDeliveryError, type PeerSessionHandle } from "./messaging/reference-adapter.ts";
 // Phase 6 Task 3 (R6-3): `MessageOrigin`/`ProviderNativeState` are CANONICAL in provider-runtime's
@@ -94,10 +94,10 @@ import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDelivery
 // types can live down there while `ProviderTurn`/`ProviderMessage`/`ContentBlock` stay up here.
 // `TurnRequest` is imported for its `toolChoice`/`effort`/`thinking` member types, so the engine's
 // request and an adapter's request cannot drift apart on the three fields they share.
-import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@waifucave/clover-provider-runtime";
 // P6 fix wave (Ruling E-2): the two PURE continuity functions the switch point calls. Value imports
 // from the provider-runtime barrel, one direction (runtime -> provider-runtime), same as every adapter.
-import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@yanlinglabs/winter-provider-runtime";
+import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
 export type { MessageOrigin, ProviderNativeState };
 // R6-7: the sidecar record types the persistence seam carries. `store/provider-state.ts` imports
 // NOTHING from this file (its own types come from provider-runtime), so this is not the circular
@@ -1702,7 +1702,7 @@ export interface EngineOptions {
   contextAccountant?: ContextAccountant;
   // Phase 4 Task 3 (MUST 8): called ONCE, synchronously, near the start of the run, handing the
   // caller a live getter over this run's own child roster -- the ONE exposure point
-  // MessagingRouterSeam.children() (@yanlinglabs/winter-agent-sdk/messaging) is meant to be built from. No routing
+  // MessagingRouterSeam.children() (@waifucave/clover-agent-sdk/messaging) is meant to be built from. No routing
   // logic lives in the engine; this is purely "here is where the children actually are."
   onChildRosterReady?: (getChildren: () => readonly ChildHandle[]) => void;
   restoredChildren?: ChildHandle[];
@@ -3643,7 +3643,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     }
   };
   // Phase 4 Task 3 (MUST 8): the live child roster this run's own spawns append to -- what
-  // `MessagingRouterSeam.children()` (@yanlinglabs/winter-agent-sdk/messaging) is defined to read from. No routing
+  // `MessagingRouterSeam.children()` (@waifucave/clover-agent-sdk/messaging) is defined to read from. No routing
   // logic lives here (WS-10 §15's own split); `onChildRosterReady` (EngineOptions) is this run's own
   // ONE exposure point, called once below, for whichever host-level code constructs Lane D's own
   // real MessagingRouterSeam to wire its `children()` against.

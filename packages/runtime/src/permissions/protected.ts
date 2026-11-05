@@ -8,7 +8,7 @@
 // be compound) -- the WHOLE-call extraction (which tool field is "the path", whether a Bash call
 // even IS a removal at all) is the evaluator.ts seam's own job (its header comment explains why).
 import { resolve } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /**
  * P7a (D19): the three brand fields the protected-path floor needs.

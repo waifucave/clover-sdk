@@ -1,4 +1,4 @@
-// @yanlinglabs/winter-web -- web search (Exa) and SSRF-guarded web fetching. Public API: everything
+// @waifucave/clover-web -- web search (Exa) and SSRF-guarded web fetching. Public API: everything
 // exported here is covered by semver (see README.md).
 
 // Fetching

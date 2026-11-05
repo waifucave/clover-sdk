@@ -1,5 +1,5 @@
 import { PassThrough, Writable } from "node:stream";
-import type { HostCodeProcessHandle, HostCodeProcessScope } from "@yanlinglabs/winter-agent-sdk";
+import type { HostCodeProcessHandle, HostCodeProcessScope } from "@waifucave/clover-agent-sdk";
 import { currentHostCodeProcessClient, requireBoundHandle } from "../sandbox/host-code-process.ts";
 import { stderrTail, type WorkerProcess } from "./runtime.ts";
 

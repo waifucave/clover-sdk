@@ -19,7 +19,7 @@ import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import { isDisallowedAddress } from "@yanlinglabs/winter-provider-runtime";
+import { isDisallowedAddress } from "@waifucave/clover-provider-runtime";
 import "../descriptors/monitor.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
 import { createBackgroundTask } from "../background-tasks.ts";
@@ -322,7 +322,7 @@ async function runMonitorCommand(input: MonitorInput & { command: string }, ctx:
 // ---------------------------------------------------------------------------------------------
 
 // RULING R6-11 (P6 T2): the address classifier itself now lives in
-// `@yanlinglabs/winter-provider-runtime` (src/address-classifier.ts) and is MOVED there, not
+// `@waifucave/clover-provider-runtime` (src/address-classifier.ts) and is MOVED there, not
 // copied — the provider endpoint policy needs the identical classification and WS-13's own rule
 // is one classifier with one fixture set. The move direction is forced: packages/runtime depends
 // on the provider-runtime package and the reverse import would be a cycle (R6-4).

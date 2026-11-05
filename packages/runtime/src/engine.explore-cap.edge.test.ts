@@ -3,7 +3,7 @@
 // `runEngine`, the real child-engine factory, the real Agent tool executor), observing the
 // `resolvedModel` the Agent tool reports back to the parent model.
 import { describe, test, expect, afterEach } from "bun:test";
-import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { runEngine, type EngineProviderIdentity } from "./engine.ts";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { registerChildEngineFactory, resetChildEngineFactoryForTest } from "./subagents/child-handle.ts";

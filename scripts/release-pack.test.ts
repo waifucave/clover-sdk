@@ -21,14 +21,14 @@ import {
  * PLUS the runtime, publishable as of WS-23 (an embedding host installs it by name).
  */
 const EXPECTED_PACKAGE_NAMES = [
-  "@yanlinglabs/winter-agent-runtime",
-  "@yanlinglabs/winter-agent-sdk",
-  "@yanlinglabs/winter-agent-sdk-darwin-arm64",
-  "@yanlinglabs/winter-conformance",
-  "@yanlinglabs/winter-provider-catalog",
-  "@yanlinglabs/winter-provider-conformance",
-  "@yanlinglabs/winter-provider-runtime",
-  "@yanlinglabs/winter-web",
+  "@waifucave/clover-agent-runtime",
+  "@waifucave/clover-agent-sdk",
+  "@waifucave/clover-agent-sdk-darwin-arm64",
+  "@waifucave/clover-conformance",
+  "@waifucave/clover-provider-catalog",
+  "@waifucave/clover-provider-conformance",
+  "@waifucave/clover-provider-runtime",
+  "@waifucave/clover-web",
 ];
 
 /** P9a-3: a BIN-ONLY package (no `exports`, a `bin` field) -- ships a native binary, not JS. */
@@ -62,10 +62,10 @@ describe("findPackageManifests / discoverPublishablePackages against the real re
     const names = discoverPublishablePackages().map((p) => p.name);
     expect(names).toEqual(EXPECTED_PACKAGE_NAMES);
     // WS-23: the runtime was the one private package; an embedding host now installs it by name.
-    expect(names).toContain("@yanlinglabs/winter-agent-runtime");
+    expect(names).toContain("@waifucave/clover-agent-runtime");
     // R-7-2's gap: the platform package existed but stayed unpublished (`private: true`) until this
     // binary could actually be produced by CI (P9a-4). It is IN the set now, by name.
-    expect(names).toContain("@yanlinglabs/winter-agent-sdk-darwin-arm64");
+    expect(names).toContain("@waifucave/clover-agent-sdk-darwin-arm64");
   });
 
   test("every discovered package's dir actually contains the package.json it was read from", () => {
@@ -80,7 +80,7 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
 
   beforeAll(() => {
     dirtyDir = mkdtempSync(join(tmpdir(), "winter-release-pack-dirty-"));
-    writeFileSync(join(dirtyDir, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-conformance", version: "0.0.1" }));
+    writeFileSync(join(dirtyDir, "package.json"), JSON.stringify({ name: "@waifucave/clover-conformance", version: "0.0.1" }));
     mkdirSync(join(dirtyDir, "compat", "anthropic"), { recursive: true });
     writeFileSync(join(dirtyDir, "compat", "anthropic", "leftover.json"), "{}");
     mkdirSync(join(dirtyDir, "node_modules", "foo"), { recursive: true });
@@ -89,7 +89,7 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
     mkdirSync(join(dirtyDir, "claude-agent-sdk"), { recursive: true });
     writeFileSync(join(dirtyDir, "claude-agent-sdk", "sdk.mjs"), "");
     mkdirSync(join(dirtyDir, "nested"), { recursive: true });
-    writeFileSync(join(dirtyDir, "nested", "package.json"), JSON.stringify({ name: "not-yanlinglabs" }));
+    writeFileSync(join(dirtyDir, "nested", "package.json"), JSON.stringify({ name: "not-waifucave" }));
     mkdirSync(join(dirtyDir, "official-capture-output"), { recursive: true });
     writeFileSync(join(dirtyDir, "official-capture-output", "report.txt"), "x");
     // P7a fix wave (item 9): a test file, a test-support file, and the two CONTROLS that must NOT
@@ -105,14 +105,14 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
   afterAll(() => rmSync(dirtyDir, { recursive: true, force: true }));
 
   test("catches all seven categories in one pass over one fixture", () => {
-    const { violations, filesScanned } = scanExtractedPackage("@yanlinglabs/winter-conformance", dirtyDir);
+    const { violations, filesScanned } = scanExtractedPackage("@waifucave/clover-conformance", dirtyDir);
     expect(filesScanned).toBeGreaterThan(0);
     expect(violations.some((v) => v.includes('forbidden directory "compat"'))).toBe(true);
     expect(violations.some((v) => v.includes('forbidden directory "node_modules"'))).toBe(true);
     expect(violations.some((v) => v.includes("official-capture output"))).toBe(true);
     expect(violations.some((v) => v.includes("Anthropic artifact"))).toBe(true);
     expect(violations.some((v) => v.includes("credentials-shaped"))).toBe(true);
-    expect(violations.some((v) => v.includes('unexpected identity ("not-yanlinglabs"'))).toBe(true);
+    expect(violations.some((v) => v.includes('unexpected identity ("not-waifucave"'))).toBe(true);
     // P7a fix wave (item 9): the test-file category, both spellings...
     expect(violations.some((v) => v.includes("a test file shipped at src/thing.test.ts"))).toBe(true);
     expect(violations.some((v) => v.includes("a test file shipped at src/raw-fake.test-support.ts"))).toBe(true);
@@ -137,9 +137,9 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
   test("a mismatched root package.json (right scope, wrong package) is caught by the identity check", () => {
     const dir = mkdtempSync(join(tmpdir(), "winter-release-pack-wrongname-"));
     try {
-      writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-provider-runtime", version: "0.0.1" }));
-      const { violations } = scanExtractedPackage("@yanlinglabs/winter-conformance", dir);
-      expect(violations.some((v) => v.includes('declares "@yanlinglabs/winter-provider-runtime" instead'))).toBe(true);
+      writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "@waifucave/clover-provider-runtime", version: "0.0.1" }));
+      const { violations } = scanExtractedPackage("@waifucave/clover-conformance", dir);
+      expect(violations.some((v) => v.includes('declares "@waifucave/clover-provider-runtime" instead'))).toBe(true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -158,15 +158,15 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
         mkdirSync(join(dir, "bin"), { recursive: true });
         writeFileSync(join(dir, "bin", "winter"), machO, { mode: 0o755 });
       }
-      writeFileSync(join(clean, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-agent-sdk-darwin-arm64", version: "0.0.4", os: ["darwin"], cpu: ["arm64"], bin: { winter: "bin/winter" } }));
-      const ok = scanExtractedPackage("@yanlinglabs/winter-agent-sdk-darwin-arm64", clean);
+      writeFileSync(join(clean, "package.json"), JSON.stringify({ name: "@waifucave/clover-agent-sdk-darwin-arm64", version: "0.0.4", os: ["darwin"], cpu: ["arm64"], bin: { winter: "bin/winter" } }));
+      const ok = scanExtractedPackage("@waifucave/clover-agent-sdk-darwin-arm64", clean);
       expect(ok.filesScanned).toBe(2);
       expect(ok.violations).toEqual([]);
 
-      writeFileSync(join(dirty, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-provider-runtime", version: "0.0.4" }));
-      const bad = scanExtractedPackage("@yanlinglabs/winter-agent-sdk-darwin-arm64", dirty);
+      writeFileSync(join(dirty, "package.json"), JSON.stringify({ name: "@waifucave/clover-provider-runtime", version: "0.0.4" }));
+      const bad = scanExtractedPackage("@waifucave/clover-agent-sdk-darwin-arm64", dirty);
       expect(bad.filesScanned).toBe(2);
-      expect(bad.violations.some((v) => v.includes('declares "@yanlinglabs/winter-provider-runtime" instead'))).toBe(true);
+      expect(bad.violations.some((v) => v.includes('declares "@waifucave/clover-provider-runtime" instead'))).toBe(true);
       // the binary itself is never a violation: every hit names package.json, none names bin/winter
       expect(bad.violations.some((v) => v.includes("bin/winter"))).toBe(false);
     } finally {
@@ -179,7 +179,7 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
     const dir = mkdtempSync(join(tmpdir(), "winter-release-pack-nomanifest-"));
     try {
       writeFileSync(join(dir, "index.js"), "");
-      const { violations } = scanExtractedPackage("@yanlinglabs/winter-conformance", dir);
+      const { violations } = scanExtractedPackage("@waifucave/clover-conformance", dir);
       expect(violations.some((v) => v.includes("no package.json found"))).toBe(true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -189,9 +189,9 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
   test("a clean, single-file package has zero violations", () => {
     const clean = mkdtempSync(join(tmpdir(), "winter-release-pack-clean-"));
     try {
-      writeFileSync(join(clean, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-conformance", version: "0.0.1" }));
+      writeFileSync(join(clean, "package.json"), JSON.stringify({ name: "@waifucave/clover-conformance", version: "0.0.1" }));
       writeFileSync(join(clean, "index.js"), "export const ok = true;\n");
-      const { violations, filesScanned } = scanExtractedPackage("@yanlinglabs/winter-conformance", clean);
+      const { violations, filesScanned } = scanExtractedPackage("@waifucave/clover-conformance", clean);
       expect(violations).toEqual([]);
       expect(filesScanned).toBe(2);
     } finally {
@@ -206,7 +206,7 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
   test("credentials-shaped filenames: dot- and prefix-variants are caught, and legitimate source files named `credentials.ts` are NOT false-flagged", () => {
     const dir = mkdtempSync(join(tmpdir(), "winter-release-pack-credentials-"));
     try {
-      writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "@yanlinglabs/winter-provider-runtime", version: "0.0.1" }));
+      writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "@waifucave/clover-provider-runtime", version: "0.0.1" }));
       writeFileSync(join(dir, ".credentials.json"), "{}"); // the reviewer's exact planted-file case
       writeFileSync(join(dir, "aws.credentials.json"), "{}");
       writeFileSync(join(dir, ".aws-credentials.json"), "{}");
@@ -214,7 +214,7 @@ describe("scanExtractedPackage: a synthetic dirty fixture proves the scan has te
       writeFileSync(join(dir, "src", "credentials", "credentials.ts"), "export const ok = true;\n"); // a REAL, legitimate module -- must NOT be flagged
       writeFileSync(join(dir, "src", "credentials", "credentials.test.ts"), "export const ok = true;\n");
 
-      const { violations } = scanExtractedPackage("@yanlinglabs/winter-provider-runtime", dir);
+      const { violations } = scanExtractedPackage("@waifucave/clover-provider-runtime", dir);
       const credentialViolations = violations.filter((v) => v.includes("credentials-shaped"));
       expect(credentialViolations.some((v) => v.includes(".credentials.json") && !v.includes("aws"))).toBe(true);
       expect(credentialViolations.some((v) => v.includes("aws.credentials.json"))).toBe(true);
@@ -281,7 +281,7 @@ describe("releasePack: the real, hermetic, mkdtemp-destined pack (WS-02 §9 Step
   });
 
   test("R-7a-12: the conformance tarball DOES ship goldens/*.trace.json (they are publishable, not excluded)", async () => {
-    const conformance = result.packages.find((p) => p.name === "@yanlinglabs/winter-conformance");
+    const conformance = result.packages.find((p) => p.name === "@waifucave/clover-conformance");
     expect(conformance).toBeDefined();
     const proc = Bun.spawn(["tar", "-tzf", conformance!.tarballPath], { stdout: "pipe" });
     const listing = await new Response(proc.stdout).text();
@@ -406,7 +406,7 @@ describe("releasePack: the real, hermetic, mkdtemp-destined pack (WS-02 §9 Step
     // Kept as a test rather than deleted, because the property that matters is the same one: a
     // declared subpath must have a file behind it, and an exclusion written one character wider
     // would still break it.
-    const runtime = result.packages.find((p) => p.name === "@yanlinglabs/winter-provider-runtime")!;
+    const runtime = result.packages.find((p) => p.name === "@waifucave/clover-provider-runtime")!;
     const proc = Bun.spawn(["tar", "-tzf", runtime.tarballPath], { stdout: "pipe" });
     const listing = await new Response(proc.stdout).text();
     expect(await proc.exited).toBe(0);

@@ -12,7 +12,7 @@
 // Latent at 9c41d49 (the only injectors were T3's contract fakes), which is exactly why it needed a
 // test rather than a note: P5's host wiring is the first real injector.
 import { describe, test, expect } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";
 import { echoProvider } from "../provider/mock.ts";

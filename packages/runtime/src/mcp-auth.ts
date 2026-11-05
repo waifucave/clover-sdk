@@ -1,5 +1,5 @@
 // WS-25 (MCP OAuth): the runtime's MCP sign-in, as a public subpath --
-// `@yanlinglabs/winter-agent-runtime/mcp-auth`.
+// `@waifucave/clover-agent-runtime/mcp-auth`.
 //
 // WHO USES IT. The HOST -- Winter's daemon and CLI: `startMcpOAuthLogin` on `mcp.login` / `winter mcp
 // login`, `refreshMcpOAuthToken` when a session asks (`mcp_oauth_refresh`), `revokeMcpOAuth` on logout,
@@ -54,7 +54,7 @@ export { startMcpOAuthLogin, type McpOAuthLogin, type McpOAuthLoginOutcome, type
 export { refreshMcpOAuthToken, type RefreshMcpOAuthTokenOptions, type RefreshMcpOAuthTokenResult } from "./mcp-auth/refresh.ts";
 export { revokeMcpOAuth, type RevokeMcpOAuthOptions } from "./mcp-auth/revoke.ts";
 // The wire half, declared in the SDK package (a host that never imports the runtime still types it).
-export { CREDENTIAL_RESOLVE_SUBTYPE, type CredentialResolveAnswer, type CredentialResolveRequest, MCP_OAUTH_REFRESH_SUBTYPE, type McpOAuthConfig, type McpOAuthRefreshAnswer, type McpOAuthRefreshRequest, type McpOAuthSecretRef } from "@yanlinglabs/winter-agent-sdk";
+export { CREDENTIAL_RESOLVE_SUBTYPE, type CredentialResolveAnswer, type CredentialResolveRequest, MCP_OAUTH_REFRESH_SUBTYPE, type McpOAuthConfig, type McpOAuthRefreshAnswer, type McpOAuthRefreshRequest, type McpOAuthSecretRef } from "@waifucave/clover-agent-sdk";
 
 /** The status string `mcp_status` / `system/init.mcp_servers` report for a server that needs sign-in. */
 export const MCP_STATUS_NEEDS_AUTH = "needs-auth";

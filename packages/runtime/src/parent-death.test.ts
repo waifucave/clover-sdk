@@ -13,7 +13,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { encodeFrame, splitFrames, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 
 const MAIN = fileURLToPath(new URL("./main.ts", import.meta.url));
 const COMPILED = fileURLToPath(new URL("../../platform/darwin-arm64/bin/winter", import.meta.url));

@@ -11,7 +11,7 @@
 // reason: a child engine carries its PARENT's `config.sessionId`, so keying by session alone would
 // resolve a child's invocation against the parent's `skills` option. A child restricted to no skills
 // would silently inherit the parent's whole set.
-import type { SkillsOption } from "@yanlinglabs/winter-agent-sdk";
+import type { SkillsOption } from "@waifucave/clover-agent-sdk";
 import type { InvokedSkillsAttachment } from "./attachment.ts";
 import type { SkillOverrides } from "./listing.ts";
 import type { SkillIndex } from "./store.ts";

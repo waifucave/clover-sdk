@@ -17,7 +17,7 @@
 // workflow worker to it yet in this phase -- WS-11 is a later phase; this ships the tested
 // mechanism now, exactly as T1 shipped `buildAdvertisedSet` before anything called it.
 import { join } from "node:path";
-import { WINTER_BRAND, globalConfigFileName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, globalConfigFileName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /**
  * P7a (D19): the two dot-dir names the seatbelt fences. `homeDirName` anchors the winter root under

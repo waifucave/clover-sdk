@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultSpawn, createMandatoryFloorSpawn } from "@yanlinglabs/winter-agent-sdk";
+import { defaultSpawn, createMandatoryFloorSpawn } from "@waifucave/clover-agent-sdk";
 
 describe.skipIf(process.platform!=="darwin")("native permission-error glob fallback",()=>{
   test("absolute and parent-relative patterns retain allowed hits beyond cwd",async()=>{

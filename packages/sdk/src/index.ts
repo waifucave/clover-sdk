@@ -15,7 +15,7 @@ export type { Options } from "./options.ts";
 export { SYSTEM_PROMPT_DYNAMIC_BOUNDARY, DEFAULT_CONTEXT_WINDOW_TOKENS, DEFAULT_COMPACTION_THRESHOLD, DEFAULT_PLANS_DIRECTORY, DEFAULT_OUTPUT_STYLE } from "./options.ts";
 // Phase 6 Task 2 (WS-13): the provider-layer option shapes + their two runtime-side defaults. Note
 // `CredentialRef` in particular — it is declared ONCE, here in the dependency-free sdk, and
-// re-exported by @yanlinglabs/winter-provider-runtime, so a lane importing it from either package
+// re-exported by @waifucave/clover-provider-runtime, so a lane importing it from either package
 // gets the identical type rather than two structurally-similar twins that can drift.
 export { DEFAULT_PROVIDER_STALL_TIMEOUT_MS, DEFAULT_KEYCHAIN_SERVICE, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, MCP_OAUTH_REFRESH_SUBTYPE, CREDENTIAL_RESOLVE_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_MESSAGE_LIST_SUBTYPE, HOST_SESSION_STOP_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HELD_INPUT_CAPABILITY } from "./options.ts";
 export type { HostMessagingHandler } from "./options.ts";
@@ -359,9 +359,9 @@ export type {
 // packages/sdk/src/plugins/ and this package's re-export of the catalog's own rename table.
 //
 // Task L1b.1 (spec §8 step 5; F23): the catalog's own derived old-tag -> new-key map, re-exported
-// here so a host (the daemon's `canonicalModelTag`) never depends on `@yanlinglabs/winter-provider-catalog`
+// here so a host (the daemon's `canonicalModelTag`) never depends on `@waifucave/clover-provider-catalog`
 // directly just to read it.
-export { CATALOG_TAG_RENAMES } from "@yanlinglabs/winter-provider-catalog";
+export { CATALOG_TAG_RENAMES } from "@waifucave/clover-provider-catalog";
 
 // Task L1b.3 (spec §6.3 item 7; F15): the plugin-management API matching `claude plugin …`,
 // implemented once here and exported for `winter plugin` (the CLI verb, not shipped in this task).

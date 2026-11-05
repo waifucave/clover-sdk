@@ -33,7 +33,7 @@
 // SECRETS. `done` reports a REASON -- an error code, an OAuth error code -- never a message from the code
 // exchange (an authorization server's error text is its own, and may echo the request). Nothing here logs.
 import { auth, computeScopeUnion, exchangeAuthorization, OAuthError, OAuthErrorCode, type OAuthClientInformationContext, type OAuthClientMetadata, type OAuthDiscoveryState, type OAuthClientProvider, type StoredOAuthClientInformation } from "@modelcontextprotocol/client";
-import type { McpOAuthConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { McpOAuthConfig } from "@waifucave/clover-agent-sdk";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { mcpOAuthClientAccount, mcpOAuthClientSecretAccount, mcpOAuthTokenAccount } from "./account.ts";
 import { MCP_OAUTH_CALLBACK_PATH, MCP_OAUTH_LOGIN_TIMEOUT_MS, MCP_OAUTH_STATE_BYTES, WINTER_MCP_CLIENT_METADATA_URL } from "./constants.ts";

@@ -7,7 +7,7 @@
 // only the adapter's pure half (identity, effort mapping, capabilities) and answers the process's
 // `secrets.get`; it never signs and the shared plugin host never sees the keys.
 import { fileURLToPath } from "node:url";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { identityHeaderLookup } from "../identity.ts";
 import { descriptorLookupForAdapter } from "../adapters/index.ts";
 import { BEDROCK_ADAPTER_ID, createBedrockConverseAdapter, type BedrockAdapter } from "../adapters/bedrock/index.ts";

@@ -6,7 +6,7 @@
 // half of every claim below is asserted through a real `runEngine` with a recording provider, not by
 // calling `assemble()` and trusting the engine to have used it.
 import { test, expect, describe } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderRequest } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

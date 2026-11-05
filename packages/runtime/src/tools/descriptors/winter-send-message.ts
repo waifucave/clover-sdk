@@ -48,8 +48,8 @@
 // short-circuits `source: "builtin"` to "eager"
 // unconditionally ("core built-ins... never deferred through the public surface"), so a builtin-
 // sourced canonical entry could never be deferred at all.
-import { WINTER_BRAND, mcpToolName } from "@yanlinglabs/winter-agent-sdk";
-import { SEND_MESSAGE_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { WINTER_BRAND, mcpToolName } from "@waifucave/clover-agent-sdk";
+import { SEND_MESSAGE_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, definitionFields } from "./_shared.ts";
 

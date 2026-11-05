@@ -4,7 +4,7 @@
 // spellings, the subagent model variable, per-call models, built-in vs session-defined Explore, Plan
 // and general-purpose -- with the `resolvedModel` the Agent tool reported when the corpus was recorded.
 import { expect, test } from "bun:test";
-import type { WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { runEngine } from "./engine.ts";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { registerChildEngineFactory, resetChildEngineFactoryForTest } from "./subagents/child-handle.ts";

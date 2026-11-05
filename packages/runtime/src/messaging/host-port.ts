@@ -8,8 +8,8 @@
 // session id, so its SendMessage reaches the same port through the same lookup, and a child engine never
 // registers one of its own. Identical in the two topologies: a spawned `winter` process and an embedded
 // Worker both run this engine over the same frame stream.
-import { HOST_MESSAGE_LIST_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_SESSION_STOP_SUBTYPE } from "@yanlinglabs/winter-agent-sdk";
-import { isHostMessageSendAnswer, isHostSessionStopAnswer, normaliseHostMessageListAnswer, type HostMessagingPort } from "@yanlinglabs/winter-agent-sdk/messaging";
+import { HOST_MESSAGE_LIST_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_SESSION_STOP_SUBTYPE } from "@waifucave/clover-agent-sdk";
+import { isHostMessageSendAnswer, isHostSessionStopAnswer, normaliseHostMessageListAnswer, type HostMessagingPort } from "@waifucave/clover-agent-sdk/messaging";
 import type { RpcBridge } from "../rpc/bridge.ts";
 
 /**

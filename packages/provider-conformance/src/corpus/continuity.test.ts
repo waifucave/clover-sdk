@@ -18,8 +18,8 @@ import { CONTINUITY_CASES, claudeTurn, createContinuityWorld, formatContinuityRe
 // reachable code (M-6, close-out's own debt), and this file only ever runs under `bun test`.
 import { adapterAsProvider, type HistoryRenderer } from "../../../runtime/src/provider/bridge.ts";
 import type { ProviderMessage, ProviderStreamSink } from "../../../runtime/src/engine.ts";
-import { createHistoryRenderer, type ProviderContext, type ResolvedModel } from "@yanlinglabs/winter-provider-runtime";
-import { scriptedAdapter } from "@yanlinglabs/winter-provider-runtime/testing";
+import { createHistoryRenderer, type ProviderContext, type ResolvedModel } from "@waifucave/clover-provider-runtime";
+import { scriptedAdapter } from "@waifucave/clover-provider-runtime/testing";
 
 describe("the continuity corpus (report §12.3 + §12.4)", () => {
   test("every case passes, and none is missing", async () => {

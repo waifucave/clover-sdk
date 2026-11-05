@@ -1,7 +1,7 @@
 // THIN CALLER (P7a Lane C, WS-02 §9 Step 2): the real implementation (ten scenarios A-K, the
 // ephemeral official-SDK install, every loopback fake) moved to
 // `packages/conformance/src/official/capture.ts` so it is importable from the published
-// `@yanlinglabs/winter-conformance` package. See that file's own header for the full procedure,
+// `@waifucave/clover-conformance` package. See that file's own header for the full procedure,
 // hermeticity, and scenario documentation — nothing about the CAPTURE ITSELF changed in the move.
 //
 // This file keeps exactly two things, byte-for-byte unchanged: the `RUN_OFFICIAL_CAPTURE=1` gate

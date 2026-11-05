@@ -60,7 +60,7 @@ import { readSourceFileSync, readSourceDirectorySync, statSourceSync } from "../
 // exact destructive target) is not.
 
 import { basename, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
 import { capBytes, neutralizeReminderTags } from "./injection.ts";
 import { parseFrontmatter } from "../subagents/definitions.ts";
 

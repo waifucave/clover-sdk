@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { WinterFrame, ControlRequestFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame, ControlRequestFrame } from "@waifucave/clover-agent-sdk";
 import { createRpcBridge } from "../rpc/bridge.ts";
 import { createRuntimeContextChannel } from "./runtime-context-channel.ts";
 import { resolveRequiredContext } from "./required-context.ts";

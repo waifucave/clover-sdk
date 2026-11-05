@@ -4,7 +4,7 @@
 import { fixtureCase, toolScript, terminalText, fixtureProbePaths } from "./cases.ts";
 import { dlopen, FFIType, ptr } from "bun:ffi";
 import { fstatSync, readFileSync } from "node:fs";
-import type { ProviderEvent } from "@yanlinglabs/winter-provider-runtime";
+import type { ProviderEvent } from "@waifucave/clover-provider-runtime";
 
 if (process.platform !== "linux" || JSON.stringify(process.argv.slice(2)) !== JSON.stringify(["--listener-fd", "3", "--admission-fd", "4", "--owner-library-fd", "5", "--metadata-fd", "6"])) throw new Error("fixed Linux provider fixture entry required");
 for (const fd of [5, 6]) { const st = fstatSync(fd); if (!st.isFile() || st.uid !== 0 || st.nlink !== 1 || st.mode & 0o222 || st.size > 4 * 1024 * 1024) throw new Error("immutable fixture input required"); }

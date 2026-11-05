@@ -12,7 +12,7 @@
 // when not opted in, a `main()` exported for the hermetic spawn-based test, and `process.exitCode`
 // (never `process.exit()`) so a `finally` cleanup always runs.
 //
-// WS-23: the same throwaway checkout then installs `@yanlinglabs/winter-agent-runtime` (the package an
+// WS-23: the same throwaway checkout then installs `@waifucave/clover-agent-runtime` (the package an
 // embedding host -- Winter's daemon -- installs by name), imports its side-effect-free `./version`, and
 // proves the runtime, the wrapper and the platform package resolve at ONE exact version
 // (`checkExactPins`, hermetically tested over planted trees).
@@ -31,16 +31,16 @@ isolateKeychain();
 
 export const OPT_IN_VAR = "WINTER_PACKAGES_TOKEN";
 export const SKIPPED_LINE =
-  "verify:published-install skipped: not opted in (set WINTER_PACKAGES_TOKEN=<a GitHub Packages token with read:packages> to install @yanlinglabs/winter-conformance and @yanlinglabs/winter-agent-runtime from a throwaway checkout outside this monorepo)";
+  "verify:published-install skipped: not opted in (set WINTER_PACKAGES_TOKEN=<a GitHub Packages token with read:packages> to install @waifucave/clover-conformance and @waifucave/clover-agent-runtime from a throwaway checkout outside this monorepo)";
 
 /** WS-23: the embedding root and the two packages it must install beside at the SAME version. */
-export const RUNTIME_PACKAGE = "@yanlinglabs/winter-agent-runtime";
-export const WRAPPER_PACKAGE = "@yanlinglabs/winter-agent-sdk";
-export const PLATFORM_PACKAGE = "@yanlinglabs/winter-agent-sdk-darwin-arm64";
+export const RUNTIME_PACKAGE = "@waifucave/clover-agent-runtime";
+export const WRAPPER_PACKAGE = "@waifucave/clover-agent-sdk";
+export const PLATFORM_PACKAGE = "@waifucave/clover-agent-sdk-darwin-arm64";
 
 /**
  * WS-23: the EXACT-PIN check over an installed tree -- what an embedding host (Winter's daemon) gets
- * when it installs `@yanlinglabs/winter-agent-runtime@<version>`.
+ * when it installs `@waifucave/clover-agent-runtime@<version>`.
  *
  * The runtime runs in the host's process and talks to the wrapper's `query()` over the same frame
  * protocol a spawned binary would, so a runtime and a wrapper at two versions are a mixed pair nobody
@@ -120,7 +120,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   }
 
   const version = argv[0] ?? currentPublishedVersion();
-  const spec = `@yanlinglabs/winter-conformance@${version}`;
+  const spec = `@waifucave/clover-conformance@${version}`;
 
   // Outside the monorepo ON PURPOSE (a fresh mkdtemp under the OS temp root, never a subdirectory of
   // this checkout): the whole point is proving what a repository that has never heard of this
@@ -128,7 +128,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   const probeDir = mkdtempSync(join(tmpdir(), "winter-verify-published-install-"));
   try {
     writeFileSync(join(probeDir, "package.json"), JSON.stringify({ name: "winter-verify-published-install-probe", private: true, version: "0.0.0" }, null, 2) + "\n");
-    writeFileSync(join(probeDir, ".npmrc"), `@yanlinglabs:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${token}\n`);
+    writeFileSync(join(probeDir, ".npmrc"), `@waifucave:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${token}\n`);
 
     const add = Bun.spawnSync(["pnpm", "add", spec], { cwd: probeDir, stdout: "pipe", stderr: "pipe" });
     if (add.exitCode !== 0) {
@@ -136,10 +136,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     }
 
     const runtime = runtimeLabel();
-    const probeScript = `import(${JSON.stringify("@yanlinglabs/winter-conformance/trace")}).then((m) => { if (typeof m.normalizeTrace !== "function") throw new Error("normalizeTrace missing from the installed package"); console.log("import ok"); });`;
+    const probeScript = `import(${JSON.stringify("@waifucave/clover-conformance/trace")}).then((m) => { if (typeof m.normalizeTrace !== "function") throw new Error("normalizeTrace missing from the installed package"); console.log("import ok"); });`;
     const run = Bun.spawnSync([process.execPath, "-e", probeScript], { cwd: probeDir, env: keychainIsolatedEnv(), stdout: "pipe", stderr: "pipe" });
     if (run.exitCode !== 0) {
-      throw new Error(`import("@yanlinglabs/winter-conformance/trace") failed under ${runtime} (exit ${run.exitCode}):\n${decode(run.stdout)}${decode(run.stderr)}`);
+      throw new Error(`import("@waifucave/clover-conformance/trace") failed under ${runtime} (exit ${run.exitCode}):\n${decode(run.stdout)}${decode(run.stderr)}`);
     }
 
     // WS-23: the embedding root, into the SAME throwaway checkout. Its version module imports nothing,

@@ -17,7 +17,7 @@
 // relative fs read does not survive that — the catalog next door already ships as a static JSON
 // import into the same binary, so this path is proven rather than assumed.
 
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
 import pkg from "../package.json";
 import { FIRST_PARTY_ORIGINATORS, WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";
 

@@ -21,8 +21,8 @@
 // resumes the session next (Winter's `WinterSession.open()` awaits the previous iteration, which ends
 // with this stream) must not overlap two engines on one transcript: the lease is stamped with the pid,
 // and every Worker shares the host's pid, so the lock itself cannot tell them apart.
-import type { HostExecutionFloor, SpawnedRuntimeProcess, SpawnRuntimeOptions } from "@yanlinglabs/winter-agent-sdk";
-import { MandatoryFloorUnavailableError } from "@yanlinglabs/winter-agent-sdk";
+import type { HostExecutionFloor, SpawnedRuntimeProcess, SpawnRuntimeOptions } from "@waifucave/clover-agent-sdk";
+import { MandatoryFloorUnavailableError } from "@waifucave/clover-agent-sdk";
 import { copyHostCodeProtection, type HostCodeProtection } from "./sandbox/host-code-protection.ts";
 import { Queue } from "./protocol/channel.ts";
 import type { EmbeddedHostMessage, EmbeddedWorkerMessage, EmbeddedWorkflowWorkerCommand } from "./embedded-protocol.ts";

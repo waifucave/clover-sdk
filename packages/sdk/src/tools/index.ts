@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-agent-sdk/tools` — WINTER'S DEFAULT TOOLS, declared and implemented once
+// `@waifucave/clover-agent-sdk/tools` — WINTER'S DEFAULT TOOLS, declared and implemented once
 // (user ruling R-8-1, 2026-09-10).
 //
 // THE RULING, and why this subpath is its shape. The router owns NO tool. The daemon owns the

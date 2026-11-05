@@ -31,11 +31,11 @@
 // also authored; this file's own contribution is the shared TYPE contract, provable from the runtime
 // side without duplicating that suite.
 import { describe, test, expect } from "bun:test";
-import { isWinterMcpServerInstance, type WinterMcpServerInstance } from "@yanlinglabs/winter-agent-sdk";
+import { isWinterMcpServerInstance, type WinterMcpServerInstance } from "@waifucave/clover-agent-sdk";
 import { createFakeChildHandle } from "./test-fakes.ts";
 import { createChildEngineFactory } from "./child-engine.ts";
 import type { ChildEngineRunContext } from "./child-handle.ts";
-import { createFakeMessagingRouterSeam } from "@yanlinglabs/winter-agent-sdk/messaging";
+import { createFakeMessagingRouterSeam } from "@waifucave/clover-agent-sdk/messaging";
 import { createFakeMcpControlSeam } from "../mcp/control-seam.ts";
 import { createFakeMcpServerStateSource } from "../mcp/state.ts";
 import { handleMcpStatus, handleMcpReconnect, handleMcpToggle, handleMcpSetServers } from "../rpc/mcp-control.ts";

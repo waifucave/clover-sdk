@@ -21,8 +21,8 @@
 //   - THE MATERIAL STAYS IN THE FRAME: it arrives in the control_response and is returned to the caller;
 //     it is never logged, never put in an error (errors name the ref and a reason code), never cached
 //     beyond the generation number.
-import { CREDENTIAL_RESOLVE_SUBTYPE, type CredentialRef, type CredentialResolveAnswer, type CredentialResolveRequest } from "@yanlinglabs/winter-agent-sdk";
-import { CredentialResolutionError, redactRef, type CredentialMaterial, type CredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import { CREDENTIAL_RESOLVE_SUBTYPE, type CredentialRef, type CredentialResolveAnswer, type CredentialResolveRequest } from "@waifucave/clover-agent-sdk";
+import { CredentialResolutionError, redactRef, type CredentialMaterial, type CredentialStore } from "@waifucave/clover-provider-runtime";
 import { parseStoredCredentialMaterial, type KeychainSecretReader } from "./keychain-store.ts";
 
 type KeychainRef = Extract<CredentialRef, { kind: "keychain" }>;

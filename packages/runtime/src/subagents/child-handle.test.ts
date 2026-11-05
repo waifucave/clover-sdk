@@ -3,7 +3,7 @@
 // semantics against a fake, and the full adapter/router seam, are the seam-contracts-p4.test.ts
 // file's own job (this file covers the parts genuinely local to child-handle.ts itself).
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import type { WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { WinterFrame } from "@waifucave/clover-agent-sdk";
 import {
   transformChildFrame,
   registerChildEngineFactory,

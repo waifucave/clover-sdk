@@ -1,4 +1,4 @@
-// Compiled against @anthropic-ai/claude-agent-sdk (official, ephemeral) AND @yanlinglabs/winter-agent-sdk.
+// Compiled against @anthropic-ai/claude-agent-sdk (official, ephemeral) AND @waifucave/clover-agent-sdk.
 // The import specifier is swapped by tsconfig `paths`; the body is identical for both (drop-in surface, WS-03 §1).
 import { query } from "@sdk-under-test";
 import type { Options } from "@sdk-under-test";

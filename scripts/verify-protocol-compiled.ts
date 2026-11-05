@@ -19,9 +19,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { encodeFrame, splitFrames, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { SCENARIO_FINAL_TEXT, SCENARIO_MODELS, SCENARIO_TOOL_NAME, startScenarioFake } from "@yanlinglabs/winter-agent-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
+import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { SCENARIO_FINAL_TEXT, SCENARIO_MODELS, SCENARIO_TOOL_NAME, startScenarioFake } from "@waifucave/clover-agent-runtime";
 import { isolateKeychain, keychainIsolatedEnv } from "./test-keychain-env.ts";
 // Never the real Keychain: set before any session or child starts (see ./test-keychain-env.ts).
 isolateKeychain();
@@ -32,7 +32,7 @@ const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
  * Phase 6 Task 10: THE CATALOG RESOLVES INSIDE THE BINARY.
  *
  * This is a leg the equivalence suite cannot supply, and the reason is the whole point of the gate.
- * `@yanlinglabs/winter-provider-catalog` imports its data as a BUNDLED JSON MODULE precisely because
+ * `@waifucave/clover-provider-catalog` imports its data as a BUNDLED JSON MODULE precisely because
  * `bun build --compile` produces a single-file executable whose `$bunfs` has no repository beside it —
  * a runtime path read would resolve to nothing there while type-checking and every dev-mode test
  * passed. That is the exact "silently breaks only in the compiled form" class, and the only way to

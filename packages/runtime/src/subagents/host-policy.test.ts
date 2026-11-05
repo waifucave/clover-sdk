@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { RuntimeAgentDefinition } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
 import { resolveHostCodeDescendantPolicy } from "./host-policy.ts";
 import { sourceRule } from "../permissions/ruleset.ts";
 import { registerTool, unregisterToolForTest, type RegisteredTool } from "../tools/registry.ts";

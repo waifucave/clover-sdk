@@ -5,7 +5,7 @@
 // message right after the user turn it follows, every request's messages are a prefix of the next, a
 // resumed session rebuilds the epoch from its history, and a refusal falls back once to today's rebuild.
 import { afterEach, describe, expect, test } from "bun:test";
-import type { PermissionMode, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { ProviderTurnError, runEngine, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

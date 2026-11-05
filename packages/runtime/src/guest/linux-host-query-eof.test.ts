@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { query, encodeFrame, splitFrames, WinterCompatibilitySessionStore, compatibilityKeys, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { query, encodeFrame, splitFrames, WinterCompatibilitySessionStore, compatibilityKeys, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "../testing.ts";
 import type { Provider, ToolExecutor } from "../engine.ts";
 import { boundedLinuxSessionInput } from "./linux-session-entry.ts";

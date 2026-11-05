@@ -23,7 +23,7 @@
 // the process env -- settings can never set it, which is exactly why it lives in the refused-name
 // lists above too), every tier's `env` additionally loses every provider/auth/proxy/TLS key, so a
 // settings file cannot override the host-managed provider identity.
-import { disableCronEnvName, envName, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName, WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { disableCronEnvName, envName, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName, WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { mcpOAuthTestStoreEnvName } from "../mcp-auth/store.ts";
 
 export type EnvFilterTier = "user" | "project" | "local" | "flag";

@@ -31,7 +31,7 @@
 //     consistent with the rest of WS-08) than crashing engine startup over a host's typo. Documented
 //     judgment call.
 import { parseRule, matchesRule } from "../permissions/grammar.ts";
-import type { HookEvent, HookSource } from "@yanlinglabs/winter-agent-sdk";
+import type { HookEvent, HookSource } from "@waifucave/clover-agent-sdk";
 import type { HookParticipant } from "./reducer.ts";
 
 // WS-08 §1.3: "Tool-scoped matchers (§2.1) apply to the decision- and contribution-capable rows;

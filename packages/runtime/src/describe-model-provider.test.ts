@@ -7,8 +7,8 @@
 // so a deepseek-anthropic session's system prompt named the model by `alibaba-cn`'s row. It now takes
 // the session's provider, and without one a bare id shared by several providers names none of them.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
-import { loadCatalog, type WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 import { runEngine, type Provider } from "./engine.ts";
 import { createInMemoryChannel } from "./protocol/channel.ts";
 import { stubExecutor } from "./provider/mock.ts";

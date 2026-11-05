@@ -7,7 +7,7 @@ import { describe, test, expect, afterEach } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { WinterCompatibilitySessionStore } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore } from "@waifucave/clover-agent-sdk";
 import { childTranscriptSubpath } from "../store/dialect.ts";
 import { rebuildChildRoster, successfulRecords } from "./roster.ts";
 import type { ChildSessionRecord } from "./child-handle.ts";

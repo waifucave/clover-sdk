@@ -11,7 +11,7 @@ import {
   type ElicitationRequestPayload,
   type ElicitationResultPayload,
 } from "./elicitation.ts";
-import type { ControlRequestFrame, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlRequestFrame, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createRpcBridge } from "../rpc/bridge.ts";
 import { connectMcpServer } from "./client.ts";
 import { createFixtureMcpServer } from "./test-fixtures.ts";

@@ -1,8 +1,8 @@
 // A TOOL's secret: JSON api-key material, a BARE key string, a missing item, and everything that is
 // neither -- each as a VALUE, none as a throw, and never with the secret in a message.
 import { describe, expect, test } from "bun:test";
-import type { CredentialRef } from "@yanlinglabs/winter-agent-sdk";
-import { CredentialResolutionError, createMemoryCredentialStore, type CredentialStore } from "@yanlinglabs/winter-provider-runtime";
+import type { CredentialRef } from "@waifucave/clover-agent-sdk";
+import { CredentialResolutionError, createMemoryCredentialStore, type CredentialStore } from "@waifucave/clover-provider-runtime";
 import { createKeychainSecretReader, type SecretsBackend } from "./keychain-store.ts";
 import { createToolSecretResolver, interpretToolSecret } from "./tool-secret.ts";
 import { buildSessionProvider } from "./session-provider.ts";

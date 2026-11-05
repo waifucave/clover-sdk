@@ -12,7 +12,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultSpawn, query, type Options, type Query, type SDKHostInputFoldedMessage, type SpawnRuntimeOptions, type WinterMcpServerInstance } from "@yanlinglabs/winter-agent-sdk";
+import { defaultSpawn, query, type Options, type Query, type SDKHostInputFoldedMessage, type SpawnRuntimeOptions, type WinterMcpServerInstance } from "@waifucave/clover-agent-sdk";
 import { spawnEmbeddedWorker } from "./embedded-host.ts";
 import { isSandboxAvailable } from "./sandbox/spawn.ts";
 

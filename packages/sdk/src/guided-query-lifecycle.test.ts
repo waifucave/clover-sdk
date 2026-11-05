@@ -9,7 +9,7 @@ import { encodeFrame, splitFrames } from "./protocol/codec.ts";
 import { PROTOCOL_VERSION, type WinterFrame, type ControlResponseFrame } from "./protocol/frames.ts";
 import type { RuntimeConfig } from "./protocol/config.ts";
 import { Queue } from "../../runtime/src/protocol/channel.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

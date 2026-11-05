@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-provider-runtime/testing` — review r1 (Critical-2) remediation.
+// `@waifucave/clover-provider-runtime/testing` — review r1 (Critical-2) remediation.
 //
 // WHY THIS FILE EXISTS. `packages/provider-conformance`'s corpus/fakes reached a handful of
 // provider-runtime internals that the main barrel (`src/index.ts`) never re-exports -- mostly

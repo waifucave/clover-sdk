@@ -1,4 +1,4 @@
-import { WINTER_BRAND, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
 // WS-10 §8: filesystem isolation -- a `Workspace {root, isolationType, cleanupPolicy}` abstraction
 // (report §106's own "orchestration never learns git details"). `isolation: "worktree"` REUSES Lane
 // E-of-P3's own git plumbing (tools/impl/enter-worktree.ts: runGit/listWorktrees) -- READ-ONLY per

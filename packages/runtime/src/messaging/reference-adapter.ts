@@ -27,10 +27,10 @@
 //     explicitly instead.
 //
 // PHASE 7B (R-7b-4): the contract and every routing rule this adapter is measured against now live
-// in `@yanlinglabs/winter-agent-sdk/messaging`; the adapter itself stays here, because WS-10 §15 is
+// in `@waifucave/clover-agent-sdk/messaging`; the adapter itself stays here, because WS-10 §15 is
 // explicit that "adapters perform owner-specific operations only" -- this one drives THIS runtime's
 // own child handles and in-process peers, and nothing about it generalises.
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 import {
   serializeRuntimeAddress,
   childToListedRuntimeObject,
@@ -65,7 +65,7 @@ import {
   type MessagingRuntimeDeps,
   type SubscriberDirectory,
   type HostMessagingPort,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 import { ChildResumeModeIncomparableError } from "../permissions/auto/inheritance.ts";
 import { getMessagingRuntime, registerMessagingRuntime } from "./router.ts";
 

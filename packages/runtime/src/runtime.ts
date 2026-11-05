@@ -1,5 +1,5 @@
 import type { FrameSource, FrameSink } from "./protocol/channel.ts";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { runEngine, type Provider, type ToolExecutor, type SessionPersistence } from "./engine.ts";
 import { stubExecutor } from "./provider/mock.ts";
 

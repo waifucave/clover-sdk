@@ -15,7 +15,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { BackgroundTaskMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import "../tools/impl/bash.ts";
 import { getRegisteredTool, type ToolExecutionContext } from "../tools/registry.ts";
 import { createSessionReadState } from "../tools/read-state.ts";

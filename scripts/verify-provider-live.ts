@@ -77,10 +77,10 @@
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadCatalog, type WinterCatalog, type WinterProviderDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { createEnvCredentialStore, CredentialResolutionError, winterUserAgent, type CredentialStore, type ProviderAdapter } from "@yanlinglabs/winter-provider-runtime";
-import { WINTER_BRAND, envName } from "@yanlinglabs/winter-agent-sdk";
-import { describeThrown, formatClassifierSafetyReport, formatLiveRow, formatLiveReport, runClassifierSafetyCorpus, runLiveTarget, type LiveTargetKindLabel } from "@yanlinglabs/winter-provider-conformance";
+import { loadCatalog, type WinterCatalog, type WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
+import { createEnvCredentialStore, CredentialResolutionError, winterUserAgent, type CredentialStore, type ProviderAdapter } from "@waifucave/clover-provider-runtime";
+import { WINTER_BRAND, envName } from "@waifucave/clover-agent-sdk";
+import { describeThrown, formatClassifierSafetyReport, formatLiveRow, formatLiveReport, runClassifierSafetyCorpus, runLiveTarget, type LiveTargetKindLabel } from "@waifucave/clover-provider-conformance";
 import { adapterAsProvider } from "../packages/runtime/src/provider/bridge.ts";
 import { createProviderContext, createSelectionRegistry, resolveSessionProvider } from "../packages/runtime/src/provider/selection.ts";
 import { createKeychainCredentialStore, DEFAULT_KEYCHAIN_SERVICE } from "../packages/runtime/src/provider/keychain-store.ts";
@@ -89,7 +89,7 @@ import { startProviderLogin, type ProviderLoginId, type StartProviderLoginOption
 import { createModelClassifier } from "../packages/runtime/src/provider/classifier/model-classifier.ts";
 import { normalizeAutoModeConfig } from "../packages/runtime/src/permissions/auto/config.ts";
 import type { ActionEnvelope } from "../packages/runtime/src/permissions/auto/envelope.ts";
-import type { CredentialRef, RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { CredentialRef, RuntimeConfig } from "@waifucave/clover-agent-sdk";
 
 /** The exact line the not-opted-in path prints. Exported so the fixture asserts on THIS string rather than a copy of it. */
 export const SKIPPED_LINE =

@@ -1,6 +1,6 @@
 {
-  "name": "@yanlinglabs/winter-agent-runtime",
-  "version": "0.0.62",
+  "name": "@waifucave/clover-agent-runtime",
+  "version": "0.0.63",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -121,10 +121,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.1.0",
-    "@yanlinglabs/winter-agent-sdk": "workspace:*",
-    "@yanlinglabs/winter-provider-catalog": "workspace:*",
-    "@yanlinglabs/winter-provider-runtime": "workspace:*",
-    "@yanlinglabs/winter-web": "workspace:*",
+    "@waifucave/clover-agent-sdk": "workspace:*",
+    "@waifucave/clover-provider-catalog": "workspace:*",
+    "@waifucave/clover-provider-runtime": "workspace:*",
+    "@waifucave/clover-web": "workspace:*",
     "ajv": "^8.20.0",
     "ignore": "7.0.5"
   },

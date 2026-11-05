@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createSystemPromptAssembler } from "./assembler.ts";
 import type { SystemPromptInput } from "./seam.ts";
-import type { Settings } from "@yanlinglabs/winter-agent-sdk";
+import type { Settings } from "@waifucave/clover-agent-sdk";
 
 test("guided assembler retains the exact required source and excludes legacy instruction/memory discovery", () => {
   let memoryInputs = 0;

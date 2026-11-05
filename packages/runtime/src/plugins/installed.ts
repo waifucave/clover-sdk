@@ -1,6 +1,6 @@
 import { readSourceFileSync } from "../sandbox/source-read.ts";
 // WS-21 lane L1b, Task L1b.2 (spec §5.2/§6.3 item 5, Contract B): reads `<pluginsRoot>/installed_plugins.json`
-// -- the SAME V2 document `@yanlinglabs/winter-agent-sdk`'s `packages/sdk/src/plugins/manage.ts`
+// -- the SAME V2 document `@waifucave/clover-agent-sdk`'s `packages/sdk/src/plugins/manage.ts`
 // writes (`{version:2, plugins: {"<key>": [<record>, ...]}}`, one array per compound key because the
 // identical plugin id can be installed at more than one scope; see `manage.ts`'s own header for the
 // file format). This is the RUNTIME's own reader, called
@@ -17,7 +17,7 @@ import { readSourceFileSync } from "../sandbox/source-read.ts";
 // test coverage expects.
 
 import { join } from "node:path";
-import { resolveMarketplacePluginPath } from "@yanlinglabs/winter-agent-sdk";
+import { resolveMarketplacePluginPath } from "@waifucave/clover-agent-sdk";
 
 export interface PluginRecord {
   /** The `installed_plugins.json` key this record came from -- see the header for why. */
@@ -96,7 +96,7 @@ export function readInstalledPlugins(pluginsRoot: string): PluginRecord[] {
 // `known_marketplaces.json` + the marketplace's own `.claude-plugin/marketplace.json` directly;
 // Winter's runtime only ever consulted `installed_plugins.json`, so a plugin the user enabled in
 // settings.json without ever running an explicit "install" step (which only WRITES that record --
-// `@yanlinglabs/winter-agent-sdk`'s `packages/sdk/src/plugins/manage.ts` is where that happens)
+// `@waifucave/clover-agent-sdk`'s `packages/sdk/src/plugins/manage.ts` is where that happens)
 // silently never loaded.
 //
 // MIRRORS `manage.ts`'s OWN `resolvePluginSourcePath`/`readKnownMarketplacesFile`/
@@ -164,7 +164,7 @@ function resolveDirectoryMarketplacePluginPath(installLocation: string, pluginNa
   if (!Array.isArray(manifest.plugins)) return undefined;
   const entry = (manifest.plugins as MarketplaceManifestPluginEntryRaw[]).find((p) => p.name === pluginName);
   if (entry === undefined) return undefined;
-  // Fix round 3 (I-1, security): the ONE resolver shared with `@yanlinglabs/winter-agent-sdk`'s own
+  // Fix round 3 (I-1, security): the ONE resolver shared with `@waifucave/clover-agent-sdk`'s own
   // `manage.ts` (marketplace-path.ts's own header) -- a bare `resolve(installLocation, pluginRoot,
   // entry.source)` here let `source: "../../x"` / `source: "/abs"` / `pluginRoot: "/etc"` escape the
   // marketplace root entirely, and that plugin's hooks then run shell commands from wherever it

@@ -19,7 +19,7 @@
 // because capture (F) observed the pinned runtime forwarding stream events for two of its three POSTs
 // and suppressing the third's entirely.
 import { randomUUID } from "node:crypto";
-import type { ProtocolSdkMessage as SdkMessage, WireStreamEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage, WireStreamEvent } from "@waifucave/clover-agent-sdk";
 import type { ProviderStreamSink } from "../engine.ts";
 
 export interface StreamFrameSinkDeps {

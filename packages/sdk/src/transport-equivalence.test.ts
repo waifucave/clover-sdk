@@ -45,7 +45,7 @@ import type { CanUseTool, PermissionMode } from "./permissions/types.ts";
 import { TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type Options, type WinterMcpServerInstance } from "./options.ts";
 import type { ModelInfo } from "./protocol/config.ts";
 import { PROVIDER_STATE_FILE_SUFFIX } from "./store/session-store.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 import {
   echoProvider,
   stubExecutor,
@@ -79,8 +79,8 @@ import {
   recordedProviderSystems,
   resetRecordedProviderSystems,
   type ScenarioFake,
-} from "@yanlinglabs/winter-agent-runtime";
-import { normalizeTrace, compareTraces, type ConformanceTraceEntry } from "@yanlinglabs/winter-conformance/trace";
+} from "@waifucave/clover-agent-runtime";
+import { normalizeTrace, compareTraces, type ConformanceTraceEntry } from "@waifucave/clover-conformance/trace";
 import type { MessagingIdleNoticePayload } from "./protocol/messaging.ts";
 
 // Task 8: every engine run in this file persists by default (RuntimeConfig.persistSession defaults

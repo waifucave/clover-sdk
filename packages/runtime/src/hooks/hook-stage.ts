@@ -20,7 +20,7 @@
 // HookDecision union gained a real "defer" member for exactly this (see that file's own header for
 // how evaluate() resolves it: it outranks a matched ask rule, loses to a stage-2 deny rule, and
 // dontAsk converts it to an immediate denial before any durable record is created).
-import type { PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionUpdate } from "@waifucave/clover-agent-sdk";
 import type { PermissionCall, EvaluationContext, HookStage, HookDecision, PromptStageMeta, PermissionRequestHookDecision } from "../permissions/evaluator.ts";
 import { runHooks, type HookInvoker, type HookAuditRecorder, type HookTimeoutConfig, type ToolInputValidator, type HookLifecycleSink } from "./runner.ts";
 import type { HookRegistry } from "./registry.ts";

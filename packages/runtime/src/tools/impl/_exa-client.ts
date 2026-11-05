@@ -2,7 +2,7 @@
 // REGISTERS NOTHING. `impl/web-search.ts` drives it; nothing here is a tool.
 //
 // THE CLIENT ITSELF (anonymous-first, the key fallback, the breaker, the pacer, the per-call timeout,
-// the echo-proof error reading, the parsing) LIVES IN `@yanlinglabs/winter-web`'s
+// the echo-proof error reading, the parsing) LIVES IN `@waifucave/clover-web`'s
 // `createExaSearchClient`; what stays here is Winter's TRANSPORT for it -- this runtime's own MCP
 // client (`connectMcpServer`, below) and the reading of that client's error types -- plus the
 // session's key resolver and the hit/failure shapes `web-search.ts` and its tests speak.
@@ -48,7 +48,7 @@
 //             highlight lines follow), separated by a line holding only `---`.
 // `parseExaHits` reads both and is deliberately tolerant: the payload is a third party's, unversioned.
 import { SdkError, SdkErrorCode, SdkHttpError, SseError } from "@modelcontextprotocol/client";
-import type { McpServerConfigForProcessTransport } from "@yanlinglabs/winter-agent-sdk";
+import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import {
   createExaSearchClient as createWebExaSearchClient,
   EXA_AUTH_PATTERN,
@@ -59,7 +59,7 @@ import {
   type ExaSearchResultItem,
   type ExaTransport,
   type ExaSearchFailureCode as WebExaSearchFailureCode,
-} from "@yanlinglabs/winter-web";
+} from "@waifucave/clover-web";
 import { connectMcpServer, McpConnectError } from "../../mcp/client.ts";
 import { createElicitationAsker } from "../../mcp/elicitation.ts";
 import type { ToolSecretResult } from "../../provider/tool-secret.ts";
@@ -89,8 +89,8 @@ export {
   EXA_URL_MAX_CHARACTERS,
   type ExaBackendState,
   type ExaTier,
-} from "@yanlinglabs/winter-web";
-import type { ExaBackendState, ExaTier } from "@yanlinglabs/winter-web";
+} from "@waifucave/clover-web";
+import type { ExaBackendState, ExaTier } from "@waifucave/clover-web";
 
 const MCP_SERVER_NAME = "exa";
 

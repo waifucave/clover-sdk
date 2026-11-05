@@ -1,6 +1,6 @@
 // P7a Lane C (WS-02 §9 Step 2): moved here verbatim from `scripts/fetch-upstream.ts`, which is now a
 // thin caller re-exporting these names and keeping only the CLI entry point (`bun run
-// conformance:fetch`). Living inside `@yanlinglabs/winter-conformance` makes this an IMPORTABLE
+// conformance:fetch`). Living inside `@waifucave/clover-conformance` makes this an IMPORTABLE
 // module: `capture.ts` beside it imports `fetchAndVerifyUpstream` directly rather than reaching back
 // out to `scripts/`, and any other consumer of the pinned-upstream mechanics (WS-02 §6) can import it
 // from the published package instead of a repo-relative script path. The RUN_OFFICIAL_CAPTURE=1 gate
@@ -8,7 +8,7 @@
 //
 // review r1 Critical Finding 1: `CHECKSUMS` used to be read at MODULE TOP LEVEL, which means merely
 // IMPORTING this file (or the barrels that re-export it -- `./index.ts`, `../index.ts`, the bare
-// `@yanlinglabs/winter-conformance` package) did file I/O against `compat/anthropic/0.3.250/
+// `@waifucave/clover-conformance` package) did file I/O against `compat/anthropic/0.3.250/
 // checksums.json`. `compat/` is deliberately excluded from this package's `files` allowlist
 // (R-7a-12) -- it never ships -- so a real install threw `ENOENT` the instant anything imported the
 // barrel, reproduced against a real packed tarball. `getChecksums()` below makes the read LAZY
@@ -21,11 +21,11 @@ import { mkdirSync, mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const CHECKSUM_MISMATCH_BRAND = Symbol.for("@yanlinglabs/winter-conformance:ChecksumMismatchError");
-const OFFICIAL_COMPAT_UNAVAILABLE_BRAND = Symbol.for("@yanlinglabs/winter-conformance:OfficialCompatUnavailableError");
+const CHECKSUM_MISMATCH_BRAND = Symbol.for("@waifucave/clover-conformance:ChecksumMismatchError");
+const OFFICIAL_COMPAT_UNAVAILABLE_BRAND = Symbol.for("@waifucave/clover-conformance:OfficialCompatUnavailableError");
 
 export class ChecksumMismatchError extends Error {
-  // P7a fix wave r3 (F2): this class is exported from BOTH `@yanlinglabs/winter-conformance` and
+  // P7a fix wave r3 (F2): this class is exported from BOTH `@waifucave/clover-conformance` and
   // `.../official`, and the compiled emit gives each entry its own copy -- so a plain prototype
   // `instanceof` is false across subpaths under Node. See `../bun-required.ts` for the whole
   // reasoning; the brand is package-scoped, so another package's class still does not match.
@@ -56,7 +56,7 @@ interface UpstreamChecksums {
 
 // Relative to THIS file (packages/conformance/src/official/fetch.ts): ../../ is the package root
 // (packages/conformance/), where compat/anthropic/0.3.250/checksums.json lives IN THE REPOSITORY --
-// never inside an installed `node_modules/@yanlinglabs/winter-conformance` (R-7a-12 excludes
+// never inside an installed `node_modules/@waifucave/clover-conformance` (R-7a-12 excludes
 // `compat/` from `files` on purpose).
 const CHECKSUMS_URL = new URL("../../compat/anthropic/0.3.250/checksums.json", import.meta.url);
 let cachedChecksums: UpstreamChecksums | undefined;

@@ -19,8 +19,8 @@
 // So the rule for the next author is not "do not import this from a test". It is: a fixture that
 // drives this runner must pin BOTH the endpoint (a loopback fake) and the adapter (the module
 // override). A fixture that omits either one goes live on the machine that runs it.
-import type { ProviderAdapter, ProviderContext } from "@yanlinglabs/winter-provider-runtime";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { ProviderAdapter, ProviderContext } from "@waifucave/clover-provider-runtime";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { describeThrown } from "../corpus/classifier-safety.ts";
 import { LIVE_CASES, LIVE_CASE_IMPLS, LiveCaseAssertionError, type LiveCaseContext, type LiveCaseId, type LiveCaseSpec } from "./cases.ts";
 

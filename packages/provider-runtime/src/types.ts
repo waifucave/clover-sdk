@@ -10,10 +10,10 @@
 // STRUCTURAL RULE (R6-4): this package NEVER imports `winter-agent-runtime`. The engine's
 // `ProviderTurn`/`ProviderMessage`/`ContentBlock` stay defined in `engine.ts`, the runtime-side
 // bridge (T3) folds an adapter's event stream into one `ProviderTurn`, and the dependency runs
-// runtime → provider-runtime only. 0.0.56 (W9): it no longer imports `@yanlinglabs/winter-agent-sdk`
+// runtime → provider-runtime only. 0.0.56 (W9): it no longer imports `@waifucave/clover-agent-sdk`
 // at all -- `CredentialRef` is declared in `winter-defaults.ts`, held equal to the sdk's by a test.
 
-import type { ProviderProtocol, ToolCalling, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { ProviderProtocol, ToolCalling, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 
 // The sdk's `CredentialRef`, structurally identical (`winter-defaults.ts`, and the test beside it that
 // keeps the two equal). A lane importing `CredentialRef` from either package gets the same shape.

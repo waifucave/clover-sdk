@@ -15,7 +15,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { PermissionMode, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   NO_OPINION_AUTO_ENGINE,

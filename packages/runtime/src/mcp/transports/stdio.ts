@@ -36,7 +36,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { prepareHostChildLaunch } from "../../sandbox/host-child-floor.ts";
 import { ReadBuffer, serializeMessage, type JSONRPCMessage, type Transport } from "@modelcontextprotocol/client";
-import type { McpStdioServerConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { McpStdioServerConfig } from "@waifucave/clover-agent-sdk";
 import { trackProcessGroup } from "../../process-groups.ts";
 
 // The upstream PARITY BASELINE, named explicitly rather than silently duplicated: this is the exact

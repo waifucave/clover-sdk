@@ -4,7 +4,7 @@
 // fixtures shaped from each vendor's documented wire (each fixture's `$comment` names the page). Turn 2
 // must carry turn 1's state byte for byte, and a different model must never receive it.
 import { afterEach, describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import googleFixture from "./__fixtures__/google-openai-thought-signature-tool-loop.json" with { type: "json" };
 import mistralFixture from "./__fixtures__/mistral-think-chunk-tool-loop.json" with { type: "json" };
 import reasoningFixture from "./__fixtures__/reasoning-content-tool-loop.json" with { type: "json" };

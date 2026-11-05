@@ -5,9 +5,9 @@
 // because neither is visible from a unit test of any one layer: the fold, the engine's assembly, the
 // wire serializer and the history renderer all touch the same blocks on the way through.
 import { describe, expect, test } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { ANTHROPIC_CONSOLE_CREDENTIAL_ACCOUNT, WinterProviderResolutionError, createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { ProtocolSdkMessage as SdkMessage, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { ANTHROPIC_CONSOLE_CREDENTIAL_ACCOUNT, WinterProviderResolutionError, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { contentForHost, runEngine, type ContentBlock } from "../engine.ts";
 import { stubExecutor } from "./mock.ts";

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { maxWebSearchesPerSessionEnvName, reserveWebSearchCall, resetWebSearchBudgetForTest, resolveMaxWebSearchesPerSession, webSearchBudgetRefusalText, webSearchCallsUsed, DEFAULT_MAX_WEB_SEARCHES_PER_SESSION } from "./_search-budget.ts";
 
 afterEach(resetWebSearchBudgetForTest);

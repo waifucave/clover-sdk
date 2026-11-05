@@ -13,7 +13,7 @@
 // package meant to ship, per context.md's file-ownership map — "package manifests: every publishable
 // package.json (name, publishConfig, files, exports)"). `pnpm -r pack` does NOT itself honour
 // `private` (empirically verified while building this script: it happily packs
-// `@yanlinglabs/winter-agent-sdk-darwin-arm64`, a `"private": true` platform package with no built
+// `@waifucave/clover-agent-sdk-darwin-arm64`, a `"private": true` platform package with no built
 // binary yet — R-7-2 says that package is not published at 7a), so this script computes the
 // publishable set itself and packs each one individually via `pnpm --filter <name> pack`, never `-r`.
 //
@@ -47,7 +47,7 @@
 //      `packages/provider-runtime/src/adapters/google/jwt-rs256.ts`) — a content scan for
 //      "-----BEGIN...KEY-----" would false-positive on that comment, not catch a real secret.
 //   5. package identity — every `package.json` found inside the tarball must declare a name under
-//      the `@yanlinglabs/` scope, and the tarball's own root manifest must match the package this
+//      the `@waifucave/` scope, and the tarball's own root manifest must match the package this
 //      script asked `pnpm pack` to produce (catches an accidental cross-package/foreign manifest
 //      leaking into the packed output).
 //
@@ -90,7 +90,7 @@ export interface PublishablePackage {
    *
    * Every publishable package goes to GitHub Packages (the org's own registry). The npm set is the
    * runtime dependency CLOSURE of the roots: the wrapper (what `npm install
-   * @yanlinglabs/winter-agent-sdk` needs) plus every package flagged `harness` (see `.harness`) and
+   * @waifucave/clover-agent-sdk` needs) plus every package flagged `harness` (see `.harness`) and
    * whatever those in turn depend on -- a published manifest pins its dependencies at an exact
    * version, so a root on npm whose dependency is not there is an install that 404s.
    *
@@ -424,8 +424,8 @@ export function scanExtractedPackage(expectedName: string, packageRoot: string):
         violations.push(`${expectedName}: ${relPath} is not valid JSON`);
         continue;
       }
-      if (typeof nestedName !== "string" || !nestedName.startsWith("@yanlinglabs/")) {
-        violations.push(`${expectedName}: ${relPath} declares an unexpected identity ("${String(nestedName)}", not an "@yanlinglabs/" name)`);
+      if (typeof nestedName !== "string" || !nestedName.startsWith("@waifucave/")) {
+        violations.push(`${expectedName}: ${relPath} declares an unexpected identity ("${String(nestedName)}", not an "@waifucave/" name)`);
       }
       if (relPath === "package.json") {
         sawOwnManifest = true;

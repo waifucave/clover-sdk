@@ -17,7 +17,7 @@ import { sourceObjectPath, sourceObjectAllowed, readSourceFileSync, readSourceDi
 // pre-parsed from the wire.
 
 import { join } from "node:path";
-import { WINTER_BRAND, type AgentInfo, type BrandProfile, type RuntimeAgentDefinition, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type AgentInfo, type BrandProfile, type RuntimeAgentDefinition, type SettingSource } from "@waifucave/clover-agent-sdk";
 import { resolveBuiltinAgents, resolveBuiltinAgentGates, type BuiltinAgentGates } from "./builtin-agents.ts";
 
 export type AgentDefinitionSource = "programmatic" | "project" | "user" | "plugin" | "builtin";

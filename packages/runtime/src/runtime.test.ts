@@ -3,7 +3,7 @@ import { createInMemoryChannel } from "./protocol/channel.ts";
 import { runWinterRuntime } from "./runtime.ts";
 import { echoProvider } from "./provider/mock.ts";
 import type { ProviderTurn } from "./engine.ts";
-import type { ProtocolSdkMessage as SdkMessage, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage, WinterFrame } from "@waifucave/clover-agent-sdk";
 
 async function collect(source: AsyncIterable<WinterFrame>, until: (f: WinterFrame) => boolean): Promise<WinterFrame[]> {
   const out: WinterFrame[] = [];

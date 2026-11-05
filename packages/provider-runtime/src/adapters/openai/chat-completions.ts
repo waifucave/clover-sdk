@@ -47,7 +47,7 @@
 // full assistant message (including `ThinkChunk`) back into the message history" -- instead of a
 // `reasoning_content` field Mistral does not define.
 
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { isBillingErrorBody } from "../../errors.ts";
 import { parseSse } from "../../sse.ts";
 import type { ContentBlockLike, CredentialRef, CredentialStatus, DiscoveryContext, ModelCatalogResult, ProviderAdapter, ProviderContext, ProviderEvent, ProviderMessageLike, TurnRequest } from "../../types.ts";

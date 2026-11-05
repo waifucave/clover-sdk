@@ -24,7 +24,7 @@
 //     still an `api_retry` with `error_status: 429` like everywhere else; what the quota manager
 //     ADDS is the subscription-shaped state the pinned frame actually describes.
 
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { CredentialMaterial, CredentialRef, CredentialStatus, CredentialStore, DiscoveryContext, ModelCatalogResult, ProviderAdapter, ProviderContext, ProviderEvent, TurnRequest } from "../../types.ts";
 import { parseRetryAfterMs } from "../../errors.ts";
 import { CODEX, CODEX_MODELS, codexCredentialAccount } from "./codex-config.ts";

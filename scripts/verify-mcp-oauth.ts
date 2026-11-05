@@ -47,7 +47,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
-import { encodeFrame, splitFrames, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { startFixtureAs, type FixtureAs } from "../packages/runtime/src/mcp-auth/test-fixture-as.ts";
 import { createTestFileMcpOAuthStore, readTokenRecord, readClientRecord, toSessionMcpTokenRecord, writeTokenRecord } from "../packages/runtime/src/mcp-auth/store.ts";
 import { mcpOAuthClientAccount, mcpOAuthTokenAccount } from "../packages/runtime/src/mcp-auth/account.ts";

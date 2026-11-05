@@ -16,8 +16,8 @@ import type { Provider, ProviderRequest, ProviderTurn } from "../../engine.ts";
 import type { ActionEnvelope } from "../../permissions/auto/envelope.ts";
 import type { ClassifierContext } from "../../permissions/auto/engine.ts";
 import { normalizeAutoModeConfig } from "../../permissions/auto/config.ts";
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { stampFamilyFields } from "@waifucave/clover-provider-catalog";
 
 const ENVELOPE: ActionEnvelope = {
   toolName: "Bash",

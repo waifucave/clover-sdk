@@ -13,8 +13,8 @@
 //
 // The per-family corpora (`corpus/<family>.ts`) still ask their questions of `ProviderAdapter`s; each
 // family moves onto this interface when its adapter moves into its model plugin (A-M2).
-import { KeyedFetchError, MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type KeyedFetch, type KeyedFetchConfig, type KeyedTokenSource, type ModelAdapter } from "@yanlinglabs/winter-provider-runtime";
-import type { TurnRequest } from "@yanlinglabs/winter-provider-runtime";
+import { KeyedFetchError, MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type KeyedFetch, type KeyedFetchConfig, type KeyedTokenSource, type ModelAdapter } from "@waifucave/clover-provider-runtime";
+import type { TurnRequest } from "@waifucave/clover-provider-runtime";
 import { startFake } from "../fakes/server.ts";
 import { describeCaseFailure } from "../corpus/classifier-safety.ts";
 

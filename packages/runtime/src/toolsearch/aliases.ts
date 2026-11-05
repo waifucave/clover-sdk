@@ -24,7 +24,7 @@
 // directly (never going through a name at all) is untouched by it -- `disallowedTools` remains the
 // thing that actually closes that second door (WS-09 §10, same verdict).
 import { getRegisteredTool, isBareDenied, type AdvertisedPartition, type ToolDescriptor } from "../tools/registry.ts";
-import { WINTER_BRAND, mcpToolName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, mcpToolName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 
 /** The one brand field this module needs: the standing server's name. */
 export type AliasBrand = Pick<BrandProfile, "mcpServerName">;

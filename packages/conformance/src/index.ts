@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-conformance` — the public barrel (P7a Lane C, WS-02 §9/§3).
+// `@waifucave/clover-conformance` — the public barrel (P7a Lane C, WS-02 §9/§3).
 //
 // This package ships the pieces a CONSUMER of Winter's conformance story needs without cloning this
 // repository: the trace normalizer differential.ts already uses to compare a fresh trace against a
@@ -9,10 +9,10 @@
 //
 // Two subpaths exist BESIDE this barrel, each independently importable so a consumer who only wants
 // one slice does not pull in the rest:
-//   `@yanlinglabs/winter-conformance/trace`    -- just `normalizeTrace`/`compareTraces` (also here).
-//   `@yanlinglabs/winter-conformance/official` -- just the fetch/capture mechanics (also here).
+//   `@waifucave/clover-conformance/trace`    -- just `normalizeTrace`/`compareTraces` (also here).
+//   `@waifucave/clover-conformance/official` -- just the fetch/capture mechanics (also here).
 // Both subpaths are re-exported from this file too, so `import { normalizeTrace } from
-// "@yanlinglabs/winter-conformance"` and the subpath import are equally valid; pick whichever import
+// "@waifucave/clover-conformance"` and the subpath import are equally valid; pick whichever import
 // graph a given consumer prefers.
 //
 // NOTE ON RUNTIME PORTABILITY: `./official/capture.ts` calls `Bun.spawn` (to install the pinned

@@ -14,7 +14,7 @@ import { readSourceTextWithOrigin, type SourceOrigin, bindSourceObject, readSour
 import { realpathSync } from "node:fs";
 import type { Dirent } from "node:fs";
 import { basename, join, resolve, sep } from "node:path";
-import type { BrandProfile, SdkPluginConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { BrandProfile, SdkPluginConfig } from "@waifucave/clover-agent-sdk";
 import { parseSkillFile } from "../skills/frontmatter.ts";
 import { pluginNameError } from "../skills/frontmatter.ts";
 import { parseAgentDefinitionFile } from "../subagents/definitions.ts";

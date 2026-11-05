@@ -3,7 +3,7 @@
 // T10's own job) and TINY injected timeouts throughout (never a real 60s/30s wait — the stall
 // watchdog killed a predecessor on exactly this class of mistake).
 import { describe, test, expect } from "bun:test";
-import { HOOK_EVENTS, type HookEvent, type PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import { HOOK_EVENTS, type HookEvent, type PermissionUpdate } from "@waifucave/clover-agent-sdk";
 import type { SourcedHookEntry, HookRegistry } from "./registry.ts";
 import {
   runHooks,

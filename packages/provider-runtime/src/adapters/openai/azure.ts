@@ -26,7 +26,7 @@
 //     generated default and therefore no privileged header on this surface at all. The catalog row
 //     is `experimental` (R6-A); promoting it is Lane X's, on the corpus.
 
-import type { WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { CredentialRef, CredentialStatus, DiscoveryContext, ModelCatalogResult, ProviderAdapter, ProviderContext, ProviderEvent, TurnRequest } from "../../types.ts";
 import { chatTurn } from "./chat-completions.ts";
 import { responsesTurn } from "./responses.ts";

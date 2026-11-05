@@ -1,7 +1,7 @@
 // Phase 5 Lane C (task 6) -- the plan-mode body (WS-11 §6.6, derived-shapes-p5 item (c)).
 import { test, expect, describe } from "bun:test";
 import { DEFAULT_PLAN_BODY, PLAN_MODE_ENFORCEMENT, PLAN_MODE_PROTOCOL, renderPlanModeBlock } from "./plan-mode.ts";
-import { DEFAULT_PLANS_DIRECTORY } from "@yanlinglabs/winter-agent-sdk";
+import { DEFAULT_PLANS_DIRECTORY } from "@waifucave/clover-agent-sdk";
 
 describe("context/plan-mode.ts", () => {
   test("the default rendering carries the enforcement preamble, the default body and the ExitPlanMode protocol", () => {

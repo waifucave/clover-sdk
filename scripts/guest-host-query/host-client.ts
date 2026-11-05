@@ -1,7 +1,7 @@
 /** Actual SDK query over fixed owned pipes. This transports bytes; it cannot admit a guest owner. */
 import { fstatSync, readFileSync, writeSync, closeSync } from "node:fs";
 import { createReadStream } from "node:fs";
-import { query, splitFrames, CLIConnectionError, ProcessError, ProtocolDecodeError, ResultError, AbortError, type RuntimeConfig, type PermissionMode, type SpawnedRuntimeProcess } from "@yanlinglabs/winter-agent-sdk";
+import { query, splitFrames, CLIConnectionError, ProcessError, ProtocolDecodeError, ResultError, AbortError, type RuntimeConfig, type PermissionMode, type SpawnedRuntimeProcess } from "@waifucave/clover-agent-sdk";
 import { assertLinuxHostQueryConfig } from "../../packages/runtime/src/guest/linux-host-query-profile.ts";
 import { createHash } from "node:crypto";
 import { fixtureCase, toolScript, terminalText, PROC_WRITE_RESULT, PLAN_BOUNDARY_RESULT, VIEW_RESULT, fixtureProbePaths, type ProbePaths, type Case } from "./cases.ts";

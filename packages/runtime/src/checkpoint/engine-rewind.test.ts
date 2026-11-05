@@ -9,7 +9,7 @@ import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ControlResponseFrame, RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { ControlResponseFrame, RuntimeConfig, WinterFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderTurn, type ToolExecutor } from "../engine.ts";
 import { createFileCheckpointSink, CHECKPOINT_DIRNAME } from "./sink.ts";

@@ -4,7 +4,7 @@ import * as providerState from "../store/provider-state.ts";
 import { mkdtempSync, mkdirSync, realpathSync, readFileSync, writeFileSync, readdirSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { WinterCompatibilitySessionStore, compatibilityKeys, encodeFrame, splitFrames, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type RuntimeConfig, type PermissionUpdate } from "@yanlinglabs/winter-agent-sdk";
+import { WinterCompatibilitySessionStore, compatibilityKeys, encodeFrame, splitFrames, TEST_KEYCHAIN_ENV, TEST_KEYCHAIN_MEMORY, type RuntimeConfig, type PermissionUpdate } from "@waifucave/clover-agent-sdk";
 import { runEmbeddedSession } from "../embedded.ts";
 import { Queue } from "../protocol/channel.ts";
 import { runEngine } from "../engine.ts";

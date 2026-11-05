@@ -31,7 +31,7 @@
 // or test that injects its own `fetch` gets the SAME URL rules and caps, and EVERY redirect refused
 // (`redirect: "error"`) -- `boundedFetch` cannot run over a foreign network function, and a policy that
 // followed hops on one it cannot see would be a policy in name only.
-import { boundedFetch, classifyAddress, DEFAULT_MAX_REDIRECTS, ProviderBodyLimitError, ProviderRequestError, type EndpointPolicy } from "@yanlinglabs/winter-provider-runtime";
+import { boundedFetch, classifyAddress, DEFAULT_MAX_REDIRECTS, ProviderBodyLimitError, ProviderRequestError, type EndpointPolicy } from "@waifucave/clover-provider-runtime";
 import { isIP } from "node:net";
 import { McpOAuthError } from "./errors.ts";
 

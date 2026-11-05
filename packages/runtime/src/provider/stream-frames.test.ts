@@ -5,7 +5,7 @@
 // likely to be got wrong -- `stream_event` is gated on `includePartialMessages` and nothing else in
 // this family is.
 import { test, expect, describe } from "bun:test";
-import type { ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createStreamFrameSink } from "./stream-frames.ts";
 
 function harness(opts: { includePartialMessages?: boolean } = {}): { sink: ReturnType<typeof createStreamFrameSink>; frames: SdkMessage[] } {

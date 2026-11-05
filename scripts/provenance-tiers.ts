@@ -18,8 +18,8 @@
 //   bun run scripts/provenance-tiers.ts --check    # fail (exit 1) if the block has drifted
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
-import { CATALOG_VOCABULARIES, loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { CATALOG_VOCABULARIES, loadCatalog } from "@waifucave/clover-provider-catalog";
 
 export const PROVENANCE_PATH = join(import.meta.dir, "..", "packages", "provider-catalog", "PROVENANCE.md");
 

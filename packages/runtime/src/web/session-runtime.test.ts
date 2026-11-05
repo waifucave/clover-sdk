@@ -4,7 +4,7 @@
 // claim that matters is about what a session ADVERTISES: nothing without an executor, and with one
 // exactly what the session's own facts allow.
 import { afterEach, describe, expect, test } from "bun:test";
-import { resolveWebToolsConfig, type ProtocolSdkMessage as SdkMessage, type RuntimeConfig, type WinterFrame } from "@yanlinglabs/winter-agent-sdk";
+import { resolveWebToolsConfig, type ProtocolSdkMessage as SdkMessage, type RuntimeConfig, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import "../tools/descriptors/index.ts";
 import { runEngine, type EngineOptions, type Provider } from "../engine.ts";
 import { scriptedProvider } from "../provider/mock.ts";

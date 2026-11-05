@@ -8,7 +8,7 @@
 // structural property here, not a promise.
 //
 // The move direction is the only one available: `packages/runtime` depends on
-// `@yanlinglabs/winter-provider-runtime`, and R6-4 forbids the reverse import (cycle). So shared
+// `@waifucave/clover-provider-runtime`, and R6-4 forbids the reverse import (cycle). So shared
 // code has to live at the lower level.
 //
 // BEHAVIOUR IS PRESERVED EXACTLY, including one wart, deliberately: an unrecognised IPv6 string

@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { runEmbeddedSession } from "../embedded.ts";
 import { assertLinuxGuidedHostQueryConfig, assertLinuxGuidedHostQueryRoots } from "./linux-guided-host-query-profile.ts";
 import { LINUX_GUIDED_READER_LIMITS, parseLinuxGuidedReaderRegistration } from "./linux-guided-reader-protocol.ts";

@@ -1,7 +1,7 @@
 // Task 12 (WS-07 §11): subagent inheritance mechanics -- the forced-mode table cell-by-cell, the
 // disableBypassPermissionsMode veto, and the child-resume stricter-of rule.
 import { describe, test, expect } from "bun:test";
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
 import { computeChildPolicy, resolveChildResumeMode, stricterOf, AUTO_MODE_STRICTNESS_ORDER, ChildResumeModeIncomparableError } from "./inheritance.ts";
 import { emptyRuleSet } from "../ruleset.ts";
 import type { PolicyState } from "../policy-state.ts";

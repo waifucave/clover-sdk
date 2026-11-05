@@ -4,8 +4,8 @@
 import { expect, test } from "bun:test";
 import { query } from "./query.ts";
 import { WinterRpcError } from "./errors.ts";
-import { inMemoryProcess } from "@yanlinglabs/winter-agent-runtime/testing";
-import type { Provider } from "@yanlinglabs/winter-agent-runtime";
+import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
+import type { Provider } from "@waifucave/clover-agent-runtime";
 import type { EffortLevel } from "./protocol/config.ts";
 
 test("setEffort(): resolves on the engine's ack and the next turn runs at the new level; an unknown level rejects with `invalid_effort`", async () => {

@@ -3,7 +3,7 @@
 // source-tagged registrations, which ones does `matching(event, toolName)` return, and in what
 // order."
 import { describe, test, expect } from "bun:test";
-import { HOOK_EVENTS, type HookEvent } from "@yanlinglabs/winter-agent-sdk";
+import { HOOK_EVENTS, type HookEvent } from "@waifucave/clover-agent-sdk";
 import { buildHookRegistry, TOOL_SCOPED_HOOK_EVENTS, type SourcedHookEntry } from "./registry.ts";
 
 function reg(id: string, event: HookEvent, source: SourcedHookEntry["source"], matcher?: string): SourcedHookEntry {

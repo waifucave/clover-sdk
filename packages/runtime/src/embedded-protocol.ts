@@ -13,7 +13,7 @@
 // code out. The wire INSIDE those chunks is the unchanged NDJSON frame stream (WS-04 §2), so the
 // wrapper's `query()`, the projector, the approval bridge and `sdk_mcp_call` cannot tell a Worker
 // from a spawned `winter` -- which is the whole point: one protocol, two topologies.
-import type { HostExecutionFloor } from "@yanlinglabs/winter-agent-sdk";
+import type { HostExecutionFloor } from "@waifucave/clover-agent-sdk";
 import type { HostCodeProtection } from "./sandbox/host-code-protection.ts";
 
 /** A worker-side spawn command (the workflow worker's `(file, args)`), structurally `workflows/sandbox.ts`'s `WorkerCommand`. */

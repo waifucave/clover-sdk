@@ -30,7 +30,7 @@
 // Input `{}` -- the runtime forwards the session's own conversation/tool history; no model-supplied
 // parameters. Availability stays gated on `winter.reviewer-model` (a reviewer must be resolvable in
 // the session's provider catalog).
-import { ADVISOR_DEFINITION } from "@yanlinglabs/winter-agent-sdk/tools";
+import { ADVISOR_DEFINITION } from "@waifucave/clover-agent-sdk/tools";
 
 import { stub, builtinNameOf, definitionFields } from "./_shared.ts";
 

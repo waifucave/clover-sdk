@@ -2,7 +2,7 @@ import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HOST_CODE_PROCESS_SUBTYPES as operations, type HostCodeProcessStart, type HostCodeProcessStartReply, type HostCodeProcessPollReply } from "@yanlinglabs/winter-agent-sdk";
+import { HOST_CODE_PROCESS_SUBTYPES as operations, type HostCodeProcessStart, type HostCodeProcessStartReply, type HostCodeProcessPollReply } from "@waifucave/clover-agent-sdk";
 import { createHostCodeProcessRegistration, type HostCodeCanonicalContext } from "./host-code-broker.ts";
 import { installHostCodeProcessClient, type HostCodeProcessClient } from "./host-code-process.ts";
 import { brokeredWorkflowWorker } from "../workflows/host-code-worker.ts";

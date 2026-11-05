@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
 // WS-10 §5: foreground/background policy. `run_in_background` (AgentInput) is an INVOCATION
 // REQUEST, never the whole rule. Resolution order, verbatim:
 //

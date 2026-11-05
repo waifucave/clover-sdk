@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { loadCatalog } from "@yanlinglabs/winter-provider-catalog";
+import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { DiscoveryContext, ModelCatalogResult, ProviderAdapter } from "./types.ts";
 import { createMemoryCredentialStore } from "./credentials/memory.ts";
 import { createDiscoveryCache, discoverModels } from "./discovery.ts";

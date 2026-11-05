@@ -2,7 +2,7 @@
 // against its real backup store; the engine keeps it green against interception and the control
 // request.
 import { test, expect, describe } from "bun:test";
-import type { RewindFilesResult, RuntimeConfig, WinterFrame, ControlResponseFrame, ProtocolSdkMessage as SdkMessage } from "@yanlinglabs/winter-agent-sdk";
+import type { RewindFilesResult, RuntimeConfig, WinterFrame, ControlResponseFrame, ProtocolSdkMessage as SdkMessage } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type Provider, type ProviderTurn } from "../engine.ts";
 import { stubExecutor } from "../provider/mock.ts";

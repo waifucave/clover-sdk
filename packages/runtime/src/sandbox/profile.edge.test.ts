@@ -10,7 +10,7 @@
 // of the output.
 import { describe, expect, test } from "bun:test";
 import { buildSeatbeltProfile, type SeatbeltProfileInput } from "./profile.ts";
-import { WINTER_BRAND } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { recursiveGlobToSbplRegexSource } from "../permissions/file-rules.ts";
 
 const OPS = "file-write* file-write-unlink file-write-create";

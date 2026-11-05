@@ -5,9 +5,9 @@
 // obligations -- what it accumulates, what it forwards, what it refuses to do, and what it must
 // never let reach a frame.
 import { test, expect, describe } from "bun:test";
-import type { ProviderAdapter, ProviderContext, ProviderEvent, ResolvedModel, TurnRequest } from "@yanlinglabs/winter-provider-runtime";
-import { IMAGE_BUDGET_NOTE } from "@yanlinglabs/winter-provider-runtime";
-import type { WireStreamEvent } from "@yanlinglabs/winter-agent-sdk";
+import type { ProviderAdapter, ProviderContext, ProviderEvent, ResolvedModel, TurnRequest } from "@waifucave/clover-provider-runtime";
+import { IMAGE_BUDGET_NOTE } from "@waifucave/clover-provider-runtime";
+import type { WireStreamEvent } from "@waifucave/clover-agent-sdk";
 import { adapterAsProvider, createIdentityHistoryRenderer, foldProviderStream, ProviderTurnError, stampNativeState } from "./bridge.ts";
 import type { ProviderMessage, ProviderStreamSink, ReasoningProgress } from "../engine.ts";
 

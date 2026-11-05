@@ -1,6 +1,6 @@
 // The Winter runtime's messaging COMPOSITION module: the process-level runtime singleton the three
 // messaging tool executors read, over the router core published as
-// `@yanlinglabs/winter-agent-sdk/messaging`.
+// `@waifucave/clover-agent-sdk/messaging`.
 //
 // PHASE 7B (R-7b-4): every routing rule that used to live in this file -- message-id allocation and
 // the retry ledger, resolution, the bounds, the SendMessage/ListAgents/ReadNotifications
@@ -18,8 +18,8 @@
 //   messages, notification queue and messageId ledger all silently replaced mid-turn by the child's
 //   fresh ones. See `ensureDefaultMessagingRuntimeRegistered` (reference-adapter.ts) for the lazy,
 //   idempotent registrar built on top of this.
-import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
-import type { MessagingRuntimeDeps } from "@yanlinglabs/winter-agent-sdk/messaging";
+import type { PermissionMode } from "@waifucave/clover-agent-sdk";
+import type { MessagingRuntimeDeps } from "@waifucave/clover-agent-sdk/messaging";
 
 // The core, re-exported under the names this package has always imported from here.
 export {
@@ -32,7 +32,7 @@ export {
   listAgents,
   readNotifications,
   createMessagingRouter,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 export type {
   MessagingRouterSeamWithRoster,
   SubscriberDirectory,
@@ -47,7 +47,7 @@ export type {
   RuntimeAddress,
   ListedRuntimeObject,
   DeliveryOutcome,
-} from "@yanlinglabs/winter-agent-sdk/messaging";
+} from "@waifucave/clover-agent-sdk/messaging";
 export type { PermissionMode };
 
 let activeRuntime: MessagingRuntimeDeps | undefined;

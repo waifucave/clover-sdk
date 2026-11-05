@@ -4,7 +4,7 @@
 // `\.git`, so the exact reading alone would stop a deny rule or a write floor that used to fire on those
 // spellings. Every command below was caught before the change; each must still be caught after it.
 import { describe, expect, test } from "bun:test";
-import type { PermissionMode, PermissionRuleValue } from "@yanlinglabs/winter-agent-sdk";
+import type { PermissionMode, PermissionRuleValue } from "@waifucave/clover-agent-sdk";
 import {
   evaluate,
   NO_OPINION_AUTO_ENGINE,

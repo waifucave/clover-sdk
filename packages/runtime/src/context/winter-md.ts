@@ -36,7 +36,7 @@ import { execFileSync } from "node:child_process";
 import { prepareHostChildLaunch } from "../sandbox/host-child-floor.ts";
 import { realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@yanlinglabs/winter-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
 import { expandImports } from "./imports.ts";
 import { neutralizeReminderTags, readWhole } from "./injection.ts";
 

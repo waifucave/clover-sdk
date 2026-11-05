@@ -1,7 +1,7 @@
 /** GM1: the host-query guest's coordination tools, host messaging flag, host-answer frames and subtype gates. No native admission is minted. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import type { RuntimeConfig } from "@yanlinglabs/winter-agent-sdk";
+import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { assertLinuxHostQueryConfig, checkLinuxHostQueryFrame, hostMessageRequestKind, LINUX_HOST_MESSAGE_SUBTYPES, LINUX_HOST_QUERY_COORDINATION_TOOLS, LINUX_HOST_QUERY_TOOLS } from "./linux-host-query-profile.ts";
 import { createRpcBridge } from "../rpc/bridge.ts";
 import { buildRegistryToolExecutor, type RegistryToolExecutorDeps } from "../tools/registry.ts";

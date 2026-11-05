@@ -8,8 +8,8 @@ import { buildHeaders, buildRequestBody, LOOKBACK_MARGIN_POSITIONS, perMessageEf
 import { ProviderRequestError } from "../../http.ts";
 import { createEndpointPolicy } from "../../endpoint-policy.ts";
 import type { CredentialMaterial, CredentialRef, ProviderContext, ProviderEvent, ProviderMessageLike, TurnRequest } from "../../types.ts";
-import type { WinterCatalog, WinterModelDescriptor } from "@yanlinglabs/winter-provider-catalog";
-import { loadCatalog, stampFamilyFields } from "@yanlinglabs/winter-provider-catalog";
+import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { loadCatalog, stampFamilyFields } from "@waifucave/clover-provider-catalog";
 
 const evidence = <T>(value: T) => ({ value, source: "official-doc" as const, confidence: "declared" as const });
 

@@ -9,9 +9,9 @@
 //   - a 400 naming the item falls back once, sticky and logged once;
 //   - a compaction restarts the chain: one head update, nothing stale.
 import { describe, expect, test } from "bun:test";
-import type { RuntimeConfig, WinterFrame } from "@yanlinglabs/winter-agent-sdk";
-import { createMemoryCredentialStore } from "@yanlinglabs/winter-provider-runtime";
-import type { WinterCatalog } from "@yanlinglabs/winter-provider-catalog";
+import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import type { WinterCatalog } from "@waifucave/clover-provider-catalog";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type EngineOptions } from "../engine.ts";
 import { stubExecutor } from "./mock.ts";

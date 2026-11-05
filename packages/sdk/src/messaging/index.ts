@@ -1,4 +1,4 @@
-// `@yanlinglabs/winter-agent-sdk/messaging` — the cross-runtime messaging contract and its router
+// `@waifucave/clover-agent-sdk/messaging` — the cross-runtime messaging contract and its router
 // core (WS-10 §10–§15), published under R-7b-4 ("move down into it").
 //
 // WHAT IS HERE, and why it is a SUBPATH rather than part of the main barrel. Three parties must
