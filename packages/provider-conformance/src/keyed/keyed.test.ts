@@ -17,10 +17,18 @@ describe("the keyed fetch conformance cases", () => {
   }, 30_000);
 
   test("the cases are not vacuous: a fetch that adds no key and follows any redirect fails them", async () => {
-    // Loopback only (the tests' network guard refuses anything else): a non-loopback URL is answered
-    // locally, as a fetch with no host rule would have sent it.
-    const plain = () => (url: string, init?: Parameters<typeof fetch>[1]) => (new URL(url).hostname === "127.0.0.1" || new URL(url).hostname === "localhost" ? fetch(url, { ...(init ?? {}) } as RequestInit) : Promise.resolve(new Response("sent")));
-    const report = await runKeyedFetchConformance("a plain fetch", plain as never);
+    // A fetch with no host rule that follows every redirect -- but only ever on loopback (the tests'
+    // network guard refuses anything else): it follows redirects by hand, and a non-loopback URL, first
+    // or redirected to, is answered here as if it had been sent.
+    const loopback = (url: string): boolean => ["127.0.0.1", "localhost"].includes(new URL(url).hostname);
+    const plainFetch = async (url: string, init?: Parameters<typeof fetch>[1], hops = 0): Promise<Response> => {
+      if (!loopback(url)) return new Response("sent");
+      const res = await fetch(url, { ...(init ?? {}), redirect: "manual" } as RequestInit);
+      const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (location === null || hops >= 5) return res;
+      return plainFetch(new URL(location, url).toString(), init, hops + 1);
+    };
+    const report = await runKeyedFetchConformance("a plain fetch", (() => (url: string, init?: Parameters<typeof fetch>[1]) => plainFetch(url, init)) as never);
     expect(report.ok).toBe(false);
     const failed = report.outcomes.filter((o) => o.status === "failed").map((o) => o.id);
     expect(failed).toEqual(expect.arrayContaining(["declared-hosts-only", "key-in-placement", "caller-cannot-set-the-key", "redirect-elsewhere-refused", "retry-401-once-with-newer-token", "idle-ends-typed"]));
