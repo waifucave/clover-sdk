@@ -150,6 +150,39 @@ export function setWinterIdentity(next: WinterIdentity): () => void {
 }
 
 /**
+ * The brand fields an identity is made of, structurally (this package never imports the sdk, whose
+ * `BrandProfile` carries them under these names): `packageName` is the product token, and
+ * `productVersion` the host's own release (absent: this package's version, right only for Winter).
+ */
+export interface BrandIdentitySource {
+  packageName: string;
+  codexOriginator: string;
+  contactUrl: string;
+  productVersion?: string;
+}
+
+/** The identity a brand presents: the one mapping from brand fields to identity tokens. */
+export function identityFromBrand(brand: BrandIdentitySource): WinterIdentity {
+  return {
+    product: brand.packageName,
+    codexOriginator: brand.codexOriginator,
+    contactUrl: brand.contactUrl,
+    ...(brand.productVersion === undefined ? {} : { version: brand.productVersion }),
+  };
+}
+
+/**
+ * Install a brand's identity (`setWinterIdentity(identityFromBrand(brand))`), with the same frame and
+ * disposer semantics. What a branded SESSION installs for its run (the runtime's production wiring)
+ * and what a branded HOST installs for its own process, where its own provider calls run outside any
+ * session (Clover's daemon: titles, the bash reviewer, sign-ins) — so the two can never present
+ * differently. Throws `TypeError` for a brand whose identity `setWinterIdentity` would refuse.
+ */
+export function installBrandIdentity(brand: BrandIdentitySource): () => void {
+  return setWinterIdentity(identityFromBrand(brand));
+}
+
+/**
  * `<product>/<version>` — the `User-Agent` every adapter family sends.
  *
  * Never an editor, a vendor CLI or a first-party product identity (WS-13 §5, D21). Where a vendor

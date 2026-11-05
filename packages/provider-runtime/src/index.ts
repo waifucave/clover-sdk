@@ -60,6 +60,10 @@ export { renderIdentityHeaders } from "./identity.ts";
 // `activeWinterIdentity` is what the two originator sites read. See identity.ts's own header for
 // why this is process-level state and not a threaded parameter.
 export { setWinterIdentity, activeWinterIdentity } from "./identity.ts";
+// 0.0.63: the brand-to-identity mapping, once: a session and a host install the same identity from the
+// same brand (`productVersion` puts the host's own release after its product token).
+export { identityFromBrand, installBrandIdentity } from "./identity.ts";
+export type { BrandIdentitySource } from "./identity.ts";
 // 0.0.56 (W9): Winter's own default identity, now declared in this package (it used to be read off the
 // sdk's brand profile, which made the sdk -- and its optional native binary -- a runtime dependency).
 export { WINTER_DEFAULT_IDENTITY } from "./winter-defaults.ts";

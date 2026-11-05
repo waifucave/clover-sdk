@@ -342,6 +342,16 @@ describe("P7a (D19): a host's own brand reaches every Winter-owned name", () => 
     expect(activeWinterIdentity()).toEqual({ product: WINTER_BRAND.packageName, codexOriginator: WINTER_BRAND.codexOriginator, contactUrl: WINTER_BRAND.contactUrl });
   });
 
+  test("0.0.63: a brand that names its release puts it on the User-Agent; the session gives the identity back", async () => {
+    const acmeHome = tempDirNamed("p7a-acme-home-");
+    const cwd = tempDirNamed("p7a-cwd-");
+    await withWiring(acmeConfig({ cwd, brand: { ...ACME, productVersion: "4.5.6" } }), { ACME_HOME: acmeHome }, () => {
+      expect(activeWinterIdentity()).toEqual({ product: "acme", codexOriginator: "acme", contactUrl: "https://acme.example/support", version: "4.5.6" });
+      expect(winterUserAgent()).toBe("acme/4.5.6");
+    });
+    expect(activeWinterIdentity()).toEqual({ product: WINTER_BRAND.packageName, codexOriginator: WINTER_BRAND.codexOriginator, contactUrl: WINTER_BRAND.contactUrl });
+  });
+
   test("R-7a-8: the keychain store and the cross-provider `authRef` read ONE source -- `com.acme.core`", () => {
     // The case that used to be wrong: a host that set ONLY `brand.keychainService`. `query()` does
     // emit the deprecated top-level key for such a session, but a reader of that key alone is a

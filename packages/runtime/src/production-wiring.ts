@@ -34,7 +34,7 @@ import { applyHostManagedSettingsFilter, filterSettingsEnv, type EnvFilterTier }
 // P7a (D19): the two process-level brand surfaces this module installs per session -- see (10b).
 import { rebrandStandingServerTools } from "./tools/registry.ts";
 import { canonicalAliases, WINTER_CANONICAL_ALIASES } from "./toolsearch/aliases.ts";
-import { setWinterIdentity } from "@yanlinglabs/winter-provider-runtime";
+import { installBrandIdentity } from "@yanlinglabs/winter-provider-runtime";
 import { resolveSettingsDetailed, filterEscalatingDefaultMode, providerSettingsFrom } from "./settings/resolve.ts";
 import { sourceRule, rawToRuleValue, type SourcedRuleEntry } from "./permissions/ruleset.ts";
 import { validatePermissionRuleString } from "./permissions/grammar.ts";
@@ -1137,7 +1137,9 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
     Object.entries(canonicalAliases(brand)).map(([native, target]) => ({ from: WINTER_CANONICAL_ALIASES[native] as string, to: target })),
     brand.mcpServerName,
   );
-  const disposeIdentity = setWinterIdentity({ product: brand.packageName, codexOriginator: brand.codexOriginator, contactUrl: brand.contactUrl });
+  // The brand's whole identity, its `productVersion` included (0.0.63), through the one mapping a host
+  // uses for its own process too (`installBrandIdentity`), so the two never present differently.
+  const disposeIdentity = installBrandIdentity(brand);
 
   // (11) COMPACTION (Lane K). Registered unconditionally: with no controller the engine never
   // auto-compacts and `/compact` answers "no compaction controller", which is a permanent

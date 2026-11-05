@@ -92,7 +92,18 @@ export interface BrandProfile {
    * from a profile is exactly where a surprising scheme should not be accepted.
    */
   contactUrl: string;
+  /**
+   * 0.0.63: the HOST'S OWN RELEASE, which its identity puts after its product token
+   * (`User-Agent: <packageName>/<productVersion>`, a vendor row's `<version>` placeholder). OPTIONAL,
+   * and absent in `WINTER_BRAND`: absent means the provider layer's own version, which is right for
+   * Winter (the product and the SDK are one release) and wrong for any other product. A plain version
+   * token: letters, digits, `.`, `+` and `-`, at most 64 characters.
+   */
+  productVersion?: string;
 }
+
+/** `brand.productVersion`'s grammar — the provider layer's own `version` token rule. */
+const PRODUCT_VERSION_RE = /^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/;
 
 /**
  * The token grammar for the NAME-shaped fields: lowercase, digit- and hyphen-continued, 1..32 chars.
@@ -164,7 +175,8 @@ export const WINTER_BRAND: Readonly<BrandProfile> = Object.freeze({
 export type BrandValidation = { ok: true; brand: BrandProfile } | { ok: false; reason: string };
 
 interface FieldRule {
-  field: keyof BrandProfile;
+  // The required string fields only: `productVersion` has its own optional rule below.
+  field: Exclude<keyof BrandProfile, "productVersion">;
   re: RegExp;
   shape: string;
 }
@@ -217,6 +229,8 @@ export function resolveBrand(partial?: Partial<BrandProfile>): BrandValidation {
     tempRootName: pick("tempRootName"),
     pluginManifestDir: pick("pluginManifestDir"),
     contactUrl: pick("contactUrl"),
+    // Carried only when the host stated one; Winter's own brand has none.
+    ...(p.productVersion === undefined ? {} : { productVersion: p.productVersion }),
   };
 
   for (const key of Object.keys(brand) as Array<keyof BrandProfile>) {
@@ -242,6 +256,9 @@ export function resolveBrand(partial?: Partial<BrandProfile>): BrandValidation {
       ok: false,
       reason: `brand.contactUrl: ${JSON.stringify(brand.contactUrl)} is not an https:// URL — it is published to vendors in identity headers as the way to reach whoever runs this client`,
     };
+  }
+  if (brand.productVersion !== undefined && !PRODUCT_VERSION_RE.test(brand.productVersion)) {
+    return { ok: false, reason: `brand.productVersion: ${JSON.stringify(brand.productVersion)} is not a plain version token (letters, digits, '.', '+', '-'; at most 64 characters)` };
   }
   if (FIRST_PARTY_ORIGINATORS.includes(brand.codexOriginator)) {
     return {

@@ -209,3 +209,47 @@ describe("the derived-name helpers", () => {
     expect(userAgent({ packageName: "acme-agent-sdk" }, "9.9.9")).toBe("acme-agent-sdk/9.9.9");
   });
 });
+
+// 0.0.63: the host's own release rides on its brand, so the identity a host installs for its own
+// process and the one a branded session installs come from the same profile (provider-runtime's
+// `identityFromBrand`). Optional, absent from Winter's own brand, and a plain version token.
+describe("brand.productVersion", () => {
+  const acme = { productName: "Acme", packageName: "acme", homeDirName: ".acme", projectDirName: ".acme", instructionsFile: "ACME.md", envPrefix: "ACME_", keychainService: "com.acme.core", mcpServerName: "acme", presetName: "acme_code", processLabel: "acme", codexOriginator: "acme", tempRootName: "acme", pluginManifestDir: ".acme-plugin", contactUrl: "https://acme.example/support" };
+
+  test("absent from WINTER_BRAND and from a resolved profile that never named one (no `undefined` key)", () => {
+    expect("productVersion" in WINTER_BRAND).toBe(false);
+    const resolved = resolveBrand(acme);
+    expect(resolved.ok).toBe(true);
+    expect(resolved.ok && "productVersion" in resolved.brand).toBe(false);
+    const explicitUndefined = resolveBrand({ ...acme, productVersion: undefined } as unknown as Partial<BrandProfile>);
+    expect(explicitUndefined.ok && "productVersion" in explicitUndefined.brand).toBe(false);
+  });
+
+  test("carried as given when the host names its release", () => {
+    for (const version of ["0.124.0", "1.0.0-rc.1", "2.0.0+build.7", "7"]) {
+      const resolved = resolveBrand({ ...acme, productVersion: version });
+      expect(resolved.ok).toBe(true);
+      expect(resolved.ok && resolved.brand.productVersion).toBe(version);
+    }
+  });
+
+  for (const [label, value] of [
+    ["empty", ""],
+    ["a space", "1.2 beta"],
+    ["a slash", "1/2"],
+    ["a newline", "1.2\nX-Injected: 1"],
+    ["a leading dot", ".1"],
+    ["over 64 characters", "1".repeat(65)],
+  ] as const) {
+    test(`refuses a version with ${label}`, () => {
+      const resolved = resolveBrand({ ...acme, productVersion: value });
+      expect(resolved.ok).toBe(false);
+      expect(!resolved.ok && resolved.reason).toContain("brand.productVersion");
+    });
+  }
+
+  test("a non-string is refused like every other field", () => {
+    const resolved = resolveBrand({ ...acme, productVersion: 7 as unknown as string });
+    expect(resolved.ok).toBe(false);
+  });
+});
