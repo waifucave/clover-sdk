@@ -5894,6 +5894,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     // returned by `select:` -- one hop from callable. (The Winter-branch DEFAULT canonical pair was
     // never exposed this way: `hideAliasExcludedTwins` applies it unconditionally.)
     ...(config.toolAliases !== undefined ? { toolAliases: config.toolAliases } : {}),
+    // The session's brand, so the candidate pool hides the SAME canonical twins `init.tools` does
+    // (`suppressionAliasTable` above is spelled from it too). Without it a branded host's twins of a
+    // withheld native were listed as loadable (`toolsearch/exposure.ts`'s `brand`).
+    brand: sessionBrand,
     ...(effectiveMcpStateSource !== undefined ? { stateSource: effectiveMcpStateSource } : {}),
   });
 

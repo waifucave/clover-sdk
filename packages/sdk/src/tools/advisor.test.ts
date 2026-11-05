@@ -199,6 +199,27 @@ describe("transcriptSourceForSessionKey (ruling P-6: the durable transcript, rea
     }
   });
 
+  test("C0 follow-up: there is no default home -- a call naming neither a store nor a home refuses", async () => {
+    // It used to fall back to the SDK's own brand's home (`~/.winter/sdk`), the wrong store for any
+    // branded host. A JavaScript caller (no type checker) gets the refusal at the call, not a read.
+    const key = { projectKey: "proj", sessionId: "s_x" };
+    expect(() => transcriptSourceForSessionKey(key, {} as never)).toThrow(TypeError);
+    expect(() => transcriptSourceForSessionKey(key, undefined as never)).toThrow(TypeError);
+    expect(() => transcriptSourceForSessionKey(key, { winterHome: "" })).toThrow(TypeError);
+  });
+
+  test("a named home reads that home's filesystem store", async () => {
+    const home = mkdtempSync(join(tmpdir(), "winter-advisor-transcript-"));
+    try {
+      const store = new WinterCompatibilitySessionStore({ winterHome: home });
+      const key = { projectKey: "proj", sessionId: "s_3" };
+      await store.append(key, [{ type: "user", uuid: "u1", message: { role: "user", content: "by home" } }]);
+      await expect(transcriptSourceForSessionKey(key, { winterHome: home }).getEntries()).resolves.toEqual([{ role: "user", text: "by home" }]);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
   test("non-conversational entries are skipped -- only what a reviewer can read is forwarded", async () => {
     const home = mkdtempSync(join(tmpdir(), "winter-advisor-transcript-"));
     try {

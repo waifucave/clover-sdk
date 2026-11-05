@@ -8,6 +8,7 @@ import type { PermissionMode } from "@yanlinglabs/winter-agent-sdk";
 import { registeredNameForMcpSpelling, type DeferralActivation, type ToolDescriptor } from "../tools/registry.ts";
 import type { McpServerStateSource } from "../mcp/state.ts";
 import { computeExposurePartition } from "./exposure.ts";
+import type { AliasBrand } from "./aliases.ts";
 import { rankCandidates, type RankableCandidate } from "./ranking.ts";
 
 const DEFAULT_MAX_RESULTS = 5;
@@ -68,6 +69,9 @@ export interface ToolSearchDeps {
   // host-configured alias edge. Present on the SESSION-scoped shape (engine.ts registers it once per
   // run from `RuntimeConfig.toolAliases`), never per call.
   toolAliases?: Record<string, string>;
+  // The session's brand, so the alias-exclusion pass spells the standing server's twins the way this
+  // session's registry does (`ExposureQuery.brand`). engine.ts passes `RuntimeConfig.brand`.
+  brand?: AliasBrand;
   // Fix round 21: the run's own scope over the process-wide registry (`ExposureQuery.toolFilter`).
   // Read once per ToolSearch pass -- engine.ts supplies it as a GETTER, so the visible-server set is
   // the live one each time.
@@ -111,6 +115,7 @@ function exposureQuery(deps: ToolSearchDeps) {
     ...(deps.insideSubagent !== undefined ? { insideSubagent: deps.insideSubagent } : {}),
     ...(deps.familyMetadata !== undefined ? { familyMetadata: deps.familyMetadata } : {}),
     ...(deps.toolAliases !== undefined ? { toolAliases: deps.toolAliases } : {}),
+    ...(deps.brand !== undefined ? { brand: deps.brand } : {}),
     ...(deps.toolFilter !== undefined ? { toolFilter: deps.toolFilter } : {}),
   };
 }
