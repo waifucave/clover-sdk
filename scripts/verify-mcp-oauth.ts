@@ -47,7 +47,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
-import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { startFixtureAs, type FixtureAs } from "../packages/runtime/src/mcp-auth/test-fixture-as.ts";
 import { createTestFileMcpOAuthStore, readTokenRecord, readClientRecord, toSessionMcpTokenRecord, writeTokenRecord } from "../packages/runtime/src/mcp-auth/store.ts";
 import { mcpOAuthClientAccount, mcpOAuthTokenAccount } from "../packages/runtime/src/mcp-auth/account.ts";
@@ -185,7 +185,8 @@ async function legSession(winterBin: string, fx: FixtureAs, storeFile: string, l
       strictMcpConfig: true,
       mcpServers: { [SERVER]: { type: "http", url: fx.mcpUrl, versionNegotiation: "legacy", ...(alwaysLoadLeg ? { alwaysLoad: true } : {}) } },
     };
-    const proc = Bun.spawn([winterBin, "--run", "--config-json", JSON.stringify(config)], {
+    // A1: a host always sends its brand (the SDK has no default); this gate is Winter's own.
+    const proc = Bun.spawn([winterBin, "--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, ...config })], {
       cwd: REPO_ROOT,
       env: keychainIsolatedEnv({ ...process.env, WINTER_HOME: winterHome, WINTER_TEST_MCP_OAUTH_STORE_FILE: storeFile, ...(alwaysLoadLeg ? { MCP_CONNECT_TIMEOUT_MS: String(ALWAYS_LOAD_CONNECT_DEADLINE_MS) } : {}) }),
       stdin: "pipe",

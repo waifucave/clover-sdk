@@ -2,11 +2,15 @@ import { randomUUID } from "node:crypto";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { query, encodeFrame, splitFrames, ResultError, type RuntimeConfig, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, installBrand, query, encodeFrame, splitFrames, ResultError, type RuntimeConfig, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { inMemoryProcess } from "@waifucave/clover-agent-runtime/testing";
 import { testProviderByName, scriptedProvider, registerTool, MCP_SDK_TEST_SERVER_NAME, MCP_SDK_TEST_TOOL_NAME, P5_FIXTURE_SKILL_NAME, SCENARIO_MODELS, SCENARIO_TOOL_NAME, startScenarioFake } from "@waifucave/clover-agent-runtime";
 import { normalizeTrace, compareTraces, type ConformanceTraceEntry } from "@waifucave/clover-conformance/trace";
 import { isolateKeychain } from "./test-keychain-env.ts";
+
+// A1: the SDK has no default brand. This differential is Winter's own harness, so the process runs as Winter:
+// every query() below, and the in-process runtime of the raw interrupt scenario, read this installed brand.
+installBrand(WINTER_BRAND);
 // Never the real Keychain: set before any session or child starts (see ./test-keychain-env.ts).
 isolateKeychain();
 

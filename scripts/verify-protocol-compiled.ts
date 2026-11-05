@@ -20,7 +20,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
 import { loadCatalog } from "@waifucave/clover-provider-catalog";
-import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 import { SCENARIO_FINAL_TEXT, SCENARIO_MODELS, SCENARIO_TOOL_NAME, startScenarioFake } from "@waifucave/clover-agent-runtime";
 import { isolateKeychain, keychainIsolatedEnv } from "./test-keychain-env.ts";
 // Never the real Keychain: set before any session or child starts (see ./test-keychain-env.ts).
@@ -44,7 +44,8 @@ const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
  * IN, and the negative leg asserts the refusal is `unknown-model` rather than a bundling failure.
  */
 async function runCompiledSession(binPath: string, config: Record<string, unknown>, winterHome: string): Promise<{ frames: WinterFrame[]; stderr: string; exitCode: number }> {
-  const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify(config)], {
+  // A1: a host always sends its brand (the SDK has no default); this gate is Winter's own.
+  const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, ...config })], {
     cwd: REPO_ROOT,
     env: keychainIsolatedEnv({ ...process.env, WINTER_HOME: winterHome }),
     stdin: "pipe",
@@ -164,7 +165,7 @@ async function verifyCwdAutoloadIgnored(binPath: string): Promise<void> {
     rmSync(preloadMarker, { force: true });
 
     const run = async (env: Record<string, string>): Promise<{ stdout: string; stderr: string; exitCode: number }> => {
-      const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify({ sessionId: "verify-noautoload", cwd: hostile })], {
+      const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, sessionId: "verify-noautoload", cwd: hostile })], {
         cwd: hostile,
         env,
         stdin: "pipe",

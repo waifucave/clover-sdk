@@ -49,7 +49,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildRuntime } from "./build-runtime.ts";
-import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 // The runtime's own 2026-07-28 fixture (a dev dependency of that package, resolved from its file).
 import { withModernHttpFixture } from "../packages/runtime/src/mcp/test-fixtures.ts";
 import { isolateKeychain, keychainIsolatedEnv } from "./test-keychain-env.ts";
@@ -173,7 +173,8 @@ async function runLeg(binPath: string, leg: Leg, modernUrl?: string): Promise<vo
       strictMcpConfig: true,
       mcpServers: { ping: pingServerConfig(leg, label, http?.url, modernUrl) },
     };
-    const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify(config)], {
+    // A1: a host always sends its brand (the SDK has no default); this gate is Winter's own.
+    const proc = Bun.spawn([binPath, "--run", "--config-json", JSON.stringify({ brand: WINTER_BRAND, ...config })], {
       cwd: REPO_ROOT,
       // WS-25: a remote server now connects through the session's MCP sign-in store; the test seam keeps
       // the http legs off the real Keychain (an empty temp file: no sign-in, so nothing changes on the wire).
