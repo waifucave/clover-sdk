@@ -54,7 +54,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-provider-catalog` as 
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
 files, `README.md` and `LICENSE`. It does **not** ship `src/`: the TypeScript sources live at
-<https://github.com/yanlingLabs/winter-agent-sdk>, which is where to read them, file an issue, or send
+<https://github.com/waifucave/clover-sdk>, which is where to read them, file an issue, or send
 a patch.
 
 ## License

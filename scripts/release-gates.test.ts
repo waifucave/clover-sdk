@@ -700,13 +700,13 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
         bugs?: { url?: string };
       };
       expect([pkg.name, manifest.repository?.type]).toEqual([pkg.name, "git"]);
-      expect([pkg.name, manifest.repository?.url]).toEqual([pkg.name, "git+https://github.com/yanlingLabs/winter-agent-sdk.git"]);
+      expect([pkg.name, manifest.repository?.url]).toEqual([pkg.name, "git+https://github.com/waifucave/clover-sdk.git"]);
       // `directory` is what makes each package's npm page link at its own subtree, and it must name
       // the real one -- derived from the package's own path, never a literal repeated five times.
       const expectedDir = pkg.dir.replace(/\/$/, "").split("/packages/")[1]!;
       expect([pkg.name, manifest.repository?.directory]).toEqual([pkg.name, `packages/${expectedDir}`]);
-      expect([pkg.name, manifest.homepage]).toEqual([pkg.name, "https://github.com/yanlingLabs/winter-agent-sdk"]);
-      expect([pkg.name, manifest.bugs?.url]).toEqual([pkg.name, "https://github.com/yanlingLabs/winter-agent-sdk/issues"]);
+      expect([pkg.name, manifest.homepage]).toEqual([pkg.name, "https://github.com/waifucave/clover-sdk"]);
+      expect([pkg.name, manifest.bugs?.url]).toEqual([pkg.name, "https://github.com/waifucave/clover-sdk/issues"]);
     }
   });
 
@@ -741,7 +741,7 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
       expect([pkg.name, readme.includes("read:packages")]).toEqual([pkg.name, true]);
       // ITEM 11: the DIST-ONLY sentence, and the source pointed at GitHub.
       expect([pkg.name, readme.includes("COMPILED OUTPUT ONLY")]).toEqual([pkg.name, true]);
-      expect([pkg.name, readme.includes("github.com/yanlingLabs/winter-agent-sdk")]).toEqual([pkg.name, true]);
+      expect([pkg.name, readme.includes("github.com/waifucave/clover-sdk")]).toEqual([pkg.name, true]);
       // R4 (M1): no README may point a reader at a "registry pin" -- the committed `.npmrc` pins
       // nothing and `publishConfig.registry` is gone from every manifest. Round 2's N1 named this
       // sentence and it was fixed in ONE README; a third copy must not be able to survive the next

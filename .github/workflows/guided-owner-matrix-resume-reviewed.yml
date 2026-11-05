@@ -25,7 +25,7 @@ env:
   OWNER_SHA256: 7630cb1f2e9b76be78fb6fb0f0efb6df74d437b39f9e3db69ac8aacc83162372
 jobs:
   reviewed-disposable-owner-matrix:
-    if: github.repository == 'yanlingLabs/winter-agent-sdk' && github.event_name == 'push' && github.ref == 'refs/heads/cowork/guided-owner-matrix-resume-run' && github.event.created == true && github.run_attempt == '1'
+    if: github.repository == 'waifucave/clover-sdk' && github.event_name == 'push' && github.ref == 'refs/heads/cowork/guided-owner-matrix-resume-run' && github.event.created == true && github.run_attempt == '1'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:

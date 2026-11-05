@@ -34,7 +34,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-agent-runtime` as usu
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus
 `README.md`, `NOTICE` and `LICENSE`. The TypeScript sources live at
-<https://github.com/yanlingLabs/winter-agent-sdk>, which is where to read them, file an issue, or send
+<https://github.com/waifucave/clover-sdk>, which is where to read them, file an issue, or send
 a patch.
 
 This package, `@yanlinglabs/winter-agent-sdk` and its platform binary package are released together

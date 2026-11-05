@@ -7,7 +7,7 @@ pinned-upstream ("official SDK") mechanics that back Winter's compatibility clai
 
 This package is published to GitHub Packages under restricted access (`@yanlinglabs` scope). The
 registry is chosen by the release workflow, not by a committed pin — see
-[RELEASING.md](https://github.com/yanlingLabs/winter-agent-sdk/blob/main/RELEASING.md).
+[RELEASING.md](https://github.com/waifucave/clover-sdk/blob/main/RELEASING.md).
 
 ## Install
 
@@ -41,7 +41,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-conformance` as usual
 **The published packages contain COMPILED OUTPUT ONLY.** Each tarball ships `dist/` — the bundled
 JavaScript a consumer imports and the `.d.ts` declarations their type-checker reads — plus its data
 files, `README.md` and `LICENSE`. It does **not** ship `src/`: the TypeScript sources live at
-<https://github.com/yanlingLabs/winter-agent-sdk>, which is where to read them, file an issue, or send
+<https://github.com/waifucave/clover-sdk>, which is where to read them, file an issue, or send
 a patch.
 
 ## What it ships

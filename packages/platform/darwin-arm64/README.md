@@ -2,7 +2,7 @@
 
 The compiled `winter` runtime binary for macOS on Apple Silicon (`darwin`/`arm64`). This package
 ships **no JavaScript API** — it is an `optionalDependency` of
-[`@yanlinglabs/winter-agent-sdk`](https://github.com/yanlingLabs/winter-agent-sdk/tree/main/packages/sdk),
+[`@yanlinglabs/winter-agent-sdk`](https://github.com/waifucave/clover-sdk/tree/main/packages/sdk),
 which spawns the binary this package installs and speaks to it over Winter's own protocol.
 
 You do not import this package. Installing `@yanlinglabs/winter-agent-sdk` on a matching platform
@@ -40,7 +40,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-agent-sdk-darwin-arm6
 binary under `bin/winter` — a single-file, dependency-free executable built with
 `bun build --compile` from a path-neutral copy of the checkout (it embeds no developer's filesystem
 path) — plus `README.md` and `LICENSE`. It does **not** ship any source: the TypeScript that
-compiles into this binary lives at <https://github.com/yanlingLabs/winter-agent-sdk>
+compiles into this binary lives at <https://github.com/waifucave/clover-sdk>
 (`packages/runtime/`), which is where to read it, file an issue, or send a patch.
 
 ## What this package IS and IS NOT

@@ -41,7 +41,7 @@ literal in the file. Then `npm install @yanlinglabs/winter-web` as usual.
 
 **The published package contains COMPILED OUTPUT ONLY.** The tarball ships `dist/` — the bundled
 JavaScript and the `.d.ts` declarations — plus `README.md` and `LICENSE`. The TypeScript sources live
-at <https://github.com/yanlingLabs/winter-agent-sdk> (`packages/web`).
+at <https://github.com/waifucave/clover-sdk> (`packages/web`).
 
 ## Fetching a page
 
@@ -95,7 +95,7 @@ Nothing here throws for an expected failure: every refusal and every network out
 | `followRedirects` | `"any"` | `"any"`, `"same-host"` (same scheme, port and host, a `www.` prefix ignored), or `(from: URL, to: URL) => boolean`. Every followed hop is re-validated in full. A redirect not followed is `redirect_not_followed` with the target (userinfo removed) in `location`. |
 | `maxRedirects` | 10 | Then `too_many_redirects`. A non-negative integer; values above `WEB_FETCH_MAX_REDIRECTS_CEILING` (20, exported) are clamped to it, and a non-integer, negative or non-finite value uses the default. |
 | `blockedDomains` | `[]` | Hosts never fetched on any hop (suffix match on a label boundary: `example.com` blocks `docs.example.com`, not `notexample.com`). |
-| `userAgent` | `winter-web (+https://github.com/yanlingLabs/winter-agent-sdk)` | |
+| `userAgent` | `winter-web (+https://github.com/waifucave/clover-sdk)` | |
 | `cache` (`fetchWebPage` only) | none | Any `WebFetchCache` (`get`/`set`, sync or async). `MemoryWebFetchCache` is a TTL (15 min) + byte-weighted LRU (50 MiB). |
 | `binary` (`fetchWebPage` only) | `"flag"` | `"bytes"` returns a binary body as `bytes`. |
 | `resolveHost`, `transport`, `connectBudgetMs` | system resolver, `node:http(s)`, 10 s | Advanced; tests use them. A custom `transport` is only ever handed validated addresses. |

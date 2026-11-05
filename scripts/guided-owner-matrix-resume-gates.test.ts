@@ -24,7 +24,7 @@ const ZERO_HEAD = "0".repeat(40);
 const WORKFLOW = readFileSync(join(WORKFLOWS_DIR, WORKFLOW_NAME), "utf8");
 const TRIGGER_BRANCH = "cowork/guided-owner-matrix-resume-run";
 const SPENT_BRANCHES = ["cowork/guided-owner-matrix-run", "cowork/guided-owner-matrix-run-2"];
-const REPOSITORY = "yanlingLabs/winter-agent-sdk";
+const REPOSITORY = "waifucave/clover-sdk";
 const OPT_IN = "WINTER_GUIDED_OWNER_NATIVE_ADMISSION";
 const FIXTURE_PATH = "scripts/guest-supervisor/guided_owner_native_fixture.c";
 const MATRIX_PATH = "scripts/guest-supervisor/test_guided_owner.py";
@@ -369,7 +369,7 @@ const MUTATIONS: Array<[string, (text: string) => string]> = [
   ["widen the branch to a glob", (t) => t.replace("'cowork/guided-owner-matrix-resume-run'", "'cowork/**'")],
   ["add a tags filter", (t) => t.replace("    branches:\n", "    tags: ['*']\n    branches:\n")],
   ["swap to a previously used branch", (t) => t.replaceAll("cowork/guided-owner-matrix-resume-run", "cowork/linux-host-query-fixture")],
-  ["drop the repository gate", (t) => t.replace("github.repository == 'yanlingLabs/winter-agent-sdk' && ", "")],
+  ["drop the repository gate", (t) => t.replace("github.repository == 'waifucave/clover-sdk' && ", "")],
   ["drop the event-name gate", (t) => t.replace("github.event_name == 'push' && ", "")],
   ["drop the exact-ref gate", (t) => t.replace(" && github.ref == 'refs/heads/cowork/guided-owner-matrix-resume-run'", "")],
   ["drop the first-creation gate", (t) => t.replace(" && github.event.created == true", "")],
@@ -478,13 +478,13 @@ const EXPECT: Record<string, string> = {
   "widen the branch to a glob": "on.push must be exactly one literal branch and nothing else",
   "add a tags filter": "on.push must be exactly one literal branch and nothing else",
   "swap to a previously used branch": "on.push must be exactly one literal branch and nothing else",
-  "drop the repository gate": "job if lacks: github.repository == 'yanlingLabs/winter-agent-sdk'",
+  "drop the repository gate": "job if lacks: github.repository == 'waifucave/clover-sdk'",
   "drop the event-name gate": "job if lacks: github.event_name == 'push'",
   "drop the exact-ref gate": "job if lacks: github.ref == 'refs/heads/cowork/guided-owner-matrix-resume-run'",
   "drop the first-creation gate": "job if lacks: github.event.created == true",
   "drop the run_attempt gate": "job if lacks: github.run_attempt == '1'",
   "turn the gate into a disjunction": "job if must be a pure conjunction",
-  "remove the job if entirely": "job if lacks: github.repository == 'yanlingLabs/winter-agent-sdk'",
+  "remove the job if entirely": "job if lacks: github.repository == 'waifucave/clover-sdk'",
   "wrong runner": "runs-on must be ubuntu-24.04-arm",
   "drop top-level permissions": "permissions must be exactly contents: read",
   "widen permissions": "permissions must be exactly contents: read",

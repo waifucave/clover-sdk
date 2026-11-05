@@ -4,12 +4,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yanlingLabs/winter-agent-sdk.git",
+    "url": "git+https://github.com/waifucave/clover-sdk.git",
     "directory": "packages/platform/darwin-arm64"
   },
-  "homepage": "https://github.com/yanlingLabs/winter-agent-sdk",
+  "homepage": "https://github.com/waifucave/clover-sdk",
   "bugs": {
-    "url": "https://github.com/yanlingLabs/winter-agent-sdk/issues"
+    "url": "https://github.com/waifucave/clover-sdk/issues"
   },
   "os": [
     "darwin"

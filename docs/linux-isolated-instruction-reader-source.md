@@ -191,7 +191,7 @@ device filesystems, which was incomplete (v6.8 also registers `binder`, `smackfs
 exact fstype string printed by `/proc/self/mountinfo` must equal a member; there are no
 prefixes, so `fuse`, `fuseblk` and `fuse.<subtype>` never match. Members need a cited consumer.
 Citations use public sources only, pinned to commits so line numbers cannot drift:
-**W** = `yanlingLabs/winter` `origin/main` at `7523c60c37ddbca79448bdff21a836c11ed810b5`;
+**W** = `waifucave/clover` `origin/main` at `7523c60c37ddbca79448bdff21a836c11ed810b5`;
 **R** = `yanlingLabs/winter-runtime-sdk`, branch `cowork/reader-report-classifier`, at
 `67dca46abce706e3679648c0114a81aa363a5e17`; **S** = `systemd/systemd` at tag `v255`.
 
