@@ -1,0 +1,617 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:waifucave:clover:catalog-row:1",
+  "title": "CloverCatalogRow",
+  "description": "One model row of a model plugin's catalog (Clover spec §3.3, §5.9), version 1: the SDK catalog's own model descriptor. A plugin's catalog is an array of these.",
+  "$ref": "#/$defs/WinterModelDescriptor",
+  "$defs": {
+    "EvidenceConfidence": {
+      "enum": [
+        "verified",
+        "declared",
+        "inferred",
+        "unknown"
+      ]
+    },
+    "EvidenceSource": {
+      "enum": [
+        "official-doc",
+        "live-discovery",
+        "live-probe",
+        "upstream-static",
+        "user-override",
+        "local-override",
+        "winter-default"
+      ]
+    },
+    "WinterModelDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "providerId",
+        "upstreamId",
+        "modelFamily",
+        "canonicalModelId",
+        "displayName",
+        "aliases",
+        "endpoints",
+        "inputModalities",
+        "outputModalities",
+        "toolCalling",
+        "nativeTools",
+        "unsupportedParameters",
+        "status"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "\"<providerId>/<upstreamId>\" (WS-13 §8.3). Split on the FIRST slash: an OpenRouter upstreamId is itself slash-bearing."
+        },
+        "providerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upstreamId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelFamily": {
+          "type": "string",
+          "minLength": 1,
+          "description": "WS-13c §1: the family id this model belongs to, or \"other\". DERIVED at build by `stampFamilyFields`; an overlay row MAY set it as an override."
+        },
+        "canonicalModelId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "WS-13c §1: the vendor's model identity with the provider's spelling removed. DERIVED at build; an overlay row MAY set it as an override."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "endpoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "chat",
+              "responses",
+              "embeddings",
+              "image",
+              "audio",
+              "video"
+            ]
+          }
+        },
+        "contextWindow": {
+          "$ref": "#/$defs/evidenceNumber"
+        },
+        "maxInputTokens": {
+          "$ref": "#/$defs/evidenceNumber"
+        },
+        "maxOutputTokens": {
+          "$ref": "#/$defs/evidenceNumber"
+        },
+        "inputModalities": {
+          "$ref": "#/$defs/evidenceStringArray"
+        },
+        "outputModalities": {
+          "$ref": "#/$defs/evidenceStringArray"
+        },
+        "toolCalling": {
+          "$ref": "#/$defs/evidenceToolCalling"
+        },
+        "nativeTools": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "parallelTools": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "structuredOutput": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "promptCaching": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "deferredToolLoading": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "midConversationSystem": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "promptCacheKey": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "midConversationToolChanges": {
+          "$ref": "#/$defs/evidenceMidConversationToolChanges"
+        },
+        "inlineToolDefinitions": {
+          "$ref": "#/$defs/evidenceInlineToolDefinitions"
+        },
+        "clientToolSearch": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "additionalToolsItem": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "allowedToolsChoice": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "undeclaredToolCalls": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "assistantPrefill": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "classifierEligible": {
+          "$ref": "#/$defs/evidenceBoolean"
+        },
+        "pricing": {
+          "$ref": "#/$defs/evidencePricing"
+        },
+        "reasoning": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "supported",
+            "efforts",
+            "continuation"
+          ],
+          "properties": {
+            "supported": {
+              "$ref": "#/$defs/evidenceBoolean"
+            },
+            "efforts": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "May be EMPTY: a model whose reasoning is budget-controlled (Gemini) or uncontrollable (DeepSeek reasoner) has no named-effort vocabulary."
+            },
+            "defaultEffort": {
+              "type": "string",
+              "minLength": 1
+            },
+            "continuation": {
+              "enum": [
+                "none",
+                "plaintext",
+                "opaque-provider-state",
+                "server-response-handle"
+              ]
+            },
+            "readableState": {
+              "$ref": "#/$defs/evidenceReadableState"
+            },
+            "summaryRequest": {
+              "$ref": "#/$defs/evidenceSummaryRequest"
+            },
+            "replayScope": {
+              "$ref": "#/$defs/evidenceReplayScope"
+            },
+            "continuationDomain": {
+              "$ref": "#/$defs/evidenceStringArray"
+            },
+            "completionEvent": {
+              "$ref": "#/$defs/evidenceString"
+            },
+            "toolLoopRequirement": {
+              "$ref": "#/$defs/evidenceToolLoopRequirement"
+            },
+            "effortRequest": {
+              "$ref": "#/$defs/evidenceEffortRequest"
+            },
+            "blockBinding": {
+              "$ref": "#/$defs/evidenceBlockBinding"
+            },
+            "perMessageEffort": {
+              "$ref": "#/$defs/evidencePerMessageEffort"
+            }
+          }
+        },
+        "unsupportedParameters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "experimental",
+            "supported",
+            "deprecated",
+            "blocked"
+          ]
+        }
+      }
+    },
+    "evidenceBase": {
+      "type": "object",
+      "required": [
+        "value",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/EvidenceSource"
+        },
+        "sourceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "confidence": {
+          "$ref": "#/$defs/EvidenceConfidence"
+        }
+      }
+    },
+    "evidenceBlockBinding": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "beta"
+          ],
+          "properties": {
+            "beta": {
+              "enum": [
+                "thinking-binding-controls-2026-08-01"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "evidenceBoolean": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "evidenceEffortRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field"
+          ],
+          "properties": {
+            "field": {
+              "enum": [
+                "output_config.effort"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "evidenceInlineToolDefinitions": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "beta"
+          ],
+          "properties": {
+            "beta": {
+              "enum": [
+                "inline-tools-2026-09-15"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "evidenceMidConversationToolChanges": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "beta"
+          ],
+          "properties": {
+            "beta": {
+              "enum": [
+                "mid-conversation-tool-changes-2026-07-01"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "evidenceNumber": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "evidencePerMessageEffort": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "beta"
+              ],
+              "properties": {
+                "beta": {
+                  "enum": [
+                    "mid-conversation-output-config-2026-07-01"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "item"
+              ],
+              "properties": {
+                "item": {
+                  "enum": [
+                    "configuration_update"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "evidencePricing": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "inputPerMTokUsd",
+            "outputPerMTokUsd"
+          ],
+          "properties": {
+            "inputPerMTokUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "outputPerMTokUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cacheReadPerMTokUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cacheWritePerMTokUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "longContextTiers": {
+              "type": "array",
+              "minItems": 1,
+              "description": "0.0.56: prompt-length price tiers, strictly ascending minPromptTokens. A request whose whole prompt (input + cache reads + cache writes) is at least a tier's minPromptTokens (inclusive) is priced entirely at the highest such tier; absent on a flat-priced row.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "minPromptTokens",
+                  "inputPerMTokUsd",
+                  "outputPerMTokUsd"
+                ],
+                "properties": {
+                  "minPromptTokens": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "inputPerMTokUsd": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "outputPerMTokUsd": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "cacheReadPerMTokUsd": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "cacheWritePerMTokUsd": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidenceReadableState": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "none",
+            "summary",
+            "full-exposed"
+          ]
+        }
+      }
+    },
+    "evidenceReplayScope": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "current-tool-loop",
+            "current-turn",
+            "selected-turns",
+            "all-turns"
+          ]
+        }
+      }
+    },
+    "evidenceString": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceStringArray": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "evidenceSummaryRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "values"
+          ],
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidenceToolCalling": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "native",
+            "emulated",
+            "none"
+          ]
+        }
+      }
+    },
+    "evidenceToolLoopRequirement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/evidenceBase"
+        }
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "hard-error",
+            "silent-degradation",
+            "not-required"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -74,6 +74,13 @@ export type { LiveCaseContext, LiveCaseId, LiveCaseOutcome, LiveCaseSpec, LiveRe
 // site about which family's fold it is.
 export * as azureCorpus from "./corpus/azure.ts";
 
+// --- Clover A-M1: the kit on the model adapter interface ------------------------------------------
+//
+// The keyed fetch's cases (any `net.fetch`: the SDK's reference and the daemon's plugin API) and the
+// model adapter's cases (an adapter on the keyed fetch, or in a process of its own).
+export { CONFORMANCE_CASE_TIMEOUT_MS, KEYED_FETCH_CASES, MODEL_ADAPTER_CASES, formatConformanceReport, runKeyedFetchConformance, runModelAdapterConformance } from "./keyed/index.ts";
+export type { ConformanceCaseSpec, ConformanceOutcome, ConformanceReport, KeyedFetchCaseId, KeyedFetchFactory, ModelAdapterCaseId, RunModelAdapterConformanceOptions } from "./keyed/index.ts";
+
 // `anthropicCorpus`, `bedrockCorpus`, `googleCorpus`, `openaiCorpus`, `vertexCorpus` and
 // `openaiScenarios` are DELIBERATELY NOT re-exported here (review r1 Critical Finding 2's actual
 // fix, not a Phase 6 omission). `corpus/{anthropic,bedrock,google,openai}.ts` import

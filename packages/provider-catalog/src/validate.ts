@@ -12,6 +12,7 @@
 //
 // Every error message names a JSON-pointer-ish path so a generator can point at the offending row.
 
+import type { CatalogRowsValidationResult } from "./row.ts";
 import type {
   CapabilityEvidence,
   CatalogValidationError,
@@ -1045,4 +1046,47 @@ export function validateCatalog(json: unknown): CatalogValidationResult {
 }
 
 // Re-exported for the generator/registry so nothing re-derives them from the type declarations.
+/**
+ * Validates a MODEL PLUGIN'S rows (Clover's catalog row schema, `row.ts`): every row by the same
+ * per-row rules `validateCatalog` applies to the SDK's own models, plus what holds within one
+ * plugin's list: keys unique, `upstreamId ∪ aliases` collision-free per provider, no credential-shaped
+ * value anywhere, and -- when `providerId` is given -- every row on that provider (a plugin's rows
+ * belong to the provider it adds). Never throws.
+ */
+export function validateCatalogRows(rows: unknown, opts: { providerId?: string } = {}): CatalogRowsValidationResult {
+  const errs = new Errors();
+  if (!Array.isArray(rows)) return { ok: false, errors: [{ code: "invalid", path: "<rows>", message: `<rows>: expected an array of model rows, got ${describe(rows)}` }] };
+  const keys = new Set<string>();
+  const names = new Map<string, Set<string>>();
+  for (let i = 0; i < rows.length; i++) {
+    const path = `rows[${i}]`;
+    checkModel(errs, rows[i], path);
+    const row = rows[i];
+    if (!isRecord(row)) continue;
+    const key = typeof row["key"] === "string" ? row["key"] : undefined;
+    const providerId = typeof row["providerId"] === "string" ? row["providerId"] : undefined;
+    if (key !== undefined && key.length > 0) {
+      if (keys.has(key)) errs.add(`${path}.key`, `duplicate model key ${JSON.stringify(key)}`);
+      keys.add(key);
+    }
+    if (opts.providerId !== undefined && providerId !== undefined && providerId !== opts.providerId) {
+      errs.add(`${path}.providerId`, `expected ${JSON.stringify(opts.providerId)} — this plugin's rows belong to the provider it adds`);
+    }
+    if (providerId !== undefined) {
+      const seen = names.get(providerId) ?? new Set<string>();
+      names.set(providerId, seen);
+      const own = [row["upstreamId"], ...(Array.isArray(row["aliases"]) ? row["aliases"] : [])].filter((n): n is string => typeof n === "string" && n.length > 0);
+      for (const name of new Set(own)) {
+        if (seen.has(name)) errs.add(`${path}.aliases`, `${JSON.stringify(name)} is already a model id or alias of provider ${JSON.stringify(providerId)}`);
+        seen.add(name);
+      }
+    }
+  }
+  for (const finding of scanForSecrets(rows, "rows")) {
+    const split = finding.indexOf(": ");
+    errs.list.push({ code: "secret", path: split > 0 ? finding.slice(0, split) : "<rows>", message: finding });
+  }
+  return errs.list.length === 0 ? { ok: true, rows: rows as WinterModelDescriptor[] } : { ok: false, errors: errs.list };
+}
+
 export type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor };

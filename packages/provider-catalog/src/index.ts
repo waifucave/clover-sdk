@@ -25,7 +25,10 @@ export type {
   WinterProviderDescriptor,
 } from "./types.ts";
 
-export { CATALOG_VOCABULARIES, scanForSecrets, validateCatalog } from "./validate.ts";
+export { CATALOG_VOCABULARIES, scanForSecrets, validateCatalog, validateCatalogRows } from "./validate.ts";
+// Clover A-M1: the catalog row schema every model plugin's rows follow, pinned and versioned.
+export { CATALOG_ROW_SCHEMA, CATALOG_ROW_SCHEMA_ID, CATALOG_ROW_SCHEMA_SHA256, CATALOG_ROW_SCHEMA_VERSION, buildCatalogRowSchema, canonicalJson } from "./row.ts";
+export type { CatalogRow, CatalogRowsValidationResult } from "./row.ts";
 
 // WS-13c §1–§3 (P6.6 spine): the pure family helpers. Every lane IMPORTS these — the normaliser, the
 // matcher fallback and the slot-name acceptance rule each have exactly one implementation, because a
