@@ -47,7 +47,10 @@ export type { WireMcpToolDefinition } from "./protocol/config.ts";
 // `WINTER_BRAND` to read a default it is not overriding, `resolveBrand` to validate one before
 // constructing a query, and the three derivation helpers to spell the names its own integration
 // code needs (an env var, an mcp tool name, a User-Agent) exactly the way Winter spells them.
-export { WINTER_BRAND, BRAND_TOKEN_RE, FIRST_PARTY_ORIGINATORS, resolveBrand, envName, mcpToolName, userAgent } from "./brand.ts";
+// A1 (fail closed): there is no default brand. `installBrand` names the one this process serves,
+// `requireBrand` is what a reader handed no brand calls, and `BrandRequiredError` is what it throws
+// when neither exists.
+export { WINTER_BRAND, BRAND_TOKEN_RE, FIRST_PARTY_ORIGINATORS, resolveBrand, envName, mcpToolName, userAgent, installBrand, installedBrand, requireBrand } from "./brand.ts";
 export type { BrandProfile, BrandValidation } from "./brand.ts";
 export {
   WinterSDKError,
@@ -60,6 +63,7 @@ export {
   WinterRpcError,
   WinterRpcTimeoutError,
   InvalidBrandError,
+  BrandRequiredError,
 } from "./errors.ts";
 
 // The pinned process seam (WS-04 §8) — byte-level SpawnedRuntimeProcess handle, shared by the real

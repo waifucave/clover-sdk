@@ -12,7 +12,7 @@
 // files are Lane E's own, so this is an intra-lane import, not a cross-lane dependency R3-5 forbids).
 import { mkdirSync, realpathSync } from "node:fs";
 import { join } from "node:path";
-import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { requireBrand } from "@waifucave/clover-agent-sdk";
 import { prepareHostChildLaunch } from "../../sandbox/host-child-floor.ts";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import "../descriptors/enter-worktree.ts"; // self-sufficiency: guarantees the "EnterWorktree" stub is registered before replaceExecutor runs below.
@@ -136,7 +136,7 @@ export const enterWorktreeExecutor: ToolExecutor = {
     }
 
     if (name !== undefined) {
-      const worktreesDir = join(ctx.cwd, (ctx.brand ?? WINTER_BRAND).projectDirName, "worktrees");
+      const worktreesDir = join(ctx.cwd, requireBrand(ctx.brand).projectDirName, "worktrees");
       const target = join(worktreesDir, name);
       mkdirSync(worktreesDir, { recursive: true });
 

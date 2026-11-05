@@ -67,7 +67,7 @@ import { flattenSubcommands, naiveCommandPieces } from "./shell-structure.ts";
 import { isProtectedWrite as isProtectedPath, isCriticalRemoval as classifyCriticalRemoval, isWorkflowScriptCarveOut, isMemoryCarveOut, isCarvableOutputsDir, type ProtectedBrand } from "./protected.ts";
 // P7a fix r1 (Important-2): the reading for an evaluation context that carries no brand -- every
 // hand-built one in this package's tests, and a host driving the evaluator directly.
-import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { requireBrand } from "@waifucave/clover-agent-sdk";
 // Task 12 (WS-07 §10.1 step 2 / §6.5): the two auto/config.ts primitives evaluator.ts's own `auto`
 // mode arm and plan's classifier borrow need. This is the ONLY dependency evaluator.ts takes on
 // the auto/ package — the concrete AutoEngine implementation (auto/engine.ts) is never imported
@@ -386,8 +386,9 @@ export interface EvaluationContext {
   /**
    * P7a (D19): the session's brand -- the protected-path floor's own dot-dir and instructions file.
    *
-   * Optional, `WINTER_BRAND` when absent, so every hand-built evaluation context in this package's
-   * tests keeps exactly today's verdicts.
+   * Optional: absent means the brand installed for this process (`requireBrand`; A1, there is no
+   * default brand). This package's tests install Winter's own, so their hand-built contexts keep
+   * exactly today's verdicts.
    */
   brand?: ProtectedBrand;
   /**
@@ -1317,7 +1318,7 @@ function isProjectsBaselineDeny(entry: SourcedRuleEntry, ctx: EvaluationContext)
   // was denied outright. It failed CLOSED, so a break rather than a hole; it still silently removed
   // a documented capability under exactly the feature this lane ships. Byte-identical under the
   // default brand: `WINTER_BRAND.homeDirName` IS the segment the literal spelled.
-  const homeAnchor = `~/${(ctx.brand ?? WINTER_BRAND).homeDirName}/projects`;
+  const homeAnchor = `~/${requireBrand(ctx.brand).homeDirName}/projects`;
   if (content === homeAnchor || content.startsWith(`${homeAnchor}/`)) return true;
   // Phase 5 fix wave, I1: the RESOLVED-root twin of the same baseline deny. `buildBaselineDenyRules`
   // now emits `//<durableRoot>/projects/**` alongside the home-anchored form, and the P5-B carve-out

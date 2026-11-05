@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 // WS-10 §6, RULING R4-9: the progress-stall watchdog. Parity target is Norma's shipped
 // `packages/core/src/agent/subagents.ts` (WS-10 §6's own citation): a progress-INACTIVITY watchdog,
 // on by default at 600_000ms, that aborts with a typed "stalled: no progress" error -- distinct from
@@ -19,7 +19,7 @@ export class ChildStalledError extends Error {
 const DEFAULT_STALL_TIMEOUT_MS = 600_000;
 
 export function resolveStallTimeoutMs(env: Record<string, string | undefined> = process.env, brand?: Pick<BrandProfile, "envPrefix">): number {
-  const raw = env[envName(brand ?? WINTER_BRAND, "ASYNC_AGENT_STALL_TIMEOUT_MS")];
+  const raw = env[envName(requireBrand(brand), "ASYNC_AGENT_STALL_TIMEOUT_MS")];
   if (raw === undefined || raw === "") return DEFAULT_STALL_TIMEOUT_MS;
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_STALL_TIMEOUT_MS;

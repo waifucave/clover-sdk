@@ -14,7 +14,7 @@
 // child-engine.ts's own header still discloses the remaining subsystem-level seams.
 import { randomUUID } from "node:crypto";
 import { writeFileSync, appendFileSync } from "node:fs";
-import { WINTER_BRAND, envName, type RuntimeAgentDefinition } from "@waifucave/clover-agent-sdk";
+import { envName, type RuntimeAgentDefinition, requireBrand } from "@waifucave/clover-agent-sdk";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { AGENT_TOOL_CANONICAL_NAME } from "../../provider/slots.ts";
 import { OMITTED_TYPE_REQUIRED_PREFIX } from "../descriptors/agent.ts"; // also self-sufficiency: guarantees the "Agent" stub is registered before replaceExecutor runs below.
@@ -279,7 +279,7 @@ function isTruthyEnv(v: string | undefined): boolean {
  * Winter's equivalent: one stderr line, and only when `<PREFIX>DEBUG` is set for the session.
  */
 function debugLog(ctx: ToolExecutionContext, line: string): void {
-  const brand = ctx.brand ?? WINTER_BRAND;
+  const brand = requireBrand(ctx.brand);
   if (!isTruthyEnv((ctx.env ?? process.env)[envName(brand, "DEBUG")])) return;
   try {
     process.stderr.write(`${brand.envPrefix.toLowerCase().replace(/_$/, "")}[debug]: ${line}\n`);
@@ -384,7 +384,7 @@ export const agentExecutor: ToolExecutor = {
     }
 
     const env = ctx.env ?? process.env;
-    const agentsBrand = ctx.brand ?? WINTER_BRAND;
+    const agentsBrand = requireBrand(ctx.brand);
 
     // R-S5: the fork gate (the session's resolved RuntimeConfig/env verdict). With the gate OFF,
     // "fork" is an ordinary name that no definition carries -- the not-found error below.

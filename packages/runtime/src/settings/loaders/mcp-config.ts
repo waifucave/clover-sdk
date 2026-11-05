@@ -16,7 +16,7 @@ import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts"
 // trust is which ORIGIN it tags a source with -- and that is exactly the judgment call below.
 
 import { join, normalize, resolve } from "node:path";
-import { globalConfigFileName, WINTER_BRAND, type BrandProfile, type McpServerConfig, type ResolvedSettingSource, type SettingSource } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, globalConfigFileName, type BrandProfile, type McpServerConfig, type ResolvedSettingSource, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import type { McpConfigSourceOrigin, McpServerSource } from "../../mcp/lifecycle.ts";
 
 /**
@@ -24,11 +24,16 @@ import type { McpConfigSourceOrigin, McpServerSource } from "../../mcp/lifecycle
  * `.mcp.json` is NOT read.
  */
 export function projectMcpConfigRelative(brand?: Pick<BrandProfile, "projectDirName">): string {
-  return join((brand ?? WINTER_BRAND).projectDirName, "mcp.json");
+  return join(requireBrand(brand).projectDirName, "mcp.json");
 }
 
-/** Winter's own value, for every caller that has not threaded a brand. */
-export const PROJECT_MCP_CONFIG_RELATIVE = projectMcpConfigRelative();
+/**
+ * Winter's own value.
+ * A1: NOT a default for a caller that has not threaded a brand (that caller calls the function, which
+ * reads the installed brand or refuses); a default computed here, at module load, would also make
+ * importing this module fail in a process with no brand installed.
+ */
+export const PROJECT_MCP_CONFIG_RELATIVE = projectMcpConfigRelative(WINTER_BRAND);
 
 export interface RejectedMcpConfig {
   origin: McpConfigSourceOrigin;

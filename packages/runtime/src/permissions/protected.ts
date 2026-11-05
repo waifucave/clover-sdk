@@ -8,7 +8,7 @@
 // be compound) -- the WHOLE-call extraction (which tool field is "the path", whether a Bash call
 // even IS a removal at all) is the evaluator.ts seam's own job (its header comment explains why).
 import { resolve } from "node:path";
-import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 /**
  * P7a (D19): the three brand fields the protected-path floor needs.
@@ -195,7 +195,7 @@ export function isWorkflowScriptCarveOut(absPath: string, home: string, resolved
   // Must start with <home>/<homeDirName>/projects/<key>/<uuid>/workflows/scripts/ and have at least one
   // more segment after it (the script file itself) -- the DIRECTORY is not itself writable, only its
   // contents, so a `Write` targeting the directory path is still denied.
-  return matchesCarveOut(segments, [...homeSegments, (brand ?? WINTER_BRAND).homeDirName, WINTER_PROJECTS_SEGMENT], 2, WORKFLOW_SCRIPTS_SEGMENTS);
+  return matchesCarveOut(segments, [...homeSegments, requireBrand(brand).homeDirName, WINTER_PROJECTS_SEGMENT], 2, WORKFLOW_SCRIPTS_SEGMENTS);
 }
 
 /**
@@ -210,7 +210,7 @@ export function isWorkflowScriptCarveOut(absPath: string, home: string, resolved
 export function isMemoryCarveOut(absPath: string, home: string, resolvedWinterHome?: string, brand?: ProtectedBrand): boolean {
   if (resolvedWinterHome !== undefined && matchesCarveOut(pathSegments(absPath), [...pathSegments(resolve(resolvedWinterHome)), WINTER_PROJECTS_SEGMENT], 1, MEMORY_SEGMENTS)) return true;
   const homeSegments = pathSegments(resolve(home));
-  return matchesCarveOut(pathSegments(absPath), [...homeSegments, (brand ?? WINTER_BRAND).homeDirName, WINTER_PROJECTS_SEGMENT], 1, MEMORY_SEGMENTS);
+  return matchesCarveOut(pathSegments(absPath), [...homeSegments, requireBrand(brand).homeDirName, WINTER_PROJECTS_SEGMENT], 1, MEMORY_SEGMENTS);
 }
 
 /**
@@ -306,7 +306,7 @@ function winterHomeRoots(home: string, resolvedWinterHome: string | undefined, b
 
 /** Is `outputsDir` (absolute) a directory the outputs carve-out may apply to? See the block above. */
 export function isCarvableOutputsDir(outputsDir: string, home: string, resolvedWinterHome: string | undefined, brand?: ProtectedBrand): boolean {
-  const b = brand ?? WINTER_BRAND;
+  const b = requireBrand(brand);
   const dir = resolve(outputsDir);
   for (const root of winterHomeRoots(home, resolvedWinterHome, b)) {
     if (dir === root || !dir.startsWith(root === "/" ? "/" : `${root}/`)) continue;
@@ -323,7 +323,7 @@ export function isCarvableOutputsDir(outputsDir: string, home: string, resolvedW
  * itself protected.
  */
 export function isOutputsCarveOut(absPath: string, outputsDirs: readonly string[], brand?: ProtectedBrand): boolean {
-  const b = brand ?? WINTER_BRAND;
+  const b = requireBrand(brand);
   for (const dir of outputsDirs) {
     const root = resolve(dir);
     if (!absPath.startsWith(`${root}/`)) continue;
@@ -345,7 +345,7 @@ export function isProtectedWrite(
   path: string,
   ctx: { cwd: string; home: string; winterHome?: string; storeHome?: string; brand?: ProtectedBrand; outputsDirs?: readonly string[] },
 ): boolean {
-  const brand = ctx.brand ?? WINTER_BRAND;
+  const brand = requireBrand(ctx.brand);
   // Fix round 11 (CRITICAL regression, defense in depth): trimmed here too, regardless of whether
   // the caller already trimmed its own candidate (evaluator.ts's `REAL_SPECIAL_CHECKS.
   // isProtectedWrite` does, via edit-recognition.ts's own round-11 fix) -- this is the exported,

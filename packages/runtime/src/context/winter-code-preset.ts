@@ -22,7 +22,7 @@
 // P7a (D19): the preset TEXT is unchanged by a rebrand -- only its NAME follows the profile. The
 // version stamp below deliberately keeps Winter's own token: it attributes WHICH authored text a
 // conformance run compared, and that text is Winter's whoever is running it.
-import { WINTER_BRAND, type BrandProfile, type SystemPromptPreset } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SystemPromptPreset, requireBrand } from "@waifucave/clover-agent-sdk";
 import presetText from "./presets/winter-code.md" with { type: "text" };
 
 /**
@@ -55,11 +55,16 @@ export const WINTER_CODE_PRESET: string = presetText.trim();
  * compatibility alias (WS-01 §5, never rebranded); `brand.presetName` is the native one (WS-01 §6).
  */
 export function winterCodePresetNames(brand?: Pick<BrandProfile, "presetName">): readonly string[] {
-  return ["claude_code", (brand ?? WINTER_BRAND).presetName];
+  return ["claude_code", requireBrand(brand).presetName];
 }
 
-/** The default profile's pair, for every caller that has not threaded a brand. */
-export const WINTER_CODE_PRESET_NAMES: readonly string[] = winterCodePresetNames();
+/**
+ * Winter's own pair.
+ * A1: NOT a default for a caller that has not threaded a brand (that caller calls the function, which
+ * reads the installed brand or refuses); a default computed here, at module load, would also make
+ * importing this module fail in a process with no brand installed.
+ */
+export const WINTER_CODE_PRESET_NAMES: readonly string[] = winterCodePresetNames(WINTER_BRAND);
 
 export function isWinterCodePreset(preset: string, brand?: Pick<BrandProfile, "presetName">): boolean {
   return winterCodePresetNames(brand).includes(preset);

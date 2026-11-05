@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { WINTER_BRAND, envName, type BrandProfile } from "../brand.ts";
+import { envName, type BrandProfile, requireBrand } from "../brand.ts";
 
 // Shared "blank env value = unset" rule: both the home override here and the temp-dir override
 // (runtime's temp.ts) treat a missing key, an empty string, or a whitespace-only string identically
@@ -20,8 +20,9 @@ export type HomeBrand = Pick<BrandProfile, "envPrefix" | "homeDirName">;
  * (WS-05 §4), with the brand's own token instead of Claude's.
  *
  * `env` is injectable so tests never read the real process environment; it defaults to
- * `process.env` in production. `brand` defaults to `WINTER_BRAND`, so every existing caller keeps
- * exactly today's behaviour (`WINTER_HOME` || `~/.winter`) until it threads a profile through.
+ * `process.env` in production. A1 (fail closed): an absent `brand` means the brand INSTALLED for this
+ * process (`installBrand`), and with none installed this throws `BrandRequiredError`. It never means
+ * Winter's (`WINTER_HOME` || `~/.winter`): a caller that forgot its brand must not address Winter's home.
  *
  * THE ENV NAME IS DERIVED, NEVER SPELLED, and it is read INSIDE this function — never at module
  * load. The brand arrives with `--config-json`, so a module-level read of a literal `<PREFIX>HOME`
@@ -46,7 +47,7 @@ export type HomeBrand = Pick<BrandProfile, "envPrefix" | "homeDirName">;
  * consistent with the shared runtime home being the thing the SDK itself now means by "home".
  */
 export function resolveWinterHome(env?: Record<string, string | undefined>, brand?: HomeBrand): string {
-  const b = brand ?? WINTER_BRAND;
+  const b = requireBrand(brand);
   const e = env ?? process.env;
   const override = e[envName(b, "HOME")];
   if (!isUnset(override)) return override as string;

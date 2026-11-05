@@ -9,8 +9,8 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-// Relative, not the package: `brand.ts` is dependency-free, so this preload loads nothing else before a test.
-import { WINTER_BRAND, envName } from "../packages/sdk/src/brand.ts";
+// Relative, not the package: `brand.ts` needs only `errors.ts`, so this preload loads little before a test.
+import { WINTER_BRAND, envName, installBrand } from "../packages/sdk/src/brand.ts";
 
 /** Set by this preload when it supplied the temp home, so a test can tell the two apart. */
 export const TEST_WINTER_HOME_MARKER = "WINTER_TEST_HOME_FROM_PRELOAD";
@@ -23,3 +23,11 @@ if (process.env[HOME_VAR] === undefined || process.env[HOME_VAR] === "") {
   process.env[HOME_VAR] = mkdtempSync(join(tmpdir(), "winter-test-home-"));
   process.env[TEST_WINTER_HOME_MARKER] = "1";
 }
+
+// A1 (fail closed): the SDK has no default brand any more; a reader handed none reads the brand
+// INSTALLED for its process and otherwise throws `BrandRequiredError`. This repository's suites are
+// Winter's own, so the test process installs Winter's profile (with the temp home above): every
+// hand-built config and unbranded call in a test keeps exactly the names it had. A child process a
+// test spawns does NOT inherit this: it installs the brand its own config names, or is refused, which
+// is the production behaviour the fail-closed tests exercise.
+installBrand(WINTER_BRAND);

@@ -1,5 +1,5 @@
 import type { RuntimeContextChannel } from "./context/runtime-context-channel.ts";
-import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE } from "@waifucave/clover-agent-sdk";
+import { parseRuntimeContextConfig, RUNTIME_CONTEXT_VERSION, RUNTIME_CONTEXT_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, requireBrand } from "@waifucave/clover-agent-sdk";
 import { assertLinuxSession, assertRunningLinuxSession, checkLinuxSessionFrame, linuxSessionProfile, linuxSessionBindings, linuxGuidedSessionChannel, FRESH_LINUX_TOOLS, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
 import { LINUX_GUIDED_HOST_QUERY_PROFILE } from "./guest/linux-guided-host-query-profile.ts";
 import { dispatchGuidedParentControl } from "./guest/guided-parent-input.ts";
@@ -2264,7 +2264,7 @@ export function buildBaselineDenyRules(resolvedWinterHome?: string, brand?: Pick
   // swap would unprotect all of them to protect one. A resolved root that IS the default emits no
   // duplicate (the two anchors coincide and the dedupe below drops the second).
   const absolute: SourcedRuleEntry[] = [];
-  const defaultHome = resolve(join(homedir(), (brand ?? WINTER_BRAND).homeDirName));
+  const defaultHome = resolve(join(homedir(), requireBrand(brand).homeDirName));
   if (resolvedWinterHome !== undefined && resolve(resolvedWinterHome) !== defaultHome) {
     // `//`-ANCHORED, not a bare absolute path. WS-07 §3.1's own grammar (permissions/paths.ts's
     // `resolveAnchor`) reads a SINGLE leading `/` as "relative to the rule's own settings-file
@@ -2318,7 +2318,7 @@ export function buildBaselineDenyRules(resolvedWinterHome?: string, brand?: Pick
   // nothing, while the reuser's own transcripts, backups and run socket would sit unfenced. The
   // resolved-root branch above still emits its twin whenever `<PREFIX>HOME` points somewhere else,
   // and it emits nothing when the two coincide (the dedupe below drops the duplicate).
-  const homeAnchor = `~/${(brand ?? WINTER_BRAND).homeDirName}`;
+  const homeAnchor = `~/${requireBrand(brand).homeDirName}`;
   return [
     ...absolute,
     // The daemon's own runtime directory -- sockets, pidfiles, credentials-adjacent state.
@@ -2815,11 +2815,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // I1: the same resolved root every other fence in this run uses. `wiredWinterHome` is what
   // `production-wiring.ts` computed (`config.winterHome ?? resolveWinterHome(env)`); the fallback
   // keeps a host that drives `runEngine` directly on exactly its pre-fix behaviour.
-  // P7a (D19): this run's brand. `production-wiring.ts` owns the ONE fallback for a session it
-  // builds; a host driving `runEngine` directly (and every hand-built test config) has no `brand`
-  // on the wire, and Winter's own profile is the correct reading for those -- see that module's
-  // own note on why the fallback is not repeated at each reader.
-  const sessionBrand = config.brand ?? WINTER_BRAND;
+  // P7a (D19): this run's brand. A1 (fail closed): a host driving `runEngine` directly with no
+  // `brand` on the config runs under the brand installed for this process (this repository's test
+  // preload installs Winter's own for its hand-built configs), and with none installed the run is
+  // refused (`BrandRequiredError`); it never defaults to Winter's.
+  const sessionBrand = requireBrand(config.brand);
   const resolvedWinterHome = wiredWinterHome ?? config.winterHome;
   // Spawn-surface parity (R-S5): the fork gate, resolved once per run -- the RuntimeConfig field
   // wins in either direction, the env var is the fallback, and absent-and-unset is off.

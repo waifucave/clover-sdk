@@ -181,6 +181,8 @@ function sessionEnvPrefix(argv: readonly string[]): Pick<BrandProfile, "envPrefi
   }
   return DEFAULT_BRAND_PREFIX;
 }
+// A1: a config with no brand is refused by the production wiring (`requireBrand`), before any session
+// runs; this prefix only arms the parent watch first, so a refused child still exits with its host.
 const DEFAULT_BRAND_PREFIX: Pick<BrandProfile, "envPrefix"> = WINTER_BRAND;
 
 /** Whether stdin is a pipe or a socket -- a host is writing it -- rather than a file or a terminal. */

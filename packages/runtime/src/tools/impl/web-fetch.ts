@@ -35,7 +35,7 @@
 import "../descriptors/web-fetch.ts";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { WINTER_BRAND, type WebPrivateAddressPolicy } from "@waifucave/clover-agent-sdk";
+import { type WebPrivateAddressPolicy, requireBrand } from "@waifucave/clover-agent-sdk";
 import { winterUserAgent } from "@waifucave/clover-provider-runtime";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { webSessionRuntimeFor, type WebSessionRuntime } from "../../web/session-runtime.ts";
@@ -90,7 +90,7 @@ function webFetchHostnameOfCached(finalUrl: string): string | undefined {
 }
 
 function brandNameFor(ctx: ToolExecutionContext): string {
-  return ctx.brand?.productName ?? WINTER_BRAND.productName;
+  return requireBrand(ctx.brand).productName;
 }
 
 /** Races `promise` against `signal` aborting; resolves `"aborted"` first if the signal wins. `signal` may be absent (a hand-built test context) -- then this is just `await promise`. */

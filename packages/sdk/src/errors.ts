@@ -91,6 +91,20 @@ export class InvalidBrandError extends WinterSDKError {
   }
 }
 
+/**
+ * A1 (fail closed): a session, or a reader inside one, needed a brand and none was named. There is no
+ * default brand: a session runs under the brand its host names (`Options.brand`, or `installBrand()`
+ * once per process), never Winter's by omission, so a missed thread can never land on Winter's home,
+ * environment variables or Keychain service.
+ */
+export class BrandRequiredError extends WinterSDKError {
+  readonly code = "brand_required";
+  constructor(public readonly reason: string) {
+    super(`brand_required: ${reason}. Name the brand (Options.brand), or install one for this process with installBrand(); there is no default brand.`);
+    this.name = "BrandRequiredError";
+  }
+}
+
 // Task 2 (WS-04 §3.1): the control-RPC bridge's typed rejection for a `control_response{ok:false}`
 // — both directions (runtime's createRpcBridge answering a runtime-originated request; query.ts's
 // own host-originated pendingHostRequests correlation) throw this SAME class rather than each

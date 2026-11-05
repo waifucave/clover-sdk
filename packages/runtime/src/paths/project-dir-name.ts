@@ -12,7 +12,7 @@
 // session so a LATER resume re-applies the SAME name even if the env var has since changed, or is
 // unset, is explicitly Task 9's obligation, not this helper's — see task-7-report.md's seam note.
 // home.ts moved to the sdk package (Task 10, WS-05 §6); temp.ts stays runtime-private.
-import { isUnset, WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { isUnset, envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 import { WinterPathsError } from "./temp.ts";
 
 // Re-declared rather than imported from temp.ts: assertSafeSegment there is private (this task's
@@ -36,7 +36,7 @@ const SAFE_DIR_NAME = /^[A-Za-z0-9_-]{1,64}$/;
 // REFUSAL MESSAGE: a reuser whose prefix is `ACME_`, told to fix `<PREFIX>PROJECT_DIR_NAME` under
 // Winter's spelling, has been handed the name of a variable that does not exist in their product.
 export function resolveProjectDirName(defaultProjectKey: string, env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">): string {
-  const varName = envName(brand ?? WINTER_BRAND, "PROJECT_DIR_NAME");
+  const varName = envName(requireBrand(brand), "PROJECT_DIR_NAME");
   const override = (env ?? process.env)[varName];
   if (isUnset(override)) return defaultProjectKey;
   if (!SAFE_DIR_NAME.test(override as string)) {

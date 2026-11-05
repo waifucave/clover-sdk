@@ -117,7 +117,8 @@ test.each([undefined, "cold-restart-project-override"])("SendMessage resumes the
   mkdirSync(cwd);
   const sessionId = randomUUID();
   const base: RuntimeConfig = {
-    sessionId, cwd, model: "winter-test/calls", settingSources: [],
+    // A1: a host always sends its brand (the SDK has no default); these are Winter's own suites.
+    sessionId, cwd, brand: WINTER_BRAND, model: "winter-test/calls", settingSources: [],
     allowedTools: ["Agent", "SendMessage", "ListAgents", "Bash"],
     forwardSubagentText: true, sandbox: { enabled: false }, autoMemory: { enabled: false },
     agents: { "cold-probe": { description: "Durable context probe", prompt: "COLD_RESTART_PERSONA", tools: ["Bash"] } },
@@ -284,7 +285,8 @@ test("nested children keep their depth, history and recorded project key across 
   mkdirSync(cwd);
   const sessionId = randomUUID();
   const base: RuntimeConfig = {
-    sessionId, cwd, model: "winter-test/calls", settingSources: [],
+    // A1: a host always sends its brand (the SDK has no default); these are Winter's own suites.
+    sessionId, cwd, brand: WINTER_BRAND, model: "winter-test/calls", settingSources: [],
     allowedTools: ["Agent", "SendMessage", "ListAgents", "Bash"],
     forwardSubagentText: true, sandbox: { enabled: false }, autoMemory: { enabled: false },
     agents: {
@@ -369,7 +371,8 @@ test("SIGKILL during a child tool resumes valid parent and child histories in a 
   mkdirSync(cwd);
   const sessionId = randomUUID();
   const config: RuntimeConfig = {
-    sessionId, cwd, model: "winter-test/calls", settingSources: [],
+    // A1: a host always sends its brand (the SDK has no default); these are Winter's own suites.
+    sessionId, cwd, brand: WINTER_BRAND, model: "winter-test/calls", settingSources: [],
     allowedTools: ["Agent", "SendMessage", "Bash"], forwardSubagentText: true,
     sandbox: { enabled: false }, autoMemory: { enabled: false },
     agents: { "cold-probe": { description: "Crash context probe", prompt: "COLD_RESTART_PERSONA", tools: ["Bash"] } },

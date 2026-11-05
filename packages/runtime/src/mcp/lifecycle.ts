@@ -1,4 +1,5 @@
 import { guestToolUnsupported } from "../guest/file-session.ts";
+import { requireBrand } from "@waifucave/clover-agent-sdk";
 // Phase 4 Task 4 (Lane A), WS-09 §1.2/§2/§2.1/§9: the multi-server orchestrator -- source precedence
 // resolution, the three-deadline connection model, and Lane A's own REAL `McpServerStateSource`
 // (mcp/state.ts's own header: "the REAL implementation... is Lane A's own job"). One instance per
@@ -27,7 +28,6 @@ import { guestToolUnsupported } from "../guest/file-session.ts";
 import type { McpServerConfigForProcessTransport } from "@waifucave/clover-agent-sdk";
 import { registerMcpServerTools, unregisterMcpServerTools, replaceExecutor, type McpToolDefinition, type ToolExecutionContext, type ToolResultPayload } from "../tools/registry.ts";
 import { imagePrepWorkRoot, resultBlocksForModel, type RawResultPart } from "../tools/image-prep.ts";
-import { WINTER_SERVER_NAME } from "./winter-server.ts";
 import type { McpServerState, McpServerStateKind, McpServerStateSource } from "./state.ts";
 import type { McpControlSeam } from "./control-seam.ts";
 import type { McpEnvConfig } from "./env.ts";
@@ -193,14 +193,14 @@ export { validateServerConfig };
  *   - and a reuser could not name any live server `winter`, a stale reservation for a standing
  *     server that under their brand is called `acme`.
  *
- * The parameter defaults to `WINTER_SERVER_NAME`, so every existing caller and fixture keeps today's
- * behaviour unchanged.
+ * A1 (fail closed): the parameter defaults to the process's installed brand's `mcpServerName`
+ * (`requireBrand()`), never to Winter's `WINTER_SERVER_NAME`; with no brand installed it throws.
  */
 export function resolveMcpServerSources(
   sources: readonly McpServerSource[],
   opts: { strictMcpConfig?: boolean; trustedWorkspace: boolean; reservedServerName?: string; hostReservedServerNames?: readonly string[] },
 ): ResolveMcpServerSourcesResult {
-  const reservedServerName = opts.reservedServerName ?? WINTER_SERVER_NAME;
+  const reservedServerName = opts.reservedServerName ?? requireBrand().mcpServerName;
   // `RuntimeConfig.reservedMcpServerNames`: names the HOST keeps for its own in-process servers. Only
   // the host itself (origin `explicit`) may use one, and only for a `type: "sdk"` server -- a settings,
   // project or plugin file naming one is refused, as is an explicit non-sdk entry, so a tool spelled

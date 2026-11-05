@@ -60,7 +60,7 @@ import { readSourceFileSync, readSourceDirectorySync, statSourceSync } from "../
 // exact destructive target) is not.
 
 import { basename, join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
+import { type BrandProfile, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import { capBytes, neutralizeReminderTags } from "./injection.ts";
 import { parseFrontmatter } from "../subagents/definitions.ts";
 
@@ -263,7 +263,7 @@ export interface OutputStyleLookup {
   cwd: string;
   /** The resolved winter home (`~/<brand.homeDirName>` by default). */
   home: string;
-  /** P7a (D19): the session's brand -- the project dot-dir the project tier is read from. Omitted = `WINTER_BRAND`. */
+  /** P7a (D19): the session's brand -- the project dot-dir the project tier is read from. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: Pick<BrandProfile, "projectDirName">;
   /** Omitted means all three tiers (the pinned default). */
   settingSources?: readonly SettingSource[];
@@ -335,7 +335,7 @@ export function resolveOutputStyle(name: string, lookup: OutputStyleLookup): Res
   const sources = lookup.settingSources ?? (["user", "project", "local"] as const);
 
   if (sources.includes("project")) {
-    const found = parseStyleFile(join(lookup.cwd, (lookup.brand ?? WINTER_BRAND).projectDirName, "output-styles", `${name}.md`), name, "project");
+    const found = parseStyleFile(join(lookup.cwd, requireBrand(lookup.brand).projectDirName, "output-styles", `${name}.md`), name, "project");
     if (found !== null) {
       if (!found.keepCodingInstructions && lookup.trustedWorkspace !== true) {
         return { ...found, keepCodingInstructions: true, replacementDowngraded: true };

@@ -36,7 +36,7 @@ import { execFileSync } from "node:child_process";
 import { prepareHostChildLaunch } from "../sandbox/host-child-floor.ts";
 import { realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import { expandImports } from "./imports.ts";
 import { neutralizeReminderTags, readWhole } from "./injection.ts";
 
@@ -163,7 +163,7 @@ export interface WinterMdInput {
   home: string;
   /** Omitted means the pinned default: all three tiers. `[]` reads nothing. */
   settingSources?: readonly SettingSource[];
-  /** P7a (D19): the session's brand. Omitted = `WINTER_BRAND`, i.e. today's `WINTER_MD_BASENAME`. */
+  /** P7a (D19): the session's brand. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: Pick<BrandProfile, "instructionsFile">;
   /**
    * WS-21 §6.3 item 2: UNCONDITIONAL rules (`context/rules.ts`'s `loadRules(...).unconditional`),
@@ -188,7 +188,7 @@ export interface WinterMdInput {
  */
 export function discoverWinterMd(input: WinterMdInput): WinterMdBlock[] {
   const sources = input.settingSources ?? (["user", "project", "local"] as const);
-  const basename = (input.brand ?? WINTER_BRAND).instructionsFile;
+  const basename = requireBrand(input.brand).instructionsFile;
   const localBasename = localInstructionsBasename(basename);
   const blocks: WinterMdBlock[] = [];
 

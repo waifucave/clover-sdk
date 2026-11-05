@@ -1,4 +1,4 @@
-import { WINTER_BRAND, envName, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, envName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 
 /** The one brand field every env-name derivation in this module needs. */
 type EnvBrand = Pick<BrandProfile, "envPrefix">;
@@ -77,11 +77,11 @@ function parsePositiveIntEnv(raw: string | undefined, fallback: number): number 
 }
 
 export function resolveMaxSpawnDepth(env: Record<string, string | undefined> = process.env, brand?: EnvBrand): number {
-  return parsePositiveIntEnv(env[envName(brand ?? WINTER_BRAND, "MAX_SUBAGENT_SPAWN_DEPTH")], DEFAULT_MAX_DEPTH);
+  return parsePositiveIntEnv(env[envName(requireBrand(brand), "MAX_SUBAGENT_SPAWN_DEPTH")], DEFAULT_MAX_DEPTH);
 }
 
 export function resolveMaxConcurrentSubagents(env: Record<string, string | undefined> = process.env, brand?: EnvBrand): number {
-  return parsePositiveIntEnv(env[envName(brand ?? WINTER_BRAND, "MAX_CONCURRENT_SUBAGENTS")], DEFAULT_MAX_CONCURRENCY);
+  return parsePositiveIntEnv(env[envName(requireBrand(brand), "MAX_CONCURRENT_SUBAGENTS")], DEFAULT_MAX_CONCURRENCY);
 }
 
 // Absent from this map = depth 0 (the true top-level session, or any id this module has never seen)
@@ -101,7 +101,7 @@ export interface SpawnLimitCheck {
 // paired with releaseSpawn below, called once the child reaches a terminal status.
 export function checkAndRegisterSpawn(opts: { parentKey: string; childKey: string; env?: Record<string, string | undefined>; brand?: EnvBrand; recordedDepth?: number }): SpawnLimitCheck {
   const env = opts.env ?? process.env;
-  const brand = opts.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts.brand);
   const maxDepth = resolveMaxSpawnDepth(env, brand);
   const maxConcurrency = resolveMaxConcurrentSubagents(env, brand);
   const parentDepth = depthById.get(opts.parentKey) ?? 0;

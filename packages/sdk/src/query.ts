@@ -27,8 +27,8 @@ import type {
 } from "./permissions/types.ts";
 import { resolveRuntimeExecutable, defaultSpawn, type SpawnRuntimeOptions, type SpawnedRuntimeProcess } from "./transport.ts";
 import { HOST_CODE_PROCESS_SUBTYPES } from "./host-code-process.ts";
-import { ResultError, CLIConnectionError, ProtocolDecodeError, ProcessError, AbortError, WinterRpcError, InvalidBrandError } from "./errors.ts";
-import { envName, resolveBrand, WINTER_BRAND, type BrandProfile } from "./brand.ts";
+import { ResultError, CLIConnectionError, ProtocolDecodeError, ProcessError, AbortError, WinterRpcError, InvalidBrandError, BrandRequiredError } from "./errors.ts";
+import { envName, installedBrand, resolveBrand, WINTER_BRAND, type BrandProfile } from "./brand.ts";
 import { resolveKeychainServiceForProfile } from "./paths/home.ts";
 // R-7b-4: the facet's own contract types + the guards this side runs on the runtime's answers. The
 // `id` -> RuntimeAddress rule (`resolveFacetTarget`) is applied on the RUNTIME side, where the
@@ -927,7 +927,7 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
     // read by the HOST -- a reuser told to set `WINTER_HOME` has been handed a variable their
     // runtime does not read. Derived from the partial profile the caller just supplied (the full
     // resolution happens below, and this throw precedes it), falling back to Winter's own prefix.
-    const homeVar = envName({ envPrefix: options.brand?.envPrefix ?? WINTER_BRAND.envPrefix }, "HOME");
+    const homeVar = envName({ envPrefix: options.brand?.envPrefix ?? installedBrand()?.envPrefix ?? WINTER_BRAND.envPrefix }, "HOME");
     throw new Error(`sessionStore cannot be used with persistSession: false -- the storage adapter requires local writes to mirror from. Use ${homeVar}=/tmp for ephemeral local writes with external mirroring.`);
   }
   if (options.sessionStore !== undefined && options.enableFileCheckpointing === true) {
@@ -942,8 +942,11 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
   // THE WRAPPER RESOLVES; THE RUNTIME NEVER DEFAULTS (protocol/config.ts's own `brand` comment).
   // Every config this function builds carries the FULL profile, so a spawned or compiled child
   // derives its home dir, env names, keychain service, preset name and MCP server name from the
-  // same object the wrapper used. A host that passes no `brand` gets `WINTER_BRAND` — identical to
-  // every session before this option existed.
+  // same object the wrapper used. A1 (fail closed): THERE IS NO DEFAULT BRAND. A host that passes no
+  // `brand` gets the brand installed for its process (`installBrand`), and with none installed the
+  // query is refused here (`BrandRequiredError`) before anything is spawned, so a missed thread can
+  // never start a session on Winter's home, environment variables or Keychain service. A PARTIAL
+  // profile is completed from the installed brand the same way, never from Winter's.
   // The DEPRECATED standalone alias wins (it predates the profile, and existing hosts pass it), and
   // the losing value is never silent: a host that sets BOTH to different services is told which one
   // is on the wire. Setting both to the SAME value is not a mistake and warns about nothing.
@@ -963,7 +966,7 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
     ...options.brand,
     ...(options.keychainService !== undefined ? { keychainService: options.keychainService } : {}),
   });
-  if (!brandResolution.ok) throw new InvalidBrandError(brandResolution.reason);
+  if (!brandResolution.ok) throw brandResolution.missing !== undefined ? new BrandRequiredError(brandResolution.reason) : new InvalidBrandError(brandResolution.reason);
   // P7a fix wave (item 5, M-3): the DEV PROFILE's other half. `<PREFIX>PROFILE=dev` already selects
   // `~/<homeDirName>-dev`; WS-01's Phase 6 amendment pairs it with a `.dev` Keychain service too,
   // and only the home half had landed -- so an env-selected dev session got its own home and its own

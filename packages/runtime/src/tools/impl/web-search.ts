@@ -25,7 +25,7 @@
 //     never needs to tell the model how to add a key; Winter's does;
 //   - the SESSION SPEND CEILING stop (`isBudgetStop`, below) has no claude analogue at all -- Winter's
 //     own inner pass is billed against the session's own `maxBudgetUsd`, a Winter product concept.
-import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 import { WEB_SEARCH_CANONICAL_NAME } from "../descriptors/web-search.ts"; // self-sufficiency: guarantees the stub is registered before replaceExecutor runs below.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { searchBackendUsable, webSessionRuntimeFor, type WebSessionRuntime } from "../../web/session-runtime.ts";
@@ -215,7 +215,7 @@ export function createWebSearchExecutor(deps: WebSearchExecutorDeps = {}): ToolE
     }
 
     // --- the session's own budget (counted BEFORE the search runs; see `_search-budget.ts`) --------
-    const brand = deps.brand ?? ctx.brand ?? WINTER_BRAND;
+    const brand = requireBrand(deps.brand ?? ctx.brand);
     const env = ctx.env ?? process.env;
     const cap = resolveMaxWebSearchesPerSession(env, brand);
     const reservation = reserveWebSearchCall(ctx.sessionId, cap);

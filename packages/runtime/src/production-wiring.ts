@@ -1,4 +1,4 @@
-import { parseRuntimeContextConfig } from "@waifucave/clover-agent-sdk";
+import { parseRuntimeContextConfig, requireBrand, installBrand } from "@waifucave/clover-agent-sdk";
 import { createRuntimeContextChannel, type RuntimeContextChannel } from "./context/runtime-context-channel.ts";
 import { linuxGuidedSessionChannel } from "./guest/linux-session-admission.ts";
 import { assertLinuxSession, type LinuxSessionAdmission } from "./guest/linux-session-admission.ts";
@@ -29,7 +29,7 @@ import { installSourceReadRestrictions } from "./sandbox/source-read.ts";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { InitPluginInfo, RuntimeConfig, SdkPluginConfig, Settings, SettingSource } from "@waifucave/clover-agent-sdk";
-import { OVERLAY_NEVER_KEYS, resolveWinterHome, WINTER_BRAND, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@waifucave/clover-agent-sdk";
+import { OVERLAY_NEVER_KEYS, resolveWinterHome, isUnset, pluginCacheDirEnvName, providerManagedByHostEnvName, storeHomeEnvName } from "@waifucave/clover-agent-sdk";
 import { applyHostManagedSettingsFilter, filterSettingsEnv, type EnvFilterTier } from "./settings/env-filter.ts";
 // P7a (D19): the two process-level brand surfaces this module installs per session -- see (10b).
 import { rebrandStandingServerTools } from "./tools/registry.ts";
@@ -777,14 +777,18 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
   if (config.requiredRuntimeContext !== undefined) parseRuntimeContextConfig(config.requiredRuntimeContext);
   const freshLinux = opts.linuxSessionAdmission !== undefined;
   if (freshLinux) assertLinuxSession(opts.linuxSessionAdmission, config);
-  // (0) THE BRAND (P7a, D19). THE ONE FALLBACK IN THE RUNTIME, and it is here rather than at each
-  // reader for a reason worth stating: `query()` always puts the resolved profile on the wire, so a
-  // live session's `config.brand` is never absent -- the only configs without one are the ones this
-  // repository hand-builds in tests and scripted doubles. A `?? WINTER_BRAND` at forty call sites
-  // would make "a reader forgot to thread the brand" indistinguishable from "this session is
-  // Winter", which is precisely the failure the profile exists to make impossible. One fallback,
-  // one place, and every consumer below is handed a real profile.
-  const brand = config.brand ?? WINTER_BRAND;
+  // (0) THE BRAND (P7a, D19; A1, fail closed). `query()` always puts the resolved profile on the wire,
+  // so a live session's `config.brand` is never absent. THERE IS NO DEFAULT: a config without one
+  // runs under the brand installed for this process (this repository's test preload installs
+  // Winter's own for Winter's own suites) and, with none installed, is REFUSED here with
+  // `BrandRequiredError` before anything reads a home, an environment variable or a Keychain service.
+  //
+  // The session's brand is then INSTALLED for this process (a spawned runtime, or an embedded
+  // session's own Worker: one realm per session), first install winning. So a reader deeper down
+  // that was never handed the brand (a missed thread) reads THIS session's names through
+  // `requireBrand`, never Winter's.
+  const brand = requireBrand(config.brand);
+  if (config.brand !== undefined) installBrand(config.brand);
   // WS-25: the MCP sign-in test seam is read from the ORIGINAL process env, HERE, before any settings
   // tier's `env` block is merged into `env` below -- a settings file must never be able to move the
   // session's sign-ins (and every tier refuses the name as well, settings/env-filter.ts).

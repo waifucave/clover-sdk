@@ -11,3 +11,7 @@ packages/platform/*/bin/
 # stray bun build --compile cache artifact when --outfile is a path outside cwd (a real leak this
 # branch hit once, see commit removing it)
 *.bun-build
+
+# Python bytecode a test that compiles the guest supervisor leaves behind (it embeds absolute paths)
+__pycache__/
+*.pyc

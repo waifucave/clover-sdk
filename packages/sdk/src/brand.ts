@@ -29,6 +29,8 @@
 // `process.env.<PREFIX>_X` evaluated at import time would read the WRONG (or no) prefix. Every read
 // of a brand-derived env name is lazy, inside a function, and the gate's rule 9 pins that.
 
+import { BrandRequiredError } from "./errors.ts";
+
 /**
  * Every Winter-owned name, as one swappable object.
  *
@@ -172,7 +174,10 @@ export const WINTER_BRAND: Readonly<BrandProfile> = Object.freeze({
 });
 
 /** A refusal carries WHICH field and WHY, never a bare boolean — the host has to fix something. */
-export type BrandValidation = { ok: true; brand: BrandProfile } | { ok: false; reason: string };
+export type BrandValidation =
+  | { ok: true; brand: BrandProfile }
+  /** `missing` is set when the refusal is that fields are unset and no brand is installed (A1, fail closed). */
+  | { ok: false; reason: string; missing?: ReadonlyArray<keyof BrandProfile> };
 
 interface FieldRule {
   // The required string fields only: `productVersion` has its own optional rule below.
@@ -197,20 +202,104 @@ const FIELD_RULES: readonly FieldRule[] = [
   { field: "keychainService", re: KEYCHAIN_SERVICE_RE, shape: "a lowercase reverse-DNS-style service name, e.g. \"com.acme.core\"" },
 ];
 
+// --- A1: THE INSTALLED BRAND, AND NO DEFAULT (fail closed) -----------------------------------------
+//
+// `WINTER_BRAND` is Winter's profile, and Winter's home (`~/.winter`), environment (`WINTER_*`) and
+// Keychain service belong to a live install this SDK must never reach by accident. So nothing falls
+// back to it any more. A session's brand is the one its host names (`Options.brand`, which rides the
+// wire as `RuntimeConfig.brand`); a reader that was not handed one (a "missed thread") reads the brand
+// INSTALLED for this process, and with none installed it throws `BrandRequiredError` instead of
+// quietly using Winter's names.
+//
+// WHO INSTALLS:
+//   * a host, once, when it loads (Clover's core: `process-identity.ts`), so its own process's
+//     readers and `query()` calls that name no brand read the host's own;
+//   * the runtime's production wiring, at the start of a session, in its own process or Worker
+//     (a spawned runtime and an embedded session each run in a realm of their own);
+//   * this repository's test preload, which installs Winter's own profile for Winter's own suites.
+//
+// THE FIRST INSTALL WINS for the life of the process (a realm serves one brand). Installing the same
+// profile again changes nothing; installing a different one leaves the first in place and returns
+// `false`, so a session that names its own brand explicitly still runs under it (an explicit brand
+// always wins over the installed one) while its missed threads read the process's.
+let installed: Readonly<BrandProfile> | undefined;
+
+/** The brand installed for this process, or `undefined` when none is. */
+export function installedBrand(): Readonly<BrandProfile> | undefined {
+  return installed;
+}
+
 /**
- * Fold a host's partial profile onto Winter's defaults and validate the result.
+ * Install the brand this process serves: what every reader that was handed no brand reads, and what
+ * `query()` and `resolveBrand()` complete a partial profile from. The profile must be complete and
+ * valid (`resolveBrand`'s rules); an invalid one throws `TypeError`. Returns `true` when this brand is
+ * now the installed one (installed now, or installed already), `false` when another was installed
+ * first and stays.
+ */
+export function installBrand(brand: BrandProfile): boolean {
+  const missing = missingBrandFields(brand);
+  if (missing.length > 0) throw new TypeError(`installBrand: the profile must be complete; it has no ${missing.join(", ")}`);
+  const checked = resolveBrand(brand);
+  if (!checked.ok) throw new TypeError(`installBrand: ${checked.reason}`);
+  if (installed === undefined) {
+    installed = Object.freeze({ ...checked.brand });
+    return true;
+  }
+  return sameBrand(installed, checked.brand);
+}
+
+/**
+ * The brand a reader runs under: the one it was handed, else the one installed for this process.
+ * With neither it throws `BrandRequiredError`: there is no default brand, so a missed thread fails
+ * where it is instead of landing on Winter's home, environment or Keychain.
+ */
+export function requireBrand(): Readonly<BrandProfile>;
+export function requireBrand<B extends Partial<BrandProfile>>(explicit: B | undefined): B | Readonly<BrandProfile>;
+export function requireBrand(explicit?: Partial<BrandProfile>): Partial<BrandProfile> {
+  if (explicit !== undefined) return explicit;
+  if (installed !== undefined) return installed;
+  throw new BrandRequiredError("this code was handed no brand, and this process has installed none");
+}
+
+/** The required string fields a profile leaves unset (`productVersion` is optional). */
+function missingBrandFields(p: Partial<BrandProfile>): Array<keyof BrandProfile> {
+  return (Object.keys(WINTER_BRAND) as Array<keyof BrandProfile>).filter((key) => p[key] === undefined);
+}
+
+function sameBrand(a: Readonly<BrandProfile>, b: Readonly<BrandProfile>): boolean {
+  const keys = new Set<keyof BrandProfile>([...(Object.keys(a) as Array<keyof BrandProfile>), ...(Object.keys(b) as Array<keyof BrandProfile>)]);
+  for (const key of keys) if (a[key] !== b[key]) return false;
+  return true;
+}
+
+/**
+ * Complete a host's profile and validate the result.
+ *
+ * A field the profile leaves unset is taken from the brand INSTALLED for this process (A1), never from
+ * Winter's: with fields unset and no brand installed the result is a refusal naming them, so a partial
+ * profile can never pick up Winter's home, environment prefix or Keychain service by omission. A
+ * complete profile needs nothing installed.
  *
  * ABSENT AND EXPLICITLY-`undefined` ARE THE SAME THING (`exactOptionalPropertyTypes` is on
  * repo-wide, so a caller spreading an options object can legitimately produce either): both mean
- * "keep Winter's value for this field".
+ * "take the installed brand's value for this field".
  *
  * Returns a RESULT rather than throwing. The one caller that must turn a refusal into a throw is
- * `query()`, which does so as its own typed `InvalidBrandError` at construction time alongside its
- * other option validation; everything else (tests, a host previewing a profile) wants the value.
+ * `query()`, which does so as its own typed error at construction time alongside its other option
+ * validation; everything else (tests, a host previewing a profile) wants the value.
  */
 export function resolveBrand(partial?: Partial<BrandProfile>): BrandValidation {
   const p = partial ?? {};
-  const pick = <K extends keyof BrandProfile>(key: K): BrandProfile[K] => (p[key] === undefined ? WINTER_BRAND[key] : (p[key] as BrandProfile[K]));
+  const missing = missingBrandFields(p);
+  if (missing.length > 0 && installed === undefined) {
+    return {
+      ok: false,
+      reason: `no brand: ${missing.length === Object.keys(WINTER_BRAND).length ? "no profile was given" : `the profile leaves ${missing.join(", ")} unset`}, and this process has installed no brand to complete it from (installBrand); there is no default brand`,
+      missing,
+    };
+  }
+  const base = installed;
+  const pick = <K extends keyof BrandProfile>(key: K): BrandProfile[K] => (p[key] === undefined ? (base as BrandProfile)[key] : (p[key] as BrandProfile[K]));
   // A fresh object every call. A caller that mutates what it got back must not be able to reach the
   // shared constant through it -- and `RuntimeConfig.brand` is serialised per query, so handing out
   // the frozen singleton would also make one host's mutation attempt a cross-session surprise.

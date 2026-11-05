@@ -18,20 +18,7 @@ import type { RuntimeConfig, PermissionUpdate, RuleSource } from "@waifucave/clo
 // store-level primitive (packages/sdk/src/store/fork-session.ts): the ONLY caller left in this
 // file, so it is imported directly here rather than re-exported through resume.ts (which no longer
 // has any relationship to it — see task-10-report.md).
-import {
-  WinterCompatibilitySessionStore,
-  DIALECT_RECORD_ENTRY_TYPE,
-  resolveWinterHome,
-  WINTER_BRAND,
-  compatibilityKeys,
-  forkSessionByKey,
-  WinterStoreLeaseError,
-  storeHomeEnvName,
-  isUnset,
-  type SessionKey,
-  type SessionStore,
-  type SessionStoreEntry,
-} from "@waifucave/clover-agent-sdk";
+import { WinterCompatibilitySessionStore, DIALECT_RECORD_ENTRY_TYPE, resolveWinterHome, compatibilityKeys, forkSessionByKey, WinterStoreLeaseError, storeHomeEnvName, isUnset, type SessionKey, type SessionStore, type SessionStoreEntry, requireBrand } from "@waifucave/clover-agent-sdk";
 import type { ContentBlock, ProviderMessage, SessionPersistence } from "../engine.ts";
 import { assertProtectedStoreConfig, createProtectedRuntimeStore, type OpenedProtectedStoreBootstrap } from "../guest/store-bootstrap.ts";
 import { durableOperationGuard, guardedDurableMethods, type DurableOperationGuard } from "./durable-authority.ts";
@@ -1366,7 +1353,7 @@ export async function resolveEngineSession(opts: {
   // Ruling P1-N (1): resolve the persistent projectKey (WINTER_PROJECT_DIR_NAME override applied,
   // if any) up front — every branch below (fresh session AND continue's single-directory scope)
   // uses this SAME resolved value, never the raw default.
-  const cwdKey = resolveProjectDirName(defaultProjectKey, opts.env, config.brand ?? WINTER_BRAND);
+  const cwdKey = resolveProjectDirName(defaultProjectKey, opts.env, requireBrand(config.brand));
   // N2 extensions 4.5: the held-input journal beside the transcript, under the same store-lease guard as the other durable stores.
   const heldFor = (projectKey: string, sessionId: string, transcriptIds: ReadonlySet<string>): { held?: { journal: HeldInputJournal; transcriptInputIds: ReadonlySet<string> } } => {
     if (opts.heldInputs !== true) return {};
@@ -1557,7 +1544,7 @@ export async function resolveEngineSession(opts: {
 export function resolveProductionWinterHome(config: RuntimeConfig, env: Record<string, string | undefined>): string {
   // P7a (D19): the session's own profile decides both `<PREFIX>HOME` and the default dir name.
   // Absent only for a config no `query()` produced -- Winter's own names are the reading then.
-  return config.winterHome ?? resolveWinterHome(env, config.brand ?? WINTER_BRAND);
+  return config.winterHome ?? resolveWinterHome(env, requireBrand(config.brand));
 }
 
 // WS-21 §3.7/§6.3 item 3 (durable-write audit, fix round 2): the direct sibling of
@@ -1573,6 +1560,6 @@ export function resolveProductionWinterHome(config: RuntimeConfig, env: Record<s
 export function resolveProductionStoreHome(config: RuntimeConfig, env: Record<string, string | undefined>): string | undefined {
   // Fix round 3 (M-6): a blank `WINTER_STORE_HOME=""` counts as unset, mirroring
   // production-wiring.ts's own identical fix and `WINTER_HOME`'s own `isUnset` rule.
-  const fromEnv = env[storeHomeEnvName(config.brand ?? WINTER_BRAND)];
+  const fromEnv = env[storeHomeEnvName(requireBrand(config.brand))];
   return config.storeHome ?? (isUnset(fromEnv) ? undefined : fromEnv);
 }

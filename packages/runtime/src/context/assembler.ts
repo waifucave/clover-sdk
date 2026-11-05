@@ -35,7 +35,7 @@
 // compaction; the engine memoizes `userContext()` the same way (see engine.ts's session-context
 // memo), so an edit is seen after the next compaction or in a new session.
 import type { RuntimeConfig, Settings, SystemPromptPreset } from "@waifucave/clover-agent-sdk";
-import { DEFAULT_OUTPUT_STYLE, WINTER_BRAND, envName, resolveWinterHome, SYSTEM_PROMPT_DYNAMIC_BOUNDARY } from "@waifucave/clover-agent-sdk";
+import { DEFAULT_OUTPUT_STYLE, WINTER_BRAND, envName, resolveWinterHome, SYSTEM_PROMPT_DYNAMIC_BOUNDARY, requireBrand } from "@waifucave/clover-agent-sdk";
 import { join } from "node:path";
 import type { AssembledPrompt, SystemPromptAssembler, SystemPromptInput } from "./seam.ts";
 import { renderEnvironmentContextValue, renderEnvironmentSection, renderStaticEnvironmentSection, type EnvironmentInput } from "./dynamic-sections.ts";
@@ -180,7 +180,7 @@ function resolveContext(deps: SystemPromptAssemblerDeps, input: SystemPromptInpu
   // P7a (D19): the session's own profile, off the config it is already reading. `WINTER_BRAND`
   // is the fallback for the configs this repository hand-builds in tests -- a live session's
   // config always carries the resolved profile (`query()` never omits it).
-  const brand = config.brand ?? WINTER_BRAND;
+  const brand = requireBrand(config.brand);
   const home = deps.home ?? resolveWinterHome(input.env, brand);
   const region = resolveRegion(config.systemPrompt);
 

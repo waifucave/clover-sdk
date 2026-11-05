@@ -836,25 +836,20 @@ export function scanFileForBrandlessCallSites(relPath: string, src: string): Cal
  */
 const BRANDLESS_CALL_SITE_ALLOWLIST: Readonly<Record<string, string>> = {
   // --- (a) defaults a branded caller overrides -----------------------------------------------------
-  "packages/sdk/src/sessions.ts:57": "the unbranded default: a caller that supplied NO brand gets Winter's home, which is what I-1 made explicit rather than implicit",
   "packages/sdk/src/options.ts:78": "DEFAULT_PLANS_DIRECTORY -- the default a session's `brand.projectDirName` replaces",
-  "packages/sdk/src/options.ts:95": "DEFAULT_KEYCHAIN_SERVICE -- the default a host's own `brand.keychainService` replaces",
-  "packages/sdk/src/query.ts:930": "the FALLBACK side of `options.brand?.envPrefix ?? WINTER_BRAND.envPrefix` (M-1's fix; line shifted by the sdk server's `toolNames` on the wire and the host-messaging responders, SDK 0.0.40's `toolLanes` and cancelled-`sdk_mcp_call` answers, SDK 0.0.41's `concurrentTools`, and `Query.clearQueuedInput`)",
-  "packages/sdk/src/query.ts:1117": "a COMPARISON against the default, deciding whether to emit the deprecated top-level key (line shifted by `toolNames`, `tools`, `deferTools`, `legacyToolNames`, `reservedMcpServerNames` and the host-messaging responders, SDK 0.0.40's `toolLanes` and cancelled-`sdk_mcp_call` answers, SDK 0.0.41's `concurrentTools`, and `Query.clearQueuedInput`)",
+  "packages/sdk/src/options.ts:95": "DEFAULT_KEYCHAIN_SERVICE -- Winter's own service, exported; since A1 nothing DEFAULTS to it (the Keychain stores read `requireBrand().keychainService`), and `mcp-auth/store.ts` only compares against it",
+  "packages/sdk/src/query.ts:930": "the LAST fallback of `options.brand?.envPrefix ?? installedBrand()?.envPrefix ?? WINTER_BRAND.envPrefix`, which only names a variable in a refusal message (the query is refused either way; A1 refuses an unbranded one just below) (M-1's fix; line shifted by the sdk server's `toolNames` on the wire and the host-messaging responders, SDK 0.0.40's `toolLanes` and cancelled-`sdk_mcp_call` answers, SDK 0.0.41's `concurrentTools`, and `Query.clearQueuedInput`)",
+  "packages/sdk/src/query.ts:1120": "a COMPARISON against the default, deciding whether to emit the deprecated top-level key (line shifted by A1's no-default-brand note above it, and by `toolNames`, `tools`, `deferTools`, `legacyToolNames`, `reservedMcpServerNames` and the host-messaging responders, SDK 0.0.40's `toolLanes` and cancelled-`sdk_mcp_call` answers, SDK 0.0.41's `concurrentTools`, and `Query.clearQueuedInput`)",
   "packages/runtime/src/guest/linux-guided-reader-protocol.ts:10": "the CLOSED Winter-only native wire's instruction filename; this profile rejects config.brand and the parser still requires the exact shared path, so a caller cannot select a different brand or filename",
   "packages/runtime/src/subagents/limits.ts:42": "a DEFAULT PARAMETER; the call site passes `brand ?? WINTER_BRAND` (review §5.1 names this correct)",
   "packages/runtime/src/subagents/limits.ts:58": "a DEFAULT PARAMETER; same call site, same override",
   "packages/runtime/src/subagents/watchdog.ts:12": "a DEFAULT PARAMETER; the call site passes the session brand",
-  "packages/runtime/src/context/memory.ts:75": "renderAutoMemorySection's `instructionsFile` DEFAULT; the assembler passes `brand.instructionsFile` (M-1's fix)",
-  "packages/runtime/src/context/memory.ts:82": "renderAutoMemoryContextValue's `instructionsFile` DEFAULT; the assembler passes `brand.instructionsFile` (M-1's fix)",
   "packages/runtime/src/context/winter-md.ts:49": "WINTER_MD_BASENAME -- Winter's own value; a session's comes from `brand.instructionsFile`",
   "packages/runtime/src/settings/env-filter.ts:65": "ALL_TIER_REFUSED_ENV's WINTER_HOME entry -- a module-scope CONSTANT list (envName(WINTER_BRAND, \"HOME\")), the identical pattern WINTER_MD_BASENAME above already uses; a settings-env filter has no per-call brand to thread, only the router's own env-name derivation, which is always WINTER_BRAND's for this SDK's own runtime",
   "packages/runtime/src/settings/env-filter.ts:106": "HOST_MANAGED_REFUSED_ENV_PATTERNS' Winter-brand-twin entry (fix round 1, item 3) -- the SAME module-scope CONSTANT list as line 65 above, for the identical reason: no per-call brand to thread",
   "packages/runtime/src/plugins/manifest.ts:24": "WINTER_PLUGIN_MANIFEST_DIR -- Winter's own value; `pluginManifestDirs(brand)` derives a session's",
-  "packages/runtime/src/provider/classifier/prompt.ts:272": "the `instructionsFile` option's DEFAULT; session-provider.ts passes the session brand's (M-1's fix; line shifted by WS-24 follow-up 6's text-fallback prompt addition above it)",
   "packages/runtime/src/permissions/protected.ts:92": "the SEED of the protected set; `isProtectedWrite` adds the session brand's own file per call",
   "packages/runtime/src/skills/store.ts:45": "PROJECT_PLUGIN_NAME -- Winter's own value; a session's is `SkillIndexOptions.brand.projectDirName`",
-  "packages/runtime/src/tools/impl/web-fetch.ts:93": "brandNameFor's DEFAULT for the domain-floor refusal text; the call site is `ctx.brand?.productName ?? WINTER_BRAND.productName`, a session's own brand always wins",
   "scripts/research/code-policy-compatibility.ts:45": "The isolated comparison intentionally uses each requested checkout's own default brand; its home is joined to the disposable fixture home, never resolved from the real process home.",
   // --- (b) the `from` side of a rename, or a comparison against the default ------------------------
   "packages/runtime/src/tools/registry.ts:918": "RESERVED_MCP_SERVER_NAMES' module-load SEED -- the `from` side; `rebrandStandingServerTools` adds the session's own name (line shifted again by fix round 4's pluginWorkflows/workflowsPaths widening, by WS-23's comment corrections above it, by code-mode images' `ToolResultPayload.blocks` / `modelReadsImages`, by the host-only `ToolResultPayload.siteIcons`, and by the plain-named MCP tools / `optIn` / `requiresAnyCapability` fields, SDK 0.0.40's `concurrencyLane` and SDK 0.0.41's `concurrencySafe`)",
@@ -899,7 +894,10 @@ describe("P7a fix wave (item 12): every brand-less call site is named and justif
     }
     // A scanner that matched nothing would pass both tests above forever.
     expect(uses.length).toBeGreaterThan(15);
-    expect(new Set(uses.map((u) => u.rule)).size).toBe(CALL_SITE_RULES.length);
+    // A1 (fail closed) threaded the LAST brand-less `resolveWinterHome` call (`sessions.ts`, which now
+    // reads the installed brand or refuses), so that rule has no real use left in the tree; the
+    // plants below are what show it still fires. The other two rules must each still see real uses.
+    expect([...new Set(uses.map((u) => u.rule))].sort()).toEqual(CALL_SITE_RULES.map((r) => r.name).filter((n) => !n.startsWith("resolveWinterHome()")).sort());
   });
 
   test("the scanner's arity test and comment filter both work (plants)", () => {

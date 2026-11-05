@@ -1,4 +1,4 @@
-import { WINTER_BRAND, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 // WS-10 §8: filesystem isolation -- a `Workspace {root, isolationType, cleanupPolicy}` abstraction
 // (report §106's own "orchestration never learns git details"). `isolation: "worktree"` REUSES Lane
 // E-of-P3's own git plumbing (tools/impl/enter-worktree.ts: runGit/listWorktrees) -- READ-ONLY per
@@ -57,7 +57,7 @@ export async function createWorkspace(opts: {
     };
   }
 
-  const worktreesDir = join(opts.parentCwd, (opts.brand ?? WINTER_BRAND).projectDirName, "worktrees");
+  const worktreesDir = join(opts.parentCwd, requireBrand(opts.brand).projectDirName, "worktrees");
   const target = join(worktreesDir, `agent-${opts.agentId}`);
   mkdirSync(worktreesDir, { recursive: true });
 

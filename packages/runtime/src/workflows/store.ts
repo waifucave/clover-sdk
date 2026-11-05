@@ -21,7 +21,7 @@ import { sourceObjectOrigin, readSourceTextWithOrigin, type SourceOrigin, bindSo
 // (skills/store.ts's own header) rather than the project tier's R4-7 trust gate.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { WINTER_BRAND, type BrandProfile, type SettingSource } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, type BrandProfile, type SettingSource, requireBrand } from "@waifucave/clover-agent-sdk";
 import { parseWorkflowMeta, type WorkflowMetaPhase } from "./meta.ts";
 
 /**
@@ -35,11 +35,16 @@ const WORKFLOW_NAME_RE = /^[A-Za-z0-9_-]+$/;
 
 /** The project workflows directory for a brand -- `<brand.projectDirName>/workflows`. */
 export function projectWorkflowsDir(brand?: Pick<BrandProfile, "projectDirName">): string {
-  return join((brand ?? WINTER_BRAND).projectDirName, "workflows");
+  return join(requireBrand(brand).projectDirName, "workflows");
 }
 
-/** Winter's own value, for every caller that has not threaded a brand. */
-export const PROJECT_WORKFLOWS_DIR = projectWorkflowsDir();
+/**
+ * Winter's own value.
+ * A1: NOT a default for a caller that has not threaded a brand (that caller calls the function, which
+ * reads the installed brand or refuses); a default computed here, at module load, would also make
+ * importing this module fail in a process with no brand installed.
+ */
+export const PROJECT_WORKFLOWS_DIR = projectWorkflowsDir(WINTER_BRAND);
 
 export type ResolvedWorkflowSource =
   | { ok: true; source: string; path: string | undefined; source_kind: "project" | "user" | "builtin" | "plugin" }
@@ -87,7 +92,7 @@ export interface WorkflowDiscoveryOptions {
    * for the same reason skills' user tier is not (skills/store.ts's header).
    */
   trustedWorkspace: boolean;
-  /** P7a (D19): the session's brand -- the project dot-dir workflows live under. Omitted = `WINTER_BRAND`. */
+  /** P7a (D19): the session's brand -- the project dot-dir workflows live under. Omitted = the brand installed for this process (`requireBrand`; A1: there is no default brand). */
   brand?: Pick<BrandProfile, "projectDirName">;
   /**
    * WS-21 §6.3 item 1 (fix round 2): the session's ENABLED plugins that ship a `workflows/`

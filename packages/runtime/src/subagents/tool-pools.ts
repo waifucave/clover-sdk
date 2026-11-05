@@ -15,7 +15,7 @@
 // canonical tool name this codebase spells as a bare literal in a dozen descriptor files already
 // (`"Read"`, `"Grep"`, ...), so a literal here carries no more drift risk than those do.
 import { SEND_MESSAGE_DEFINITION, READ_NOTIFICATIONS_DEFINITION, WINTER_DEFAULT_TOOL_DEFINITIONS } from "@waifucave/clover-agent-sdk/tools";
-import { WINTER_BRAND, mcpToolName, type BrandProfile } from "@waifucave/clover-agent-sdk";
+import { mcpToolName, type BrandProfile, requireBrand } from "@waifucave/clover-agent-sdk";
 import { AGENT_TOOL_CANONICAL_NAME } from "../provider/slots.ts";
 import { getRegisteredTool } from "../tools/registry.ts";
 
@@ -132,7 +132,7 @@ export interface SubagentToolPoolOptions {
  * prefix alone. Only a genuine MCP server's tool is an "MCP tool" in claude's sense.
  */
 export function applySubagentToolPool(tools: readonly string[], opts: SubagentToolPoolOptions): string[] {
-  const brand = opts.brand ?? WINTER_BRAND;
+  const brand = requireBrand(opts.brand);
   const twins = new Map<string, string>(WINTER_DEFAULT_TOOL_DEFINITIONS.map((def) => [mcpToolName(brand, def.toolName), builtinNameOf(def)]));
   const excluded = new Set(SUBAGENT_EXCLUDED_TOOLS.filter((name) => !(opts.planMode && name === "ExitPlanMode")));
   const allow = new Set(BACKGROUND_AGENT_TOOL_ALLOWLIST);

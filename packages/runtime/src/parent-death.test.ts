@@ -13,7 +13,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
+import { WINTER_BRAND, encodeFrame, splitFrames, type WinterFrame } from "@waifucave/clover-agent-sdk";
 
 const MAIN = fileURLToPath(new URL("./main.ts", import.meta.url));
 const COMPILED = fileURLToPath(new URL("../../platform/darwin-arm64/bin/winter", import.meta.url));
@@ -85,6 +85,8 @@ async function until(check: () => boolean, ms: number): Promise<boolean> {
 
 function sessionArgs(dir: string): string[] {
   const config = {
+    // A1: a host always sends its brand (the SDK has no default); a real child installs only that one.
+    brand: WINTER_BRAND,
     sessionId: crypto.randomUUID(),
     cwd: dir,
     model: "winter-test/calls",
