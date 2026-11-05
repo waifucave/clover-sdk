@@ -11,7 +11,15 @@
 //     (`schema/catalog.schema.json`), so the two cannot drift apart;
 //   * its canonical hash is pinned beside `CATALOG_ROW_SCHEMA_VERSION`, so any change to a row's shape
 //     fails a test until the version is bumped and the pin updated together;
-//   * every model row the SDK ships validates against it, provider by provider.
+//   * every model row the SDK ships validates against it, provider by provider, by `validateCatalogRows`
+//     and by a stock JSON Schema validator (Ajv, draft 2020-12) reading the published file.
+//
+// THE SCHEMA IS NECESSARY, NOT SUFFICIENT. It states a row's shape: its fields, their types and their
+// vocabularies. Some rules no JSON Schema can state, and `validateCatalogRows` adds them: a row's `key` is
+// `<providerId>/<upstreamId>`, every row belongs to the plugin's provider, no two rows share a key, and no
+// value is credential-shaped. A row can pass the schema and still be refused, so a host validates a
+// plugin's rows with `validateCatalogRows`, never with the schema alone; the schema is for an author's
+// tooling and editors.
 //
 // Version 1 is the row as the catalog's schemaVersion 2 defines it. An ADDITIVE change (a new optional
 // field) keeps the version; anything else (a new required field, a narrowed vocabulary, a removed
@@ -32,7 +40,7 @@ export const CATALOG_ROW_SCHEMA_SHA256 = "b49824cf42f093fb751a2d93b28bbcb8d2a854
 /** The row schema's `$id`: a name, not a URL to fetch (the schema ships in this package). */
 export const CATALOG_ROW_SCHEMA_ID = `urn:waifucave:clover:catalog-row:${CATALOG_ROW_SCHEMA_VERSION}`;
 
-/** The row schema itself (`schema/catalog-row.schema.json`), for a host or a plugin's tooling to validate against. */
+/** The row schema itself (`schema/catalog-row.schema.json`), for a plugin's tooling: necessary, not sufficient (a host runs `validateCatalogRows`). */
 export const CATALOG_ROW_SCHEMA: Readonly<Record<string, unknown>> = catalogRowSchema as Record<string, unknown>;
 
 /** One catalog row, as a model plugin supplies it. */
