@@ -109,12 +109,11 @@ describe("release.yml's trigger is pinned to v* tags and workflow_dispatch only"
     // and exists only on the npm job. Neither has the other's -- which is the whole reason they are
     // separate jobs. P9a-4 adds a THIRD job, `build-platform`, which publishes nothing and therefore
     // carries no elevated permissions at all (the default token grant, unstated here).
-    // A1 adds `npm-token`, which only reports whether the npm secret exists: it gets NO permissions.
+    // (A1's `npm-token` job, which read the secret's presence, is gone: A-M1 makes npm opt-in by a variable.)
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
     expect(doc.jobs["build-platform"]?.permissions).toBeUndefined();
     expect(doc.jobs["publish"]?.permissions).toEqual({ packages: "write", contents: "read" });
-    expect(doc.jobs["npm-token"]?.permissions).toEqual({});
     expect(doc.jobs["publish-npm"]?.permissions).toEqual({ "id-token": "write", contents: "read" });
   });
 
@@ -123,7 +122,7 @@ describe("release.yml's trigger is pinned to v* tags and workflow_dispatch only"
     // the version-vs-tag check has no tag to compare, so the jobs that publish must not run there.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
     const TAG_ONLY = "startsWith(github.ref, 'refs/tags/v')";
-    for (const jobName of ["publish", "npm-token", "publish-npm"] as const) {
+    for (const jobName of ["publish", "publish-npm"] as const) {
       expect([jobName, String(doc.jobs[jobName]?.if ?? "")]).toEqual([jobName, expect.stringContaining(TAG_ONLY) as unknown as string]);
     }
     // `build-platform` publishes nothing (pinned below), so it may build on any dispatch.
@@ -363,10 +362,8 @@ interface WorkflowJob {
   permissions?: Record<string, string>;
   /** P7a pre-publish (item 5): the npm job's dependency on the GitHub Packages job. */
   needs?: string | string[];
-  /** A1 (review M10): the publish path's tag-only condition, and the npm job's token gate. */
+  /** A1 (review M10): the publish path's tag-only condition; A-M1: the npm job's `PUBLISH_NPM` opt-in. */
   if?: string;
-  /** A1: `npm-token`'s one output, whether the repository has an npm token at all. */
-  outputs?: Record<string, string>;
 }
 interface WorkflowDoc {
   on: unknown;
@@ -441,45 +438,42 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     // from, so it must not run until the recoverable one has succeeded.
     //
     // P9a-4: a third job, `build-platform`, exists to produce the darwin-arm64 binary -- it publishes
-    // nothing (pinned separately below) and BOTH publish jobs now `needs` it too.
-    //
-    // A1: plus `npm-token`, which publishes nothing either. The npm job needs it; the GitHub Packages
-    // job does NOT, so GitHub Packages never waits on anything about npm.
+    // nothing (pinned separately below) and BOTH publish jobs now `needs` it too. Nothing about npm is
+    // a job the GitHub Packages one waits on.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
     expect(doc.jobs["publish"]?.needs).toBe("build-platform");
-    expect(doc.jobs["npm-token"]?.needs).toBeUndefined();
-    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform", "npm-token"]);
-    expect(containsPublishCommand(JSON.stringify(doc.jobs["npm-token"]))).toBe(false);
+    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform"]);
   });
 
-  test("A1: with no NPM_TOKEN the npm job is skipped AS A WHOLE, and the token's value never reaches a log", () => {
-    // A job-level `if:` cannot read `secrets`, so `npm-token` reads the secret's presence in a step and
-    // hands on `true`/`false`; the npm job's own `if:` tests that output. Nothing else in the npm job
-    // runs without a token, so nothing unrelated to the token can turn a GitHub-Packages-only release red.
+  test("A-M1: npm is OPT-IN by the repository variable PUBLISH_NPM, never by a token's presence", () => {
+    // The owner chose GitHub Packages only. v0.0.63 ran the npm job on a stale NPM_TOKEN alone, so the
+    // switch is now an explicit variable; nothing in the job-level condition looks at a secret.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    const gate = doc.jobs["npm-token"]!;
-    expect(gate.outputs).toEqual({ present: "${{ steps.check.outputs.present }}" });
-    expect(gate.steps).toHaveLength(1);
-    const check = gate.steps[0]!;
-    expect(JSON.stringify((check as unknown as { env?: unknown }).env ?? {})).toContain("secrets.NPM_TOKEN");
-    // It writes only `present=true` or `present=false`, and never echoes the variable itself.
-    expect(check.run ?? "").toContain('echo "present=true" >> "$GITHUB_OUTPUT"');
-    expect(check.run ?? "").toContain('echo "present=false" >> "$GITHUB_OUTPUT"');
-    expect((check.run ?? "").replace('[ -n "$NPM_TOKEN" ]', "")).not.toContain("$NPM_TOKEN");
-    expect(String(doc.jobs["publish-npm"]?.if ?? "")).toContain("needs.npm-token.outputs.present == 'true'");
+    const cond = String(doc.jobs["publish-npm"]?.if ?? "");
+    expect(cond).toBe("startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_NPM == 'true'");
+    expect(cond).not.toContain("NPM_TOKEN");
+    expect(cond).not.toContain("secrets");
+    // No job reports whether a token exists any more, and no job's output feeds the npm condition.
+    expect(Object.values(doc.jobs).some((job) => JSON.stringify(job).includes("outputs.present"))).toBe(false);
+    // The GitHub Packages job carries no npm condition at all: it is the leg that always runs on a tag.
+    expect(String(doc.jobs["publish"]?.if ?? "")).toBe("startsWith(github.ref, 'refs/tags/v')");
   });
 
-  test("the npm publish is TOKEN-GATED, so a missing NPM_TOKEN never blocks the GitHub Packages publish", () => {
-    // `if:` cannot read `secrets` in a job-level condition, so the secret is lifted into `env` on the
-    // step and the condition tests that -- which is also why this is a step gate, not a job gate.
-    // With no token the step is SKIPPED (green) and the other registry has already published.
+  test("A-M1: opted in with no NPM_TOKEN, the npm job FAILS first, never goes green having published nothing", () => {
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    const step = doc.jobs["publish-npm"]!.steps.find((s) => IS_PUBLISH_STEP(s.run ?? ""))!;
+    const steps = doc.jobs["publish-npm"]!.steps;
+    const first = steps[0]!;
+    expect(JSON.stringify((first as unknown as { env?: unknown }).env ?? {})).toContain("secrets.NPM_TOKEN");
+    expect(first.run ?? "").toContain('if [ -z "$NPM_TOKEN" ]');
+    expect(first.run ?? "").toContain("exit 1");
+    // It never prints the token itself: the only use of the variable is the emptiness test.
+    expect((first.run ?? "").replace('[ -z "$NPM_TOKEN" ]', "")).not.toContain("$NPM_TOKEN");
+    // The publish step itself is no longer skipped on a missing token (that was the silent-green path).
+    const step = steps.find((s) => IS_PUBLISH_STEP(s.run ?? ""))!;
     expect(step).toBeDefined();
-    expect(String((step as unknown as { if?: unknown }).if ?? "")).toContain("env.NPM_TOKEN");
+    expect((step as unknown as { if?: unknown }).if).toBeUndefined();
     expect(JSON.stringify((step as unknown as { env?: unknown }).env ?? {})).toContain("secrets.NPM_TOKEN");
-    // The GitHub Packages job's own publish carries NO such gate -- it is the leg that must always run.
     const ghStep = doc.jobs["publish"]!.steps.find((s) => IS_PUBLISH_STEP(s.run ?? ""))!;
     expect((ghStep as unknown as { if?: unknown }).if).toBeUndefined();
   });

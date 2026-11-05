@@ -32,13 +32,16 @@ pnpm strips `scripts` from the packed manifest, so the published package carries
 | GitHub Packages | `publish` | all six | `secrets.GITHUB_TOKEN`, `packages: write` |
 | public npm | `publish-npm` | the closure of the wrapper + the two harness roots + the wrapper's `optionalDependency` — all six today | `secrets.NPM_TOKEN`, `id-token: write` for provenance |
 
-**GitHub Packages only, for now (0.0.63).** The owner chose GitHub Packages as the one registry for
-now, and the repository has no `NPM_TOKEN`. The `npm-token` job reads only whether that secret exists,
-and without it the npm job is **skipped as a whole**: no install, no gates, a green workflow, and the
-version on GitHub Packages alone. The GitHub Packages job never waits on anything about npm. Adding the
-secret later turns the npm leg on with no workflow change.
+**GitHub Packages only, for now.** The owner chose GitHub Packages as the one registry. The npm job
+is **opt-in**: it runs only when the repository *variable* `PUBLISH_NPM` is exactly `true`
+(Settings → Secrets and variables → Actions → Variables). A token's presence decides nothing: v0.0.63
+ran the npm job on a Winter-era `NPM_TOKEN` alone (every PUT a 404, nothing on npmjs, but provenance
+entries in the public Sigstore log), which is why the switch is a variable now. Without the variable
+the npm job is **skipped as a whole**: no install, no gates, a green workflow, the version on GitHub
+Packages alone. With the variable and no `NPM_TOKEN` it **fails** at its first step rather than going
+green with nothing published. The GitHub Packages job never waits on anything about npm.
 
-**Only a `v*` tag publishes.** Every job on the publish path (`publish`, `npm-token`, `publish-npm`)
+**Only a `v*` tag publishes.** Every job on the publish path (`publish`, `publish-npm`)
 carries `if: startsWith(github.ref, 'refs/tags/v')`, so a `workflow_dispatch` on a branch builds the
 platform binary at most and publishes nothing. A dispatch at a `v*` tag ref is the re-drive below.
 
@@ -62,8 +65,9 @@ it, never runs.
 What the owner provides before the first `@waifucave` release:
 
 - **npm:** the `waifucave` organization (or user) on npmjs.com owning the `@waifucave` scope, and an
-  automation token with publish rights on it, stored as the repository secret `NPM_TOKEN`. The
-  packages are new names on npm, so the first publish creates them (public, as the job publishes).
+  automation token with publish rights on it, stored as the repository secret `NPM_TOKEN`, and the
+  repository variable `PUBLISH_NPM=true` to opt the npm job in. The packages are new names on npm, so
+  the first publish creates them (public, as the job publishes).
 - **GitHub Packages:** nothing beyond the repository's own `GITHUB_TOKEN` (`packages: write`, already
   in the job), since `waifucave` owns the repository. A consumer's `.npmrc` line becomes
   `@waifucave:registry=https://npm.pkg.github.com`.
@@ -133,10 +137,11 @@ a package whose declared dependency is not there yet.
    `scripts/check-release-version.ts` refuses to publish when the tag, `VERSION` and every publishable
    manifest do not agree — a mismatch does not fail the publish, it *succeeds* at publishing the wrong
    number.
-2. If the release is meant for npm too, make sure `NPM_TOKEN` exists **before** the tag is pushed.
-   Without it the npm job is skipped, the workflow goes green, GitHub Packages has the version and npm
-   has nothing — and adding the secret afterwards ships nothing until a re-drive. (GitHub Packages
-   only, the current choice, needs no secret.)
+2. If the release is meant for npm too, set the repository variable `PUBLISH_NPM=true` and make sure
+   `NPM_TOKEN` exists, both **before** the tag is pushed. Without the variable the npm job is skipped,
+   the workflow goes green, GitHub Packages has the version and npm has nothing; with it and no token
+   the npm job fails. Either fixed afterwards ships nothing until a re-drive. (GitHub Packages only,
+   the current choice, needs neither.)
 3. Tag `v<version>` and push the tag. Nothing else publishes: the workflow fires only on a `v*` tag or
    a `workflow_dispatch`, and its publish jobs run only on a `v*` tag ref, so neither a `phase-*` tag
    nor a dispatch on a branch can publish.
