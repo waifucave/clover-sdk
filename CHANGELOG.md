@@ -4,6 +4,16 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## Unreleased
+
+### npm publishing is opt-in by a repository variable
+
+The release workflow's npm job runs only when the repository variable `PUBLISH_NPM` is exactly `true`;
+a token's presence no longer turns it on (v0.0.63 ran it on a leftover `NPM_TOKEN`: nothing reached
+npmjs, but provenance entries reached the public Sigstore log). Opted in with no `NPM_TOKEN`, the job
+fails at its first step instead of going green with nothing published. The `npm-token` job is gone.
+GitHub Packages, the owner's one registry for now, is unchanged.
+
 ## 0.0.63
 
 ### The packages are `@waifucave/clover-*`

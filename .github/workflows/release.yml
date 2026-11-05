@@ -68,8 +68,8 @@ jobs:
 
   # --- TWO REGISTRIES, TWO JOBS (P7a pre-publish item 5; user ruling 2026-09-08) ------------------
   #
-  # GitHub Packages first, npm second, and SEPARATE jobs on purpose: the npm leg needs a secret this
-  # repository may not have, and a missing `NPM_TOKEN` must never block the GitHub Packages publish.
+  # GitHub Packages first, npm second, and SEPARATE jobs on purpose: the npm leg is OPT-IN (the owner
+  # chose GitHub Packages only), and nothing about npm may ever block the GitHub Packages publish.
   # `needs:` makes the dependency explicit -- npm runs only if GitHub Packages SUCCEEDED, so the two
   # registries can never disagree about which versions exist because the first leg failed halfway.
   # BOTH jobs now also `needs: build-platform` (P9a-4): the darwin-arm64 binary this workflow ships
@@ -209,37 +209,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # --- WHETHER THERE IS AN npm TOKEN AT ALL (A1: GitHub Packages only, for now) --------------------
-  #
-  # A job-level `if:` cannot read `secrets`, so this small job reads the secret's PRESENCE (never its
-  # value: the step prints only `true` or `false`) and hands it on as an output the npm job's own `if:`
-  # can test. With no `NPM_TOKEN` the npm job is SKIPPED as a whole: no install, no gates, nothing that
-  # could fail for a reason unrelated to the missing token, and the workflow is green with GitHub
-  # Packages published. The GitHub Packages job does not need this one and never waits on it.
-  npm-token:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions: {}
-    outputs:
-      present: ${{ steps.check.outputs.present }}
-    steps:
-      - id: check
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -n "$NPM_TOKEN" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "npm-token: no NPM_TOKEN secret, so the npm job is skipped and GitHub Packages publishes alone"
-          fi
-
   # --- THE npm LEG (P7a pre-publish item 5) --------------------------------------------------------
   #
   # `needs: publish` -- it runs only after GitHub Packages succeeded, so a half-published pair is not
   # possible in the direction that matters (npm is the registry a version can never be taken back
-  # from). A missing `NPM_TOKEN` skips this job's publish step and leaves the GitHub Packages publish
-  # untouched, which is why this is a separate job rather than two steps in one.
+  # from).
+  #
+  # OPT-IN, BY A REPOSITORY VARIABLE (A-M1, the owner's choice: GitHub Packages only). The job runs only
+  # when the repository variable `PUBLISH_NPM` is exactly `true`; a token's PRESENCE decides nothing. A
+  # token left over from another era is not a decision to publish: v0.0.63 ran this job on a stale
+  # `NPM_TOKEN` alone (every PUT a 404, nothing on npmjs, but provenance entries written to the public
+  # Sigstore log). Opted in, a missing `NPM_TOKEN` FAILS the job, so an intended npm release cannot go
+  # green having published nothing.
   #
   # `--registry https://registry.npmjs.org` OVERRIDES `.npmrc`'s scope pin for this command only: that
   # file makes GitHub Packages the default for `@waifucave` precisely so nothing reaches npm by
@@ -271,15 +252,25 @@ jobs:
     # `needs: build-platform` (the darwin-arm64 binary this job's own npm publish ships must exist on
     # the real artifact too -- this job checks out and downloads afresh, exactly like job 1).
     #
-    # A1: and `needs: npm-token`, whose output skips this whole job when the repository has no npm
-    # token. The publish step keeps its own token gate below as a second guard.
-    needs: [publish, build-platform, npm-token]
-    if: startsWith(github.ref, 'refs/tags/v') && needs.npm-token.outputs.present == 'true'
+    # A-M1: opt-in only, through the repository variable `PUBLISH_NPM` (`vars` is readable in a job-level
+    # `if:`, `secrets` is not, and a secret's presence is no longer the switch).
+    needs: [publish, build-platform]
+    if: startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_NPM == 'true'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
+      # Opted in with no token is a mistake, not a skip: fail before anything is built or published. The
+      # step prints only whether the secret exists, never its value.
+      - name: "an npm release needs NPM_TOKEN"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "publish-npm: PUBLISH_NPM is true but there is no NPM_TOKEN secret; nothing was published to npm" >&2
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: "1.4.2" }
@@ -310,10 +301,6 @@ jobs:
       # afresh: the version/tag agreement, and the compiled emit the tarballs must contain.
       - run: bun run scripts/check-release-version.ts
       - run: bun run build:packages
-      # TOKEN-GATED. `if:` cannot read `secrets` directly in a job-level condition, so the secret is
-      # lifted into `env` on the step and the condition tests THAT -- the documented pattern, and the
-      # reason this is a step-level gate rather than a job-level one. With no token the step is
-      # SKIPPED (green), the workflow succeeds, and GitHub Packages has already published.
       # P7a pre-publish r3 (review M1): the npm set reaches the publish through `$GITHUB_OUTPUT`, not
       # a `$(…)` substitution inside the command. A failing substitution used to degrade the command
       # to an unfiltered, non-recursive `pnpm publish` in the workspace root -- which fails, because
@@ -349,18 +336,18 @@ jobs:
       #    `workflow_dispatch` at the SAME tag ref. Both jobs skip what their own registry already
       #    has (`check-already-published.ts` here and in job 1), so the re-drive finishes the half
       #    that failed and reports the half that did not need doing.
-      # 2. `NPM_TOKEN` must exist BEFORE the tag is pushed. Without it this whole job is SKIPPED
-      #    (`npm-token` says so) and the workflow goes green with GitHub Packages published and npm
-      #    empty; adding the secret afterwards ships nothing until a `workflow_dispatch` re-drive at
-      #    that tag.
+      # 2. An npm release needs BOTH the repository variable `PUBLISH_NPM=true` and the `NPM_TOKEN`
+      #    secret BEFORE the tag is pushed. Without the variable this whole job is SKIPPED and the
+      #    workflow goes green with GitHub Packages published and npm empty; with the variable and no
+      #    token it FAILS at its first step. Either fixed afterwards ships nothing until a
+      #    `workflow_dispatch` re-drive at that tag.
       # 3. NEVER pack or publish these packages with plain `npm` by hand. The tarballs are dist-only
       #    through `publishConfig.exports`/`files` overrides, which pnpm applies at pack time and
       #    `npm pack` IGNORES -- a hand-packed tarball would carry a manifest whose `bun` condition
       #    names a `src/` that is not in it. `scripts/publish-npm-set.ts` packs through
       #    `releasePack()` (pnpm) and publishes the resulting tarballs with `npm publish`, which is
       #    the only combination that gets both the overrides and `--provenance`.
-      - name: "publish to npm (skipped when NPM_TOKEN is absent)"
-        if: ${{ env.NPM_TOKEN != '' }}
+      - name: "publish to npm"
         run: bun run scripts/publish-npm-set.ts --packages "${{ steps.npm-set.outputs.tarball-args }}"
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
