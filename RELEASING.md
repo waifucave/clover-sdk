@@ -32,6 +32,16 @@ pnpm strips `scripts` from the packed manifest, so the published package carries
 | GitHub Packages | `publish` | all six | `secrets.GITHUB_TOKEN`, `packages: write` |
 | public npm | `publish-npm` | the closure of the wrapper + the two harness roots + the wrapper's `optionalDependency` — all six today | `secrets.NPM_TOKEN`, `id-token: write` for provenance |
 
+**GitHub Packages only, for now (0.0.63).** The owner chose GitHub Packages as the one registry for
+now, and the repository has no `NPM_TOKEN`. The `npm-token` job reads only whether that secret exists,
+and without it the npm job is **skipped as a whole**: no install, no gates, a green workflow, and the
+version on GitHub Packages alone. The GitHub Packages job never waits on anything about npm. Adding the
+secret later turns the npm leg on with no workflow change.
+
+**Only a `v*` tag publishes.** Every job on the publish path (`publish`, `npm-token`, `publish-npm`)
+carries `if: startsWith(github.ref, 'refs/tags/v')`, so a `workflow_dispatch` on a branch builds the
+platform binary at most and publishes nothing. A dispatch at a `v*` tag ref is the re-drive below.
+
 Neither registry is chosen on a command line. `--registry` sets only `registries.default`, and both
 pnpm and npm consult the **scope** binding first — a committed `@waifucave:registry` line would
 therefore beat it, which is why the project `.npmrc` pins nothing. Each job binds its own scope *and*
@@ -123,11 +133,13 @@ a package whose declared dependency is not there yet.
    `scripts/check-release-version.ts` refuses to publish when the tag, `VERSION` and every publishable
    manifest do not agree — a mismatch does not fail the publish, it *succeeds* at publishing the wrong
    number.
-2. Make sure `NPM_TOKEN` exists **before** the tag is pushed. Without it the npm job's publish step is
-   skipped, the workflow goes green, GitHub Packages has the version and npm has nothing — and adding
-   the secret afterwards ships nothing until a re-drive.
-3. Tag `v<version>` and push the tag. Nothing else triggers a publish: the workflow fires only on a
-   `v*` tag or a `workflow_dispatch`, so a `phase-*` tag can never publish.
+2. If the release is meant for npm too, make sure `NPM_TOKEN` exists **before** the tag is pushed.
+   Without it the npm job is skipped, the workflow goes green, GitHub Packages has the version and npm
+   has nothing — and adding the secret afterwards ships nothing until a re-drive. (GitHub Packages
+   only, the current choice, needs no secret.)
+3. Tag `v<version>` and push the tag. Nothing else publishes: the workflow fires only on a `v*` tag or
+   a `workflow_dispatch`, and its publish jobs run only on a `v*` tag ref, so neither a `phase-*` tag
+   nor a dispatch on a branch can publish.
 
 ## If a job fails
 

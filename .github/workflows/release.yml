@@ -74,8 +74,14 @@ jobs:
   # registries can never disagree about which versions exist because the first leg failed halfway.
   # BOTH jobs now also `needs: build-platform` (P9a-4): the darwin-arm64 binary this workflow ships
   # must exist, on the real artifact, before either registry publish begins.
+  #
+  # A1 review M10: BOTH publish jobs run only on a `v*` tag ref. `workflow_dispatch` stays a trigger for
+  # the re-drive at the SAME tag (the runbook below), and a dispatch on a branch, where the version-vs-tag
+  # check has nothing to compare, publishes nothing: `build-platform` may still build, and the jobs that
+  # publish are skipped.
   publish:
     needs: build-platform
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     # R-7-1: GitHub Packages, scope @waifucave. `contents: read` is the default job permission
     # this repeats explicitly; `packages: write` is the one elevated grant a publish needs and the
@@ -203,6 +209,31 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # --- WHETHER THERE IS AN npm TOKEN AT ALL (A1: GitHub Packages only, for now) --------------------
+  #
+  # A job-level `if:` cannot read `secrets`, so this small job reads the secret's PRESENCE (never its
+  # value: the step prints only `true` or `false`) and hands it on as an output the npm job's own `if:`
+  # can test. With no `NPM_TOKEN` the npm job is SKIPPED as a whole: no install, no gates, nothing that
+  # could fail for a reason unrelated to the missing token, and the workflow is green with GitHub
+  # Packages published. The GitHub Packages job does not need this one and never waits on it.
+  npm-token:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - id: check
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "npm-token: no NPM_TOKEN secret, so the npm job is skipped and GitHub Packages publishes alone"
+          fi
+
   # --- THE npm LEG (P7a pre-publish item 5) --------------------------------------------------------
   #
   # `needs: publish` -- it runs only after GitHub Packages succeeded, so a half-published pair is not
@@ -239,7 +270,11 @@ jobs:
     # P9a-4: keeps `needs: publish` (npm never runs until GitHub Packages succeeded) AND gains
     # `needs: build-platform` (the darwin-arm64 binary this job's own npm publish ships must exist on
     # the real artifact too -- this job checks out and downloads afresh, exactly like job 1).
-    needs: [publish, build-platform]
+    #
+    # A1: and `needs: npm-token`, whose output skips this whole job when the repository has no npm
+    # token. The publish step keeps its own token gate below as a second guard.
+    needs: [publish, build-platform, npm-token]
+    if: startsWith(github.ref, 'refs/tags/v') && needs.npm-token.outputs.present == 'true'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -314,9 +349,10 @@ jobs:
       #    `workflow_dispatch` at the SAME tag ref. Both jobs skip what their own registry already
       #    has (`check-already-published.ts` here and in job 1), so the re-drive finishes the half
       #    that failed and reports the half that did not need doing.
-      # 2. `NPM_TOKEN` must exist BEFORE the tag is pushed. Without it this job's publish step is
-      #    SKIPPED and the workflow goes green with GitHub Packages published and npm empty; adding
-      #    the secret afterwards ships nothing until a `workflow_dispatch` re-drive at that tag.
+      # 2. `NPM_TOKEN` must exist BEFORE the tag is pushed. Without it this whole job is SKIPPED
+      #    (`npm-token` says so) and the workflow goes green with GitHub Packages published and npm
+      #    empty; adding the secret afterwards ships nothing until a `workflow_dispatch` re-drive at
+      #    that tag.
       # 3. NEVER pack or publish these packages with plain `npm` by hand. The tarballs are dist-only
       #    through `publishConfig.exports`/`files` overrides, which pnpm applies at pack time and
       #    `npm pack` IGNORES -- a hand-packed tarball would carry a manifest whose `bun` condition

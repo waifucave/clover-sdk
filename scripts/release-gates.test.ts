@@ -109,11 +109,25 @@ describe("release.yml's trigger is pinned to v* tags and workflow_dispatch only"
     // and exists only on the npm job. Neither has the other's -- which is the whole reason they are
     // separate jobs. P9a-4 adds a THIRD job, `build-platform`, which publishes nothing and therefore
     // carries no elevated permissions at all (the default token grant, unstated here).
+    // A1 adds `npm-token`, which only reports whether the npm secret exists: it gets NO permissions.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
     expect(doc.jobs["build-platform"]?.permissions).toBeUndefined();
     expect(doc.jobs["publish"]?.permissions).toEqual({ packages: "write", contents: "read" });
+    expect(doc.jobs["npm-token"]?.permissions).toEqual({});
     expect(doc.jobs["publish-npm"]?.permissions).toEqual({ "id-token": "write", contents: "read" });
+  });
+
+  test("A1 (review M10): every job on the publish path runs only on a `v*` tag ref, so a dispatch on a branch publishes nothing", () => {
+    // `workflow_dispatch` stays a trigger (the runbook's re-drive at the SAME tag), but on a branch
+    // the version-vs-tag check has no tag to compare, so the jobs that publish must not run there.
+    const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
+    const TAG_ONLY = "startsWith(github.ref, 'refs/tags/v')";
+    for (const jobName of ["publish", "npm-token", "publish-npm"] as const) {
+      expect([jobName, String(doc.jobs[jobName]?.if ?? "")]).toEqual([jobName, expect.stringContaining(TAG_ONLY) as unknown as string]);
+    }
+    // `build-platform` publishes nothing (pinned below), so it may build on any dispatch.
+    expect(doc.jobs["build-platform"]?.if).toBeUndefined();
   });
 
   test("it actually publishes via `pnpm publish -r --no-git-checks`, with NODE_AUTH_TOKEN from secrets.GITHUB_TOKEN", () => {
@@ -349,6 +363,10 @@ interface WorkflowJob {
   permissions?: Record<string, string>;
   /** P7a pre-publish (item 5): the npm job's dependency on the GitHub Packages job. */
   needs?: string | string[];
+  /** A1 (review M10): the publish path's tag-only condition, and the npm job's token gate. */
+  if?: string;
+  /** A1: `npm-token`'s one output, whether the repository has an npm token at all. */
+  outputs?: Record<string, string>;
 }
 interface WorkflowDoc {
   on: unknown;
@@ -424,10 +442,32 @@ describe("release.yml publishes to BOTH registries, npm second and token-gated",
     //
     // P9a-4: a third job, `build-platform`, exists to produce the darwin-arm64 binary -- it publishes
     // nothing (pinned separately below) and BOTH publish jobs now `needs` it too.
+    //
+    // A1: plus `npm-token`, which publishes nothing either. The npm job needs it; the GitHub Packages
+    // job does NOT, so GitHub Packages never waits on anything about npm.
     const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
-    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "publish-npm"]);
+    expect(Object.keys(doc.jobs)).toEqual(["build-platform", "publish", "npm-token", "publish-npm"]);
     expect(doc.jobs["publish"]?.needs).toBe("build-platform");
-    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform"]);
+    expect(doc.jobs["npm-token"]?.needs).toBeUndefined();
+    expect(doc.jobs["publish-npm"]?.needs).toEqual(["publish", "build-platform", "npm-token"]);
+    expect(containsPublishCommand(JSON.stringify(doc.jobs["npm-token"]))).toBe(false);
+  });
+
+  test("A1: with no NPM_TOKEN the npm job is skipped AS A WHOLE, and the token's value never reaches a log", () => {
+    // A job-level `if:` cannot read `secrets`, so `npm-token` reads the secret's presence in a step and
+    // hands on `true`/`false`; the npm job's own `if:` tests that output. Nothing else in the npm job
+    // runs without a token, so nothing unrelated to the token can turn a GitHub-Packages-only release red.
+    const doc = Bun.YAML.parse(RELEASE_YML) as WorkflowDoc;
+    const gate = doc.jobs["npm-token"]!;
+    expect(gate.outputs).toEqual({ present: "${{ steps.check.outputs.present }}" });
+    expect(gate.steps).toHaveLength(1);
+    const check = gate.steps[0]!;
+    expect(JSON.stringify((check as unknown as { env?: unknown }).env ?? {})).toContain("secrets.NPM_TOKEN");
+    // It writes only `present=true` or `present=false`, and never echoes the variable itself.
+    expect(check.run ?? "").toContain('echo "present=true" >> "$GITHUB_OUTPUT"');
+    expect(check.run ?? "").toContain('echo "present=false" >> "$GITHUB_OUTPUT"');
+    expect((check.run ?? "").replace('[ -n "$NPM_TOKEN" ]', "")).not.toContain("$NPM_TOKEN");
+    expect(String(doc.jobs["publish-npm"]?.if ?? "")).toContain("needs.npm-token.outputs.present == 'true'");
   });
 
   test("the npm publish is TOKEN-GATED, so a missing NPM_TOKEN never blocks the GitHub Packages publish", () => {
