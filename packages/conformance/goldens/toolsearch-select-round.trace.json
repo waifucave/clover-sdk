@@ -208,6 +208,8 @@
         "iterations": [],
         "speed": "standard"
       },
+      "context_tokens": "<context_tokens>",
+      "context_window": 200000,
       "permission_denials": [],
       "modelUsage": {
         "winter-test/echo": {

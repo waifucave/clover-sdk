@@ -156,6 +156,8 @@
         "iterations": [],
         "speed": "standard"
       },
+      "context_tokens": "<context_tokens>",
+      "context_window": 1048576,
       "permission_denials": [],
       "modelUsage": {
         "google/gemini-2.5-flash": {
