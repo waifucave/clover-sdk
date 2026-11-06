@@ -784,6 +784,9 @@ export interface McpToolDefinition {
 
 const mcpServerOwnedNames = new Map<string, Set<string>>(); // server -> canonical names it currently owns
 const mcpToolOwner = new Map<string, string>(); // canonical name -> owning server (reverse index)
+// Clover A-M3: a BUILT-IN a host's in-process tool took the name of (`shadowBuiltins`), set aside while that server
+// owns the name and put back when it lets go -- name -> the server and the built-in's own entry.
+const shadowedBuiltins = new Map<string, { server: string; entry: RegisteredTool }>();
 const registryChangeListeners = new Set<() => void>();
 
 function notifyRegistryChange(): void {
@@ -1108,6 +1111,14 @@ export function registerMcpServerTools(
     toolNames?: McpServerToolNames;
     toolLanes?: McpServerToolLanes;
     concurrentTools?: McpServerConcurrentTools;
+    /**
+     * Clover A-M3: built-ins this session is NOT offered (`Options.tools` leaves them out) whose names the host's own
+     * plain-named tools may take (`toolNames` mapping a tool to exactly that name): the core's `SendMessage`,
+     * `ListAgents`, `TaskStop` and `Agent` in place of the runtime's. The built-in is set aside, never advertised or
+     * dispatched while the host's tool holds the name, and comes back when this server unregisters. Any other
+     * collision is refused as before.
+     */
+    shadowBuiltins?: readonly string[];
   },
 ): void {
   if (RESERVED_MCP_SERVER_NAMES.has(server)) {
@@ -1149,6 +1160,7 @@ export function registerMcpServerTools(
   // mcpToolOwner/mcpServerOwnedNames byte-identical to their pre-call state -- nothing is ever
   // half-applied (registry.test.ts pins this exact scenario).
   const plainNamesSeen = new Set<string>();
+  const toShadow: string[] = [];
   for (const tool of tools) {
     const plain = plainNameFor(tool);
     if (plain !== undefined) {
@@ -1180,6 +1192,11 @@ export function registerMcpServerTools(
       }
     }
     if (registry.has(canonicalName) && existingOwner === undefined) {
+      const builtin = registry.get(canonicalName)!;
+      if (plain === canonicalName && builtin.descriptor.source === "builtin" && opts.shadowBuiltins?.includes(canonicalName) === true) {
+        toShadow.push(canonicalName);
+        continue;
+      }
       throw new Error(
         `registerMcpServerTools: "${canonicalName}" is already registered by a non-live-MCP mechanism ` +
           `(e.g. a static WS-06 descriptor stub, or the standing winter server's own advisor identity) -- ` +
@@ -1207,9 +1224,12 @@ export function registerMcpServerTools(
       if (!newNames.has(oldName)) {
         registry.delete(oldName);
         mcpToolOwner.delete(oldName);
+        restoreShadowed(oldName, server);
       }
     }
   }
+  for (const name of toShadow) shadowedBuiltins.set(name, { server, entry: registry.get(name)! });
+  for (const name of toShadow) registry.delete(name);
 
   const nowOwned = new Set<string>();
   const concurrent = concurrentToolSet(opts.concurrentTools);
@@ -1257,8 +1277,22 @@ export function unregisterMcpServerTools(server: string): void {
   for (const name of owned) {
     registry.delete(name);
     mcpToolOwner.delete(name);
+    restoreShadowed(name, server);
   }
   notifyRegistryChange();
+}
+
+/** Puts back the built-in `server`'s tool had set aside under `name` (`shadowBuiltins`), if any. */
+function restoreShadowed(name: string, server: string): void {
+  const shadowed = shadowedBuiltins.get(name);
+  if (shadowed === undefined || shadowed.server !== server) return;
+  shadowedBuiltins.delete(name);
+  registry.set(name, shadowed.entry);
+}
+
+/** Clover A-M3: whether a built-in is set aside under `name` now (a host's tool holds the name). For tests. */
+export function isBuiltinShadowed(name: string): boolean {
+  return shadowedBuiltins.has(name);
 }
 
 // --- Phase 4 Task 2: the deferral primitive (WS-09 §8.5/§9) ---------------------------------------

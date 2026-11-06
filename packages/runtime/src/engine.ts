@@ -371,7 +371,7 @@ import { aliasExclusionReasons, aliasPermissionIdentities, effectiveAliasTable, 
 // Phase 4 Task 8 (rider 2, WS-09 §8): Lane B's session-keyed ToolSearch/WaitForMcpServers runtime
 // registry. Both of that lane's executors answer a typed "no session runtime registered" error until
 // a live run registers one -- this file is the one production registrar.
-import { registerToolSearchSessionRuntime } from "./toolsearch/search.ts";
+import { executeToolSearch, getToolSearchSessionRuntime, registerToolSearchSessionRuntime } from "./toolsearch/search.ts";
 // The web tools' session seam (see that module's header for why it is a keyed registry and not the
 // advisor's per-run `replaceExecutor`). Type-only in the other direction, so there is no value cycle.
 import { digestModelResolves, inheritedWebSessionFacts, registerWebSessionRuntime, searchAnswerUsable, searchBackendUsable, webSessionRuntimeFor, type WebSessionRuntime } from "./web/session-runtime.ts";
@@ -4987,6 +4987,23 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // the next in-memory-leg run sharing this process's module-level registry singleton.
   const mcpEnvConfig = parseMcpEnvConfig(engineEnv ?? process.env);
   const sdkMcpServerNames: string[] = [];
+  // Clover A-M3 (`hostToolSearch`): the names a host search tool's result asks to load, loaded exactly as
+  // `ToolSearch`'s `select:` loads them (this session's runtime: the same pool, exposure and refusals), and the
+  // outcome as text. Undefined when the result names nothing (a search with no load).
+  const hostToolSearchLoad = async (raw: unknown, ctx: ToolExecutionContext): Promise<string | undefined> => {
+    if (!Array.isArray(raw)) return undefined;
+    const names = [...new Set(raw.filter((n): n is string => typeof n === "string" && n !== "" && !n.includes(",")))].slice(0, 100);
+    if (names.length === 0) return undefined;
+    const runtime = getToolSearchSessionRuntime(ctx.agentId ?? ctx.sessionId);
+    if (runtime === undefined) return `Not loaded (no tool search in this session): ${names.join(", ")}`;
+    const outcome = await executeToolSearch({ query: `select:${names.join(",")}`, max_results: names.length }, { ...runtime, ...(ctx.emitToolReference !== undefined ? { emitToolReference: ctx.emitToolReference } : {}) });
+    if (!outcome.ok) return `Not loaded: ${outcome.message}`;
+    const missing = names.filter((n) => !outcome.result.matches.includes(n));
+    return [
+      outcome.result.matches.length > 0 ? `Loaded, callable now: ${outcome.result.matches.join(", ")}` : undefined,
+      missing.length > 0 ? `Not loaded (unknown, not deferred or not available to you): ${missing.join(", ")}` : undefined,
+    ].filter((l): l is string => l !== undefined).join("\n");
+  };
   // Robustness note (Phase 4 Task 3, refreshed fix round 1 item 3): this run's own teardown (below,
   // right before `output.end()`) only executes on NORMAL completion of this function -- there is no
   // top-level try/finally around the rest of runEngine's body. Without this try/catch, a
@@ -5029,11 +5046,17 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
         const toolLanes = serverCfg.toolLanes;
         // SDK 0.0.41: the host's concurrency-safe, NOT read-only, tools (`McpSdkServerConfig.concurrentTools`).
         const concurrentTools = serverCfg.concurrentTools;
+        // Clover A-M3: a plain name may take a built-in's name when this session isn't offered that built-in
+        // (`config.tools` leaves it out) -- the host's own tool replaces it (registry.ts's `shadowBuiltins`).
+        const shadowBuiltins = toolNames !== undefined && config.tools !== undefined
+          ? Object.values(toolNames).filter((n) => !config.tools!.includes(n))
+          : [];
         registerMcpServerTools(serverName, toolDefs, {
           deferredDefault: true,
           ...(toolNames !== undefined ? { toolNames } : {}),
           ...(toolLanes !== undefined ? { toolLanes } : {}),
           ...(concurrentTools !== undefined ? { concurrentTools } : {}),
+          ...(shadowBuiltins.length > 0 ? { shadowBuiltins } : {}),
         });
         sdkMcpServerNames.push(serverName);
         const perServerTimeoutMs = serverCfg.timeout;
@@ -5060,6 +5083,12 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
                 const text = (result.content ?? [])
                   .map((block) => (typeof block.text === "string" ? block.text : JSON.stringify(block)))
                   .join("\n");
+                // Clover A-M3: the host's own search-and-load tool (`hostToolSearch`) names tools to load in
+                // `_meta["clover/load"]`; they load through ToolSearch's `select:` path for THIS session.
+                if (canonicalName === config.hostToolSearch && result.isError !== true) {
+                  const loaded = await hostToolSearchLoad((result as { _meta?: Record<string, unknown> })._meta?.["clover/load"], ctx);
+                  if (loaded !== undefined) return { output: text === "" ? loaded : `${text}\n${loaded}` };
+                }
                 return { output: text, ...(result.isError === true ? { isError: true } : {}) };
               } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
@@ -5259,7 +5288,9 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // has no search tool, so nothing may be deferred behind one -- folded in HERE, into the one activation
   // value, so the advertised partition, the ToolSearch-vs-WaitForMcpServers gate and the load-first
   // boundary cannot disagree about it.
-  const toolSearchExcludedByTools = config.tools !== undefined && !config.tools.includes(TOOL_SEARCH_TOOL_NAME);
+  // Clover A-M3: a host that brings its own search-and-load tool (`hostToolSearch`, Clover's `Glossary`) keeps
+  // deferral on with `ToolSearch` left out -- its tool loads through the same `select:` path (below).
+  const toolSearchExcludedByTools = config.tools !== undefined && !config.tools.includes(TOOL_SEARCH_TOOL_NAME) && !(typeof config.hostToolSearch === "string" && config.hostToolSearch !== "");
   const enableToolSearch: DeferralActivation["enableToolSearch"] = toolSearchExcludedByTools
     ? "false"
     : config.toolSearchEnabled === true
@@ -10380,7 +10411,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
                 : {
                     type: "tool_result",
                     tool_use_id: call.id,
-                    content: `'${call.name}' is a deferred tool that has not been loaded this session yet -- use ToolSearch to select it before calling it (WS-09 §8.5)`,
+                    content: `'${call.name}' is a deferred tool that has not been loaded this session yet -- use ${typeof config.hostToolSearch === "string" && config.hostToolSearch !== "" ? `${config.hostToolSearch} to load it` : "ToolSearch to select it"} before calling it (WS-09 §8.5)`,
                     loadFirst: true,
                   },
             );

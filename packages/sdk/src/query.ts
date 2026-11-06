@@ -1069,6 +1069,7 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
     // so it serializes as absent (one meaning, one spelling, on every transport).
     ...(Array.isArray(options.tools) ? { tools: [...options.tools] } : {}),
     ...(options.deferTools !== undefined ? { deferTools: [...options.deferTools] } : {}),
+    ...(typeof options.hostToolSearch === "string" && options.hostToolSearch !== "" ? { hostToolSearch: options.hostToolSearch } : {}),
     ...(options.legacyToolNames !== undefined ? { legacyToolNames: { ...options.legacyToolNames } } : {}),
     ...(options.reservedMcpServerNames !== undefined ? { reservedMcpServerNames: [...options.reservedMcpServerNames] } : {}),
     // Task 6 (WS-07 §6.4): same pure-passthrough convention as every field above.
