@@ -346,6 +346,12 @@ export interface RunModelAdapterConformanceOptions {
   ownProcess?: boolean;
   /** For `ownProcess`: how many requests the fake has received (to see the turn reached it). */
   fakeRequests?: () => number;
+  /**
+   * 0.0.65: true for an adapter that signs its own requests, run where it runs in production (the plugin's own
+   * process, here in place): every request must still go through `ctx.fetch` (`fetch-only`, as for any adapter), but
+   * it sets its own credential header, so `no-credential-header` is skipped.
+   */
+  signs?: boolean;
 }
 
 export async function runModelAdapterConformance(opts: RunModelAdapterConformanceOptions): Promise<ConformanceReport<ModelAdapterCaseId>> {
@@ -410,6 +416,7 @@ export async function runModelAdapterConformance(opts: RunModelAdapterConformanc
     },
     "no-credential-header": async () => {
       if (opts.ownProcess === true) return { skipped: "an adapter in a process of its own signs its requests itself" };
+      if (opts.signs === true) return { skipped: "the adapter signs its requests itself" };
       const base = opts.context();
       const set: string[] = [];
       await drain({

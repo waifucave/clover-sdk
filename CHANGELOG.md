@@ -28,6 +28,9 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   `admission` from a plugin the host doesn't trust (it stays `review-required`), and checks each entry's provider
   record on its own. A bad one (identity headers, say) refuses that plugin alone (`provider-invalid`), where it used to
   make the whole build throw.
+- **The conformance kit's `signs` mode** (`provider-conformance`): `runModelAdapterConformance({ signs: true })` runs a
+  signing adapter where it runs in production, in place: `fetch-only` holds it to `ctx.fetch` like any adapter, and
+  `no-credential-header` is skipped, since it sets its own.
 - **Codex's `originator` option** is held to the identity rule (`PRODUCT_TOKEN_RE`, now exported): a lowercase token
   of 1-32 characters that names no first party. So "Codex" or "codex_cli_rs " is refused too.
 
