@@ -167,8 +167,9 @@ export interface AgentNotificationInput {
   /** The task description the Agent call supplied -- the `Agent "<description>" …` summary's subject. */
   description: string;
   status: "completed" | "failed" | "stopped";
-  /** Who stopped it, for the `stopped` wording. `"parent"` = this session's own assistant, `"user"` = the human. */
-  stoppedBy?: "parent" | "user";
+  /** Who stopped it, for the `stopped` wording. `"parent"` = this session's own assistant, `"user"` = the human,
+   *  `"host"` = the host program (`Query.stopTask`). */
+  stoppedBy?: "parent" | "user" | "host";
   error?: string;
   /** The child's final report text -- the `<result>` block. */
   finalMessage?: string;
@@ -192,7 +193,7 @@ export function renderAgentNotification(input: AgentNotificationInput): string {
   } else if (input.status === "failed") {
     outcome = `failed: ${nonEmpty(input.error) ? input.error : "Unknown error"}`;
   } else {
-    outcome = input.stoppedBy === "parent" ? "was stopped by the assistant" : input.stoppedBy === "user" ? "was stopped by user" : "was stopped";
+    outcome = input.stoppedBy === "parent" ? "was stopped by the assistant" : input.stoppedBy === "user" ? "was stopped by user" : input.stoppedBy === "host" ? "was stopped by the host" : "was stopped";
   }
 
   let body = `\n${AGENT_RESUME_NOTE}`;
@@ -245,8 +246,8 @@ export function renderMonitorEventNotification(input: { taskId?: string; descrip
 }
 
 /** A TaskStop against a NON-agent task. `stoppedBy` renders the actor. */
-export function renderTaskStopNotification(input: { taskId: string; toolUseId?: string; description: string; stoppedBy?: "parent" | "user" }): string {
-  const who = input.stoppedBy === "parent" ? "the assistant" : "user";
+export function renderTaskStopNotification(input: { taskId: string; toolUseId?: string; description: string; stoppedBy?: "parent" | "user" | "host" }): string {
+  const who = input.stoppedBy === "parent" ? "the assistant" : input.stoppedBy === "host" ? "the host" : "user";
   return renderTaskNotification({
     taskId: xmlEscape(input.taskId),
     ...optionalEscaped(input.toolUseId, undefined),

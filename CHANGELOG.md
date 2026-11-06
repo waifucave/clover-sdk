@@ -13,7 +13,10 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   notification, the same process-group kill and `background_tasks_changed`. It is for a host whose own `TaskStop`
   hides the runtime's (`shadowBuiltins`) and passes on an id it doesn't know. It resolves with
   `{ message, taskId, taskType, command? }` (an already-finished task says so), and rejects `unknown_task` for an id
-  no task of the session has, never turning to the host's own sessions as the tool's fallback does.
+  no task of the session has, never turning to the host's own sessions as the tool's fallback does. Another
+  session's task in the same process is not the session's to stop, through this control or the tool (its emitter
+  names the session that owns it). The model's notification says the host stopped it (`stoppedBy: "host"`), or the
+  assistant with `{ by: "assistant" }` when the host is relaying the model's own TaskStop call.
 
 ## 0.0.68
 

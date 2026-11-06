@@ -6979,7 +6979,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
               output.write({ type: "control_response", requestId: cf.requestId, ok: false, error: { code: "invalid_request", message: "stop_task needs a task_id" } });
               continue;
             }
-            const stopped = stopOwnTask(taskId, { sessionId: config.sessionId, emitFrame: (frame) => output.write({ type: "data", message: frame }) });
+            // Who the model's notification names: the host by default; `"assistant"` when the host is relaying the
+            // model's own request (a host TaskStop that hides this one).
+            const by = typeof payload === "object" && payload !== null && (payload as { by?: unknown }).by === "assistant" ? "parent" : "host";
+            const stopped = stopOwnTask(taskId, { sessionId: config.sessionId, emitFrame: (frame) => output.write({ type: "data", message: frame }) }, by);
             if (stopped === undefined) {
               output.write({ type: "control_response", requestId: cf.requestId, ok: false, error: { code: "unknown_task", message: `no task ${JSON.stringify(taskId.slice(0, 128))} in this session` } });
               continue;

@@ -61,12 +61,15 @@ function formatResult(message: string, taskId: string, taskKind: BackgroundTaskK
 /**
  * Stops one of this session's own tasks by id, as the TaskStop tool does: the same lookup, the same once-per-id
  * notification, the same process-group kill and `background_tasks_changed`. `undefined` when no task of this
- * session has the id. Shared by the tool and the host's `stop_task` control request (`Query.stopTask`), which a
- * host whose own TaskStop hides this one (`shadowBuiltins`) passes an id it doesn't know to.
+ * session has the id: the registry is the process's, and another session's task (its emitter names that session) is
+ * never this one's to stop. A subagent's tasks are its session's (Bash records the parent's `sessionId`). Shared by
+ * the tool and the host's `stop_task` control request (`Query.stopTask`), which a host whose own TaskStop hides this
+ * one (`shadowBuiltins`) passes an id it doesn't know to. `by` names who stopped it in the model's notification.
  */
-export function stopOwnTask(id: string, ctx: Pick<ToolExecutionContext, "sessionId" | "emitFrame">): { output: string; taskType: string; command?: string } | undefined {
+export function stopOwnTask(id: string, ctx: Pick<ToolExecutionContext, "sessionId" | "emitFrame">, by: "parent" | "host" = "parent"): { output: string; taskType: string; command?: string } | undefined {
   const task = getTask(id);
   if (!task) return undefined;
+  if (task.emitter !== undefined && task.emitter.sessionId !== ctx.sessionId) return undefined;
   const result = (message: string) => ({ output: formatResult(message, id, task.kind, task.command), taskType: wireTaskType(task.kind), ...(task.command !== undefined ? { command: task.command } : {}) });
   {
     if (task.status !== "running") {
@@ -93,8 +96,8 @@ export function stopOwnTask(id: string, ctx: Pick<ToolExecutionContext, "session
       task.isBackgrounded === false
         ? null
         : task.kind === "agent"
-          ? renderAgentNotification({ taskId: id, ...(task.toolUseId !== undefined ? { toolUseId: task.toolUseId } : {}), description: task.description, status: "stopped", stoppedBy: "parent", outputFile: task.outputPath })
-          : renderTaskStopNotification({ taskId: id, ...(task.toolUseId !== undefined ? { toolUseId: task.toolUseId } : {}), description: task.description, stoppedBy: "parent" });
+          ? renderAgentNotification({ taskId: id, ...(task.toolUseId !== undefined ? { toolUseId: task.toolUseId } : {}), description: task.description, status: "stopped", stoppedBy: by, outputFile: task.outputPath })
+          : renderTaskStopNotification({ taskId: id, ...(task.toolUseId !== undefined ? { toolUseId: task.toolUseId } : {}), description: task.description, stoppedBy: by });
     updateTask(id, { status: "stopped", endTime: Date.now(), notification: { summary: killedTaskSummary(task.kind, task.description), modelNotification } });
     stopTask(id); // process-group kill (WS-12 §5.2) for bash/Monitor-command, or the task's own stop() for Monitor-ws
 
