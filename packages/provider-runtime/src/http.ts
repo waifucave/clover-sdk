@@ -1,4 +1,4 @@
-// Bounded, policy-enforcing HTTP. FROZEN as of P6 T2's merge (R6-12).
+// Bounded, policy-enforcing HTTP. FROZEN as of P6 T2's merge (R6-12); Clover A-M2 added the transport hook only.
 //
 // WS-13 §13's per-request floor, in one place so no adapter has to re-implement it:
 // cancellation, timeouts, connection and body limits, manual redirects with revalidation, and no
@@ -19,8 +19,25 @@
 //     than any sane connect budget; the timer is cleared the moment headers arrive, and mid-stream
 //     silence is the stall watchdog's job (`parseSse`, `providerStallTimeoutMs`).
 
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { ProviderError } from "./types.ts";
 import { stripCredentialHeaders, type EndpointPolicy } from "./endpoint-policy.ts";
+
+/**
+ * What sends one hop of a `boundedFetch` (Clover A-M2): the platform's `fetch`, unless the call runs inside
+ * `runWithProviderTransport`. A model plugin's adapter that runs keyless in the plugin host (§5.2) runs its family's
+ * `ProviderAdapter` with such a transport, which sends every request through the plugin's keyed fetch
+ * (`adapter-interface/keyed-bridge.ts`). Every rule above still applies to the hop: the header deadline, the body
+ * cap, manual redirects with revalidation.
+ */
+export type ProviderTransport = (url: string, init: RequestInit) => Promise<Response>;
+
+const transports = new AsyncLocalStorage<ProviderTransport>();
+
+/** Runs `fn` with `transport` sending every `boundedFetch` hop it makes, however deep in its async calls. */
+export function runWithProviderTransport<T>(transport: ProviderTransport, fn: () => T): T {
+  return transports.run(transport, fn);
+}
 
 /** Following more than this many hops is a loop, not a route. */
 export const DEFAULT_MAX_REDIRECTS = 5;
@@ -208,7 +225,8 @@ export async function boundedFetch(url: string, init: BoundedFetchInit): Promise
     try {
       // `body` is spread CONDITIONALLY: exactOptionalPropertyTypes forbids an explicit `undefined`,
       // and a GET carrying `body: undefined` is rejected by the platform anyway.
-      response = await fetch(currentUrl, { ...requestInit, method, ...(body !== undefined && body !== null ? { body } : {}), headers, redirect: "manual", signal: controller.signal });
+      const send = transports.getStore() ?? fetch;
+      response = await send(currentUrl, { ...requestInit, method, ...(body !== undefined && body !== null ? { body } : {}), headers, redirect: "manual", signal: controller.signal });
     } catch (err) {
       throw transportError(err, callerAborted, timedOut, timeoutMs);
     } finally {

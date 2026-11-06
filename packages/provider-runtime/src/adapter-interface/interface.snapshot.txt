@@ -221,6 +221,7 @@ export interface ConnectionProfile {
     apiVersion?: string;
     local?: boolean;
     endpointOrigin?: "reviewed" | "user";
+    account?: string;
 }
 
 // packages/provider-runtime/src/types.ts ContentBlockLike

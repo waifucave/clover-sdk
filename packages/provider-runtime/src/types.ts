@@ -53,6 +53,12 @@ export interface ConnectionProfile {
    * Read in exactly one place — `connectionEndpointOptions` — so no adapter re-derives the rule.
    */
   endpointOrigin?: "reviewed" | "user";
+  /**
+   * Clover A-M2: the signed-in account's NON-SECRET id (a ChatGPT account id), for an adapter that names it on the
+   * wire but runs keyless in the plugin host, where it never sees the credential material that carries it. The
+   * host fills it from its own sign-in record (`adapter-interface/keyed-bridge.ts`).
+   */
+  account?: string;
 }
 
 /**

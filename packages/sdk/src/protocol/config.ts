@@ -891,6 +891,12 @@ export interface RuntimeConfig {
    * A flag, never a handler.
    */
   hostMessaging?: boolean;
+  /**
+   * Clover A-M2: `Options.modelProviders` on the wire. The catalog file the host built from its model plugins (path
+   * and the sha256 of its bytes) and the adapters it serves; the handler stays in the host's process. Absent: this
+   * build's own catalog and adapters.
+   */
+  modelProviders?: { catalogPath: string; catalogSha256: string; hostAdapters?: Array<{ id: string; version: string; family: string; protocol: string; countTokens?: boolean }> };
   autoClassifier?: AutoClassifierConfig;
   advisor?: AdvisorConfig;
   /** The wire twin of `Options.web` -- see `WebToolsConfig`. Pure passthrough; absent means every default in `WEB_TOOLS_DEFAULTS`. */

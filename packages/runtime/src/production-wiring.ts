@@ -83,6 +83,7 @@ import { DEFAULT_OUTPUT_STYLE } from "@waifucave/clover-agent-sdk";
 // selection R6-9 requires. Now both call this module and this module calls one builder.
 import { buildSessionProvider, createProductionCredentialStore, resolveSessionKeychainService, type SessionProviderOptions, type SessionProviderWiring } from "./provider/session-provider.ts";
 import { createHostBrokeredCredentialStore, createHostBrokeredSecretReader, createHostCredentialChannel, type HostCredentialChannel } from "./provider/host-credentials.ts";
+import { hostModelProviders } from "./provider/model-plugins.ts";
 import { createHostBrokeredMcpOAuthStore, mcpOAuthTestStoreEnvName, resolveSessionMcpOAuthStore, type McpOAuthStore } from "./mcp-auth/store.ts";
 import type { ProviderStateRecordInput } from "./store/provider-state.ts";
 import type { Provider } from "./engine.ts";
@@ -586,6 +587,8 @@ export interface ProductionWiring {
     mcpOAuthStore: McpOAuthStore;
     /** WS-25 §7: present when the host resolves credentials; `runEngine` binds it to its control bridge. */
     hostCredentialChannel?: HostCredentialChannel;
+    /** Clover A-M2: present when the host serves model adapters; `runEngine` binds it to its control bridge. */
+    hostModelAdapterChannel?: HostCredentialChannel;
     runtimeContextChannel?: RuntimeContextChannel;
     initSlashCommands: readonly string[];
     initSkills: readonly string[];
@@ -1346,10 +1349,15 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
           readKeychainSecret: createHostBrokeredSecretReader(hostCredentialChannel),
         }
       : {};
+  // Clover A-M2: a session on its host's model plugins reads the host's catalog and registers the generic adapters
+  // and a stub per adapter the host serves, whose calls ride THIS session's control bridge (bound in `runEngine`).
+  const hostModelAdapterChannel = (config.modelProviders?.hostAdapters?.length ?? 0) > 0 ? createHostCredentialChannel() : undefined;
+  const modelProviders = config.modelProviders !== undefined ? hostModelProviders(config.modelProviders, hostModelAdapterChannel) : undefined;
   const providerWiring = buildSessionProvider({
     config,
     env,
     ...hostCredentialOptions,
+    ...(modelProviders !== undefined ? { catalog: modelProviders.catalog, adapters: modelProviders.adapters } : {}),
     // WS-13b R6b-7: the per-provider enable setting, threaded as a GETTER over the SAME live
     // `settingsGetter` every other consumer reads. That is what makes it hot-reloadable within this
     // module's own contract (see this file's header): nothing here watches a file, but a host that
@@ -1896,6 +1904,7 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
           ? createHostBrokeredMcpOAuthStore(hostCredentialChannel)
           : resolveSessionMcpOAuthStore({ keychainService: resolveSessionKeychainService(config), testStoreFile: mcpOAuthTestStoreFile }),
       ...(hostCredentialChannel !== undefined ? { hostCredentialChannel } : {}),
+      ...(hostModelAdapterChannel !== undefined ? { hostModelAdapterChannel } : {}),
       ...(runtimeContextChannel !== undefined ? { runtimeContextChannel } : {}),
       initSlashCommands,
       initSkills,

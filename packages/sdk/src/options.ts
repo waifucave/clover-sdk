@@ -127,6 +127,46 @@ export const MCP_OAUTH_REFRESH_SUBTYPE = "mcp_oauth_refresh";
 /** WS-25 §7: the runtime -> host control subtype a host-brokered session resolves a Keychain credential with (`CredentialResolveRequest` -> `CredentialResolveAnswer`). */
 export const CREDENTIAL_RESOLVE_SUBTYPE = "credential_resolve";
 
+/**
+ * Clover A-M2: the runtime -> host control subtypes a session calls a model adapter its host serves with (a code
+ * model plugin's, which runs in the host's plugin host): open a call, pull its events, cancel it. The wire is
+ * provider-runtime's `adapter-interface/host-served.ts`, which names the same strings.
+ */
+export const MODEL_ADAPTER_OPEN_SUBTYPE = "model_adapter_open";
+export const MODEL_ADAPTER_NEXT_SUBTYPE = "model_adapter_next";
+export const MODEL_ADAPTER_CANCEL_SUBTYPE = "model_adapter_cancel";
+
+/** Clover A-M2: an adapter the host serves to a session, as `Options.modelProviders.hostAdapters` lists it. */
+export interface HostServedAdapter {
+  id: string;
+  version: string;
+  /** The adapter's family (`openai`, `anthropic`, `google`, `bedrock`, …), as the provider runtime names them. */
+  family: string;
+  /** Its catalog protocol (`openai-responses`, `bedrock-converse`, …). */
+  protocol: string;
+  countTokens?: boolean;
+}
+
+/** Clover A-M2: the answer to one `model_adapter_*` request (provider-runtime's `createHostModelAdapterServer`). */
+export type ModelAdapterServeAnswer = { ok: true; value: unknown } | { ok: false; error: { code: string; message: string } };
+
+/**
+ * Clover A-M2 (spec §3.3): the session's providers are the HOST's model plugins, never this build's own. See
+ * `Options.modelProviders`.
+ */
+export interface ModelProvidersOption {
+  /**
+   * The catalog the host built from its enabled model plugins (provider-catalog's `catalogFromModelPlugins`), as a
+   * JSON file the session reads: it is megabytes, so it never rides the config. `sha256` is the hex digest of the
+   * file's bytes; a file that does not match, or does not validate, fails the session's start.
+   */
+  catalog: { path: string; sha256: string };
+  /** The adapters the host serves: each provider whose `adapterId` is one of these is called through `serve`. */
+  hostAdapters?: readonly HostServedAdapter[];
+  /** Answers the session's `model_adapter_*` requests. Required with `hostAdapters`. Never serialized. */
+  serve?: (subtype: string, payload: unknown, options: { signal: AbortSignal }) => Promise<ModelAdapterServeAnswer>;
+}
+
 /** Host messaging: the runtime -> host control subtype `SendMessage` asks its host to deliver with (`HostMessageSendRequest` -> `HostMessageSendAnswer`). */
 export const HOST_MESSAGE_SEND_SUBTYPE = "host_message_send";
 /** Host messaging: the runtime -> host control subtype `ListAgents` asks its host what it can reach with (`HostMessageListRequest` -> `HostMessageListAnswer`). */
@@ -660,6 +700,15 @@ export interface Options {
    * control_response frame.
    */
   onCredentialResolve?: (request: CredentialResolveRequest, options: { signal: AbortSignal }) => Promise<CredentialResolveAnswer>;
+
+  /**
+   * Clover A-M2 (spec §3.3, §5.3 `models`): the session's catalog and adapters are the host's model plugins'. When
+   * set, the session reads its catalog from the host's file and registers only the generic adapters (the ones a
+   * declarative plugin's `endpoint` runs on) and a stub per `hostAdapters` entry, whose calls `serve` answers; no
+   * provider this build ships is registered. Absent: this build's own catalog and adapters, for a host that brings
+   * no model plugins.
+   */
+  modelProviders?: ModelProvidersOption;
 
   /**
    * Host messaging, WINTER-ONLY: this session's line to the host's OTHER sessions. When set, `query()`

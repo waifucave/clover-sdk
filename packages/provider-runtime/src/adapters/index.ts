@@ -24,7 +24,7 @@
 // the request's own `ctx.connection.providerId`, and a row is found in THAT provider's rows only --
 // exactly the rule the Anthropic and Google families' `findDescriptor(catalog, providerId, model)`
 // already followed.
-import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import { GENERIC_ADAPTER_IDS, type WinterCatalog, type WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter } from "../types.ts";
 import { identityHeaderLookup } from "../identity.ts";
 import { createAnthropicMessagesAdapter } from "./anthropic/index.ts";
@@ -200,6 +200,31 @@ export function createShippedAdapters(catalog: WinterCatalog): ProviderAdapter[]
   ];
 }
 
+/**
+ * Clover A-M2: the GENERIC adapters only, the ones a declarative model plugin's `endpoint` runs on
+ * (`GENERIC_ENDPOINT_ADAPTERS` in the catalog package): chat-completions, the local runners, Responses and Messages,
+ * built against the catalog the host's plugins make. Every other adapter is a code plugin's, which the host serves;
+ * a session built on plugins registers these and the host's, never the rest of `createShippedAdapters`.
+ */
+export function createGenericAdapters(catalog: WinterCatalog): ProviderAdapter[] {
+  return createShippedAdapters(catalog).filter((a) => GENERIC_ADAPTER_IDS.has(a.id));
+}
+
+/**
+ * Clover A-M2: one of this SDK's family adapters by its id, built against `catalog` (a code model plugin's own
+ * provider and rows), for a plugin that runs it keyless (`modelAdapterFromProviderAdapter`) or in a process of its
+ * own (`modelAdapterFromSigningAdapter`). Throws for an id this SDK has no family adapter for.
+ */
+export function familyAdapterById(catalog: WinterCatalog, adapterId: string, options: { codexOriginator?: string } = {}): ProviderAdapter {
+  if (adapterId === "winter.codex-oauth" && options.codexOriginator !== undefined) {
+    const url = generatedBaseUrlForAdapter(catalog, adapterId);
+    return createCodexOauthAdapter({ descriptors: descriptorLookupForAdapter(catalog, adapterId), identityHeaders: identityHeaderLookup(catalog), originator: options.codexOriginator, ...(url !== undefined ? { generatedBaseUrl: url } : {}) });
+  }
+  const adapter = createShippedAdapters(catalog).find((a) => a.id === adapterId);
+  if (adapter === undefined) throw new TypeError(`no family adapter ${JSON.stringify(adapterId)} in this SDK`);
+  return adapter;
+}
+
 // --- the families' own surfaces, re-exported ------------------------------------------------------
 //
 // NAMED rather than `export *`: `findDescriptor` is exported by BOTH the anthropic and the google
@@ -242,6 +267,7 @@ export {
 } from "./bedrock/index.ts";
 export type { BedrockAdapter, BedrockAdapterOptions } from "./bedrock/index.ts";
 export {
+  CODEX,
   CODEX_ORIGINATOR,
   DEEPSEEK_BASE_URL,
   OPENAI_API_BASE_URL,

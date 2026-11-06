@@ -29,6 +29,28 @@ export { CATALOG_VOCABULARIES, scanForSecrets, validateCatalog, validateCatalogR
 // Clover A-M1: the catalog row schema every model plugin's rows follow, pinned and versioned.
 export { CATALOG_ROW_SCHEMA, CATALOG_ROW_SCHEMA_ID, CATALOG_ROW_SCHEMA_SHA256, CATALOG_ROW_SCHEMA_VERSION, buildCatalogRowSchema, canonicalJson } from "./row.ts";
 export type { CatalogRow, CatalogRowsValidationResult } from "./row.ts";
+// Clover A-M2: every provider is a model plugin's `models[]` entry; this builds the catalog the SDK resolves against
+// from a host's enabled entries (and splits the SDK's own catalog into plugins, for the generator).
+export {
+  CODE_ADAPTER_HANDLER,
+  ENDPOINT_PROTOCOLS,
+  GENERIC_ADAPTER_IDS,
+  GENERIC_ENDPOINT_ADAPTERS,
+  MODEL_PLUGIN_CATALOG_FORMAT,
+  WIRE_PROTOCOL_OF_ENDPOINT,
+  adapterIdForEntry,
+  authKindsOf,
+  catalogFromModelPlugins,
+  familiesServedBy,
+  isInterpolatedUrl,
+  modelPluginForProvider,
+  providerDescriptorForEntry,
+  readModelPluginCatalog,
+  settingKeysOfTemplate,
+  settingTemplateOf,
+  textOf,
+} from "./model-plugins.ts";
+export type { CatalogFromModelPluginsOptions, CatalogFromModelPluginsResult, EndpointProtocol, ModelEntry, ModelPluginCatalogFile, ModelPluginInput, ModelPluginRefusal, ProviderMeta } from "./model-plugins.ts";
 
 // WS-13c §1–§3 (P6.6 spine): the pure family helpers. Every lane IMPORTS these — the normaliser, the
 // matcher fallback and the slot-name acceptance rule each have exactly one implementation, because a

@@ -44,7 +44,8 @@ export {
   withRetry,
 } from "./retry.ts";
 export type { RetryPolicy, RetryPolicyOptions } from "./retry.ts";
-export { DEFAULT_MAX_REDIRECTS, ProviderBodyLimitError, ProviderRequestError, boundedFetch } from "./http.ts";
+export { DEFAULT_MAX_REDIRECTS, ProviderBodyLimitError, ProviderRequestError, boundedFetch, runWithProviderTransport } from "./http.ts";
+export type { ProviderTransport } from "./http.ts";
 export type { BoundedFetchInit } from "./http.ts";
 // WS-13b (P6.5 spine): Winter's own wire identity. Exported because the widening lanes' new
 // adapters and connect screens must reach the SAME function -- a second literal is how a

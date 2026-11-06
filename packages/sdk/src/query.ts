@@ -8,7 +8,7 @@ import type { SdkMessage as RuntimeSdkMessage, WinterFrame, InitFrame, ControlRe
 import { PROTOCOL_VERSION } from "./protocol/frames.ts";
 import { splitFrames, encodeFrame, ProtocolError } from "./protocol/codec.ts";
 import type { AccountInfo, AgentInfo, CredentialResolveAnswer, CredentialResolveRequest, EffortLevel, ModelInfo, ModelFamilyListing, RuntimeConfig, RuntimeHooksConfig, RuntimeHookMatcherGroup, McpServerConfigForProcessTransport, McpOAuthRefreshAnswer, McpOAuthRefreshRequest, RewindFilesResult } from "./protocol/config.ts";
-import { CREDENTIAL_RESOLVE_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_MESSAGE_LIST_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_SESSION_STOP_SUBTYPE, isWinterMcpServerInstance, MCP_OAUTH_REFRESH_SUBTYPE, TEST_KEYCHAIN_ENV, type HostMessagingHandler, type Options, type McpServerConfig } from "./options.ts";
+import { CREDENTIAL_RESOLVE_SUBTYPE, HOST_INPUT_COMMIT_SUBTYPE, HOST_INPUT_DISCARD_SUBTYPE, HOST_INPUT_FORGET_SUBTYPE, HOST_INPUT_HOLD_SUBTYPE, HOST_MESSAGE_LIST_SUBTYPE, HOST_MESSAGE_SEND_SUBTYPE, HOST_SESSION_STOP_SUBTYPE, isWinterMcpServerInstance, MCP_OAUTH_REFRESH_SUBTYPE, MODEL_ADAPTER_CANCEL_SUBTYPE, MODEL_ADAPTER_NEXT_SUBTYPE, MODEL_ADAPTER_OPEN_SUBTYPE, TEST_KEYCHAIN_ENV, type HostMessagingHandler, type Options, type McpServerConfig } from "./options.ts";
 import type { HostInputCommitAnswer, HostInputDiscardAnswer, HostInputForgetAnswer, HostInputHoldAnswer, HostInputHoldRequest } from "./protocol/config.ts";
 import { isHostMessageListRequest, isHostMessageSendAnswer, isHostMessageSendRequest, isHostSessionStopAnswer, isHostSessionStopRequest, normaliseHostMessageListAnswer } from "./messaging/host.ts";
 import type {
@@ -555,6 +555,25 @@ function makeCredentialResolveHandler(onCredentialResolve: NonNullable<Options["
     } catch (err) {
       console.error(`winter: onCredentialResolve threw for account '${payload.ref.account}' (${err instanceof Error ? err.name : "error"}) -- answering unavailable`);
       return { ok: true, payload: { ok: false, reason: "unavailable" } };
+    }
+  };
+}
+
+// Clover A-M2: the runtime-originated `model_adapter_*` responders, registered ONLY with
+// `Options.modelProviders.hostAdapters`. The host's `serve` answers each (provider-runtime's
+// `createHostModelAdapterServer`); a throw answers a typed `serve_failed`, naming the error's NAME only (a model
+// plugin's error text may quote the conversation).
+function makeModelAdapterServeHandler(serve: NonNullable<NonNullable<Options["modelProviders"]>["serve"]>, abortController: AbortController | undefined): (subtype: string) => ControlRequestHandler {
+  return (subtype) => async (payload: unknown, handlerCtx?: { signal: AbortSignal }): Promise<ControlRequestHandlerResult> => {
+    const { controller, dispose } = abortableFor(abortController, handlerCtx);
+    try {
+      const answer = await serve(subtype, payload, { signal: controller.signal });
+      return answer.ok ? { ok: true, payload: answer.value } : { ok: false, error: { code: answer.error.code, message: answer.error.message } };
+    } catch (err) {
+      console.error(`clover: the host's model adapter server threw on ${subtype} (${err instanceof Error ? err.name : "error"})`);
+      return { ok: false, error: { code: "serve_failed", message: `the host could not answer ${subtype}` } };
+    } finally {
+      dispose();
     }
   };
 }
@@ -1122,6 +1141,10 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
     ...(options.onCredentialResolve !== undefined ? { hostCredentials: true } : {}),
     // Host messaging: a flag only -- the handler stays in this process and answers control requests.
     ...(options.hostMessaging !== undefined ? { hostMessaging: true } : {}),
+    // Clover A-M2: the catalog file's path and digest and the served adapters' identities; `serve` stays here.
+    ...(options.modelProviders !== undefined
+      ? { modelProviders: { catalogPath: options.modelProviders.catalog.path, catalogSha256: options.modelProviders.catalog.sha256, ...(options.modelProviders.hostAdapters !== undefined && options.modelProviders.hostAdapters.length > 0 ? { hostAdapters: options.modelProviders.hostAdapters.map((a) => ({ ...a })) } : {}) } }
+      : {}),
     ...(options.autoClassifier !== undefined ? { autoClassifier: options.autoClassifier } : {}),
     ...(options.advisor !== undefined ? { advisor: options.advisor } : {}),
     // The web tools' and auto-memory's own blocks: pure passthrough, same convention as `advisor`.
@@ -1499,6 +1522,12 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
   }
   if (options.onCredentialResolve) {
     controlRequestHandlers.set(CREDENTIAL_RESOLVE_SUBTYPE, makeCredentialResolveHandler(options.onCredentialResolve, options.abortController));
+  }
+  if (options.modelProviders?.hostAdapters !== undefined && options.modelProviders.hostAdapters.length > 0) {
+    const serve = options.modelProviders.serve;
+    if (typeof serve !== "function") throw new TypeError("Options.modelProviders.hostAdapters needs a serve handler to answer the session's model_adapter_* requests");
+    const handler = makeModelAdapterServeHandler(serve, options.abortController);
+    for (const subtype of [MODEL_ADAPTER_OPEN_SUBTYPE, MODEL_ADAPTER_NEXT_SUBTYPE, MODEL_ADAPTER_CANCEL_SUBTYPE]) controlRequestHandlers.set(subtype, handler(subtype));
   }
   if (options.hostMessaging) {
     controlRequestHandlers.set(HOST_MESSAGE_SEND_SUBTYPE, makeHostMessageSendHandler(options.hostMessaging, options.abortController));
