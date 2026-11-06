@@ -1,6 +1,6 @@
 {
   "name": "@waifucave/clover-agent-sdk",
-  "version": "0.0.67",
+  "version": "0.0.68",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -32,6 +32,11 @@
       "types": "./dist/tools/index.d.ts",
       "bun": "./src/tools/index.ts",
       "default": "./dist/tools/index.js"
+    },
+    "./acp": {
+      "types": "./dist/acp/index.d.ts",
+      "bun": "./src/acp/index.ts",
+      "default": "./dist/acp/index.js"
     }
   },
   "files": [
@@ -56,6 +61,10 @@
       "./tools": {
         "types": "./dist/tools/index.d.ts",
         "default": "./dist/tools/index.js"
+      },
+      "./acp": {
+        "types": "./dist/acp/index.d.ts",
+        "default": "./dist/acp/index.js"
       }
     }
   },

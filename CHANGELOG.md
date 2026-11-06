@@ -4,6 +4,28 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.68
+
+### The Agent Client Protocol, both sides (Clover K-M3)
+
+- **`@waifucave/clover-agent-sdk/acp`**, a new subpath: `serveAcpAgent` (and `runAcpAgentOnStdio`) runs the coding
+  agent as an ACP agent (v1, NDJSON on stdio) over `query()`, so a Clover bot can delegate to it like to any other
+  coding agent. `session/new` and `session/resume` open a query with the session's `cwd` and MCP servers (`resume`
+  for a resume, with no replay); a prompt is the session's next input and ends at its `result`; text and thinking
+  deltas, tool calls and their results become `session/update`s; `canUseTool` asks the client
+  (`session/request_permission`, `allow_once` / `allow_always` / `reject_once`); `session/set_config_option` and
+  `session/set_mode` set the model, the effort and the permission mode (`default`, `acceptEdits`, `plan`, the
+  read-only one); `session/cancel` interrupts the turn. `_meta.systemPrompt.append` is appended to the system prompt.
+- **The client's answer is the only allow.** No settings files load unless the host names `settingSources`, bypass
+  is never allowed, and base options that would pre-allow tools (`allowedTools`, `permissionPromptToolName`, an allow
+  rule in `permissions` or `serverManagedSettings`, `allowDangerouslySkipPermissions`) are refused. An answer that
+  arrives after its turn was cancelled or ended is a refusal. `EnterPlanMode` and `ExitPlanMode` are `switch_mode`
+  calls, and a mode change the runtime reports reaches the client as `current_mode_update`. A resume takes only a
+  session id shaped like one this agent hands out, and the sessions end when the link closes.
+- The protocol layer moved here from Clover's `agents/acp/`: `RpcPeer` (a tolerant JSON-RPC 2.0 peer over NDJSON,
+  which now measures complete lines against its limit too, and reports its close through `onClose`) and ACP's
+  tolerant readers.
+
 ## 0.0.67
 
 ### Clover's turn loop (lane A, A-M3)

@@ -17,6 +17,9 @@
       "@waifucave/clover-agent-sdk": [
         "./packages/sdk/src/index.ts"
       ],
+      "@waifucave/clover-agent-sdk/acp": [
+        "./packages/sdk/src/acp/index.ts"
+      ],
       "@waifucave/clover-agent-sdk/messaging": [
         "./packages/sdk/src/messaging/index.ts"
       ],
