@@ -15,6 +15,22 @@ corresponds to one `chore(release): vX.Y.Z` commit.
 - **`result.context_window`**: the window that request was judged against (the session's limit for its model,
   `contextWindowTokens` or the model's row).
 
+### Model plugins, from the A-M2 review
+
+- **A signing adapter is held to its plugin's hosts** (`provider-runtime`): `modelAdapterFromSigningAdapter` runs
+  every request over the plugin's `net.fetch` (`ctx.fetch`), with no key added, so Bedrock's and Vertex's requests
+  meet the `network:` limit like any other adapter's. Before, they used the platform `fetch` and could reach any host.
+- **A keyed fetch refusal is final**: a request the keyed fetch refuses by its rules (a host the plugin didn't declare,
+  plain http, a redirect off its hosts) is a `capability` error that isn't retried; `no_credential` is `auth`.
+  `boundedFetch` passes a transport hook's typed error through as it is. Before, both read as network failures and
+  were retried for about a minute.
+- **What an untrusted plugin may state** (`provider-catalog`): `catalogFromModelPlugins` ignores `risk` and
+  `admission` from a plugin the host doesn't trust (it stays `review-required`), and checks each entry's provider
+  record on its own. A bad one (identity headers, say) refuses that plugin alone (`provider-invalid`), where it used to
+  make the whole build throw.
+- **Codex's `originator` option** is held to the identity rule (`PRODUCT_TOKEN_RE`, now exported): a lowercase token
+  of 1-32 characters that names no first party. So "Codex" or "codex_cli_rs " is refused too.
+
 ## 0.0.64
 
 ### Every provider a plugin (Clover A-M2)

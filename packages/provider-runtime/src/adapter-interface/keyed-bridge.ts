@@ -99,12 +99,35 @@ export function keyedTransport(fetch: KeyedFetch, sentinel: string | undefined, 
       plain[name] = value;
     });
     const keyedInit: KeyedFetchInit = { method: init.method ?? "GET", headers: plain, body: await keyedBody(init.body), ...(init.signal ? { signal: init.signal } : {}) };
-    return fetch(url, keyedInit, carried && authName !== undefined ? { auth: authName } : { auth: false });
+    try {
+      return await fetch(url, keyedInit, carried && authName !== undefined ? { auth: authName } : { auth: false });
+    } catch (err) {
+      throw refusalOf(err) ?? err;
+    }
   };
 }
 
+/** The keyed fetch's own refusals (its rules, never the network's), by code: none of them goes away on a retry. */
+const POLICY_REFUSALS: ReadonlySet<string> = new Set(["host_not_declared", "insecure_url", "redirect_refused", "unknown_auth", "ambiguous_auth", "credential_header", "refused"]);
+
+/**
+ * 0.0.65: a request the keyed fetch refused by its rules (a host the plugin didn't declare, a plain-http URL, a
+ * redirect off its hosts) is a `capability` error, not retryable, as the adapters' retry ladder reads it; before, it
+ * read as a network failure and was retried for a minute. `no_credential` is `auth`. A refusal that crossed a process
+ * boundary carries its code on a plain error, so the code alone decides.
+ */
+function refusalOf(err: unknown): ProviderRequestError | undefined {
+  const code = (err as { code?: unknown } | null)?.code;
+  if (typeof code !== "string") return undefined;
+  const message = err instanceof Error ? err.message : String(err);
+  if (POLICY_REFUSALS.has(code)) return new ProviderRequestError({ code: "capability", message: `the keyed fetch refused the request (${code}): ${message}`, retryable: false });
+  if (code === "no_credential") return new ProviderRequestError({ code: "auth", message: `no credential for the request: ${message}`, retryable: false });
+  return undefined;
+}
+
 /** Iterates `iterable` with every step inside `transport`, so each request the adapter makes takes it. */
-async function* withTransport<T>(transport: ProviderTransport, start: () => AsyncIterable<T>): AsyncGenerator<T, void, undefined> {
+/** Runs an adapter's stream with `transport` in force for every step (the hop of each pull). */
+export async function* withTransport<T>(transport: ProviderTransport, start: () => AsyncIterable<T>): AsyncGenerator<T, void, undefined> {
   const iterator = runWithProviderTransport(transport, () => start()[Symbol.asyncIterator]());
   let finished = false;
   try {

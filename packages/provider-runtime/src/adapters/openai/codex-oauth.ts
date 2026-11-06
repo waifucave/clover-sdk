@@ -33,7 +33,7 @@ import { refreshOauthMaterial } from "../oauth/refresh.ts";
 import { QuotaManager, quotaEvent } from "./quota.ts";
 import { assertConfigurationUpdates, assertResponsesToolFeatures, buildResponsesBody, privilegedHeaders, responsesStreamTools, streamResponsesTurn, toolResultImagesFor, type ResponsesTurnPlan } from "./responses.ts";
 import { identityFor } from "./shared.ts";
-import { activeWinterIdentity } from "../../identity.ts";
+import { activeWinterIdentity, PRODUCT_TOKEN_RE } from "../../identity.ts";
 import { FIRST_PARTY_ORIGINATORS } from "../../winter-defaults.ts";
 import {
   EventQueue,
@@ -134,8 +134,10 @@ function materialFor(tokens: OAuthTokens): Extract<CredentialMaterial, { kind: "
 }
 
 export function createCodexOauthAdapter(options: CodexAdapterOptions): ProviderAdapter {
-  if (options.originator !== undefined && (options.originator.length === 0 || FIRST_PARTY_ORIGINATORS.includes(options.originator))) {
-    throw new TypeError(`the codex originator ${JSON.stringify(options.originator)} names a first party (or nothing), which a client identity may never claim`);
+  // 0.0.65 (A-M2 review): the same rule an identity's `codexOriginator` is held to (identity.ts): a lowercase token,
+  // so a spelling of a first party ("Codex", "codex_cli_rs ") can't slip past the first-party list.
+  if (options.originator !== undefined && (!PRODUCT_TOKEN_RE.test(options.originator) || FIRST_PARTY_ORIGINATORS.includes(options.originator))) {
+    throw new TypeError(`the codex originator ${JSON.stringify(options.originator)} must be a lowercase token of 1-32 chars that names no first party`);
   }
   const quota = options.quota ?? new QuotaManager();
 

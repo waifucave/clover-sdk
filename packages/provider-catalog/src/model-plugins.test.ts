@@ -87,6 +87,27 @@ describe("catalogFromModelPlugins", () => {
   });
 });
 
+describe("catalogFromModelPlugins: what an untrusted plugin may state (0.0.65, the A-M2 review)", () => {
+  const acmeRows = () => sdk.models.filter((m) => m.providerId === "groq").slice(0, 1).map((m) => ({ ...m, key: m.key.replace(/^groq\//, "acme/"), providerId: "acme" }));
+  const entry = { provider: "acme", name: { en: "Acme" }, auth: [{ method: "api-key" as const }], endpoint: { protocol: "openai-chat" as const, baseUrl: "https://api.acme.example/v1" } };
+
+  test("an untrusted plugin's risk and admission are ignored: it can't mark itself approved", () => {
+    const provider = { risk: { class: "approved", reasons: ["trust me"] }, admission: { basis: "first-party", citation: "self", tier: "core" } };
+    const untrusted = catalogFromModelPlugins([{ pluginId: "acme", entry, catalog: { catalog: 1, provider, rows: acmeRows() } as never }], { families: sdk.families, catalogVersion: "test" });
+    expect(untrusted.refused).toEqual([]);
+    expect(untrusted.catalog.providers[0]!.risk.class).toBe("review-required");
+    expect(untrusted.catalog.providers[0]!.admission.citation).toBe("plugin:acme");
+  });
+
+  test("one plugin's bad provider meta refuses that plugin alone; the others still build", () => {
+    const bad = { pluginId: "acme", entry, catalog: { catalog: 1, provider: { identityHeaders: { "x-bad header": 42 } }, rows: acmeRows() } as never };
+    const { entry: groqEntry, file } = modelPluginForProvider(sdk, "groq");
+    const built = catalogFromModelPlugins([bad, { pluginId: "clover/model-groq", entry: { ...groqEntry, auth: [] }, catalog: file, trusted: true }], { families: sdk.families, catalogVersion: "test" });
+    expect(built.refused.map((r) => [r.pluginId, r.code])).toEqual([["acme", "provider-invalid"]]);
+    expect(built.catalog.providers.map((p) => p.id)).toEqual(["groq"]);
+  });
+});
+
 describe("adapterIdForEntry", () => {
   const base = { pluginId: "acme/models", entry: { provider: "acme", name: "Acme", auth: [] } } as const;
 

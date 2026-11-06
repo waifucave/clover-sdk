@@ -194,10 +194,12 @@ export function providerDescriptorForEntry(input: Pick<ModelPluginInput, "plugin
     adapterId,
     family,
     upstream: meta?.upstream ?? { project: "winter", commit: "", sourcePaths: [`plugin:${input.pluginId}`] },
-    risk: meta?.risk ?? { class: "review-required", reasons: [`added by the model plugin ${input.pluginId}`] },
+    // 0.0.65 (A-M2 review): a plugin the host doesn't trust states no risk class and no admission of its own: a
+    // third party can't mark its provider approved.
+    risk: (input.trusted === true ? meta?.risk : undefined) ?? { class: "review-required", reasons: [`added by the model plugin ${input.pluginId}`] },
     scope: meta?.scope ?? "llm",
     pricingBasis: meta?.pricingBasis ?? (local ? "free" : "token"),
-    admission: meta?.admission ?? { basis: local ? "local" : "api-key", citation: `plugin:${input.pluginId}`, tier: local ? "local" : "audit" },
+    admission: (input.trusted === true ? meta?.admission : undefined) ?? { basis: local ? "local" : "api-key", citation: `plugin:${input.pluginId}`, tier: local ? "local" : "audit" },
   };
   if (meta?.identityHeaders !== undefined) descriptor.identityHeaders = meta.identityHeaders;
   if (meta?.requiresUserEndpoint === true || (entry.endpoint !== undefined && isInterpolatedUrl(entry.endpoint.baseUrl))) descriptor.requiresUserEndpoint = true;
@@ -292,7 +294,16 @@ export function catalogFromModelPlugins(inputs: readonly ModelPluginInput[], opt
       refuse(input, adapter.code, adapter.message);
       continue;
     }
-    providers.push(providerDescriptorForEntry(input, read.meta, adapter.adapterId));
+    const descriptor = providerDescriptorForEntry(input, read.meta, adapter.adapterId);
+    // 0.0.65 (A-M2 review): the entry's provider record is checked on its own, with its rows, so a bad `provider` meta
+    // (identity headers, an endpoint, discovery) refuses that plugin alone, never the whole build.
+    const own = familiesServedBy(options.families, [descriptor], checked.rows);
+    const alone = validateCatalog({ schemaVersion: 2, catalogVersion: options.catalogVersion, upstream: options.upstream ?? { tag: "", tagObject: "", commit: "", extractorVersion: "", overlayVersion: "" }, providers: [descriptor], models: own.rows, families: own.families });
+    if (!alone.ok) {
+      refuse(input, "provider-invalid", `${alone.errors.length} provider error(s): ${alone.errors.slice(0, 3).map((e: CatalogValidationError) => e.message).join("; ")}`);
+      continue;
+    }
+    providers.push(descriptor);
     for (const row of checked.rows) {
       seenKeys.add(row.key);
       rows.push(row);
