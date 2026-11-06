@@ -221,6 +221,15 @@ export interface Query extends AsyncGenerator<SdkMessage> {
    */
   clearQueuedInput?(): Promise<{ cleared: number }>;
   /**
+   * WINTER-ONLY, additive (Clover K-M3): stop one of this session's own background tasks (a command, a
+   * monitor, an agent) by its id, through the TaskStop tool's own door: the same lookup, notification
+   * and kill. For a host whose own `TaskStop` hides the runtime's (`shadowBuiltins`) and passes on an
+   * id it doesn't know. An already-finished task resolves saying so; an id no task of this session has
+   * rejects with `unknown_task` (it never reaches the host's own sessions, as the tool's fallback does).
+   * Optional on the interface, like `clearQueuedInput`; every `Query` this package returns has it.
+   */
+  stopTask?(taskId: string): Promise<{ message: string; taskId: string; taskType: string; command?: string }>;
+  /**
    * WINTER-ONLY, additive (N2 extensions 4.5): the held-input verbs. Send them ONLY to a runtime that offers `HELD_INPUT_CAPABILITY`
    * (an older runtime refuses an unknown control subtype, and a refusal ends the run). Each names the hold token of the exact hold it is
    * about. Each rejects with a `WinterRpcError` carrying the runtime's typed code: `conflict`, `superseded`, `unknown_input` (TERMINAL),
@@ -1873,6 +1882,13 @@ function queryImplementation(args: { prompt: string | AsyncIterable<string>; opt
     const payload = await sendControlRequest("clear_queued_input", undefined);
     const cleared = typeof payload === "object" && payload !== null ? (payload as { cleared?: unknown }).cleared : undefined;
     return { cleared: typeof cleared === "number" ? cleared : 0 };
+  };
+  // Clover K-M3: Winter's own `stop_task` (snake_case payload); a malformed answer REJECTS.
+  gen.stopTask = async (taskId: string) => {
+    const payload = await sendControlRequest("stop_task", { task_id: taskId });
+    const p = typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : {};
+    if (typeof p["message"] !== "string" || typeof p["task_type"] !== "string") throw new WinterRpcError("invalid_response", "stop_task: the runtime's answer has no message or task_type");
+    return { message: p["message"], taskId, taskType: p["task_type"], ...(typeof p["command"] === "string" ? { command: p["command"] } : {}) };
   };
   // N2 extensions 4.5: the held-input verbs. The wire payload is camelCase like `host_message_*`; the answers are returned as the runtime
   // sent them after a shape check, so a malformed answer REJECTS (it is never read as "nothing happened").

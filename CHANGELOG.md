@@ -4,6 +4,17 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.69
+
+### A host's TaskStop reaches the runtime's tasks (Clover K-M3)
+
+- **`Query.stopTask(taskId)`** (`stop_task`): stops one of the session's own background tasks (a command, a
+  monitor, an agent) through the TaskStop tool's own door (`stopOwnTask`): the same lookup, the same once-per-id
+  notification, the same process-group kill and `background_tasks_changed`. It is for a host whose own `TaskStop`
+  hides the runtime's (`shadowBuiltins`) and passes on an id it doesn't know. It resolves with
+  `{ message, taskId, taskType, command? }` (an already-finished task says so), and rejects `unknown_task` for an id
+  no task of the session has, never turning to the host's own sessions as the tool's fallback does.
+
 ## 0.0.68
 
 ### The Agent Client Protocol, both sides (Clover K-M3)

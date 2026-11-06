@@ -354,6 +354,7 @@ import { createSessionReadState } from "./tools/read-state.ts";
 import { configureBackgroundTaskRoot } from "./tools/background-tasks.ts";
 // Task-frames parity (2026-09-17 contract §7): the ONE read this hook needs to tell a foreground
 // task's own notification apart from a background one -- see the `emitFrame` closure below for why.
+import { stopOwnTask } from "./tools/impl/task-stop.ts";
 import { getTask, stopSessionShellTasks, listSessionRunningTasks, sweepSessionBackgroundTasks, listRunningTasks, toBackgroundTasksChangedEntry } from "./tools/impl/background-task-runtime.ts";
 import { sessionTempDir, type SessionTempDirPaths } from "./paths/temp.ts";
 // Task 8 (P3 close-out, "Settings threading" MUST): the resolved-once-per-run fallback every real
@@ -6964,6 +6965,31 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           // `user` frame the host wrote before this request is already pending when it runs. Touches
           // nothing else: not the running turn, not a queued task notification, not a message another
           // session delivered. (claude cancels one queued input by id; Winter clears them all.)
+          // --- Clover K-M3: `stop_task` (`Query.stopTask`) ---------------------------------------
+          //
+          // WINTER-ONLY. Stops one of this session's own background tasks (a command, a monitor, an
+          // agent) by id, through the TaskStop tool's own door (`stopOwnTask`): the same lookup, the
+          // same notification and kill. For a host whose own TaskStop hides this one (`shadowBuiltins`),
+          // which passes on an id it doesn't know. An id no task of this session has is refused
+          // `unknown_task`; unlike the tool, it never turns to the host's sessions (the host asked).
+          if (cf.subtype === "stop_task") {
+            const payload = cf.payload;
+            const taskId = typeof payload === "object" && payload !== null ? (payload as { task_id?: unknown }).task_id : undefined;
+            if (typeof taskId !== "string" || taskId.length === 0) {
+              output.write({ type: "control_response", requestId: cf.requestId, ok: false, error: { code: "invalid_request", message: "stop_task needs a task_id" } });
+              continue;
+            }
+            const stopped = stopOwnTask(taskId, { sessionId: config.sessionId, emitFrame: (frame) => output.write({ type: "data", message: frame }) });
+            if (stopped === undefined) {
+              output.write({ type: "control_response", requestId: cf.requestId, ok: false, error: { code: "unknown_task", message: `no task ${JSON.stringify(taskId.slice(0, 128))} in this session` } });
+              continue;
+            }
+            output.write({
+              type: "control_response", requestId: cf.requestId, ok: true,
+              payload: { message: (JSON.parse(stopped.output) as { message: string }).message, task_id: taskId, task_type: stopped.taskType, ...(stopped.command !== undefined ? { command: stopped.command } : {}) },
+            });
+            continue;
+          }
           if (cf.subtype === "clear_queued_input") {
             output.write({ type: "control_response", requestId: cf.requestId, ok: true, payload: { cleared: clearPendingHostInputs() } });
             continue;

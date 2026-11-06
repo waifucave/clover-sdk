@@ -6,7 +6,7 @@
 // second namespace.
 import { randomUUID } from "node:crypto";
 import "../descriptors/task-stop.ts";
-import { replaceExecutor, type ToolExecutor } from "../registry.ts";
+import { replaceExecutor, type ToolExecutionContext, type ToolExecutor } from "../registry.ts";
 import { getTask, updateTask, stopTask, listRunningTasks, toBackgroundTasksChangedEntry, killedTaskSummary, type BackgroundTaskKind } from "./background-task-runtime.ts";
 import { renderAgentNotification, renderTaskStopNotification } from "../../subagents/notification-queue.ts";
 // Fix round 1 (M4): the internal-kind -> wire-`task_type` mapping. TaskStop is the THIRD producer of
@@ -58,26 +58,21 @@ function formatResult(message: string, taskId: string, taskKind: BackgroundTaskK
 // exit handlers and the engine's teardown sweep -- and, for an agent, with the child's own settle()
 // text (review r1 finding 4: a TaskStop and a parent abort must not describe one event two ways).
 
-const taskStopExecutor: ToolExecutor = {
-  async execute(input, ctx) {
-    const parsed = parseTaskStopInput(input);
-    if ("error" in parsed) return { output: `Error: ${parsed.error}`, isError: true };
-
-    const id = parsed.task_id ?? parsed.shell_id!;
-    const task = getTask(id);
-    if (!task) {
-      // Host messaging: an id no task of this session has may be one of the HOST's sessions (a
-      // multi-session host such as the Winter daemon); stopping one interrupts its running turn. A
-      // session with no host line answers exactly as before.
-      const host = getMessagingRuntime()?.hostMessaging?.(ctx.sessionId);
-      if (host !== undefined) return stopHostSession(host, id, ctx.agentId, ctx.signal);
-      return { output: `Error: TaskStop: unknown task_id "${id}"`, isError: true };
-    }
-
+/**
+ * Stops one of this session's own tasks by id, as the TaskStop tool does: the same lookup, the same once-per-id
+ * notification, the same process-group kill and `background_tasks_changed`. `undefined` when no task of this
+ * session has the id. Shared by the tool and the host's `stop_task` control request (`Query.stopTask`), which a
+ * host whose own TaskStop hides this one (`shadowBuiltins`) passes an id it doesn't know to.
+ */
+export function stopOwnTask(id: string, ctx: Pick<ToolExecutionContext, "sessionId" | "emitFrame">): { output: string; taskType: string; command?: string } | undefined {
+  const task = getTask(id);
+  if (!task) return undefined;
+  const result = (message: string) => ({ output: formatResult(message, id, task.kind, task.command), taskType: wireTaskType(task.kind), ...(task.command !== undefined ? { command: task.command } : {}) });
+  {
     if (task.status !== "running") {
       // Already finished (naturally, or via a prior TaskStop) -- an informative, non-error result,
       // matching the "stopping an already-done task just says so" UX rather than erroring.
-      return { output: formatResult(`task ${id} is already ${task.status}`, id, task.kind, task.command) };
+      return result(`task ${id} is already ${task.status}`);
     }
 
     // Single source of truth for the terminal status (see background-task-runtime.ts's own header
@@ -117,7 +112,24 @@ const taskStopExecutor: ToolExecutor = {
       /* a torn-down session's emitFrame may throw; the registry's status is still correct */
     }
 
-    return { output: formatResult(`stopped task ${id}`, id, task.kind, task.command) };
+    return result(`stopped task ${id}`);
+  }
+}
+
+const taskStopExecutor: ToolExecutor = {
+  async execute(input, ctx) {
+    const parsed = parseTaskStopInput(input);
+    if ("error" in parsed) return { output: `Error: ${parsed.error}`, isError: true };
+
+    const id = parsed.task_id ?? parsed.shell_id!;
+    const stopped = stopOwnTask(id, ctx);
+    if (stopped) return { output: stopped.output };
+    // Host messaging: an id no task of this session has may be one of the HOST's sessions (a
+    // multi-session host such as the Winter daemon); stopping one interrupts its running turn. A
+    // session with no host line answers exactly as before.
+    const host = getMessagingRuntime()?.hostMessaging?.(ctx.sessionId);
+    if (host !== undefined) return stopHostSession(host, id, ctx.agentId, ctx.signal);
+    return { output: `Error: TaskStop: unknown task_id "${id}"`, isError: true };
   },
 };
 
