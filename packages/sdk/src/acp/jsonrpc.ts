@@ -7,8 +7,8 @@
 // Every message, both ways, goes to `tap` first, so the transcript is the raw wire.
 
 
-/** A byte-accurate NDJSON line splitter, safe across UTF-8 chunk boundaries: blank lines are skipped, and a partial
- *  line held past `maxLine` resets it and throws. */
+/** A byte-accurate NDJSON line splitter, safe across UTF-8 chunk boundaries: blank lines are skipped, and a line
+ *  longer than `maxLine`, complete or still partial, resets it and throws. */
 class LineDecoder {
   #buf: Uint8Array = new Uint8Array(0);
   #len = 0;
@@ -36,6 +36,11 @@ class LineDecoder {
       if (this.#len > 0) {
         this.#append(tail);
         line = this.#buf.subarray(0, this.#len);
+      }
+      if (line.length > this.maxLine) {
+        this.#len = 0;
+        this.#buf = new Uint8Array(0);
+        throw new Error(`ndjson: line too long (> ${this.maxLine} bytes)`);
       }
       if (line.length > 0) lines.push(this.#text.decode(line));
       if (this.#len > 0) {
@@ -98,6 +103,8 @@ export interface RpcPeerOptions {
   maxLineBytes?: number;
   /** Send request ids as strings (Antigravity does); the default is numbers. */
   stringIds?: boolean;
+  /** The link closed: `close()` was called, a write failed, or a line was too long to read. Called once. */
+  onClose?(reason: Error): void;
 }
 
 interface Pending {
@@ -173,6 +180,7 @@ export class RpcPeer {
       this.#pending.delete(id);
       p.reject(reason);
     }
+    this.#opts.onClose?.(reason);
   }
 
   #send(msg: JsonRpcMessage): void {

@@ -13,6 +13,11 @@
 // | `session/cancel`                      | `interrupt()`                                                              |
 // | `session/close`                       | the prompt stream ends                                                     |
 //
+// The client's answer is the only thing that allows a tool call: no settings files load unless the host opts in
+// (`settingSources`), bypass is never allowed, and options that would pre-allow tools (`allowedTools`, a
+// permission-prompt tool, `permissions.allow`) are refused. A late answer, after the turn it was asked in was
+// cancelled or ended, is a refusal.
+//
 // The client offers its own `fs` and `terminal`; this agent doesn't use them: its tools run in its own sandbox, as
 // every coding agent's do (§9.3). It never authenticates anyone (`authMethods: []`): the SDK uses the host's
 // providers as configured. `_meta.systemPrompt.append` at `session/new` is appended to the system prompt, which is
@@ -38,7 +43,9 @@ export interface AcpAgentOptions {
   /** The SDK's `query` (or a stand-in). */
   query: AcpQueryFn;
   /** Options every session starts from (model, tools, sandbox…); `cwd`, `mcpServers`, `resume`, `sessionId`,
-   *  `canUseTool` and `includePartialMessages` are set per session. */
+   *  `canUseTool` and `includePartialMessages` are set per session. Settings files load only when this names
+   *  `settingSources` (none by default); `allowedTools`, `permissionPromptToolName` and an allow rule in
+   *  `permissions` or `serverManagedSettings` are refused, and bypass is never allowed. */
   options?: Record<string, unknown>;
   agentInfo: { name: string; title?: string; version: string };
   /** One line out (stdout). */
@@ -72,8 +79,10 @@ interface Session {
   mode: string;
   effort: string | undefined;
   models: string[];
-  /** Tool calls seen, by id, for the updates' kinds. */
+  /** Whether this message's text or thinking already arrived as deltas. */
   streamed: boolean;
+  /** Tool names by call id, to read a mode switch from its result. */
+  tools: Map<string, string>;
   closed: boolean;
 }
 
@@ -128,6 +137,9 @@ export function toolKindOf(name: string): string {
       return "fetch";
     case "Think":
       return "think";
+    case "EnterPlanMode":
+    case "ExitPlanMode":
+      return "switch_mode";
     default:
       return "other";
   }
@@ -197,9 +209,27 @@ export interface AcpAgentServer {
   feed(chunk: Uint8Array | string): void;
   /** The client went away: every session's prompt stream ends. */
   close(): Promise<void>;
+  /** Settles once the link closed, from either side, and every session ended. */
+  readonly ended: Promise<void>;
 }
 
+/** Refuses base options through which something other than the client's answer could allow a tool call. */
+function checkBaseOptions(base: Record<string, unknown>): void {
+  const refuse = (what: string) => {
+    throw new Error(`serveAcpAgent: ${what} would allow tool calls without the client's answer`);
+  };
+  if (arr(base["allowedTools"]).length > 0) refuse("allowedTools");
+  if (base["permissionPromptToolName"] !== undefined) refuse("permissionPromptToolName");
+  if (arr(obj(base["permissions"])?.["allow"]).length > 0) refuse("permissions.allow");
+  if (arr(obj(obj(base["serverManagedSettings"])?.["permissions"])?.["allow"]).length > 0) refuse("serverManagedSettings.permissions.allow");
+  if (base["allowDangerouslySkipPermissions"] === true) refuse("allowDangerouslySkipPermissions");
+}
+
+/** A session id the client may resume: an id this agent hands out (a UUID by default), never a path or a pattern. */
+const SESSION_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
 export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
+  checkBaseOptions(o.options ?? {});
   const sessions = new Map<string, Session>();
   const newId = o.newId ?? (() => crypto.randomUUID());
 
@@ -227,6 +257,8 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
   };
 
   const ask = async (s: Session, toolName: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal) => {
+    // The turn this was asked in: an answer counts only while that same turn is still running and not cancelled.
+    const turn = s.turn;
     const outcome = await Promise.race([
       peer.request("session/request_permission", {
         sessionId: s.id,
@@ -240,8 +272,18 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
       new Promise<undefined>((r) => signal.addEventListener("abort", () => r(undefined), { once: true })),
     ]).catch(() => undefined);
     const picked = outcome?.["outcome"] === "selected" ? str(outcome["optionId"]) : undefined;
+    const live = turn !== undefined && s.turn === turn && !turn.cancelled && !s.closed && !signal.aborted;
+    if (!live) return { behavior: "deny" as const, message: "The request was cancelled." };
     if (picked === "allow_once" || picked === "allow_always") return { behavior: "allow" as const, updatedInput: input };
     return { behavior: "deny" as const, message: picked === "reject_once" ? "The user refused this." : "The request was cancelled." };
+  };
+
+  /** A mode the runtime reports (at start, or from an `EnterPlanMode` or `ExitPlanMode` result) becomes the session's,
+   *  and the client is told. */
+  const modeChanged = (s: Session, mode: string | undefined) => {
+    if (!mode || !MODE_IDS.includes(mode) || mode === s.mode) return;
+    s.mode = mode;
+    update(s.id, { sessionUpdate: "current_mode_update", currentModeId: mode });
   };
 
   /** Reads one session's messages for its whole life, turning them into updates and ending each turn at its result. */
@@ -253,8 +295,7 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
         const type = str(m["type"]);
         if (type === "system" && m["subtype"] === "init") {
           s.model = str(m["model"]) ?? s.model;
-          const mode = str(m["permissionMode"]);
-          if (mode && MODE_IDS.includes(mode)) s.mode = mode;
+          modeChanged(s, str(m["permissionMode"]));
         } else if (type === "stream_event") {
           const ev = obj(m["event"]);
           const delta = obj(ev?.["delta"]);
@@ -278,6 +319,8 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
             } else if (block["type"] === "tool_use") {
               const name = str(block["name"]) ?? "tool";
               const input = obj(block["input"]);
+              const callId = str(block["id"]);
+              if (callId) s.tools.set(callId, name);
               update(s.id, {
                 sessionUpdate: "tool_call", toolCallId: str(block["id"]) ?? "", title: toolTitleOf(name, input), kind: toolKindOf(name),
                 status: "pending", rawInput: input ?? {}, locations: locationsOf(input),
@@ -290,10 +333,22 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
             const block = obj(b);
             if (block?.["type"] !== "tool_result") continue;
             const text = textOfToolResult(block["content"]);
+            const callId = str(block["tool_use_id"]) ?? "";
+            const tool = s.tools.get(callId);
+            s.tools.delete(callId);
             update(s.id, {
               sessionUpdate: "tool_call_update", toolCallId: str(block["tool_use_id"]) ?? "", status: block["is_error"] === true ? "failed" : "completed",
               ...(text ? { content: [{ type: "content", content: { type: "text", text } }] } : {}),
             });
+            if ((tool === "ExitPlanMode" || tool === "EnterPlanMode") && block["is_error"] !== true) {
+              let reported: Obj | undefined;
+              try {
+                reported = obj(JSON.parse(text));
+              } catch {
+                reported = undefined;
+              }
+              modeChanged(s, str(reported?.["newMode"]) ?? str(reported?.["mode"]) ?? (tool === "EnterPlanMode" ? "plan" : undefined));
+            }
           }
         } else if (type === "result") {
           const turn = s.turn;
@@ -340,10 +395,13 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
         ...(resume ? { resume } : { sessionId: id }),
         includePartialMessages: true,
         permissionMode: "default",
+        // The client's answer is the only allow: no settings files unless the host opted in, never bypass.
+        settingSources: Array.isArray(base["settingSources"]) ? base["settingSources"] : [],
+        allowDangerouslySkipPermissions: false,
         canUseTool: (toolName: string, input: Record<string, unknown>, opts: { signal: AbortSignal; toolUseID: string }) => ask(s, toolName, input, opts.toolUseID, opts.signal),
       },
     });
-    s = { id, q, inputs, turn: undefined, model: str(base["model"]), mode: "default", effort: str(base["effort"]), models: [], streamed: false, closed: false };
+    s = { id, q, inputs, turn: undefined, model: str(base["model"]), mode: "default", effort: str(base["effort"]), models: [], streamed: false, tools: new Map(), closed: false };
     sessions.set(id, s);
     void pump(s);
     if (q.supportedModels) s.models = await q.supportedModels().then((ms) => ms.map((m) => m.value), () => []);
@@ -372,6 +430,7 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
       case "session/resume": {
         const id = str(p?.["sessionId"]);
         if (!id) throw new RpcError(RPC_INVALID_PARAMS, "sessionId is required");
+        if (!SESSION_ID.test(id)) throw new RpcError(RPC_INVALID_PARAMS, "sessionId isn't a session id this agent hands out");
         const old = sessions.get(id);
         if (old && !old.closed) return { modes: modesOf(old), configOptions: configOptions(old) };
         const s = await open(p, id);
@@ -428,8 +487,24 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
     }
   };
 
+  const endAll = async () => {
+    for (const s of sessions.values()) {
+      s.closed = true;
+      s.inputs.end();
+      await s.q.return?.(undefined).catch(() => {});
+    }
+    sessions.clear();
+  };
+
+  let closed: (() => void) | undefined;
+  const ended = new Promise<void>((r) => (closed = r));
+
   const peer = new RpcPeer({
     write: (line) => o.write(line),
+    // The client went away (or sent a line too long to read): every session ends.
+    onClose: () => {
+      void endAll().finally(() => closed?.());
+    },
     onRequest: (method, params) => handle(method, params),
     onNotification: (method, params) => {
       if (method !== "session/cancel") return;
@@ -444,24 +519,25 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
   return {
     feed: (chunk) => peer.feed(typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk),
     close: async () => {
-      for (const s of sessions.values()) {
-        s.closed = true;
-        s.inputs.end();
-        await s.q.return?.(undefined).catch(() => {});
-      }
-      sessions.clear();
+      await endAll();
       peer.close();
     },
+    ended,
   };
 }
 
-/** Runs the agent on this process's stdin and stdout, until the client closes stdin. */
+/** Runs the agent on this process's stdin and stdout until the client closes stdin or the link breaks, then ends
+ *  every session. */
 export async function runAcpAgentOnStdio(o: Omit<AcpAgentOptions, "write">): Promise<void> {
   const server = serveAcpAgent({ ...o, write: (line) => void process.stdout.write(line), log: o.log ?? ((line) => void process.stderr.write(`${line}\n`)) });
-  await new Promise<void>((resolve) => {
-    process.stdin.on("data", (c: Buffer) => server.feed(c));
-    process.stdin.on("end", () => resolve());
-    process.stdin.on("close", () => resolve());
-  });
+  await Promise.race([
+    new Promise<void>((resolve) => {
+      process.stdin.on("data", (c: Buffer) => server.feed(c));
+      process.stdin.on("end", () => resolve());
+      process.stdin.on("close", () => resolve());
+    }),
+    server.ended,
+  ]);
   await server.close();
+  process.stdin.destroy();
 }

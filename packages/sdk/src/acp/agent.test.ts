@@ -39,11 +39,11 @@ function fakeQuery(script: ((ctl: { ask: CanUseTool; signal: AbortSignal }) => A
   return { fn, seen };
 }
 
-function connect(query: ReturnType<typeof fakeQuery>["fn"], answer: (params: Record<string, unknown>) => unknown = () => ({ outcome: { outcome: "selected", optionId: "allow_once" } })) {
+function connect(query: ReturnType<typeof fakeQuery>["fn"], answer: (params: Record<string, unknown>) => unknown = () => ({ outcome: { outcome: "selected", optionId: "allow_once" } }), options?: Record<string, unknown>) {
   const updates: Record<string, unknown>[] = [];
   const asks: Record<string, unknown>[] = [];
   let client!: RpcPeer;
-  const server = serveAcpAgent({ query, agentInfo: { name: "clover-code", version: "0.0.0" }, write: (l) => queueMicrotask(() => client.feed(new TextEncoder().encode(l))), newId: () => "sess-1" });
+  const server = serveAcpAgent({ query, agentInfo: { name: "clover-code", version: "0.0.0" }, write: (l) => queueMicrotask(() => client.feed(new TextEncoder().encode(l))), newId: () => "sess-1", ...(options ? { options } : {}) });
   client = new RpcPeer({
     write: (l) => queueMicrotask(() => server.feed(l)),
     onRequest: async (method, params) => {
@@ -150,5 +150,86 @@ describe("the coding agent over ACP", () => {
   test("tool kinds and MCP server entries", () => {
     expect(["Read", "Edit", "Bash", "Grep", "WebFetch", "Task"].map(toolKindOf)).toEqual(["read", "edit", "execute", "search", "fetch", "other"]);
     expect(mcpServersOf([{ type: "http", name: "h", url: "https://x", headers: [{ name: "a", value: "b" }] }, { name: "nocommand" }])).toEqual({ h: { type: "http", url: "https://x", headers: { a: "b" } } });
+  });
+  test("the client's answer is the only allow: no settings files by default, never bypass, pre-allowing options refused", async () => {
+    const q = fakeQuery([]);
+    const { client } = connect(q.fn, undefined, { model: "m", allowDangerouslySkipPermissions: false, trustedWorkspace: true });
+    await client.request("initialize", { protocolVersion: 1 });
+    await client.request("session/new", { cwd: "/work", mcpServers: [] });
+    expect(q.seen.options).toMatchObject({ settingSources: [], allowDangerouslySkipPermissions: false, permissionMode: "default" });
+    const q2 = fakeQuery([]);
+    const c2 = connect(q2.fn, undefined, { settingSources: ["project"] });
+    await c2.client.request("initialize", { protocolVersion: 1 });
+    await c2.client.request("session/new", { cwd: "/work", mcpServers: [] });
+    expect(q2.seen.options!["settingSources"]).toEqual(["project"]);
+    const write = () => {};
+    for (const bad of [
+      { allowedTools: ["Bash"] }, { permissionPromptToolName: "mcp__x__ask" }, { permissions: { allow: ["Bash(*)"] } },
+      { serverManagedSettings: { permissions: { allow: ["Edit"] } } }, { allowDangerouslySkipPermissions: true },
+    ]) {
+      expect(() => serveAcpAgent({ query: q.fn, agentInfo: { name: "x", version: "0" }, write, options: bad })).toThrow(/without the client's answer/);
+    }
+  });
+
+  test("an allow that arrives after its turn was cancelled is a refusal", async () => {
+    let verdict: { behavior: string } | undefined;
+    let answer!: (v: unknown) => void;
+    const q = fakeQuery([
+      async function* ({ ask, signal }) {
+        verdict = await ask("Bash", { command: "rm -rf build" }, { signal: new AbortController().signal, toolUseID: "tu9" });
+        void signal;
+      },
+    ]);
+    const { client, asks } = connect(q.fn, () => new Promise((r) => (answer = r)));
+    await client.request("initialize", { protocolVersion: 1 });
+    await client.request("session/new", { cwd: "/work", mcpServers: [] });
+    const turn = client.request("session/prompt", { sessionId: "sess-1", prompt: [{ type: "text", text: "Clean." }] });
+    for (let i = 0; i < 50 && asks.length === 0; i++) await new Promise((r) => setTimeout(r, 2));
+    expect(asks.length).toBe(1);
+    client.notify("session/cancel", { sessionId: "sess-1" });
+    await new Promise((r) => setTimeout(r, 10));
+    answer({ outcome: { outcome: "selected", optionId: "allow_once" } });
+    expect(await turn).toMatchObject({ stopReason: "cancelled" });
+    expect(verdict?.behavior).toBe("deny");
+  });
+
+  test("plan mode is left only through an ExitPlanMode the client allowed, and the client is told the new mode", async () => {
+    const q = fakeQuery([
+      async function* ({ ask, signal }) {
+        yield { type: "assistant", message: { content: [{ type: "tool_use", id: "tp1", name: "ExitPlanMode", input: { plan: "1. Fix it." } }] } };
+        const v = await ask("ExitPlanMode", { plan: "1. Fix it." }, { signal, toolUseID: "tp1" });
+        const allowed = v.behavior === "allow";
+        yield {
+          type: "user",
+          message: { content: [{ type: "tool_result", tool_use_id: "tp1", is_error: !allowed, content: allowed ? JSON.stringify({ previousMode: "plan", newMode: "default" }) : "refused" }] },
+        };
+      },
+    ]);
+    const { client, updates, asks } = connect(q.fn);
+    await client.request("initialize", { protocolVersion: 1 });
+    await client.request("session/new", { cwd: "/work", mcpServers: [] });
+    await client.request("session/set_mode", { sessionId: "sess-1", modeId: "plan" });
+    await client.request("session/prompt", { sessionId: "sess-1", prompt: [{ type: "text", text: "Plan, then fix." }] });
+    expect(asks[0]).toMatchObject({ toolCall: { kind: "switch_mode" } });
+    expect(updates.find((u) => u["sessionUpdate"] === "tool_call")).toMatchObject({ kind: "switch_mode" });
+    expect(updates.at(-1)).toEqual({ sessionUpdate: "current_mode_update", currentModeId: "default" });
+    const r = (await client.request("session/set_config_option", { sessionId: "sess-1", configId: "thought_level", value: "low" })) as { configOptions: { id: string; currentValue: string }[] };
+    expect(r.configOptions.find((c) => c.id === "mode")!.currentValue).toBe("default");
+  });
+
+  test("a resume takes only a session id this agent hands out; the sessions end when the link closes", async () => {
+    const q = fakeQuery([]);
+    const { client, server } = connect(q.fn);
+    await client.request("initialize", { protocolVersion: 1 });
+    for (const bad of ["../../etc/passwd", "a b", "*", "x".repeat(200)]) {
+      expect(await client.request("session/resume", { sessionId: bad, cwd: "/work", mcpServers: [] }).catch((e: unknown) => e)).toBeInstanceOf(Error);
+    }
+    await client.request("session/new", { cwd: "/work", mcpServers: [] });
+    // A line too long to read breaks the link: the agent ends every session and says it has ended.
+    const small = serveAcpAgent({ query: fakeQuery([]).fn, agentInfo: { name: "x", version: "0" }, write: () => {} });
+    small.feed(`${"x".repeat(33 * 1024 * 1024)}\n`);
+    await small.ended;
+    await server.close();
+    await server.ended;
   });
 });
