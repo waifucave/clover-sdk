@@ -37,7 +37,7 @@
 import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
 import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { CredentialRef, ProviderConnectionConfig, ProviderSelection, RuntimeConfig } from "@waifucave/clover-agent-sdk";
-import type { CredentialStore, ModelInfo, ProviderContext, ProviderRegistry, ResolvedModel, StickyDecoration, StickyDecorations } from "@waifucave/clover-provider-runtime";
+import type { CredentialStore, ModelInfo, ProviderAdapter, ProviderContext, ProviderRegistry, ResolvedModel, StickyDecoration, StickyDecorations } from "@waifucave/clover-provider-runtime";
 import {
   ANTHROPIC_CONSOLE_ACCOUNT_ID,
   CredentialResolutionError,
@@ -136,8 +136,15 @@ export interface SessionProviderOptions {
   config: RuntimeConfig;
   /** The environment governing R6-13's harness alias and the `env` credential store. Explicit at every entrypoint. */
   env: Record<string, string | undefined>;
-  /** Injected in tests so a fixture owns its own rows. Production: the catalog compiled into this build. */
+  /** Injected in tests so a fixture owns its own rows. Production: the host's model plugins' catalog
+   *  (`RuntimeConfig.modelProviders`, Clover A-M2), else the catalog compiled into this build. */
   catalog?: WinterCatalog;
+  /**
+   * Clover A-M2: the adapters the registry holds, built against the session's catalog. Production with model plugins:
+   * the generic adapters plus a stub per adapter the host serves (`model-plugins.ts`). Absent: every adapter this
+   * build ships (`createShippedAdapters`), for a host that brings no model plugins.
+   */
+  adapters?: (catalog: WinterCatalog) => readonly ProviderAdapter[];
   /** Injected in tests (an in-memory store). Production: keychain + env + file + inline, composed below. */
   credentials?: CredentialStore;
   /**
@@ -590,7 +597,7 @@ export function buildSessionProvider(opts: SessionProviderOptions): SessionProvi
     delete: async () => { throw new Error("guest credential writes unavailable"); },
   } : opts.credentials ?? createProductionCredentialStore(config, env, opts.home ?? env["HOME"] ?? "");
   const registry = createRegistry(catalog);
-  for (const adapter of createShippedAdapters(catalog)) registry.register(adapter);
+  for (const adapter of (opts.adapters ?? createShippedAdapters)(catalog)) registry.register(adapter);
 
   // A TOOL's secret. The raw keychain reader is the REAL one only when the credential store is the
   // production one too -- see `SessionProviderOptions.readKeychainSecret`.

@@ -1886,6 +1886,8 @@ export interface EngineOptions {
    * (`RuntimeConfig.hostCredentials`). Bound to this run's control bridge the moment it exists, so every
    * `credential_resolve` rides the session's own stdio pipe. Absent: nothing to bind.
    */
+  /** Clover A-M2: the session's line to the model adapters its host serves; bound to this run's control bridge with the credential channel. */
+  hostModelAdapterChannel?: HostCredentialChannel;
   hostCredentialChannel?: HostCredentialChannel;
   runtimeContextChannel?: RuntimeContextChannel;
   /**
@@ -2686,6 +2688,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     extraMcpServerSources,
     mcpOAuthStore,
     hostCredentialChannel,
+    hostModelAdapterChannel,
     runtimeContextChannel,
     initSlashCommands,
     initSkills,
@@ -3049,6 +3052,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // WS-25 §7: a host-brokered session's credential reads ride THIS bridge (the one top-level engine binds;
   // a child engine never receives the channel, and shares the parent's binding through the stores).
   hostCredentialChannel?.bind(bridge);
+  hostModelAdapterChannel?.bind(bridge);
   if (config.requiredRuntimeContext !== undefined) {
     const binding = parseRuntimeContextConfig(config.requiredRuntimeContext);
     if (runtimeContextChannel === undefined || runtimeContextChannel.bindingId !== binding.bindingId || systemPromptAssembler?.requiredContext !== runtimeContextChannel) throw new Error("required_context_unavailable");

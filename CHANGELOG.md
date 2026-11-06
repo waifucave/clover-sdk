@@ -4,7 +4,33 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
-## Unreleased
+## 0.0.64
+
+### Every provider a plugin (Clover A-M2)
+
+A host's sessions can run on the providers its model plugins bring, and on nothing else (Clover spec §3.3):
+
+- **The catalog from plugins** (`provider-catalog`): `catalogFromModelPlugins` builds one catalog from a host's
+  enabled `models[]` entries and their catalogs (rows, or a catalog file `{ "catalog": 1, "provider", "rows" }`
+  whose `provider` carries what a manifest entry has no field for). An entry with bad rows, a taken provider id or
+  an adapter it may not use is refused alone. A declarative entry runs on its protocol's generic adapter; a code
+  entry on its own, namespaced `plugin.<id>.<handler>` unless the host trusts it. `modelPluginForProvider` splits
+  the SDK's own catalog into plugins, and the round trip gives the same providers and rows.
+- **Family adapters keyless** (`provider-runtime`): `modelAdapterFromProviderAdapter` runs one of the SDK's family
+  adapters as a `ModelAdapter` on the keyed fetch: the adapter holds a per-call sentinel, and `boundedFetch`'s new
+  transport hook (`runWithProviderTransport`) sends each hop through the keyed fetch with the sentinel taken out,
+  so the host adds the real key where the plugin's manifest says. A sentinel anywhere but a key header is refused.
+  `familyModelAdapter` and `modelAdapterHandlers` make a code model plugin's host module a few lines.
+- **Adapters the host serves** (`provider-runtime`, `runtime`, `sdk`): `Options.modelProviders` gives a session the
+  host's catalog file (path and sha256) and the adapters the host serves; the session registers only the generic
+  adapters (`createGenericAdapters`) and a stub per served adapter, whose calls ride three new control requests
+  (`model_adapter_open`, `_next`, `_cancel`; `createHostModelAdapterServer` answers them). Absent, a session runs on
+  this build's own catalog and adapters, as before.
+- `ConnectionProfile.account` (additive): a sign-in's non-secret account id, for an adapter that runs keyless.
+- The Codex adapter takes an explicit `originator` (never a first party), so Clover's Codex plugin sends `clover`
+  whatever process it runs in.
+
+## Unreleased (folded into 0.0.64)
 
 ### npm publishing is opt-in by a repository variable
 

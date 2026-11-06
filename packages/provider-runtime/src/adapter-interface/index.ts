@@ -14,3 +14,31 @@ export { serveModelAdapterProcess, spawnModelAdapterProcess } from "./own-proces
 export type { ModelAdapterProcess, ModelAdapterProcessOptions, ServeModelAdapterProcessIo } from "./own-process.ts";
 export { BEDROCK_SECRET, bedrockNetworkHosts, bedrockAdapterProcessCommand, bedrockSigningModelAdapter, runBedrockAdapterProcess, spawnBedrockAdapterProcess } from "./bedrock-process.ts";
 export type { BedrockAdapterProcessOptions } from "./bedrock-process.ts";
+export { keyedTransport, modelAdapterFromProviderAdapter } from "./keyed-bridge.ts";
+export type { KeyedBridgeOptions } from "./keyed-bridge.ts";
+export {
+  HOST_MODEL_ADAPTER_ABANDON_MS,
+  HOST_MODEL_ADAPTER_CONTROL_TIMEOUT_MS,
+  HOST_MODEL_ADAPTER_NEXT_TIMEOUT_MS,
+  HOST_MODEL_ADAPTER_SUBTYPES,
+  createHostModelAdapterServer,
+  fromWireProviderError,
+  hostModelAdapterOf,
+  hostServedProviderAdapter,
+  rowDerivedCapabilities,
+  rowDerivedMapEffort,
+  toWireProviderError,
+} from "./host-served.ts";
+export type {
+  HostControlAnswer,
+  HostModelAdapter,
+  HostModelAdapterBatch,
+  HostModelAdapterContext,
+  HostModelAdapterMethod,
+  HostModelAdapterOpen,
+  HostModelAdapterSender,
+  HostServedAdapterIdentity,
+  WireProviderError,
+} from "./host-served.ts";
+export { catalogOfModelPlugin, familyModelAdapter, materialOfSecret, modelAdapterHandlers } from "./plugin-handlers.ts";
+export type { FamilyModelAdapterOptions, ModelAdapterDescription, ModelAdapterHandlers, ModelCallArgs, ModelHandlerContext } from "./plugin-handlers.ts";

@@ -34,6 +34,7 @@ import { QuotaManager, quotaEvent } from "./quota.ts";
 import { assertConfigurationUpdates, assertResponsesToolFeatures, buildResponsesBody, privilegedHeaders, responsesStreamTools, streamResponsesTurn, toolResultImagesFor, type ResponsesTurnPlan } from "./responses.ts";
 import { identityFor } from "./shared.ts";
 import { activeWinterIdentity } from "../../identity.ts";
+import { FIRST_PARTY_ORIGINATORS } from "../../winter-defaults.ts";
 import {
   EventQueue,
   assertRepresentableTools,
@@ -54,6 +55,12 @@ export interface CodexAdapterOptions extends OpenAiAdapterOptions {
   tokenUrl?: string;
   /** Shared across turns so the subscription state survives one. A fixture may inject its own clock. */
   quota?: QuotaManager;
+  /**
+   * Clover A-M2: the `originator` this adapter sends, whatever identity its process has: Clover's Codex model
+   * plugin sets `"clover"` (spec §3.3), since a plugin host process is not the core's. Never a first party
+   * (`FIRST_PARTY_ORIGINATORS`): such a value refuses construction. Absent: the running product's identity.
+   */
+  originator?: string;
 }
 
 /** How a codex credential is stored: one `oauth` material under `codex-oauth:<accountId>`. */
@@ -127,6 +134,9 @@ function materialFor(tokens: OAuthTokens): Extract<CredentialMaterial, { kind: "
 }
 
 export function createCodexOauthAdapter(options: CodexAdapterOptions): ProviderAdapter {
+  if (options.originator !== undefined && (options.originator.length === 0 || FIRST_PARTY_ORIGINATORS.includes(options.originator))) {
+    throw new TypeError(`the codex originator ${JSON.stringify(options.originator)} names a first party (or nothing), which a client identity may never claim`);
+  }
   const quota = options.quota ?? new QuotaManager();
 
   return {
@@ -335,7 +345,7 @@ function codexHeaders(policy: ResponsesTurnPlan["endpoint"]["policy"], tokens: E
     protocol: { "content-type": "application/json", accept: "text/event-stream", "OpenAI-Beta": CODEX.headers["OpenAI-Beta"]!, authorization: `Bearer ${tokens.accessToken}`, ...codexCacheHeaders(cacheKey) },
     // P7a (D19): the RUNNING product's originator, not the frozen table's — `CODEX.headers.originator`
     // is the default profile's value, evaluated at module load before any brand exists.
-    privileged: { ...privilegedHeaders(options), originator: activeWinterIdentity().codexOriginator, ...(tokens.accountId !== undefined ? { "chatgpt-account-id": tokens.accountId } : {}) },
+    privileged: { ...privilegedHeaders(options), originator: options.originator ?? activeWinterIdentity().codexOriginator, ...(tokens.accountId !== undefined ? { "chatgpt-account-id": tokens.accountId } : {}) },
     identity: identityFor(options, ctx),
     userSupplied: ctx.connection.headers,
   });
