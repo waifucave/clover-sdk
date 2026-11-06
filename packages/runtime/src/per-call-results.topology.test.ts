@@ -161,7 +161,8 @@ describe("concurrent subagents on an in-memory process", () => {
           if (args["label"] === "one-long") {
             // Child one is now running: stop it by its task id, through the real TaskStop tool.
             const row = listTasks().find((t) => t.kind === "agent" && t.description === "one" && t.status === "running")!;
-            const ctx = { sessionId: "test", signal: new AbortController().signal, emitFrame: () => {} } as unknown as ToolExecutionContext;
+            // As the parent's own TaskStop: a task is stopped only from the session that owns it (clover-sdk#68).
+            const ctx = { sessionId: row.emitter?.sessionId ?? "test", signal: new AbortController().signal, emitFrame: () => {} } as unknown as ToolExecutionContext;
             const out = await getRegisteredTool("TaskStop")!.executor!.execute({ task_id: row.taskId }, ctx);
             stopOutput = out.output;
           }
