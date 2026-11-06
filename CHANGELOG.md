@@ -4,6 +4,17 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.65
+
+### The context a turn ended with (Clover lane D's compaction)
+
+- **`result.context_tokens`** (agent SDK, runtime): a turn's terminal result states the whole prompt (input + cache
+  read + cache write) of its LAST main-loop provider request: how full the context is now. `usage` sums every
+  request of the turn, so it can't say this once a turn makes more than one. A subagent's or a tool's inner pass
+  never counts. It's absent when no request of the turn reported usage. The interrupted result carries it too.
+- **`result.context_window`**: the window that request was judged against (the session's limit for its model,
+  `contextWindowTokens` or the model's row).
+
 ## 0.0.64
 
 ### Every provider a plugin (Clover A-M2)

@@ -947,6 +947,15 @@ export type SdkMessage =
       api_error_status?: number | null;
       /** THIS turn's main-loop usage -- claude's `result.usage` (dist-session fixes C1); see `WireResultUsage`. */
       usage?: WireResultUsage;
+      /**
+       * Clover (0.0.65): the WHOLE prompt (input + cache read + cache write) of this turn's LAST main-loop
+       * provider request: how full the context is now, which a host's compaction reads. `usage` sums every
+       * request of the turn and cannot say it once the turn made more than one. Never a subagent's or a
+       * tool's inner pass; absent when the turn made no request that reported usage.
+       */
+      context_tokens?: number;
+      /** Clover (0.0.65): the context window that request was judged against (the session's limit for its model). */
+      context_window?: number;
       permission_denials: SDKPermissionDenial[];
       [k: string]: unknown;
     }
