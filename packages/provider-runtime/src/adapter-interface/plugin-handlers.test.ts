@@ -2,7 +2,10 @@
 // built from the plugin's own manifest entry and catalog file.
 import { describe, expect, test } from "bun:test";
 import { loadCatalog, modelPluginForProvider } from "@waifucave/clover-provider-catalog";
-import { familyModelAdapter, materialOfSecret, modelAdapterHandlers } from "./plugin-handlers.ts";
+import { familyModelAdapter, materialOfSecret, modelAdapterHandlers, plainProviderError } from "./plugin-handlers.ts";
+import { ProviderRequestError } from "../http.ts";
+import type { ProviderEvent } from "../types.ts";
+import { MODEL_ADAPTER_INTERFACE_VERSION, type ModelAdapter } from "./types.ts";
 
 const sdk = loadCatalog();
 
@@ -39,5 +42,38 @@ describe("a code model plugin's adapter and handlers", () => {
     const { entry, file } = modelPluginForProvider(sdk, "codex-oauth");
     expect(() => familyModelAdapter({ pluginId: "x", entry: { ...entry, auth: [] }, catalogFile: file, credential: { keyed: { name: "chatgpt", material: "oauth" } }, codexOriginator: "codex_cli_rs" })).toThrow(/first party/);
     expect(familyModelAdapter({ pluginId: "x", entry: { ...entry, auth: [] }, catalogFile: file, credential: { keyed: { name: "chatgpt", material: "oauth" } }, codexOriginator: "clover" }).id).toBe("winter.codex-oauth");
+  });
+});
+
+describe("0.0.66 (the A-M2 review): a turn's errors cross the plugin host and the control wire whole", () => {
+  const fakeAdapter = (events: () => AsyncIterable<ProviderEvent>): ModelAdapter =>
+    ({ interfaceVersion: MODEL_ADAPTER_INTERFACE_VERSION, id: "t", version: "1", family: "openai", protocol: "openai-chat-completions", streamTurn: () => events(), listModels: async () => ({ models: [], partial: false, cached: false, warnings: [] }), validateCredential: async () => ({ ok: true }), mapEffort: () => ({ ok: true, value: undefined }), capabilities: () => ({}) }) as unknown as ModelAdapter;
+  const handlerCtx = { api: { net: { fetch: async () => new Response("") } }, signal: new AbortController().signal } as never;
+  const args = { connection: { providerId: "t" }, stallTimeoutMs: 1000, req: { model: "m", messages: [] } } as never;
+  // What the plugin host and the control wire do to every stream value.
+  const acrossTheWire = (v: unknown): unknown => JSON.parse(JSON.stringify(structuredClone(v)));
+
+  test("an error event's ProviderRequestError arrives as its plain fields, not {}", async () => {
+    const handlers = modelAdapterHandlers(
+      fakeAdapter(async function* () {
+        yield { type: "error", error: new ProviderRequestError({ code: "rate_limit", message: "slow down", retryable: true, status: 429, retryAfterMs: 1500 }) } as ProviderEvent;
+      }),
+    );
+    const out: unknown[] = [];
+    for await (const e of handlers.streamTurn(args, handlerCtx)) out.push(acrossTheWire(e));
+    expect(out).toEqual([{ type: "error", error: { code: "rate_limit", message: "slow down", retryable: true, status: 429, retryAfterMs: 1500 } }]);
+  });
+
+  test("a throw mid-stream ends the turn as one plain error event", async () => {
+    const handlers = modelAdapterHandlers(
+      fakeAdapter(async function* () {
+        yield { type: "text_delta", text: "partial" } as ProviderEvent;
+        throw new ProviderRequestError({ code: "capability", message: "host_not_declared", retryable: false });
+      }),
+    );
+    const out: unknown[] = [];
+    for await (const e of handlers.streamTurn(args, handlerCtx)) out.push(acrossTheWire(e));
+    expect(out).toEqual([{ type: "text_delta", text: "partial" }, { type: "error", error: { code: "capability", message: "host_not_declared", retryable: false } }]);
+    expect(plainProviderError(new TypeError("boom"))).toEqual({ code: "network", message: "boom", retryable: false });
   });
 });

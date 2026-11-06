@@ -14,7 +14,8 @@
 // (§5.2). A secret's value is the credential material as JSON (`{"kind":"aws",...}`), or a bare key.
 import { catalogFromModelPlugins, loadCatalog, type ModelEntry, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 import { familyAdapterById } from "../adapters/index.ts";
-import type { CredentialMaterial, DiscoveryContext, ProviderContext, ProviderEvent, TurnRequest } from "../types.ts";
+import type { CredentialMaterial, DiscoveryContext, ProviderContext, ProviderError, ProviderEvent, TurnRequest } from "../types.ts";
+import { toWireProviderError } from "./host-served.ts";
 import { modelAdapterFromSigningAdapter } from "./bridge.ts";
 import { modelAdapterFromProviderAdapter } from "./keyed-bridge.ts";
 import { MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type AdapterSecrets, type KeyedFetch, type ModelAdapter } from "./types.ts";
@@ -73,6 +74,27 @@ function contextFor(args: ModelCallArgs, ctx: ModelHandlerContext, log: Provider
   return { connection: args.connection, stallTimeoutMs: args.stallTimeoutMs, fetch, log, ...(adapterSecrets !== undefined ? { secrets: adapterSecrets } : {}) };
 }
 
+/**
+ * A provider failure as plain data (0.0.66, the A-M2 review): what crosses the plugin host's structured clone and the
+ * control wire's JSON whole. A `ProviderRequestError` instance keeps only its message through a clone, so a session
+ * used to get `{type: "error", error: {}}`, a rate limit or a refused host with no code. A failure that isn't a
+ * provider error (a thrown `TypeError`, say) is a `network` error, not retryable, with its message.
+ */
+export function plainProviderError(err: unknown): ProviderError {
+  const wire = toWireProviderError(err);
+  if (wire.code !== undefined && wire.retryable !== undefined) return wire as ProviderError;
+  return { code: "network", message: wire.message, retryable: false };
+}
+
+/** A turn's events with every error as plain data; a throw mid-stream ends the turn as one such `error` event. */
+async function* plainEvents(events: AsyncIterable<ProviderEvent>): AsyncGenerator<ProviderEvent, void, undefined> {
+  try {
+    for await (const event of events) yield event.type === "error" ? { ...event, error: plainProviderError(event.error) } : event;
+  } catch (err) {
+    yield { type: "error", error: plainProviderError(err) };
+  }
+}
+
 /** A `ModelAdapter` as the handler object a code model plugin exports. */
 export function modelAdapterHandlers(adapter: ModelAdapter, opts: { log?: ProviderContext["log"] } = {}) {
   const log = opts.log ?? ((): void => {});
@@ -86,7 +108,7 @@ export function modelAdapterHandlers(adapter: ModelAdapter, opts: { log?: Provid
       countTokens: adapter.countTokens !== undefined,
     }),
     streamTurn: (args: ModelCallArgs & { req: Omit<TurnRequest, "signal"> }, ctx: ModelHandlerContext): AsyncIterable<ProviderEvent> =>
-      adapter.streamTurn({ ...args.req, signal: ctx.signal } as TurnRequest, contextFor(args, ctx, log)),
+      plainEvents(adapter.streamTurn({ ...args.req, signal: ctx.signal } as TurnRequest, contextFor(args, ctx, log))),
     listModels: (args: ModelCallArgs & { limits: DiscoveryContext["limits"] }, ctx: ModelHandlerContext) =>
       adapter.listModels({ ...contextFor(args, ctx, log), limits: args.limits, signal: ctx.signal }),
     validateCredential: (args: ModelCallArgs, ctx: ModelHandlerContext) => adapter.validateCredential(contextFor(args, ctx, log)),
