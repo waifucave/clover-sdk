@@ -10,6 +10,8 @@ import { query, type CredentialResolveRequest } from "@waifucave/clover-agent-sd
 import { catalogFromModelPlugins, loadCatalog, modelPluginForProvider } from "@waifucave/clover-provider-catalog";
 import { createHostModelAdapterServer, type HostModelAdapter, type ProviderEvent, type TurnRequest } from "@waifucave/clover-provider-runtime";
 import { inMemoryProcess } from "../testing.ts";
+import { getRegisteredTool, replaceExecutor } from "../tools/registry.ts";
+import { ADVISOR_TOOL_NAME } from "../tools/impl/advisor.ts";
 import { echoProvider } from "./mock.ts";
 
 const sdk = loadCatalog();
@@ -48,6 +50,9 @@ test("a turn on a host-served adapter: the request reaches the host's plugin, it
   const server = createHostModelAdapterServer((id) => (id === "winter.bedrock-converse" ? plugin : undefined));
   const asks: CredentialResolveRequest[] = [];
   const frames: string[] = [];
+  // A session on a real catalog provider installs a live advisor executor in the process-wide registry; put the
+  // module-load default back so no later test file inherits this session's (as host-credentials.test.ts does).
+  const advisorBefore = getRegisteredTool(ADVISOR_TOOL_NAME)?.executor;
   const q = query({
     prompt: "hi",
     options: {
@@ -65,7 +70,11 @@ test("a turn on a host-served adapter: the request reaches the host's plugin, it
       spawnClaudeCodeProcess: (opts) => inMemoryProcess(opts.args, echoProvider, undefined, { WINTER_HOME: home, HOME: home }),
     },
   });
-  for await (const msg of q) frames.push(JSON.stringify(msg));
+  try {
+    for await (const msg of q) frames.push(JSON.stringify(msg));
+  } finally {
+    if (advisorBefore !== undefined) replaceExecutor(ADVISOR_TOOL_NAME, advisorBefore);
+  }
   expect(seen.length).toBe(1);
   expect(seen[0]!.model).toBe("amazon.nova-lite-v1:0");
   expect(JSON.stringify(frames)).toContain("served by the plugin");
