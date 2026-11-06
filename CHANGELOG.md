@@ -4,6 +4,21 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.67
+
+### Clover's turn loop (lane A, A-M3)
+
+- **A host's tool may take an unoffered built-in's name** (runtime, `shadowBuiltins`): a plain-named in-process tool
+  (`McpSdkServerConfig.toolNames`) whose plain name is a built-in this session isn't offered (`Options.tools` leaves
+  it out) replaces that built-in for the session: Clover's core `SendMessage`, `ListAgents`, `TaskStop` and `Agent`
+  in place of the runtime's. The built-in is set aside while the host's tool holds the name and put back when its
+  server unregisters. Every other collision with a built-in still refuses the session at startup.
+- **`Options.hostToolSearch`** (agent SDK, runtime): the plain name of the host's own search-and-load tool (Clover's
+  `Glossary`, which replaces `Skill` and `ToolSearch`). With it, deferral stays active although `tools` leaves
+  `ToolSearch` out, and that tool's result may name tools to load in `_meta["clover/load"]`: each loads through
+  `ToolSearch`'s own `select:` path for the session (the same pool, exposure and refusals), and the result says what
+  loaded and what didn't. A call to a deferred tool that isn't loaded yet names the host's tool.
+
 ## 0.0.66
 
 ### A code model plugin's turn errors arrive whole (the A-M2 review)

@@ -732,6 +732,13 @@ export interface RuntimeConfig {
    */
   deferTools?: string[];
   /**
+   * Clover extension (A-M3): the plain name of the host's in-process tool that searches and loads in place of
+   * `ToolSearch` (Clover's `Glossary`). Set, deferral is active although `tools` leaves `ToolSearch` out; the tool's
+   * result may carry `_meta["clover/load"]` (string[]), and each name is loaded through `ToolSearch`'s own `select:`
+   * path for this session (the same pool and refusals), its outcome appended to the result.
+   */
+  hostToolSearch?: string;
+  /**
    * Winter extension: a tool's OLD names -- `{ <old name>: <current tool name> }` -- for a host whose
    * own tool became another one (a host's in-process `mcp__<server>__Search` became the `Search`
    * built-in). The old name keeps working everywhere a name is read: a model call under it (a resumed

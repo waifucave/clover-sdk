@@ -534,6 +534,14 @@ export interface Options {
    * defers. See `RuntimeConfig.deferTools`.
    */
   deferTools?: string[];
+  /**
+   * CLOVER option (A-M3): the plain name of the HOST's own in-process tool that finds and loads deferred tools in
+   * place of `ToolSearch` (Clover's `Glossary`). With it, deferral stays active although `tools` leaves `ToolSearch`
+   * out, and that tool's result may name tools to load in `_meta["clover/load"]` (a string array): each is loaded
+   * exactly as `ToolSearch`'s `select:` would load it (the same pool, the same refusals), and the result says which
+   * loaded. See `RuntimeConfig.hostToolSearch`.
+   */
+  hostToolSearch?: string;
   /** DISCLOSED WINTER option: a tool's old names, `{ <old>: <current> }`. See `RuntimeConfig.legacyToolNames`. */
   legacyToolNames?: Record<string, string>;
   /** DISCLOSED WINTER option: MCP server names only the host's own in-process servers may use. See `RuntimeConfig.reservedMcpServerNames`. */
