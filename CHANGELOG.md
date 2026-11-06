@@ -4,6 +4,16 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.66
+
+### A code model plugin's turn errors arrive whole (the A-M2 review)
+
+- **`modelAdapterHandlers` yields plain errors** (`provider-runtime`): a turn's `error` event carries its failure
+  as plain data, `{code, message, retryable, status?, retryAfterMs?, ...}` (`plainProviderError`, exported), and a
+  throw mid-stream ends the turn as one such event. A `ProviderRequestError` instance keeps only its message through
+  the plugin host's structured clone, so a session used to get `{type: "error", error: {}}`: a rate limit, a failed
+  key or a refused host with no code at all.
+
 ## 0.0.65
 
 ### The context a turn ended with (Clover lane D's compaction)

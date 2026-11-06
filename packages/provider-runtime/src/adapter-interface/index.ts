@@ -40,5 +40,5 @@ export type {
   HostServedAdapterIdentity,
   WireProviderError,
 } from "./host-served.ts";
-export { catalogOfModelPlugin, familyModelAdapter, materialOfSecret, modelAdapterHandlers } from "./plugin-handlers.ts";
+export { catalogOfModelPlugin, familyModelAdapter, materialOfSecret, modelAdapterHandlers, plainProviderError } from "./plugin-handlers.ts";
 export type { FamilyModelAdapterOptions, ModelAdapterDescription, ModelAdapterHandlers, ModelCallArgs, ModelHandlerContext } from "./plugin-handlers.ts";
