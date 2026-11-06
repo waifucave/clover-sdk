@@ -157,6 +157,8 @@
         "iterations": [],
         "speed": "standard"
       },
+      "context_tokens": "<context_tokens>",
+      "context_window": 1000000,
       "permission_denials": [],
       "modelUsage": {
         "deepseek/deepseek-v4-pro": {

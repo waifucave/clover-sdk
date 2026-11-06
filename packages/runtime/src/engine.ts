@@ -9448,6 +9448,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     // the sum of THIS turn's main-loop generations -- not a subagent's, not a tool's inner pass, which
     // land on `modelUsage` instead. Stamped on this turn's terminal result, priced row or not.
     const turnUsage = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, cache_creation_1h_input_tokens: 0, reasoning_tokens: 0 };
+    // Clover 0.0.65 (lane D's compaction): the LAST main-loop generation's whole prompt this turn, which the
+    // terminal result states as `context_tokens` beside `usage`'s sums (frames.ts). Overwritten per generation.
+    let turnContextTokens = 0;
+    const contextFields = (): { context_tokens?: number; context_window?: number } =>
+      turnContextTokens > 0 ? { context_tokens: turnContextTokens, context_window: contextAccountant.limit() } : {};
     // WS-23: this turn's cache verdicts, surfaced on the result only when there is one.
     const turnCacheMisses: NonNullable<WireResultUsage["cache_misses"]> = [];
     // claude's full `NonNullableUsage` shape around the four real counts (frames.ts's WireResultUsage
@@ -9857,6 +9862,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           priceGeneration(turn.usage);
           turnUsage.input_tokens += turn.usage.inputTokens;
           turnUsage.output_tokens += turn.usage.outputTokens;
+          turnContextTokens = turn.usage.inputTokens + (turn.usage.cacheReadTokens ?? 0) + (turn.usage.cacheWriteTokens ?? 0);
           turnUsage.cache_read_input_tokens += turn.usage.cacheReadTokens ?? 0;
           turnUsage.cache_creation_input_tokens += turn.usage.cacheWriteTokens ?? 0;
           turnUsage.cache_creation_1h_input_tokens += Math.min(turn.usage.cacheWrite1hTokens ?? 0, turn.usage.cacheWriteTokens ?? 0);
@@ -11137,14 +11143,14 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
       // a Winter-defined discovery channel.
       // Lane N: the ONE terminal-result door. `costFields()` is stamped INSIDE it -- at write time, not
       // here -- because a HELD result is re-stamped with the session totals when it finally flushes.
-      writeTurnResult({ ...finalResult, usage: resultUsage(), permission_denials: turnPermissionDenials, ...(enableFileCheckpointing ? { user_message_uuid: turnUserMessageUuid } : {}) } as TurnResultMessage);
+      writeTurnResult({ ...finalResult, usage: resultUsage(), ...contextFields(), permission_denials: turnPermissionDenials, ...(enableFileCheckpointing ? { user_message_uuid: turnUserMessageUuid } : {}) } as TurnResultMessage);
       // B-H1(c) point 2 (the second half): the turn is over and the state machine is back in `idle`.
       // Emitted AFTER the result so an observer that acts on it sees the result first.
       emitNotification("idle", "Waiting for input.");
     } else {
       // Provisional shape pending official capture (standing controller ruling) — no `result` text.
       sessionAborted = true;
-      writeTurnResult({ type: "result", subtype: "success", is_error: false, interrupted: true, usage: resultUsage(), permission_denials: turnPermissionDenials });
+      writeTurnResult({ type: "result", subtype: "success", is_error: false, interrupted: true, usage: resultUsage(), ...contextFields(), permission_denials: turnPermissionDenials });
     }
     // Fix r1 (M1): the messaging facet's own quiescent boundary, fired on BOTH branches. It used to
     // sit inside the success arm beside `emitNotification("idle", ...)`, which is also success-only --

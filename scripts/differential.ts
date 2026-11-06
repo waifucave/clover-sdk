@@ -104,6 +104,8 @@ function scrubResultTokenCounts(entry: ConformanceTraceEntry): ConformanceTraceE
   const payload: Record<string, unknown> = { ...p };
   if (p.usage !== undefined) payload.usage = mask(p.usage, RESULT_USAGE_TOKEN_KEYS);
   if (p.modelUsage !== undefined) payload.modelUsage = Object.fromEntries(Object.entries(p.modelUsage).map(([k, row]) => [k, mask(row, MODEL_USAGE_TOKEN_KEYS)]));
+  // 0.0.65: `context_tokens` is the last request's prompt, counted the same machine-specific way.
+  if (typeof payload.context_tokens === "number") payload.context_tokens = "<context_tokens>";
   return { ...entry, payload };
 }
 

@@ -156,6 +156,8 @@
         "iterations": [],
         "speed": "standard"
       },
+      "context_tokens": "<context_tokens>",
+      "context_window": 1047576,
       "permission_denials": [],
       "modelUsage": {
         "openai/gpt-4.1": {

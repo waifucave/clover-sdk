@@ -181,6 +181,9 @@ function isNonReplayableBody(body: BodyInit | null | undefined): boolean {
 function transportError(err: unknown, callerAborted: boolean, timedOut: boolean, timeoutMs: number): ProviderRequestError {
   if (callerAborted) return new ProviderRequestError({ code: "aborted", message: "provider request aborted by the caller", retryable: false });
   if (timedOut) return new ProviderRequestError({ code: "timeout", message: `provider did not send response headers within ${timeoutMs}ms`, retryable: true });
+  // 0.0.65: a transport hook's own typed refusal (the keyed bridge's: a host the plugin didn't declare) stands as it
+  // is, never a retryable network failure.
+  if (err instanceof ProviderRequestError) return err;
   return new ProviderRequestError({ code: "network", message: err instanceof Error ? err.message : String(err), retryable: true });
 }
 

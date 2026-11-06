@@ -298,3 +298,12 @@ describe("the Codex backend's cache affinity rides headers (WS-23 midconv fix ro
     expect(headers["thread-id"]).toBeUndefined();
   });
 });
+
+describe("0.0.65 (A-M2 review): the codex originator option is a lowercase token that names no first party", () => {
+  test("a first party, a spelling of one, or nothing refuses construction; a client's own token is taken", () => {
+    for (const bad of ["codex_cli_rs", "Codex", "codex_cli_rs ", "", "codex cli", "x".repeat(33)]) {
+      expect(() => createCodexOauthAdapter({ descriptors: () => undefined, originator: bad })).toThrow(TypeError);
+    }
+    expect(() => createCodexOauthAdapter({ descriptors: () => undefined, originator: "clover" })).not.toThrow();
+  });
+});

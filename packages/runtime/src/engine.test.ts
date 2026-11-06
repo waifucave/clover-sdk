@@ -16,7 +16,7 @@ import type {
 import { WinterCompatibilitySessionStore, splitFrames, encodeFrame, compatibilityKeys } from "@waifucave/clover-agent-sdk";
 import type { SpawnedRuntimeProcess } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "./protocol/channel.ts";
-import { runEngine, providerMessageContentToText, type Provider, type ProviderMessage, type ContentBlock, type ProviderToolSpec, type ToolExecutor, type SessionPersistence, type ResolveModelSwitch } from "./engine.ts";
+import { DEFAULT_CONTEXT_WINDOW_TOKENS, runEngine, providerMessageContentToText, type Provider, type ProviderMessage, type ContentBlock, type ProviderToolSpec, type ToolExecutor, type SessionPersistence, type ResolveModelSwitch } from "./engine.ts";
 import { enqueueTaskNotification, clearNotificationQueue, renderAgentNotification } from "./subagents/notification-queue.ts";
 // WS-13c §3 (P6.6): the pinned Claude names and the public active-set shape the Agent tool renders from.
 import { CLAUDE_RESERVED_SLOT_NAMES } from "@waifucave/clover-provider-catalog";
@@ -242,6 +242,40 @@ test("multi-turn: two user envelopes produce two assistant+result pairs; the sec
     { role: "assistant", content: "reply 1" },
     { role: "user", content: "second" },
   ]);
+});
+
+test("0.0.65: the result's context_tokens is the LAST main-loop request's whole prompt (cache included), beside usage's sums", async () => {
+  const { host, runtime } = createInMemoryChannel();
+  const provider = scriptedProvider([
+    { kind: "tool_use", calls: [{ id: "call1", name: "echo_tool", input: { x: 1 } }], usage: { inputTokens: 100, outputTokens: 10, cacheReadTokens: 900, cacheWriteTokens: 50 } },
+    { kind: "text", text: "done", usage: { inputTokens: 40, outputTokens: 5, cacheReadTokens: 1000, cacheWriteTokens: 20 } },
+  ]);
+  const done = runEngine({ config: baseConfig({ allowedTools: ["echo_tool"], contextWindowTokens: 64_000 }), input: runtime.input, output: runtime.output, provider, tools: stubExecutor });
+  host.output.write({ type: "user", text: "go" });
+  host.output.write({ type: "control_request", requestId: "r1", subtype: "end_input", payload: undefined });
+  const frames = await drain(host.input);
+  await done;
+  const result = dataMessages(frames).at(-1) as { type: string; context_tokens?: number; context_window?: number; usage?: { input_tokens: number; cache_read_input_tokens: number } };
+  expect(result.type).toBe("result");
+  expect(result.context_tokens).toBe(40 + 1000 + 20);
+  expect(result.context_window).toBe(64_000);
+  // `usage` still sums the turn's two requests.
+  expect(result.usage?.input_tokens).toBe(140);
+  expect(result.usage?.cache_read_input_tokens).toBe(1900);
+});
+
+test("0.0.65: a turn whose requests reported no usage states no context_tokens", async () => {
+  const { host, runtime } = createInMemoryChannel();
+  // A bare provider (the mock's instrumentation would report synthetic usage).
+  const done = runEngine({ config: baseConfig(), input: runtime.input, output: runtime.output, provider: { generate: async () => ({ kind: "text", text: "done" }) }, tools: stubExecutor });
+  host.output.write({ type: "user", text: "go" });
+  host.output.write({ type: "control_request", requestId: "r1", subtype: "end_input", payload: undefined });
+  const frames = await drain(host.input);
+  await done;
+  const result = dataMessages(frames).at(-1) as Record<string, unknown>;
+  expect(result.type).toBe("result");
+  expect("context_tokens" in result).toBe(false);
+  expect("context_window" in result).toBe(false);
 });
 
 test("tool rounds: tool_use then text — the engine executes the tool and the second generate() sees the tool result", async () => {
@@ -1886,6 +1920,9 @@ test("Task 8 (WS-07 §7.2): a deny answer with interrupt:true stops the round AN
     interrupted: true,
     // The turn's one generation (the tool call the deny interrupted) is what its usage block sums.
     usage: { output_tokens_details: { thinking_tokens: 0 }, input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 13, server_tool_use: { web_search_requests: 0, web_fetch_requests: 0 }, service_tier: "standard", cache_creation: { ephemeral_1h_input_tokens: 0, ephemeral_5m_input_tokens: 0 }, inference_geo: "", iterations: [], speed: "standard" },
+    // 0.0.65: that generation's whole prompt, and the window it was judged against (the default).
+    context_tokens: 1,
+    context_window: DEFAULT_CONTEXT_WINDOW_TOKENS,
     permission_denials: [{ tool_name: "mystery_tool", tool_use_id: "call1", tool_input: {} }],
   });
 

@@ -10,8 +10,9 @@
 //     where `secrets` exists, a process of the plugin's own (`own-process.ts`, §5.2). Anywhere else it
 //     refuses, typed, before anything is sent.
 import type { ConnectionProfile, CredentialMaterial, CredentialRef, CredentialStatus, CredentialStore, ProviderAdapter, ProviderContext } from "../types.ts";
-import { ProviderRequestError } from "../http.ts";
+import { ProviderRequestError, runWithProviderTransport } from "../http.ts";
 import { createKeyedFetch, type KeyPlacement } from "./keyed-fetch.ts";
+import { keyedTransport, withTransport } from "./keyed-bridge.ts";
 import { tokenSourceFromCredentialStore } from "./token-source.ts";
 import { MODEL_ADAPTER_INTERFACE_VERSION, type AdapterContext, type AdapterSecrets, type ModelAdapter } from "./types.ts";
 
@@ -85,21 +86,37 @@ export function modelAdapterFromSigningAdapter(adapter: ProviderAdapter, options
     }
     return { connection: ctx.connection, credentials: secretsStore(ctx.secrets, options.secret), authRef: ref, stallTimeoutMs: ctx.stallTimeoutMs, log: ctx.log };
   };
+  // 0.0.65 (A-M2 review B3): every request the adapter makes goes out through the plugin's `net.fetch`, so the host
+  // limit (its `network:` capabilities) holds for a signing adapter too. It signs the request itself, so the keyed
+  // fetch adds no key (`auth: false`); a request to a host the plugin didn't declare is refused there.
+  const transportOf = (ctx: AdapterContext) => keyedTransport(ctx.fetch, undefined, undefined);
   const model: ModelAdapter = {
     interfaceVersion: MODEL_ADAPTER_INTERFACE_VERSION,
     id: adapter.id,
     version: adapter.version,
     family: adapter.family,
     protocol: adapter.protocol,
-    validateCredential: async (ctx): Promise<CredentialStatus> => adapter.validateCredential(ref, contextFor(ctx)),
-    listModels: (ctx) => adapter.listModels({ ...contextFor(ctx), limits: ctx.limits, ...(ctx.signal === undefined ? {} : { signal: ctx.signal }) }),
-    streamTurn: (req, ctx) => adapter.streamTurn(req, contextFor(ctx)),
+    validateCredential: async (ctx): Promise<CredentialStatus> => {
+      const pctx = contextFor(ctx);
+      return runWithProviderTransport(transportOf(ctx), () => adapter.validateCredential(ref, pctx));
+    },
+    listModels: (ctx) => {
+      const pctx = contextFor(ctx);
+      return runWithProviderTransport(transportOf(ctx), () => adapter.listModels({ ...pctx, limits: ctx.limits, ...(ctx.signal === undefined ? {} : { signal: ctx.signal }) }));
+    },
+    streamTurn: (req, ctx) => {
+      const pctx = contextFor(ctx);
+      return withTransport(transportOf(ctx), () => adapter.streamTurn(req, pctx));
+    },
     mapEffort: (effort, descriptor) => adapter.mapEffort(effort, descriptor),
     capabilities: (descriptor) => adapter.capabilities(descriptor),
   };
   if (adapter.countTokens !== undefined) {
     const count = adapter.countTokens.bind(adapter);
-    model.countTokens = (req, ctx) => count(req, contextFor(ctx));
+    model.countTokens = (req, ctx) => {
+      const pctx = contextFor(ctx);
+      return runWithProviderTransport(transportOf(ctx), () => count(req, pctx));
+    };
   }
   return model;
 }

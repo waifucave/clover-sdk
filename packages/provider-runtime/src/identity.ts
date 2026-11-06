@@ -79,7 +79,7 @@ const DEFAULT_IDENTITY: Readonly<WinterIdentity> = Object.freeze({ ...WINTER_DEF
 // an https URL with no control byte, and a version is a plain version token. A refused identity throws
 // `TypeError` naming the field, and nothing is installed.
 // The sdk's `BRAND_TOKEN_RE`, the rule its `validateBrand` applies to `packageName` and `codexOriginator`.
-const PRODUCT_TOKEN_RE = /^[a-z][a-z0-9-]{0,31}$/;
+export const PRODUCT_TOKEN_RE = /^[a-z][a-z0-9-]{0,31}$/;
 const VERSION_TOKEN_RE = /^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/;
 const CONTROL_BYTE_RE = /[\u0000-\u001f\u007f]/;
 
