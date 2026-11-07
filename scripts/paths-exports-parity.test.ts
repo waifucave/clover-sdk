@@ -112,7 +112,7 @@ describe("P7a pre-publish (item 4): tsconfig `paths` and package `exports` agree
     }
   });
 
-  test("the parity is not vacuous: it covers every EXPORTS-BEARING publishable package and all twenty-three subpaths", () => {
+  test("the parity is not vacuous: it covers every EXPORTS-BEARING publishable package and all twenty-four subpaths", () => {
     const expected = expectedFromExports();
     // 12 since SDK 0.0.3's `@waifucave/clover-agent-sdk/tools` (R-8-1: Winter's default tools,
     // declared once for both hosts); 19 since WS-23 made the runtime publishable (`.`, `./testing`,
@@ -122,8 +122,9 @@ describe("P7a pre-publish (item 4): tsconfig `paths` and package `exports` agree
     // literal is the tripwire -- a subpath added to `exports` with no `paths` entry, or vice versa, is
     // caught by the two tests above only if this one keeps counting what they cover. 22 since 0.0.58's
     // `@waifucave/clover-web` (one entry point, `.`). 23 since Clover K-M3's `./acp` (the Agent Client Protocol, both
-    // sides: the coding agent as an ACP agent, and the protocol layer Clover's ACP client uses).
-    expect(expected.size).toBe(23);
+    // sides: the coding agent as an ACP agent, and the protocol layer Clover's ACP client uses). 24 since 0.0.72's
+    // runtime `./lookalike` (Clover's look-alike map, vendored, which Clover's gate compares with its own).
+    expect(expected.size).toBe(24);
     // P9a-3: the darwin-arm64 platform package is publishable but BIN-ONLY -- no `exports` map, so it
     // contributes zero specifiers here and must not be counted on the RHS (this test's own denominator
     // is "packages this parity check actually covers", not "every publishable package" -- the platform

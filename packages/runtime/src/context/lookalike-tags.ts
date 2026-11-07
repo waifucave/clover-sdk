@@ -1,16 +1,19 @@
 // Clover A-F8 review (0.0.71): text a background task, a monitored command, an agent or a tool produced can't open or
 // close one of the blocks it is delivered in, however it spells the tag. Ported from Clover's own turn-loop escaping
-// (lane A), so both sides read a tag the same way:
+// (lane A, `turn-loop/defuse.ts`), so both sides read a tag the same way:
 // - format characters (zero-width spaces and joiners, soft hyphens, bidi marks: `\p{Cf}`), the invisible joiners and
 //   variation selectors, and whitespace may sit anywhere between `<`, the `/` and the name's letters;
 // - each character is compared after NFKC (fullwidth and mathematical letters, the `ﬁ` ligature, `＜` and `﹤`);
 // - `<` has look-alikes (`〈`, `⟨`, `˂`, `ᐸ`, `❮`…), and so do `/` and `-`;
-// - a name's letters have Cyrillic and Greek look-alikes (`е`, `о`, `р`, `с`, `ѕ`, `α`, `ο`, `ν`…), compared through a
-//   small skeleton map;
+// - a name's letters have look-alikes in other scripts (Cyrillic `е`, `о`, `р`, `ѕ`; Greek `α`, `ο`, `ν`; Armenian `օ`,
+//   `ս`, `ց`; Cherokee `Ꮇ`, `Ꭼ`, `Ꮪ`, small capitals…), read through `lookalikeOf` (`lookalike-fold.ts`, Clover's
+//   plugin SDK map vendored), and a look-alike of an `i` or an `l` reads as either;
 // - any case.
 // Only the opening bracket of a tag so found becomes `‹`; everything else stays as written, so the text still reads.
 // Not read as a tag: whitespace between a name's letters (`<mes sage>`), which a model doesn't read as one either.
 // A `<` that opens no guarded name (`a < b`, `<messages>`) is left alone.
+
+import { lookalikeOf } from "./lookalike-fold.ts";
 
 /** The defused bracket. */
 export const DEFUSED_BRACKET = "‹";
@@ -25,29 +28,32 @@ const HYPHEN = new Set(["-", "‐", "‑", "‒", "–", "—", "―", "−", "�
 /** Invisible characters a tag may carry anywhere: the format characters, plus the joiners and fillers that aren't. */
 const INVISIBLE = /^[\p{Cf}͏ᅟᅠ឴឵᠋-᠏ㅤ︀-️ﾠ]$|^[\u{E0100}-\u{E01EF}]$/u;
 
-/** Cyrillic, Greek and other letters that look like the Latin ones the guarded names use. Upper case where it differs
- *  in look from its lower case (`Н` is an H, `н` a small-capital H). */
-const SKELETON: Record<string, string> = {
-  // Cyrillic
-  "А": "a", "а": "a", "В": "b", "в": "b", "Е": "e", "е": "e", "Ё": "e", "ё": "e", "К": "k", "к": "k", "М": "m", "м": "m",
-  "Н": "h", "н": "h", "О": "o", "о": "o", "Р": "p", "р": "p", "С": "c", "с": "c", "Т": "t", "т": "t", "У": "y", "у": "y",
-  "Х": "x", "х": "x", "І": "i", "і": "i", "Ї": "i", "ї": "i", "Ј": "j", "ј": "j", "Ѕ": "s", "ѕ": "s", "Ԁ": "d", "ԁ": "d",
-  "Ԍ": "g", "ԍ": "g", "Ӏ": "l", "ӏ": "l", "Ү": "y", "ү": "y", "Һ": "h", "һ": "h", "Ԛ": "q", "ԛ": "q", "Ԝ": "w", "ԝ": "w",
-  // Greek
-  "Α": "a", "α": "a", "Β": "b", "β": "b", "Ε": "e", "ε": "e", "Ζ": "z", "Η": "h", "Ι": "i", "ι": "i", "Κ": "k", "κ": "k",
-  "Μ": "m", "Ν": "n", "ν": "v", "Ο": "o", "ο": "o", "Ρ": "p", "ρ": "p", "Τ": "t", "τ": "t", "Υ": "y", "υ": "u", "Χ": "x",
-  "χ": "x", "γ": "y", "ϲ": "c", "Ϲ": "c", "ϳ": "j",
-  // Latin look-alikes
-  "ı": "i", "ɡ": "g", "ɑ": "a", "ɩ": "i", "ʟ": "l", "ꮪ": "s", "ꜱ": "s", "ᴅ": "d", "ᴇ": "e", "ᴋ": "k", "ᴍ": "m", "ᴏ": "o",
-  "ᴘ": "p", "ᴛ": "t", "ᴜ": "u", "ᴠ": "v", "ᴄ": "c", "ʜ": "h", "ɪ": "i", "ɴ": "n", "ʀ": "r", "ꜰ": "f", "ʏ": "y",
-};
+/** Letters the map lacks: Cyrillic Komi sje, which reads as a G. Everything else is `lookalikeOf`, the
+ *  map Clover's plugin name check (`foldTitle`) and its island read names with, so they never disagree. */
+const EXTRA: Record<string, string> = { "Ԍ": "g", "ԍ": "g" };
 
-/** One character of the text as a model reads it: NFKC, then the skeleton, lower case. */
+/** What a look-alike of an `i` or an `l` reads as: either. The map reads Greek `Ι` and Cyrillic `І`, `Ї` and `Ӏ` as an
+ *  `l`, Greek `ι` and Cyrillic `і` as an `i`; in a tag name a model reads any of them as whichever letter the tag
+ *  spells (`<task-notΙfication>`, `<bot-Іnstructions>`). A Latin `i` or `l` stays itself. A noncharacter, and one the
+ *  text itself carries reads as U+FFFD (`readAs`), so no input stands for it. */
+const EITHER_I_OR_L = "\uFDD0";
+
+/** Cherokee small letters, which the map knows by their capitals. */
+const CHEROKEE_SMALL = /^[\uAB70-\uABBF\u13F8-\u13FD]$/u;
+
+/** A non-ASCII character as `lookalikeOf` reads it (its own case, then lower case, a Cherokee small letter
+ *  by its capital), or undefined. */
+function lookalike(c: string): string | undefined {
+  return lookalikeOf(c) ?? lookalikeOf(c.toLowerCase()) ?? (CHEROKEE_SMALL.test(c) ? lookalikeOf(c.toUpperCase()) : undefined) ?? EXTRA[c];
+}
+
+/** One character of the text as a model reads it: the look-alike map, else NFKC, the map again, lower case. A Latin
+ *  letter reads as itself; the map's digits and strokes read as letters too (`<n0te>` is the tag, `|` an `i` or `l`). */
 function readAs(ch: string): string {
-  const n = ch.normalize("NFKC");
   let out = "";
-  for (const c of n) {
-    const s = SKELETON[c] ?? SKELETON[c.toLowerCase()] ?? c.toLowerCase();
+  for (const c of lookalike(ch) === undefined ? ch.normalize("NFKC") : ch) {
+    const l = /^[A-Za-z]$/.test(c) ? undefined : lookalike(c);
+    const s = c === EITHER_I_OR_L ? "\uFFFD" : l === undefined ? c.toLowerCase() : l === "i" || l === "l" ? EITHER_I_OR_L : l;
     out += HYPHEN.has(s) ? "-" : SLASH.has(s) ? "/" : s;
   }
   return out;
@@ -57,7 +63,7 @@ function isLessThan(ch: string): boolean {
   return LESS_THAN.has(ch) || ch.normalize("NFKC") === "<";
 }
 
-const WORD = /[\p{L}\p{N}_]/u;
+const WORD = /[\p{L}\p{N}_\uFDD0]/u;
 
 /**
  * `text` with the bracket of every tag that opens or closes one of `names` defused, however it is spelled (see the
@@ -104,7 +110,11 @@ function opensGuarded(cps: readonly string[], start: number, names: readonly str
   }
   const word = read.join("");
   return names.some((name) => {
-    if (!word.startsWith(name)) return false;
+    if (word.length < name.length) return false;
+    for (let k = 0; k < name.length; k++) {
+      const w = word[k]!;
+      if (w !== name[k] && !(w === EITHER_I_OR_L && (name[k] === "i" || name[k] === "l"))) return false;
+    }
     const next = word.charAt(name.length);
     return next === "" || !WORD.test(next);
   });

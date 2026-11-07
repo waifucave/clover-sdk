@@ -1,6 +1,6 @@
 {
   "name": "@waifucave/clover-agent-runtime",
-  "version": "0.0.71",
+  "version": "0.0.72",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -62,6 +62,11 @@
       "types": "./dist/mcp-auth.d.ts",
       "bun": "./src/mcp-auth.ts",
       "default": "./dist/mcp-auth.js"
+    },
+    "./lookalike": {
+      "types": "./dist/context/lookalike-fold.d.ts",
+      "bun": "./src/context/lookalike-fold.ts",
+      "default": "./dist/context/lookalike-fold.js"
     }
   },
   "files": [
@@ -112,6 +117,10 @@
       "./mcp-auth": {
         "types": "./dist/mcp-auth.d.ts",
         "default": "./dist/mcp-auth.js"
+      },
+      "./lookalike": {
+        "types": "./dist/context/lookalike-fold.d.ts",
+        "default": "./dist/context/lookalike-fold.js"
       }
     }
   },
