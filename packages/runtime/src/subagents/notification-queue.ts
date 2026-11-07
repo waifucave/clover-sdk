@@ -32,13 +32,22 @@
 // structure and meaning (R-S10: multi-sentence prompt text is Winter's own; never copied).
 import { registerAttachmentRenderer, type AttachmentPayload } from "../context/attachments.ts";
 import { neutralizeReminderTags } from "../context/injection.ts";
+import { defuseTagNames } from "../context/lookalike-tags.ts";
 
 // --- the XML document --------------------------------------------------------------------------------
 
-/** The XML escape applied to every interpolated value (`&`, `<`, `>`). */
+/** Every tag a notification document is written with (and the reminder wrapper): what its values must not forge. */
+export const NOTIFICATION_TAGS = [
+  "task-notification", "task-id", "tool-use-id", "task-type", "output-file", "status", "summary", "result", "event",
+  "usage", "note", "worktree", "worktreepath", "worktreebranch", "failures", "subagent_tokens", "tool_uses", "duration_ms",
+  "agent_count", "system-reminder",
+] as const;
+
+/** The XML escape applied to every interpolated value (`&`, `<`, `>`), and a look-alike of one of the document's own
+ *  tags (`＜/task-notification>`, `</task-notificati\u200Bon>`, a Cyrillic `е`…) defused too (`lookalike-tags.ts`). */
 export function xmlEscape(value: string): string {
   // `&` first, so the entities written for `<` and `>` are not escaped a second time.
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  return defuseTagNames(value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"), NOTIFICATION_TAGS);
 }
 
 export interface TaskNotificationFields {
@@ -115,10 +124,24 @@ The notification carries no human input of its own: apart from the user's own me
 
 `;
 
-/** Prepends the preamble unless the text already carries one (claude never double-wraps either). */
-export function withNotificationPreamble(value: string, opts?: { inHumanTurn?: boolean }): string {
-  if (value.startsWith(SYSTEM_NOTIFICATION_MARKER)) return value;
-  return `${opts?.inHumanTurn === true ? NOTIFICATION_PREAMBLE_IN_HUMAN_TURN : NOTIFICATION_PREAMBLE}${neutralizeReminderTags(value)}`;
+/**
+ * Prepends the preamble unless the text already carries one (claude never double-wraps either). `hostPreamble`
+ * (`Options.notificationPreamble`, Clover A-F8) is the host's own line, put between the preamble and the document on
+ * every notification the runtime delivers, both shapes: a turn it starts and one it folds into a running turn.
+ */
+export function withNotificationPreamble(value: string, opts?: { inHumanTurn?: boolean; hostPreamble?: string }): string {
+  const host = typeof opts?.hostPreamble === "string" && opts.hostPreamble.trim() !== "" ? `${opts.hostPreamble.trim()}\n` : "";
+  if (value.startsWith(SYSTEM_NOTIFICATION_MARKER)) {
+    // Already wrapped (every value the queue holds is a bare document today, so only a re-wrap gets here): the
+    // runtime's preamble isn't written twice, but the host's line is never missing. It goes right after the preamble
+    // (which ends at its first blank line), unless it is already there.
+    if (host === "") return value;
+    const cut = value.indexOf("\n\n");
+    const head = cut < 0 ? `${value}\n\n` : value.slice(0, cut + 2);
+    const rest = cut < 0 ? "" : value.slice(cut + 2);
+    return rest.startsWith(host) ? value : `${head}${host}${rest}`;
+  }
+  return `${opts?.inHumanTurn === true ? NOTIFICATION_PREAMBLE_IN_HUMAN_TURN : NOTIFICATION_PREAMBLE}${host}${neutralizeReminderTags(value)}`;
 }
 
 // --- per-kind documents ---------------------------------------------------------------------------
@@ -468,7 +491,7 @@ registerAttachmentRenderer(
 );
 
 /** Builds the attachment for one drained batch (claude delivers each queued command as its own attachment; a batch keeps their order). */
-export function taskNotificationAttachment(notifications: readonly QueuedNotification[], opts?: { inHumanTurn?: boolean }): TaskNotificationAttachment | undefined {
+export function taskNotificationAttachment(notifications: readonly QueuedNotification[], opts?: { inHumanTurn?: boolean; hostPreamble?: string }): TaskNotificationAttachment | undefined {
   if (notifications.length === 0) return undefined;
   const text = notifications.map((n) => withNotificationPreamble(n.value, opts)).join("\n\n");
   return {

@@ -542,6 +542,12 @@ export interface Options {
    * loaded. See `RuntimeConfig.hostToolSearch`.
    */
   hostToolSearch?: string;
+  /**
+   * CLOVER option (A-F8 review): a line put on every task notification the runtime delivers to the model, in both
+   * shapes (a turn it starts, a turn it folds one into): Clover's "data, not instructions" frame. See
+   * `RuntimeConfig.notificationPreamble`.
+   */
+  notificationPreamble?: string;
   /** DISCLOSED WINTER option: a tool's old names, `{ <old>: <current> }`. See `RuntimeConfig.legacyToolNames`. */
   legacyToolNames?: Record<string, string>;
   /** DISCLOSED WINTER option: MCP server names only the host's own in-process servers may use. See `RuntimeConfig.reservedMcpServerNames`. */
