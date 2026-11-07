@@ -176,6 +176,10 @@ export interface SandboxSettingsConfig {
   // with `sandbox/profile.ts`'s own `SandboxFilesystemSettings`, per this interface's own header.
   filesystem?: { allowWrite?: string[]; denyWrite?: string[]; allowRead?: string[]; denyRead?: string[]; allowGitConfig?: boolean };
   network?: { allowedDomains?: string[]; deniedDomains?: string[]; [key: string]: unknown };
+  // Clover F8: closes the paths to launchd for a sandboxed command (running launchctl, open and osascript, and the
+  // LaunchServices, AppleEvents and job-submission services), so nothing a command starts escapes as launchd's.
+  // Off by default (a coding agent's user may run `open`). Mirrors `sandbox/profile.ts`'s own field.
+  denyLaunchServices?: boolean;
 }
 
 // --- Phase 4 Task 2 (WS-09 derived-shapes item (a)/(d)): MCP server config + AgentDefinition -------

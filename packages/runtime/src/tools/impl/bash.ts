@@ -38,6 +38,7 @@ import {
   isSandboxAvailable,
   type RunCommandResult,
 } from "../../sandbox/spawn.ts";
+import { adoptLeftBehind, leftBehindNote } from "./left-behind.ts";
 import { SandboxConfigError, canonicalizePath, resolveNetworkPosture, type SandboxBrand } from "../../sandbox/profile.ts";
 import { formatSandboxViolations } from "../../sandbox/violations.ts";
 import { startTracking, updateTask, removeTask, emitTaskNotification, getTask, listRunningTasks, toBackgroundTasksChangedEntry, killedTaskSummary, resolveBackgroundOutcome, killOrphanedSpawn } from "./background-task-runtime.ts";
@@ -507,6 +508,8 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
     }
   }
 
+  const adopted = result.leftBehind !== undefined ? adoptLeftBehind(result.leftBehind, { command: input.command, description }, ctx) : undefined;
+
   const stdoutCapped = capOutput(ctx, "stdout", stdout, success);
   const stderrCapped = capOutput(ctx, "stderr", stderr, success);
 
@@ -518,8 +521,7 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
   // only a macOS Seatbelt run that failed with non-baseline denials carries any.
   const sandboxViolations = !success && !result.aborted && result.sandboxViolations !== undefined ? formatSandboxViolations(result.sandboxViolations) : "";
 
-  return {
-    output: formatForegroundResult({
+  const formatted = formatForegroundResult({
       stdout: stdoutCapped,
       stderr: stderrCapped,
       exitCode: result.exitCode,
@@ -530,8 +532,8 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
       sandboxOverrideRequested: result.sandboxOverrideRequested,
       streamKilled: result.streamKilled,
       ...(sandboxViolations !== "" ? { sandboxViolations } : {}),
-    }),
-  };
+    });
+  return { output: adopted !== undefined ? `${formatted}\n${leftBehindNote(adopted)}` : formatted };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -650,6 +652,11 @@ async function runBackground(input: BashInput, ctx: ToolExecutionContext): Promi
   completion.then(
     (result) => {
       outStream.end();
+      // What it left running outlives it, as its own adopted task (a stopped one's holder already stopped them).
+      if (result.leftBehind !== undefined) {
+        if (getTask(taskId)?.status === "running") adoptLeftBehind(result.leftBehind, { command: input.command, description }, ctx);
+        else result.leftBehind.stop();
+      }
       if (getTask(taskId)?.status !== "running") return; // TaskStop / teardown already recorded a terminal status
       const outcome = resolveBackgroundOutcome(result);
       updateTask(taskId, {

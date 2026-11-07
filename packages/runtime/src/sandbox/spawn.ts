@@ -351,6 +351,54 @@ export interface RunCommandOptions {
    * foreground Bash path is the one caller that asks.
    */
   reportViolations?: boolean;
+  /**
+   * macOS: the host's process holder (`native/process-holder.c`, built and signed by the host under its own identity).
+   * The command runs as its child: everything the command starts is the holder's responsibility, so what it leaves
+   * running, setsid'd and double-forked processes included, is found when it ends and stopped with the holder.
+   * Absent (or not there, or another OS): the command's process group stands for what it leaves.
+   */
+  processHolder?: string;
+}
+
+/** Processes a command left running when it ended: its caller adopts them as a background task. */
+export interface LeftBehind {
+  /** The pid that stands for them: the process holder, or the command's process group. */
+  pid: number;
+  /** Stops them all: the holder's SIGTERM (it stops everything it is responsible for, and the group gets SIGKILL only
+   *  if the holder has not exited `HOLDER_STOP_GRACE_MS` later), or the group's SIGTERM and SIGKILL
+   *  `GROUP_STOP_GRACE_MS` later. Nothing once `done` has settled; never a signal to a pid that has exited. */
+  stop(): void;
+  /** Settles once none of them is left (and, with a holder, nothing holds the command's output). */
+  done: Promise<void>;
+  /**
+   * Something the command started got out from under the holder and still holds the command's output: a process that
+   * disclaimed its responsibility (`responsibility_spawnattrs_setdisclaim`, a few lines of Python ctypes or bun:ffi)
+   * and started a session of its own. It stays inside the command's Seatbelt sandbox and fence, but nothing here can
+   * stop it; a stop lets go of its output. Set when the holder sees it: when the command ends, or once everything the
+   * holder could stop has ended. The host should log it and tell the user.
+   */
+  escaped?: boolean;
+  /** Their output from now on; what they wrote before is held (capped) and handed over first. */
+  onOutput(fn: (chunk: Buffer) => void): void;
+}
+
+/** How long a holder has to stop everything itself (two seconds' SIGTERM wait, then up to 50 SIGKILL passes 100 ms
+ *  apart) before the host's SIGKILL to its group. */
+export const HOLDER_STOP_GRACE_MS = 10_000;
+/** How long the output may stay open after a stopped holder exited before it is let go (what holds it escaped). */
+const ESCAPED_OUTPUT_GRACE_MS = 500;
+/** How long a stop of a process group a command left (no holder) waits before the group's SIGKILL. */
+export const GROUP_STOP_GRACE_MS = 3_000;
+/** How often a process group a command left is looked at, to know when it is gone (no holder). */
+const LEFT_BEHIND_POLL_MS = 1_000;
+
+function groupAlive(pgid: number): boolean {
+  try {
+    process.kill(-pgid, 0);
+    return true;
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code === "EPERM";
+  }
 }
 
 export interface RunCommandResult {
@@ -366,6 +414,9 @@ export interface RunCommandResult {
   spawnError?: string;
   /** Present when `reportViolations` was honoured and the run failed with denials of its own (`formatSandboxViolations` renders it). */
   sandboxViolations?: SandboxViolationReport;
+  /** Present when the command ended but left processes running (`(cmd) &`, `nohup … &`, and with a holder also setsid
+   *  and double forks): the run ends now, and they are the caller's to adopt (a background task). */
+  leftBehind?: LeftBehind;
 }
 
 // `async` is deliberate, not decorative: resolveNetworkPosture (below) throws SYNCHRONOUSLY on a
@@ -433,6 +484,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
       ...(opts.allowGitConfigWrites !== undefined ? { allowGitConfigWrites: opts.allowGitConfigWrites } : {}),
       ...(caseSensitiveWriteRoots.length > 0 ? { caseSensitiveWriteRoots } : {}),
+      ...(opts.settings.denyLaunchServices === true ? { denyLaunchServices: true } : {}),
     });
     spawnProfile = profile;
     if (opts.reportViolations === true) {
@@ -474,18 +526,26 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       ...(opts.signal !== undefined ? { signal: opts.signal } : {}),
     });
   }
+  // The process holder (macOS, `native/process-holder.c`): the command runs as its child, so everything the command
+  // starts, setsid'd and double-forked processes included, is found by the holder and stopped with it. Without one, the
+  // command's process group stands for what it leaves (`(cmd) &`, `nohup … &`).
+  const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
-      child = spawn(spawnFile, spawnArgs, {
-        cwd: opts.cwd,
-        stdio: ["ignore", hostOutput?.stdoutFd ?? "pipe", hostOutput?.stderrFd ?? "pipe"],
-        // Process-group kill (WS-12 §5.2, carried): `detached: true` makes this child its own group
-        // leader (setsid), so a negative-pid signal below reaps sandbox-exec + bash + any forked or
-        // backgrounded grandchildren -- closing every pipe fd so stream collection unblocks promptly.
-        detached: true,
-        env: opts.env,
-      });
+      const out = hostOutput?.stdoutFd ?? "pipe";
+      const err = hostOutput?.stderrFd ?? "pipe";
+      child = holder !== undefined
+        ? spawn(holder, ["3", spawnFile, ...spawnArgs], { cwd: opts.cwd, stdio: ["ignore", out, err, "pipe"], detached: true, env: opts.env })
+        : spawn(spawnFile, spawnArgs, {
+          cwd: opts.cwd,
+          stdio: ["ignore", out, err],
+          // Process-group kill (WS-12 §5.2, carried): `detached: true` makes this child its own group
+          // leader (setsid), so a negative-pid signal below reaps sandbox-exec + bash + any forked or
+          // backgrounded grandchildren -- closing every pipe fd so stream collection unblocks promptly.
+          detached: true,
+          env: opts.env,
+        });
     } catch (error) {
       violationMonitor?.stop(); // never leave a stream behind a command that did not start
       throw error;
@@ -495,22 +555,62 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
     // Recorded BEFORE `onSpawned`, so no caller can learn the pid ahead of the ledger.
     hostOutput?.closeWriters();
     const releaseGroup = child.pid !== undefined ? trackProcessGroup(child.pid, "command") : () => {};
-    if (child.pid !== undefined) opts.onSpawned?.({ pid: child.pid, pauseOutput() { if(hostOutput)hostOutput.pause();else{child.stdout!.pause(); child.stderr!.pause();} }, resumeOutput() { if(hostOutput)hostOutput.resume();else{child.stdout!.resume(); child.stderr!.resume();} } });
 
     let streamedBytes = 0;
     let streamKilled = false;
-    let processClosed = false;
-    const killGroup = () => {
-      // Output may remain paused after the actual process closed. Its former
-      // PID/group is no longer authority to signal anything during that drain.
-      if (processClosed || child.pid === undefined) return;
+    // Set once the command ended and left processes behind: from then on the output is theirs (`LeftBehind`).
+    let leftBehind: (LeftBehind & { feed(chunk: Buffer): void; escaped?: boolean }) | undefined;
+    // Set on the child's `exit`: it (the holder, or the group's leader) is reaped, so its pid can belong to another
+    // process from here on. Nothing signals that pid or its group after this; a stop only lets go of the output.
+    let exited = false;
+    let detached = false;
+    // A stop of the holder was asked for: once it has exited, what still holds the output (an escaped process) is let go.
+    let stopping = false;
+    let fallback: ReturnType<typeof setTimeout> | undefined;
+    /** Lets go of the output (the read ends): the run, or what it left, ends without signalling anyone. */
+    const detach = (): void => {
+      if (detached) return;
+      detached = true;
+      if (hostOutput) hostOutput.dispose();
+      else {
+        child.stdout?.destroy();
+        child.stderr?.destroy();
+      }
+      (child.stdio[3] as { destroy?: () => void } | null | undefined)?.destroy?.();
+    };
+    const signalGroup = (signal: NodeJS.Signals): void => {
+      if (exited || child.pid === undefined) return;
       try {
-        process.kill(-child.pid!, "SIGKILL");
+        process.kill(-child.pid, signal);
       } catch {
         /* group already gone */
       }
     };
+    // Stops the run, or with a holder everything it is responsible for. The holder stops them itself on SIGTERM (its
+    // SIGTERM wait, then SIGKILL passes) and exits; only if it has not exited `HOLDER_STOP_GRACE_MS` later does the
+    // group get SIGKILL. After the child's exit nothing is signalled: the output is let go instead.
+    const stopAll = (): void => {
+      if (child.pid === undefined) return;
+      if (exited) return detach();
+      if (holder === undefined) return signalGroup("SIGKILL");
+      stopping = true;
+      try {
+        process.kill(child.pid, "SIGTERM");
+      } catch {
+        /* already gone */
+      }
+      if (fallback !== undefined) return;
+      fallback = setTimeout(() => signalGroup("SIGKILL"), HOLDER_STOP_GRACE_MS);
+      (fallback as { unref?: () => void }).unref?.();
+    };
+    const killGroup = () => {
+      // Output may remain paused after the actual process closed. Its former
+      // PID/group is no longer authority to signal anything during that drain.
+      stopAll();
+    };
+    if (child.pid !== undefined) opts.onSpawned?.({ pid: child.pid, stopOwnedProcess: () => stopAll(), pauseOutput() { if(hostOutput)hostOutput.pause();else{child.stdout!.pause(); child.stderr!.pause();} }, resumeOutput() { if(hostOutput)hostOutput.resume();else{child.stdout!.resume(); child.stderr!.resume();} } });
     const onChunk = (chunk: Buffer, forward: ((c: Buffer) => void) | undefined) => {
+      if (leftBehind !== undefined) return leftBehind.feed(chunk);
       if (streamKilled) return;
       forward?.(chunk);
       streamedBytes += chunk.length;
@@ -522,10 +622,14 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
     let outputDone: Promise<unknown> | undefined;
     try { outputDone = hostOutput?.start(chunk => onChunk(chunk, opts.onStdout), chunk => onChunk(chunk, opts.onStderr)); }
     catch (error) { outputDone = Promise.reject(error); }
-    void outputDone?.catch(() => { streamKilled = true; hostOutput?.dispose(); killGroup(); });
+    // A failed output stops the run; once the process is gone there is nothing to stop (and nothing to let go).
+    void outputDone?.catch(() => { if (detached) return; streamKilled = true; hostOutput?.dispose(); if (!exited) killGroup(); });
     if (!hostOutput) {
       child.stdout!.on("data", (d: Buffer) => onChunk(d, opts.onStdout));
       child.stderr!.on("data", (d: Buffer) => onChunk(d, opts.onStderr));
+      // A let-go stream reports nothing more.
+      child.stdout!.on("error", () => {});
+      child.stderr!.on("error", () => {});
     }
 
     let timedOut = false;
@@ -545,8 +649,10 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
     }
 
     let spawnError: string | undefined;
+    let settled = false;
     const finish = (exitCode: number | null) => {
-      releaseGroup();
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
       opts.signal?.removeEventListener("abort", onAbort);
       const result: RunCommandResult = {
@@ -558,6 +664,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         sandboxOverrideRequested,
         ...(profile !== undefined ? { profile } : {}),
         ...(spawnError !== undefined ? { spawnError } : {}),
+        ...(leftBehind !== undefined ? { leftBehind } : {}),
       };
       const monitor = violationMonitor;
       violationMonitor = undefined;
@@ -571,11 +678,117 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       void monitor.drain().then((report) => resolve(report.lines.length > 0 ? { ...result, sandboxViolations: report } : result));
     };
 
+    /** The command ended and left processes running: the call ends now, and they become the caller's to adopt. */
+    const handOver = (exitCode: number | null, done: Promise<void>, stop: () => void, escaped: boolean): void => {
+      if (settled || leftBehind !== undefined || child.pid === undefined) return;
+      let sink: ((chunk: Buffer) => void) | undefined;
+      const held: Buffer[] = [];
+      let over = false;
+      let settleDone!: () => void;
+      const whenDone = new Promise<void>((r) => { settleDone = r; });
+      void done.then(() => { over = true; settleDone(); });
+      leftBehind = {
+        pid: child.pid,
+        // Once they are all gone, a stop is nothing: their pids and group may be someone else's.
+        stop() { if (!over) stop(); },
+        done: whenDone,
+        ...(escaped ? { escaped: true } : {}),
+        onOutput(fn) {
+          sink = fn;
+          for (const chunk of held.splice(0)) fn(chunk);
+        },
+        feed(chunk) {
+          if (sink !== undefined) sink(chunk);
+          else if (held.reduce((n, c) => n + c.length, 0) < maxStreamedBytes) held.push(chunk);
+        },
+      };
+      finish(exitCode);
+    };
+
+    const closed = new Promise<void>((r) => child.once("close", () => r()));
+    // The child is gone (its `exit`, or its `close`, which can come first): its pid is no longer ours to signal.
+    const gone = (): void => {
+      if (exited) return;
+      exited = true;
+      releaseGroup();
+      if (fallback !== undefined) clearTimeout(fallback);
+      // A stopped holder is gone: what still holds the output a moment later (once what was written is read) escaped
+      // it, and is let go.
+      if (stopping) {
+        const letGo = setTimeout(detach, ESCAPED_OUTPUT_GRACE_MS);
+        (letGo as { unref?: () => void }).unref?.();
+        child.once("close", () => clearTimeout(letGo));
+      }
+    };
+    child.once("exit", gone);
+
+    if (holder !== undefined) {
+      // The holder's reports on fd 3: `exit <code> <left> <escaped>` (or `signal …`) when the command ends, and
+      // `escaped <n>` if, once nothing it holds is left, something that got out from under it still has the output.
+      let buffered = "";
+      const status = child.stdio[3] as NodeJS.ReadableStream | null | undefined;
+      status?.on("data", (d: Buffer) => {
+        buffered += d.toString("utf8");
+        let nl: number;
+        while ((nl = buffered.indexOf("\n")) >= 0) {
+          const line = buffered.slice(0, nl);
+          buffered = buffered.slice(nl + 1);
+          const end = /^(exit|signal) (-?\d+) (\d+)(?: (\d+))?$/.exec(line);
+          if (end !== null) {
+            const left = Number(end[3]);
+            const escaped = Number(end[4] ?? 0) > 0;
+            const exitCode = end[1] === "exit" ? Number(end[2]) : null;
+            if ((left > 0 || escaped) && !timedOut && !aborted && !streamKilled) {
+              // Nothing the holder can stop is left when only an escaped process is: a stop lets go of its output.
+              handOver(exitCode, closed, left > 0 ? stopAll : detach, escaped);
+            }
+            continue;
+          }
+          if (/^escaped \d+$/.test(line) && leftBehind !== undefined) leftBehind.escaped = true;
+        }
+      });
+      status?.on("error", () => {});
+    } else {
+      // Without a holder: the leader exits while its group lives on, so the command left processes in it.
+      // A leader a signal ended (a stop, a kill) left nothing it meant to: only a command that ended by itself is looked at.
+      child.once("exit", (code, signal) => {
+        if (signal !== null || child.pid === undefined || timedOut || aborted || streamKilled || !groupAlive(child.pid)) return;
+        const pgid = child.pid;
+        // The group outlives its leader while any member lives, and its id cannot be taken while it does; once a look
+        // finds it empty it is never signalled again, and a pending SIGKILL is dropped.
+        let gone = false;
+        let kill: ReturnType<typeof setTimeout> | undefined;
+        const done = new Promise<void>((r) => {
+          const look = setInterval(() => {
+            if (groupAlive(pgid)) return;
+            gone = true;
+            clearInterval(look);
+            if (kill !== undefined) clearTimeout(kill);
+            r();
+          }, LEFT_BEHIND_POLL_MS);
+          (look as { unref?: () => void }).unref?.();
+        });
+        const stop = () => {
+          if (gone || kill !== undefined) return;
+          try { process.kill(-pgid, "SIGTERM"); } catch { /* gone */ }
+          kill = setTimeout(() => {
+            if (gone || !groupAlive(pgid)) return;
+            try { process.kill(-pgid, "SIGKILL"); } catch { /* gone */ }
+          }, GROUP_STOP_GRACE_MS);
+          (kill as { unref?: () => void }).unref?.();
+        };
+        handOver(code, done, stop, false);
+      });
+    }
+
     child.on("close", (code) => {
-      processClosed = true;
+      gone();
       clearTimeout(timer); opts.signal?.removeEventListener("abort", onAbort); releaseGroup();
       opts.onProcessClosed?.();
-      if(outputDone)void outputDone.then(()=>finish(code),()=>finish(null));else finish(code);
+      // What was left is the caller's now: its `done` is the holder's close, or its group being gone (the pipes can
+      // close long before that, when the processes left write elsewhere).
+      if (leftBehind !== undefined) return;
+      if(outputDone)void outputDone.then(()=>finish(code),()=>finish(detached ? code : null));else finish(code);
     });
     child.on("error", (err) => {
       spawnError = (err as Error).message;

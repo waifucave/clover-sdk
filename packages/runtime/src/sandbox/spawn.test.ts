@@ -259,7 +259,7 @@ describe("runCommand: real spawn (darwin)", () => {
     const cwd = realTmp();
     const started = Date.now();
     const res = await runCommand({
-      command: "(sleep 30 && touch survived.txt) & echo backgrounded",
+      command: "(sleep 30 && touch survived.txt) & sleep 30",
       cwd,
       env: { ...process.env, TMPDIR: cwd },
       timeoutMs: 400,
@@ -267,7 +267,22 @@ describe("runCommand: real spawn (darwin)", () => {
     });
     expect(Date.now() - started).toBeLessThan(4000);
     expect(res.timedOut).toBe(true);
+    expect(res.leftBehind).toBeUndefined();
     await new Promise((r) => setTimeout(r, 300));
+    expect(existsSync(join(cwd, "survived.txt"))).toBe(false);
+  });
+
+  // Clover F8: a command that ENDS while a job it backgrounded runs no longer waits for that job (or times out on it):
+  // the run ends, and the job is handed over (`leftBehind`) to be adopted, never killed with the call.
+  test.skipIf(process.platform !== "darwin")("a backgrounded job still running when the command ends is handed over, not waited for", async () => {
+    const cwd = realTmp();
+    const started = Date.now();
+    const res = await runCommand({ command: "(sleep 30 && touch survived.txt) & echo backgrounded", cwd, env: { ...process.env, TMPDIR: cwd }, timeoutMs: 400, settings: {} });
+    expect(Date.now() - started).toBeLessThan(4000);
+    expect(res.timedOut).toBe(false);
+    expect(res.leftBehind).toBeDefined();
+    res.leftBehind!.stop();
+    await res.leftBehind!.done;
     expect(existsSync(join(cwd, "survived.txt"))).toBe(false);
   });
 

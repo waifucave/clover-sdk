@@ -76,7 +76,34 @@ export interface SandboxSettings {
   allowUnsandboxedCommands?: boolean;
   filesystem?: SandboxFilesystemSettings;
   network?: SandboxNetworkSettings;
+  /** Close the paths to launchd for a sandboxed command (`LAUNCH_SERVICES_DENIES`); off by default. See
+   *  `SeatbeltProfileInput.denyLaunchServices`. */
+  denyLaunchServices?: boolean;
 }
+
+/**
+ * What `denyLaunchServices` closes (Clover F8, measured on macOS 26): a process the command has launchd start is
+ * launchd's, not the command's, so nothing the host tracks stands for it. Denied: running `launchctl`, `open` and
+ * `osascript`, and the LaunchServices, AppleEvents and job-submission services. git, bun, curl, python, clang and swift
+ * run unchanged under it. A copied launchctl is killed by the system.
+ *
+ * THE RESIDUAL (accepted): a program speaking launchd's private protocol over the bootstrap port, which is how
+ * launchctl itself talks to launchd. That connection has no service name for Seatbelt to deny. It needs no native
+ * build: the calls are exported by libSystem, so Python ctypes or bun:ffi reach them as well.
+ */
+export const LAUNCH_SERVICES_DENIES = {
+  exec: ["/bin/launchctl", "/usr/bin/open", "/usr/bin/osascript"],
+  services: [
+    "com.apple.coreservices.launchservicesd",
+    "com.apple.lsd.mapdb",
+    "com.apple.lsd.modifydb",
+    "com.apple.xpc.smd",
+    "com.apple.backgroundtaskmanagementagent",
+    "com.apple.backgroundtaskmanagement.agent",
+    "com.apple.coreservices.appleevents",
+    "com.apple.coreservices.quarantine-resolver",
+  ],
+} as const;
 
 // A reasonable, documented default for a session with no real configured SandboxSettings.
 // N1 (fix wave, P3 close-out): STALE as of T8 -- "nothing upstream threads a real one through yet"
@@ -674,6 +701,12 @@ export interface SeatbeltProfileInput {
    * profile is byte-identical to one built without this field.
    */
   caseSensitiveWriteRoots?: string[];
+  /**
+   * `SandboxSettings.denyLaunchServices`: denies the paths to launchd (`LAUNCH_SERVICES_DENIES`), last, so no allow
+   * above re-opens them. The profile's mach-lookup is already allow-listed, so the service denies only hold that line
+   * should the list grow; the exec denies are new. Omitted = off, and the profile is byte-identical to before.
+   */
+  denyLaunchServices?: boolean;
 }
 
 /**
@@ -886,6 +919,11 @@ export function buildSeatbeltProfile(input: SeatbeltProfileInput): string {
 
   // Minimal mach services: deny blanket lookup so open/launchctl/osascript can't ask a privileged,
   // unsandboxed service to act out-of-band on our behalf.
+  const launchServicesDenies = input.denyLaunchServices === true
+    ? `(deny process-exec ${LAUNCH_SERVICES_DENIES.exec.map((p) => `(literal "${sbplString(p)}")`).join(" ")})
+(deny mach-lookup ${LAUNCH_SERVICES_DENIES.services.map((s) => `(global-name "${sbplString(s)}")`).join(" ")})
+`
+    : "";
   const machRules = [
     "com.apple.system.notification_center",
     "com.apple.system.logger",
@@ -931,7 +969,7 @@ ${denyRulesFileRules}
 ${denyRulesFileRegex}
 ${denySettingsFileRegex}
 ${denySettingsLocalFileRegex}
-`;
+${launchServicesDenies}`;
 }
 
 // ---------------------------------------------------------------------------------------------
