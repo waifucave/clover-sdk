@@ -62,15 +62,27 @@ async function listenerIsClosed(redirectUri: string): Promise<boolean> {
 }
 
 /**
- * An EPHEMERAL loopback port for a pre-registered client's fixed redirect URI: bound on 127.0.0.1:0 so the
- * kernel picks a free one, then released for the flow's own listener to take. Never a hard-coded port --
- * two suites running at once on one machine collided on the old fixed ones.
+ * A loopback port for a pre-registered client's fixed redirect URI. It can't be OS-assigned (port 0): it is
+ * configuration (`oauth.callbackPort`) that the pre-registration names before the flow binds it. So it comes from
+ * 20000-29999, below every OS's ephemeral range (Linux 32768+, macOS and Windows 49152+): no port-0 bind on the
+ * machine (a fixture's server in this very test, another suite) can be handed it between this check and the flow's
+ * own bind. That race, a port released here and taken by the next `port: 0` bind, was the flake. Each is checked
+ * free and handed out once per run. Every listener that needs no fixed port binds port 0 and reads it back.
  */
+const handedOut = new Set<number>();
 function freeCallbackPort(): number {
-  const probe = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response() });
-  const port = probe.port as number;
-  probe.stop(true);
-  return port;
+  for (let tries = 0; tries < 500; tries++) {
+    const port = 20_000 + Math.floor(Math.random() * 10_000);
+    if (handedOut.has(port)) continue;
+    try {
+      Bun.serve({ hostname: "127.0.0.1", port, fetch: () => new Response() }).stop(true);
+    } catch {
+      continue; // something on the machine holds it
+    }
+    handedOut.add(port);
+    return port;
+  }
+  throw new Error("no free loopback port in 20000-29999 for a pre-registered callback");
 }
 
 describe("sign-in: DCR", () => {
