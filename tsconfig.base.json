@@ -82,6 +82,9 @@
       ],
       "@waifucave/clover-agent-runtime/mcp-auth": [
         "./packages/runtime/src/mcp-auth.ts"
+      ],
+      "@waifucave/clover-agent-runtime/lookalike": [
+        "./packages/runtime/src/context/lookalike-fold.ts"
       ]
     }
   }

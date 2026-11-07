@@ -4,6 +4,22 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.72
+
+### Notification tags are read with Clover's look-alike map (Clover #264, #281)
+
+- **`context/lookalike-fold.ts`**: Clover's plugin SDK look-alike map (`packages/plugin-sdk/src/catalogs/fold.ts`,
+  the map behind `foldTitle` and the island) is vendored here. It is exported as
+  `@waifucave/clover-agent-runtime/lookalike` (`lookalikeOf`, `lookalikeEntries`). A test pins its fingerprint, and
+  Clover's gate compares it with the plugin SDK's map over every code point, so the two copies can't drift.
+- **`context/lookalike-tags.ts`** now reads a tag's letters through that map, exactly as Clover's `turn-loop/defuse.ts`
+  does:
+  - Armenian and Cherokee letters (capitals and small letters) are read as the Latin letters they look like;
+  - Greek `Ι` and Cyrillic `І`/`Ї` read as `l`, as `foldTitle` reads them;
+  - a look-alike of an `i` or an `l` spells either letter of a tag; a Latin `i` or `l` is only itself;
+  - the map's digits and strokes read as letters (`<n0te>`, `|`).
+  The internal i/l wildcard is a noncharacter, and one in the text reads as U+FFFD, so no input stands for it.
+
 ## 0.0.71
 
 ### Every notification the runtime delivers carries the host's frame, and its values can't forge a tag (Clover F8 review)
