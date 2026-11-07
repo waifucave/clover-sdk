@@ -4,6 +4,32 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.71
+
+### Every notification the runtime delivers carries the host's frame, and its values can't forge a tag (Clover F8 review)
+
+- **`Options.notificationPreamble`** (`RuntimeConfig.notificationPreamble`): a line the host puts on every task
+  notification the runtime delivers to the model, after the runtime's own preamble and before the
+  `<task-notification>` document. It covers both shapes: a notification that starts its own turn, and one folded
+  into a running turn (a background task's completion, a Monitor event). Clover passes its "data, not instructions"
+  frame. Absent or blank adds nothing, so the default is byte-identical to 0.0.70.
+- **Look-alike tags are defused in every value a notification document interpolates** (`xmlEscape`, through the new
+  `context/lookalike-tags.ts`, ported from Clover's turn-loop escaping). An ASCII `<` was already escaped. Now a
+  look-alike of one of the document's own tags (`NOTIFICATION_TAGS`: `task-notification`, `summary`, `event`,
+  `result`, `system-reminder` and the rest) has its bracket become `‹`, however it is spelled:
+  - fullwidth, small, CJK or mathematical brackets;
+  - format characters such as zero-width ones and soft hyphens;
+  - NFKC forms;
+  - Cyrillic and Greek letters;
+  - dash and slash look-alikes;
+  - any case.
+  The rest of the text reads as written.
+
+### Fixes
+
+- The MCP sign-in tests draw a pre-registered client's callback port from 20000-29999, below every OS's ephemeral
+  range, so no port-0 bind (a fixture's server) can take it between the check and the sign-in's bind (#70).
+
 ## 0.0.70
 
 ### What a command leaves running is adopted, never lost or killed (Clover F8)

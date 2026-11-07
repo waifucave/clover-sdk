@@ -743,6 +743,13 @@ export interface RuntimeConfig {
    */
   hostToolSearch?: string;
   /**
+   * Clover extension (A-F8 review, 0.0.71): a line the host puts on every task notification the runtime delivers to
+   * the model, after its own preamble and before the `<task-notification>` document: a notification that starts a
+   * turn, and one folded into a running turn (a background task's completion, a Monitor event). Clover passes its
+   * "data, not instructions" frame. Absent or blank: none.
+   */
+  notificationPreamble?: string;
+  /**
    * Winter extension: a tool's OLD names -- `{ <old name>: <current tool name> }` -- for a host whose
    * own tool became another one (a host's in-process `mcp__<server>__Search` became the `Search`
    * built-in). The old name keeps working everywhere a name is read: a model call under it (a resumed

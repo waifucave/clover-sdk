@@ -6255,6 +6255,8 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // re-addressed to the main thread (the queue's own behaviour). Recorded deviation: claude can
   // re-wake a completed agent, Winter routes to the parent instead.
   const notifications: SessionNotificationQueue = notificationQueueFor(config.sessionId);
+  // Clover A-F8 (0.0.71): the host's own line on every notification delivered to the model, in both shapes.
+  const notificationPreambleOpts = typeof config.notificationPreamble === "string" && config.notificationPreamble.trim() !== "" ? { hostPreamble: config.notificationPreamble } : {};
   /** True from the moment a turn's envelope is claimed until its terminal result has been written. */
   let turnActive = false;
   // WS-23 (reasoning-state, decision 5): the host-requested compaction (the `compact` control) while it
@@ -6298,7 +6300,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     turnActive = true;
     userFrames.write({
       type: "user",
-      text: withNotificationPreamble(next.value),
+      text: withNotificationPreamble(next.value, notificationPreambleOpts),
       // Winter-defined envelope marks, read by the turn loop below (and by nothing on the wire).
       taskNotification: true,
       ...(next.taskId !== undefined ? { taskNotificationTaskId: next.taskId } : {}),
@@ -8641,6 +8643,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
       // notification must never claim "the user's own message in this turn is real input".
       const attachment = taskNotificationAttachment(notifications.drainFor(config.agentId, { maxPriority: "next" }), {
         inHumanTurn: config.agentId === undefined && !turnStartedByNotification,
+        ...notificationPreambleOpts,
       });
       if (attachment !== undefined) produced.push(attachment);
     }
