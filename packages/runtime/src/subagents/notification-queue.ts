@@ -130,8 +130,17 @@ The notification carries no human input of its own: apart from the user's own me
  * every notification the runtime delivers, both shapes: a turn it starts and one it folds into a running turn.
  */
 export function withNotificationPreamble(value: string, opts?: { inHumanTurn?: boolean; hostPreamble?: string }): string {
-  if (value.startsWith(SYSTEM_NOTIFICATION_MARKER)) return value;
   const host = typeof opts?.hostPreamble === "string" && opts.hostPreamble.trim() !== "" ? `${opts.hostPreamble.trim()}\n` : "";
+  if (value.startsWith(SYSTEM_NOTIFICATION_MARKER)) {
+    // Already wrapped (every value the queue holds is a bare document today, so only a re-wrap gets here): the
+    // runtime's preamble isn't written twice, but the host's line is never missing. It goes right after the preamble
+    // (which ends at its first blank line), unless it is already there.
+    if (host === "") return value;
+    const cut = value.indexOf("\n\n");
+    const head = cut < 0 ? `${value}\n\n` : value.slice(0, cut + 2);
+    const rest = cut < 0 ? "" : value.slice(cut + 2);
+    return rest.startsWith(host) ? value : `${head}${host}${rest}`;
+  }
   return `${opts?.inHumanTurn === true ? NOTIFICATION_PREAMBLE_IN_HUMAN_TURN : NOTIFICATION_PREAMBLE}${host}${neutralizeReminderTags(value)}`;
 }
 
