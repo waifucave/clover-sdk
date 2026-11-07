@@ -947,7 +947,7 @@ describe("performWebFetch -- N4: a CONNECT-phase failure advances to the next re
 
 describe("fixture hygiene: why every loopback test server binds 127.0.0.1", () => {
   test("a WILDCARD bind can share a port another socket holds on 127.0.0.1 -- and 127.0.0.1 then reaches the OTHER one; a 127.0.0.1 bind is refused instead", async () => {
-    const { createServer } = await import("node:net");
+    const { createServer, connect } = await import("node:net");
     const foreign = createServer((socket) => socket.end("HTTP/1.1 404 Not Found\r\ncontent-length: 9\r\nconnection: close\r\n\r\nnot found"));
     await new Promise<void>((resolve) => foreign.listen(0, "127.0.0.1", resolve));
     const taken = (foreign.address() as { port: number }).port;
@@ -962,8 +962,18 @@ describe("fixture hygiene: why every loopback test server binds 127.0.0.1", () =
       }
       if (wildcard !== undefined) {
         try {
-          const res = await fetch(`http://127.0.0.1:${taken}/ok`);
-          expect(await res.text()).toBe("not found");
+          // A plain socket with a short deadline, not `fetch` (whose pooled connection to the port could wait out the
+          // test's whole timeout): whichever socket answers 127.0.0.1 says so in its first bytes.
+          const answer = await new Promise<string>((resolve) => {
+            let got = "";
+            const socket = connect(taken, "127.0.0.1", () => socket.write("GET /ok HTTP/1.1\r\nhost: 127.0.0.1\r\nconnection: close\r\n\r\n"));
+            const deadline = setTimeout(() => { socket.destroy(); resolve(got); }, 2_000);
+            socket.on("data", (d: Buffer) => { got += d.toString("utf8"); });
+            socket.on("close", () => { clearTimeout(deadline); resolve(got); });
+            socket.on("error", () => { clearTimeout(deadline); resolve(got); });
+          });
+          expect(answer).toContain("not found");
+          expect(answer).not.toContain("ours");
         } finally {
           wildcard.stop(true);
         }
@@ -971,7 +981,12 @@ describe("fixture hygiene: why every loopback test server binds 127.0.0.1", () =
       // The guard every server in these files now uses: the same bind on 127.0.0.1 is refused outright.
       expect(() => Bun.serve({ hostname: "127.0.0.1", port: taken, fetch: () => new Response("ours") })).toThrow();
     } finally {
-      await new Promise<void>((resolve) => foreign.close(() => resolve()));
+      // Bun 1.4.2 and 1.4.4 on macOS never call `close`'s callback here once a connection has been answered (the
+      // listener does close): wait for it a short moment, never the test's whole timeout.
+      await new Promise<void>((resolve) => {
+        const give = setTimeout(resolve, 500);
+        foreign.close(() => { clearTimeout(give); resolve(); });
+      });
     }
   });
 });

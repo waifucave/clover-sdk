@@ -87,9 +87,9 @@ export interface SandboxSettings {
  * `osascript`, and the LaunchServices, AppleEvents and job-submission services. git, bun, curl, python, clang and swift
  * run unchanged under it. A copied launchctl is killed by the system.
  *
- * THE RESIDUAL (accepted): a native program speaking launchd's private protocol over the bootstrap port, which is
- * how launchctl itself talks to launchd. That connection has no service name for Seatbelt to deny, and it needs
- * deliberately built native code.
+ * THE RESIDUAL (accepted): a program speaking launchd's private protocol over the bootstrap port, which is how
+ * launchctl itself talks to launchd. That connection has no service name for Seatbelt to deny. It needs no native
+ * build: the calls are exported by libSystem, so Python ctypes or bun:ffi reach them as well.
  */
 export const LAUNCH_SERVICES_DENIES = {
   exec: ["/bin/launchctl", "/usr/bin/open", "/usr/bin/osascript"],

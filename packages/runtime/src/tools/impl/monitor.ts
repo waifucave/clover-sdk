@@ -29,6 +29,7 @@ import { startTracking, updateTask, getTask, listRunningTasks, toBackgroundTasks
 import { createMonitorEventRelay } from "../../subagents/notification-queue.ts";
 import { type GlobDenyEntry } from "../../permissions/file-rules.ts";
 import { sandboxRunInputs } from "../sandbox-run-inputs.ts";
+import { adoptLeftBehind } from "./left-behind.ts";
 
 // ---------------------------------------------------------------------------------------------
 // Input validation
@@ -276,6 +277,12 @@ async function runMonitorCommand(input: MonitorInput & { command: string }, ctx:
   completion.then(
     (result) => {
       outStream.end();
+      // What its command left running outlives it, as its own adopted task, exactly as Bash's (a stopped one's holder
+      // already stopped them).
+      if (result.leftBehind !== undefined) {
+        if (getTask(taskId)?.status === "running") adoptLeftBehind(result.leftBehind, { command: input.command, description: input.description }, ctx);
+        else result.leftBehind.stop();
+      }
       if (getTask(taskId)?.status !== "running") return; // TaskStop / teardown already recorded a terminal status
       const outcome = resolveBackgroundOutcome(result);
       updateTask(taskId, {

@@ -9,15 +9,21 @@
 // (running launchctl, open and osascript, and the LaunchServices, AppleEvents and job-submission services); Clover turns
 // it on for every bot and agent session. Tested below.
 //
-// THE RESIDUAL, accepted and documented rather than tested: a native program speaking launchd's private protocol over
-// the bootstrap port, which is how launchctl itself talks to launchd. That connection has no service name for Seatbelt
-// to deny, and it needs deliberately built native code.
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+// THE RESIDUALS, accepted:
+//   * A process that disclaims its own responsibility: `posix_spawn` with `responsibility_spawnattrs_setdisclaim(1)`
+//     and POSIX_SPAWN_SETSID, a few lines of Python ctypes or bun:ffi (no native build needed). It is its own
+//     responsible process, so the holder can't find or stop it. It stays inside the command's Seatbelt sandbox (the
+//     sandbox is inherited through the spawn; tested below) and its fence. When it still holds the command's output,
+//     the holder sees it and `leftBehind.escaped` says so (tested below); one that also let go of the output is unseen.
+//   * A program speaking launchd's private protocol over the bootstrap port, which is how launchctl itself talks to
+//     launchd. That connection has no service name for Seatbelt to deny, and the calls are exported by libSystem, so
+//     Python ctypes or bun:ffi reach them as well. Documented, not tested.
+import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCommandLocally, type LeftBehind } from "./spawn.ts";
+import { GROUP_STOP_GRACE_MS, HOLDER_STOP_GRACE_MS, runCommandLocally, type LeftBehind } from "./spawn.ts";
 import { buildSeatbeltProfile, LAUNCH_SERVICES_DENIES } from "./profile.ts";
 
 const dir = realpathSync(mkdtempSync(join(tmpdir(), "left-behind-")));
@@ -42,10 +48,40 @@ const waitFor = async (ok: () => boolean, ms = 8_000) => {
   return ok();
 };
 
-async function run(command: string, processHolder?: string) {
+async function run(command: string, processHolder?: string, env: Record<string, string> = {}) {
   const started = Date.now();
-  const result = await runCommandLocally({ command, cwd: dir, env: { PATH: "/usr/bin:/bin:/opt/homebrew/bin" }, timeoutMs: 30_000, settings: { enabled: false }, ...(processHolder !== undefined ? { processHolder } : {}) });
+  const result = await runCommandLocally({ command, cwd: dir, env: { PATH: "/usr/bin:/bin:/opt/homebrew/bin", ...env }, timeoutMs: 30_000, settings: { enabled: false }, ...(processHolder !== undefined ? { processHolder } : {}) });
   return { result, took: Date.now() - started };
+}
+
+const python = () => (existsSync("/opt/homebrew/bin/python3") ? "/opt/homebrew/bin/python3" : "/usr/bin/python3");
+
+/** Every `process.kill` this process makes from now on, as `[pid, signal]` (the calls still go through). */
+function watchKills() {
+  const spy = spyOn(process, "kill");
+  return { get calls() { return spy.mock.calls as unknown as Array<[number, string | number | undefined]>; }, restore: () => spy.mockRestore() };
+}
+const kills: Array<{ restore: () => void }> = [];
+afterEach(() => { for (const k of kills.splice(0)) k.restore(); });
+
+/** A script (Python ctypes, nothing built) that starts `inner` disclaimed and in a session of its own: out from under
+ *  the holder. The escaped shell keeps the command's output. */
+function escapeScript(inner: string): string {
+  const innerFile = join(dir, `inner-${tag()}.sh`);
+  writeFileSync(innerFile, inner);
+  const file = join(dir, `escape-${tag()}.py`);
+  writeFileSync(file, `import ctypes, sys
+libc = ctypes.CDLL("/usr/lib/libSystem.B.dylib")
+attr = ctypes.c_void_p()
+libc.posix_spawnattr_init(ctypes.byref(attr))
+libc.posix_spawnattr_setflags(ctypes.byref(attr), ctypes.c_short(0x0400))  # POSIX_SPAWN_SETSID
+libc.responsibility_spawnattrs_setdisclaim(ctypes.byref(attr), 1)
+pid = ctypes.c_int()
+argv = (ctypes.c_char_p * 3)(b"/bin/sh", ${JSON.stringify(innerFile)}.encode(), None)
+envp = (ctypes.c_char_p * 2)(b"PATH=/usr/bin:/bin", None)
+sys.exit(libc.posix_spawn(ctypes.byref(pid), b"/bin/sh", None, ctypes.byref(attr), argv, envp))
+`);
+  return `${python()} ${JSON.stringify(file)}`;
 }
 
 /** P10's two forms, setsid, and a double fork that clears its environment; each sleeps on its own number. */
@@ -123,7 +159,123 @@ describe.if(process.platform === "darwin")("with the process holder (macOS)", ()
   }, 30_000);
 });
 
+describe.if(process.platform === "darwin")("the holder's edges", () => {
+  test("a process that disclaims itself (Python ctypes) escapes the holder, stays in the sandbox, and is reported as escaped", async () => {
+    const n = `3${tag()}8`;
+    const rc = join(dir, `escaped-${n}.rc`);
+    // Under the sandbox a write to the working folder's .zshrc is refused; the escaped shell tries it, then waits.
+    const inner = `touch ${JSON.stringify(join(dir, ".zshrc"))} 2>/dev/null; echo "touch=$?" > ${JSON.stringify(rc)}; echo escaped-shell; exec sleep ${n}\n`;
+    const result = await runCommandLocally({ command: `${escapeScript(inner)}; echo command-done`, cwd: dir, env: { PATH: "/usr/bin:/bin:/opt/homebrew/bin" }, timeoutMs: 30_000, settings: { enabled: true }, processHolder: holder! });
+    try {
+      expect(result.posture).toBe("sandboxed");
+      expect(result.timedOut).toBe(false);
+      const left = result.leftBehind as LeftBehind;
+      expect(left).toBeDefined();
+      expect(left.escaped).toBe(true);
+      expect(await waitFor(() => alive(n))).toBe(true);
+      expect(await waitFor(() => existsSync(rc))).toBe(true);
+      expect(readFileSync(rc, "utf8").trim()).not.toBe("touch=0");
+      expect(existsSync(join(dir, ".zshrc"))).toBe(false);
+      // Nothing here can stop it; a stop lets go of its output, and the task is done.
+      let ended = false;
+      void left.done.then(() => { ended = true; });
+      left.stop();
+      expect(await waitFor(() => ended, 3_000)).toBe(true);
+    } finally {
+      spawnSync("/usr/bin/pkill", ["-f", `^sleep ${n}$`]);
+    }
+  }, 30_000);
+
+  test("PROCESS_HOLDER_DISCLAIMED set beforehand changes nothing: what the command leaves is still found and stopped", async () => {
+    const n = [1, 2, 3, 4].map((i) => `3${tag()}${i}`);
+    const { result } = await run(leaveFour(n), holder, { PROCESS_HOLDER_DISCLAIMED: "1" });
+    const left = result.leftBehind as LeftBehind;
+    expect(left).toBeDefined();
+    expect(left.escaped).toBeUndefined();
+    for (const s of n) expect(await waitFor(() => alive(s))).toBe(true);
+    left.stop();
+    expect(await waitFor(() => n.every((s) => !alive(s)))).toBe(true);
+  }, 30_000);
+
+  test("processes that ignore SIGTERM and keep starting more are all stopped by the holder's SIGKILL passes", async () => {
+    const n = `3${tag()}9`;
+    const script = join(dir, `spawner-${n}.sh`);
+    writeFileSync(script, `trap '' TERM\nwhile true; do (trap '' TERM; exec sleep ${n}) & sleep 0.05; done\n`);
+    const { result } = await run(`nohup /bin/bash ${JSON.stringify(script)} >/dev/null 2>&1 &\nsleep 0.5; echo ok`, holder);
+    const left = result.leftBehind as LeftBehind;
+    expect(left).toBeDefined();
+    expect(await waitFor(() => alive(n))).toBe(true);
+    let ended = false;
+    void left.done.then(() => { ended = true; });
+    left.stop();
+    expect(await waitFor(() => ended, HOLDER_STOP_GRACE_MS)).toBe(true);
+    expect(alive(n)).toBe(false);
+    expect(spawnSync("/usr/bin/pgrep", ["-f", script]).status).not.toBe(0);
+  }, 30_000);
+
+  test("probe C, holder: once the holder has exited nothing signals its pid or group, whatever asks", async () => {
+    let stopOwned: (() => void) | undefined;
+    let pid = 0;
+    const controller = new AbortController();
+    const result = await runCommandLocally({ command: "echo hi", cwd: dir, env: { PATH: "/usr/bin:/bin" }, timeoutMs: 30_000, settings: { enabled: false }, processHolder: holder!, signal: controller.signal, onSpawned: (s) => { pid = s.pid; stopOwned = s.stopOwnedProcess; } });
+    expect(result.exitCode).toBe(0);
+    const k = watchKills();
+    kills.push(k);
+    stopOwned!();
+    controller.abort();
+    await Bun.sleep(300);
+    expect(k.calls.filter(([p]) => p === pid || p === -pid)).toEqual([]);
+  }, 30_000);
+
+  test("probe C/D, holder: a stop after the holder exited, and its SIGKILL fallback, never reach its pid or group", async () => {
+    const n = `3${tag()}0`;
+    const { result } = await run(`nohup sleep ${n} >/dev/null 2>&1 & echo ok`, holder);
+    const left = result.leftBehind as LeftBehind;
+    expect(left).toBeDefined();
+    const k = watchKills();
+    kills.push(k);
+    left.stop();
+    await left.done;
+    expect(alive(n)).toBe(false);
+    left.stop();
+    // The fallback would have fired by now had it not been dropped on the holder's exit.
+    await Bun.sleep(HOLDER_STOP_GRACE_MS + 500);
+    expect(k.calls.filter(([p, s]) => p === -left.pid || (p === left.pid && s !== "SIGTERM"))).toEqual([]);
+    expect(k.calls.filter(([p]) => p === left.pid)).toEqual([[left.pid, "SIGTERM"]]);
+  }, 30_000);
+});
+
 describe("without a holder: the process group stands for what a command left", () => {
+  test("probe D: no SIGKILL lands on the group once it is gone; a stop after that is nothing", async () => {
+    const n = `4${tag()}3`;
+    const { result } = await run(`(sleep ${n} &) >/dev/null 2>&1\necho ran`);
+    const left = result.leftBehind as LeftBehind;
+    expect(left).toBeDefined();
+    const k = watchKills();
+    kills.push(k);
+    left.stop();
+    await left.done;
+    expect(alive(n)).toBe(false);
+    left.stop();
+    await Bun.sleep(GROUP_STOP_GRACE_MS + 500);
+    expect(k.calls.filter(([p, s]) => p === -left.pid && s !== 0)).toEqual([[-left.pid, "SIGTERM"]]);
+  }, 30_000);
+
+  test("probe C: after the leader exits nothing signals its group, a timeout included; the run lets go of the output", async () => {
+    const n = `4${tag()}4`;
+    let pid = 0;
+    const k = watchKills();
+    kills.push(k);
+    // A setsid'd process keeps the output open while the group is gone: without a holder it is out of reach.
+    const result = await runCommandLocally({ command: `${python()} -c 'import os,subprocess; os.setsid(); subprocess.Popen(["sleep","${n}"]); os._exit(0)'; echo ran`, cwd: dir, env: { PATH: "/usr/bin:/bin" }, timeoutMs: 1_500, settings: { enabled: false }, onSpawned: (s) => { pid = s.pid; } });
+    try {
+      expect(result.timedOut).toBe(true);
+      expect(k.calls.filter(([p, s]) => (p === pid || p === -pid) && s !== 0)).toEqual([]);
+    } finally {
+      spawnSync("/usr/bin/pkill", ["-f", `^sleep ${n}$`]);
+    }
+  }, 30_000);
+
   test("`(cmd) &` and `nohup … &` are found and stopped; a setsid'd process is out of the group's reach", async () => {
     const n = [1, 2].map((i) => `4${tag()}${i}`);
     const { result, took } = await run(`(sleep ${n[0]} &) >/dev/null 2>&1\nnohup sleep ${n[1]} >/dev/null 2>&1 &\necho ran`);

@@ -14,24 +14,55 @@ corresponds to one `chore(release): vX.Y.Z` commit.
 - **The process holder** (macOS, `native/process-holder.c`, shipped as source): a host that builds it and names it
   in `<PREFIX>PROCESS_HOLDER` has every command run as the holder's child. The holder re-executes itself with its
   responsibility disclaimed, so it is the responsible process of everything the command starts, setsid'd and
-  double-forked processes and ones that clear their environment included. When the command ends it reports how many
-  it left and stays while any remain; one SIGTERM to it stops them all (then a SIGKILL to the group). A timeout or an
-  interrupt stops everything through it too. A process the command has launchd start is not the holder's: the
-  host's sandbox profile closes those paths.
+  double-forked processes and ones that clear their environment included (its second pass knows itself by being its
+  own responsible process, never by anything in its environment or arguments). When the command ends it reports how
+  many it left and stays while any remain; one SIGTERM to it stops them all: SIGTERM, then SIGKILL passes until a scan
+  finds none (at most 50), over any number of processes. The host's own SIGKILL to the group comes only if the holder
+  has not exited ten seconds later. The holder ignores SIGPIPE. A timeout or an interrupt stops everything through it
+  too. A process the command has launchd start is not the holder's: `sandbox.denyLaunchServices` closes those paths.
+- **`LeftBehind.escaped`**: the holder also reports a process that got out from under it (see Security notes) while
+  it still holds the command's output (the host's own pipe or socket to the command, found in the process's file
+  table; a process responsible to the holder, or to the host's own responsible process, is never counted): the run
+  hands it over at once, flagged, instead of waiting on the open output until the timeout, and its `stop()` lets go
+  of that output.
+- **No signal to a pid that is gone**: once a command's process (the holder, or the group's leader) has exited, the
+  run never signals its pid or group again: a stop, a timeout or an interrupt after that lets go of the output
+  instead. A left-behind group is never signalled once it is seen empty (its pending SIGKILL is dropped), and
+  `stop()` is a no-op once `done` has settled. `onSpawned` always hands over `stopOwnedProcess`, so the task registry
+  stops a command through the same guarded door.
 - **Bash adopts them**: a foreground or background command's leftovers become a background task of the session
   (`task_started`, `is_backgrounded: true`, "Left running by: …", an `adopted` row), with an output file that takes
   what they write from then on. TaskStop, `Query.stopTask` and the session's teardown stop it like any background
-  command; it completes by itself when the last of them ends. The tool's result names the task.
+  command; it completes by itself when the last of them ends. The tool's result names the task. **Monitor**'s
+  command half adopts its command's leftovers the same way.
 - **`sandbox.denyLaunchServices`** (off by default): closes the paths to launchd for a sandboxed command, so nothing it
   starts escapes as launchd's: running `/bin/launchctl`, `/usr/bin/open` and `/usr/bin/osascript` is denied, and so
   is looking up the LaunchServices, AppleEvents and job-submission services (`LAUNCH_SERVICES_DENIES`). Measured:
   git, bun, curl, python, clang and swift run unchanged under it. The default profile is byte-identical without it.
 
+### Fixes
+
+- The loopback fixture-hygiene test no longer hangs on macOS under Bun 1.4.2 and 1.4.4: it reads which socket answers
+  with a plain socket under a deadline, and waits for the foreign server's close only briefly (those Bun releases never
+  call its callback there, though the listener does close).
+- The definitions corpus has its Bun 1.4.4 frontmatter answers (recorded from v0.0.41; the same 41 rows as 1.4.2),
+  and the rule corpus a Bun overlay mechanism with 1.4.4's digest for glob row 1139 (`/[\]..`): Bun 1.4.4's
+  `realpathSync` no longer folds a `\..` file name as if it were `..`. The code's answers did not change.
+- CI: the macOS `build-platform` job runs once a commit (the branch push; not again for a same-repository pull
+  request, nor for a `v*` tag, which release.yml builds), a newer push to the branch takes a queued one's place, and
+  it has a 30-minute limit. It had been queuing behind clover's CI for the org's five macOS runners.
+
 ### Security notes
 
-- The accepted residual of `denyLaunchServices`: a native program speaking launchd's private protocol over the
-  bootstrap port, which is how launchctl itself talks to launchd. That connection has no service name for Seatbelt to
-  deny, and it needs deliberately built native code.
+- **Accepted residual, the disclaim escape:** a process can disclaim its own responsibility (`posix_spawn` with
+  `responsibility_spawnattrs_setdisclaim(1)` and `POSIX_SPAWN_SETSID`), a few lines of Python ctypes or bun:ffi, no
+  native build needed. It is then its own responsible process, so the holder can neither find nor stop it. It stays
+  inside the command's Seatbelt sandbox and fence: the sandbox is inherited through the spawn (tested: the escaped
+  process is still sandboxed and its denied write is refused). When it holds the command's output the holder sees it
+  and `leftBehind.escaped` is set (tested); one that also let go of the output is not seen.
+- **Accepted residual of `denyLaunchServices`:** a program speaking launchd's private protocol over the bootstrap
+  port, which is how launchctl itself talks to launchd. That connection has no service name for Seatbelt to deny, and
+  it needs no native build either: the calls are exported by libSystem, so Python ctypes or bun:ffi reach them.
 
 ## 0.0.69
 

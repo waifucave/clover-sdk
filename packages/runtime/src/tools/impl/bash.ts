@@ -37,8 +37,8 @@ import {
   resolveExecutionPath,
   isSandboxAvailable,
   type RunCommandResult,
-  type LeftBehind,
 } from "../../sandbox/spawn.ts";
+import { adoptLeftBehind, leftBehindNote } from "./left-behind.ts";
 import { SandboxConfigError, canonicalizePath, resolveNetworkPosture, type SandboxBrand } from "../../sandbox/profile.ts";
 import { formatSandboxViolations } from "../../sandbox/violations.ts";
 import { startTracking, updateTask, removeTask, emitTaskNotification, getTask, listRunningTasks, toBackgroundTasksChangedEntry, killedTaskSummary, resolveBackgroundOutcome, killOrphanedSpawn } from "./background-task-runtime.ts";
@@ -381,64 +381,6 @@ function formatForegroundResult(parts: {
 // ---------------------------------------------------------------------------------------------
 // Foreground execution
 // ---------------------------------------------------------------------------------------------
-/**
- * What a command left running when it ended (`(cmd) &`, `nohup … &`, and under the host's process holder setsid'd
- * and double-forked processes too): adopted as a background task of the session, so TaskStop, the session's end and a
- * host's `stopTask` stop them like any background command. They are not killed when the call ends (a `nohup server &`
- * is meant to outlive it). The task ends when the last of them does; its output file takes what they write from now on.
- */
-function adoptLeftBehind(left: LeftBehind, input: { command: string; description: string }, ctx: ToolExecutionContext): { taskId: string; outputPath: string } {
-  let taskId: string;
-  let outputPath: string;
-  try {
-    ({ taskId, outputPath } = createBackgroundTask("bash"));
-  } catch {
-    // No task root configured (a bare engine): a row without an output file still lets TaskStop reach them.
-    taskId = randomUUID();
-    outputPath = "";
-  }
-  const out = outputPath !== "" ? createWriteStream(outputPath, { flags: "a" }) : undefined;
-  left.onOutput((chunk) => out?.write(chunk));
-  const description = `Left running by: ${input.description}`;
-  const emitter = { emitFrame: ctx.emitFrame, sessionId: ctx.sessionId };
-  startTracking({
-    taskId, kind: "bash", outputPath, description, command: input.command, isBackgrounded: true, adopted: true,
-    stopOwnedProcess: () => left.stop(),
-    ...(ctx.toolUseId !== undefined ? { toolUseId: ctx.toolUseId } : {}),
-    ...(ctx.agentId !== undefined ? { ownerAgentId: ctx.agentId } : {}),
-    emitter,
-  });
-  const changed = () => {
-    try {
-      ctx.emitFrame({ type: "system", subtype: "background_tasks_changed", tasks: listRunningTasks().map(toBackgroundTasksChangedEntry), uuid: randomUUID(), session_id: ctx.sessionId });
-    } catch {
-      /* a torn-down session's emitFrame must never throw out of here */
-    }
-  };
-  try {
-    ctx.emitFrame({
-      type: "system", subtype: "task_started", task_id: taskId,
-      ...(ctx.toolUseId !== undefined ? { tool_use_id: ctx.toolUseId } : {}),
-      description, is_backgrounded: true, task_type: "local_bash", uuid: randomUUID(), session_id: ctx.sessionId,
-    });
-  } catch {
-    /* as above */
-  }
-  changed();
-  void left.done.then(() => {
-    out?.end();
-    if (getTask(taskId)?.status !== "running") return; // stopped first: its own door already said so
-    updateTask(taskId, { status: "completed", endTime: Date.now(), notification: { summary: `${description}: every process it left has ended` } });
-    changed();
-  });
-  return { taskId, outputPath };
-}
-
-/** The line a call's result carries when it left processes running. */
-function leftBehindNote(adopted: { taskId: string; outputPath: string }): string {
-  return `Processes this command started are still running. They are background task ${adopted.taskId}${adopted.outputPath !== "" ? ` (output_file: ${adopted.outputPath})` : ""}; task_stop stops them.`;
-}
-
 async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promise<ToolResultPayload> {
   const runOptions = buildRunCommandOptions(input, ctx);
   const timeoutMs = resolveTimeout(input.timeout);

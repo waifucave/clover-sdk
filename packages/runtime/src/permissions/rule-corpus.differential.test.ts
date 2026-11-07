@@ -14,7 +14,7 @@
 // answers are still compared; and the filesystem keys `hostDependentFsKeys` names (case folding, the
 // host's root) are left out. Everything else is asserted unchanged.
 import { beforeAll, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as evaluator from "./evaluator.ts";
 import * as fileRules from "./file-rules.ts";
@@ -43,6 +43,17 @@ import {
 } from "./rule-corpus.test-support.ts";
 
 const recorded = JSON.parse(readFileSync(join(import.meta.dir, "__fixtures__", "rule-corpus.json"), "utf8")) as RecordedCorpus;
+
+// A few digests depend on the Bun the tests run under, not on the code: `__fixtures__/rule-corpus.bun-<version>.json`
+// records them for that Bun (`random.<section>.<index>`: the digest there), each with why. They replace the recorded
+// digest only under that Bun.
+const bunOverlay = join(import.meta.dir, "__fixtures__", `rule-corpus.bun-${Bun.version}.json`);
+if (existsSync(bunOverlay)) {
+  const overlay = JSON.parse(readFileSync(bunOverlay, "utf8")) as { random?: Record<string, Record<string, string>> };
+  for (const [section, rows] of Object.entries(overlay.random ?? {})) {
+    for (const [index, digestThere] of Object.entries(rows)) recorded.random[section]![Number(index)] = digestThere;
+  }
+}
 const modules = { grammar, fileRules, paths, evaluator } as unknown as CorpusModules;
 
 /** The host the corpus was recorded on; elsewhere the host-dependent answers are left out (see the header). */

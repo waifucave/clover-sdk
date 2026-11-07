@@ -1,4 +1,4 @@
-// The Bash tool adopts what a command leaves running (Clover's F8): a background task of the session, announced as one
+// The Bash tool, and Monitor's command half, adopt what a command leaves running (Clover's F8): a background task of the session, announced as one
 // (`task_started`, `is_backgrounded: true`), which TaskStop, a host's `stopTask` and the session's teardown stop like
 // any background command, and which ends by itself once the last process it stands for does. With the host's process
 // holder (`<PREFIX>PROCESS_HOLDER`, macOS) that includes setsid'd and double-forked processes.
@@ -12,10 +12,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND, envName, type BackgroundTaskMessage } from "@waifucave/clover-agent-sdk";
 import "./bash.ts";
+import "./monitor.ts";
 import { getRegisteredTool, type ToolExecutionContext } from "../registry.ts";
 import { createSessionReadState } from "../read-state.ts";
 import { configureBackgroundTaskRoot, resetBackgroundTaskRootForTest } from "../background-tasks.ts";
-import { getTask, resetBackgroundTaskRuntimeForTest, stopSessionShellTasks } from "./background-task-runtime.ts";
+import { getTask, listRunningTasks, resetBackgroundTaskRuntimeForTest, stopSessionShellTasks } from "./background-task-runtime.ts";
 import { taskStopExecutor } from "./task-stop.ts";
 
 const dir = realpathSync(mkdtempSync(join(tmpdir(), "bash-left-behind-")));
@@ -59,6 +60,7 @@ function ctxWith(frames: BackgroundTaskMessage[], sessionId = "s-left"): ToolExe
 }
 
 const bash = (input: unknown, ctx: ToolExecutionContext) => getRegisteredTool("Bash")!.executor!.execute(input, ctx);
+const monitor = (input: unknown, ctx: ToolExecutionContext) => getRegisteredTool("Monitor")!.executor!.execute(input, ctx);
 const tag = () => `${(Date.now() % 10000) * 10 + Math.floor(Math.random() * 10)}`;
 const alive = (n: string) => spawnSync("/usr/bin/pgrep", ["-f", `^sleep ${n}$`]).status === 0;
 const waitFor = async (ok: () => boolean, ms = 8_000) => {
@@ -117,5 +119,26 @@ describe.if(process.platform === "darwin")("Bash adopts what a command leaves ru
     const res = await bash({ command: "echo plain", description: "plain" }, ctxWith(frames));
     expect(res.output).not.toContain("still running");
     expect(frames.some((f) => f.subtype === "task_started")).toBe(false);
+  }, 30_000);
+
+  test("Monitor adopts what its command leaves, exactly as Bash does: one adopted task, stopped by TaskStop", async () => {
+    process.env[HOLDER_ENV] = holder!;
+    const n = [1, 2].map((i) => `7${tag()}${i}`);
+    const frames: BackgroundTaskMessage[] = [];
+    const ctx = ctxWith(frames, "s-monitor");
+    const res = await monitor({
+      command: `nohup sleep ${n[0]} >/dev/null 2>&1 & python3 -c 'import os,subprocess; os.setsid(); subprocess.Popen(["sleep","${n[1]}"]); os._exit(0)' & sleep 0.5; echo watched`,
+      description: "watch and leave two", timeout_ms: 30_000, persistent: false,
+    }, ctx);
+    const monitorId = (JSON.parse(res.output) as { taskId: string }).taskId;
+    for (const s of n) expect(await waitFor(() => alive(s))).toBe(true);
+    const adoptedRow = () => listRunningTasks().find((t) => t.adopted === true && t.description === "Left running by: watch and leave two");
+    expect(await waitFor(() => adoptedRow() !== undefined)).toBe(true);
+    expect(await waitFor(() => getTask(monitorId)?.status === "completed")).toBe(true);
+    const id = adoptedRow()!.taskId;
+    expect(frames.some((f) => f.subtype === "task_started" && (f as { task_id?: string }).task_id === id && (f as { is_backgrounded?: boolean }).is_backgrounded === true)).toBe(true);
+    await taskStopExecutor.execute({ task_id: id }, ctx);
+    expect(await waitFor(() => n.every((s) => !alive(s)))).toBe(true);
+    expect(getTask(id)?.status).toBe("stopped");
   }, 30_000);
 });
