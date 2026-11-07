@@ -116,6 +116,13 @@ export interface BackgroundTaskHandle {
    * silently means nothing the day someone does set it.
    */
   ambient?: boolean;
+  /**
+   * An ADOPTED row: the processes a Bash command left running when it ended (bash.ts's `adoptLeftBehind`), not a
+   * command of its own. Stopped through `stopOwnedProcess` (the process holder's stop, or its process group's), it ends
+   * when the last of them does, and it is a background shell row for every door that stops one (TaskStop, a host's
+   * `stopTask`, the session's teardown).
+   */
+  adopted?: boolean;
 }
 
 export interface TaskUsage {
@@ -151,6 +158,7 @@ export interface StartTrackingInput {
   usage?: () => TaskUsage | undefined;
   ownerAgentId?: string;
   ambient?: boolean;
+  adopted?: boolean;
 }
 
 // §1's register(): "emits task_started unless the id is already registered and non-terminal (a

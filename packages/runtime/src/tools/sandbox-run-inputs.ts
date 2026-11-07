@@ -12,6 +12,7 @@
 import type { ToolExecutionContext } from "./registry.ts";
 import { splitDenyPathsByGlobShape, globDenyEntriesOf, type GlobDenyEntry } from "../permissions/file-rules.ts";
 import type { SandboxBrand } from "../sandbox/profile.ts";
+import { envName } from "@waifucave/clover-agent-sdk";
 
 /** Everything about the SESSION the seatbelt profile needs, for any tool that runs a shell command. */
 export interface SandboxRunInputs {
@@ -39,6 +40,15 @@ export interface SandboxRunInputs {
   brand?: SandboxBrand;
   /** Fix round 16, item 2: `sandbox.filesystem.allowGitConfig` -- see `SandboxFilesystemSettings.allowGitConfig`'s own header. */
   allowGitConfigWrites?: boolean;
+  /** macOS: the host's process holder (`<PREFIX>PROCESS_HOLDER`, read at each call) -- see `RunCommandOptions.processHolder`. */
+  processHolder?: string;
+}
+
+/** The host's process holder, named by the session brand's `<PREFIX>PROCESS_HOLDER` in this process's environment. */
+export function processHolderOf(ctx: Pick<ToolExecutionContext, "brand">): string | undefined {
+  if (ctx.brand === undefined) return undefined;
+  const value = process.env[envName(ctx.brand, "PROCESS_HOLDER")];
+  return value !== undefined && value !== "" ? value : undefined;
 }
 
 /**
@@ -80,7 +90,9 @@ export function buildHostSandboxRunInputs(input:HostSandboxRunInputs): SandboxRu
 
 /** The session's sandbox inputs, identical for every tool that runs a shell command. */
 export function sandboxRunInputs(ctx: ToolExecutionContext): SandboxRunInputs {
+  const holder = processHolderOf(ctx);
   return {
+    ...(holder !== undefined ? { processHolder: holder } : {}),
     ...(ctx.toolUseId !== undefined ? { hostCodeScope: { sessionId: ctx.sessionId, toolUseId: ctx.toolUseId, ...(ctx.agentId !== undefined ? { agentId: ctx.agentId } : {}), ...(ctx.parentToolUseId !== undefined ? { parentToolUseId: ctx.parentToolUseId } : {}) } } : {}),
     ...buildHostSandboxRunInputs({
       cwd:ctx.cwd,env:buildSandboxChildEnv(ctx),settings:ctx.sandboxSettings,writableRoots:computeWritableRoots(ctx),home:ctx.home,

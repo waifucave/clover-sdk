@@ -4,6 +4,35 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.70
+
+### What a command leaves running is adopted, never lost or killed (Clover F8)
+
+- **`RunCommandResult.leftBehind`**: a command that ends while processes it started still run (`(cmd) &`,
+  `nohup … &`) no longer waits for them, or times out on them: the run ends, and they are handed to the caller
+  (`pid`, `stop()`, `done`, `onOutput`). Without a process holder the command's process group stands for them.
+- **The process holder** (macOS, `native/process-holder.c`, shipped as source): a host that builds it and names it
+  in `<PREFIX>PROCESS_HOLDER` has every command run as the holder's child. The holder re-executes itself with its
+  responsibility disclaimed, so it is the responsible process of everything the command starts, setsid'd and
+  double-forked processes and ones that clear their environment included. When the command ends it reports how many
+  it left and stays while any remain; one SIGTERM to it stops them all (then a SIGKILL to the group). A timeout or an
+  interrupt stops everything through it too. A process the command has launchd start is not the holder's: the
+  host's sandbox profile closes those paths.
+- **Bash adopts them**: a foreground or background command's leftovers become a background task of the session
+  (`task_started`, `is_backgrounded: true`, "Left running by: …", an `adopted` row), with an output file that takes
+  what they write from then on. TaskStop, `Query.stopTask` and the session's teardown stop it like any background
+  command; it completes by itself when the last of them ends. The tool's result names the task.
+- **`sandbox.denyLaunchServices`** (off by default): closes the paths to launchd for a sandboxed command, so nothing it
+  starts escapes as launchd's: running `/bin/launchctl`, `/usr/bin/open` and `/usr/bin/osascript` is denied, and so
+  is looking up the LaunchServices, AppleEvents and job-submission services (`LAUNCH_SERVICES_DENIES`). Measured:
+  git, bun, curl, python, clang and swift run unchanged under it. The default profile is byte-identical without it.
+
+### Security notes
+
+- The accepted residual of `denyLaunchServices`: a native program speaking launchd's private protocol over the
+  bootstrap port, which is how launchctl itself talks to launchd. That connection has no service name for Seatbelt to
+  deny, and it needs deliberately built native code.
+
 ## 0.0.69
 
 ### A host's TaskStop reaches the runtime's tasks (Clover K-M3)
