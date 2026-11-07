@@ -47,7 +47,9 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   call its callback there, though the listener does close).
 - The definitions corpus has its Bun 1.4.4 frontmatter answers (recorded from v0.0.41; the same 41 rows as 1.4.2),
   and the rule corpus a Bun overlay mechanism with 1.4.4's digest for glob row 1139 (`/[\]..`): Bun 1.4.4's
-  `realpathSync` no longer folds a `\..` file name as if it were `..`. The code's answers did not change.
+  `realpathSync` no longer folds a `\..` file name as if it were `..`, so under 1.4.4 that fuzz glob's canonical form
+  changes to `/root/\..` (one slash, where it was kept as typed, `/root//\..`), with no practical effect: the kernel
+  reads both as the same path.
 - CI: the macOS `build-platform` job runs once a commit (the branch push; not again for a same-repository pull
   request, nor for a `v*` tag, which release.yml builds), a newer push to the branch takes a queued one's place, and
   it has a 30-minute limit. It had been queuing behind clover's CI for the org's five macOS runners.

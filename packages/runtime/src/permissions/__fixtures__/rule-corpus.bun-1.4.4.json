@@ -1,4 +1,8 @@
 {
-  "why": "Bun 1.4.4's realpathSync no longer folds a segment spelled `\\..` (a file name, not `..`) as if it were `..`: `/root//\\..` is ENOENT there, where Bun 1.3.14 and 1.4.2 answered `/`. So the deny glob `/[\\]..` (row 1139) now canonicalises to `/root/\\..` (one slash) instead of being kept as typed; the same path either way to the kernel. The code did not change.",
-  "random": { "globs": { "1139": "cc3dd92497a7129b" } }
+  "why": "Bun 1.4.4's realpathSync no longer folds a segment spelled `\\..` (a file name, not `..`) as if it were `..`: `/root//\\..` is ENOENT there, where Bun 1.3.14 answered `/` (and Bun 1.4.2 gives the recorded answer). So under Bun 1.4.4 the canonical form of the fuzz glob `/[\\]..` (row 1139) changes: it becomes `/root/\\..` (one slash) instead of being kept as typed, `/root//\\..`. That has no practical effect: the kernel reads both as the same path. Our code did not change.",
+  "random": {
+    "globs": {
+      "1139": "cc3dd92497a7129b"
+    }
+  }
 }
