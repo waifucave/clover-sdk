@@ -4,6 +4,18 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.73
+
+### Clover's MCP client document (prepared; the owner hosts it)
+
+- **`CLOVER_MCP_CLIENT_METADATA_URL`** (`@waifucave/clover-agent-runtime/mcp-auth`): the URL Clover's MCP sign-ins send
+  as their client id (CIMD), `https://waifucave.com/clover/oauth-client.json` until the owner settles it. One constant.
+  The doors' default stays `WINTER_MCP_CLIENT_METADATA_URL`; Clover passes its own as `clientMetadataUrl`.
+- **`CLOVER_MCP_CLIENT_DOCUMENT`**: the document to host there. Its `client_id` is that URL, `client_name` "Clover",
+  the portless loopback redirect `http://127.0.0.1/callback` (RFC 8252 §7.3), and a public client
+  (`token_endpoint_auth_method: "none"`).
+- A dynamically registered client is named "Clover" (it was "Winter"), as an authorization server's consent page shows.
+
 ## 0.0.72
 
 ### Notification tags are read with Clover's look-alike map (Clover #264, #281)

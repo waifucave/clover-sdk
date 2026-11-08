@@ -98,7 +98,8 @@ export interface McpOAuthLogin {
 /** One flow per server, keyed by the token account: a new sign-in supersedes the one in flight. */
 const activeFlows = new Map<string, (reason: "login_superseded") => void>();
 
-const CLIENT_NAME = "Winter";
+/** The name a dynamically registered client gives (an authorization server shows it at its consent page). */
+const CLIENT_NAME = "Clover";
 
 function portOf(redirectUri: string): number | undefined {
   try {
