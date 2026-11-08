@@ -130,6 +130,10 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - run: pnpm install
+      # The Linux sandbox for Bash, Monitor and background Bash (sandbox/linux-bwrap.ts) is bubblewrap, at a system path;
+      # python3 is the Unix-socket probe in its tests. Ubuntu's AppArmor userns restriction stays ON: bubblewrap's own
+      # AppArmor profile covers it (lane C, measured on Ubuntu 26.04).
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends bubblewrap python3
       - run: bun run build:packages                # P7a fix wave r2 (item 2, re-review N2): EXPLICIT, and FIRST.
                                                      # Since the compiled emit, every publishable package points
                                                      # its `types` condition at `./dist/*.d.ts`, and two steps
@@ -145,6 +149,8 @@ jobs:
         env:
           WINTER_REQUIRE_LINUX_CONFINEMENT: "1"      # a runner that lost Landlock/seccomp fails the Linux Workflow
                                                      # cases (workflows/worker.linux.test.ts) instead of skipping them
+          WINTER_REQUIRE_LINUX_SANDBOX: "1"          # likewise: a runner without a working bubblewrap fails
+                                                     # sandbox/linux-bwrap.linux.test.ts instead of skipping it
       - run: bun run typecheck                     # whole-repo tsc --noEmit incl. test files (sdk, runtime,
                                                      # conformance/src, scripts) — Task 5 rider; `bun test` only
                                                      # type-strips, so this is the repo's one real tsc gate

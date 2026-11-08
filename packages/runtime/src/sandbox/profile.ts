@@ -79,6 +79,10 @@ export interface SandboxSettings {
   /** Close the paths to launchd for a sandboxed command (`LAUNCH_SERVICES_DENIES`); off by default. See
    *  `SeatbeltProfileInput.denyLaunchServices`. */
   denyLaunchServices?: boolean;
+  /** Linux: the host already runs this process inside its own sandbox, so a sandboxed command runs as it is, under the
+   *  host's (a sandbox of its own couldn't start inside it: no user namespaces there). Set only by a host that wraps
+   *  (Clover's fence, lane C); never a way out, since the host's sandbox holds. Ignored on macOS. */
+  hostFenced?: boolean;
 }
 
 /**
@@ -1043,4 +1047,84 @@ ${machRules})
 (deny network*)
 (allow file-write-data (path "/dev/null") (path "/dev/stdout") (path "/dev/stderr"))
 `;
+}
+
+// ---------------------------------------------------------------------------------------------
+// linuxSandboxListsFor: the same policy as `buildSeatbeltProfile`, as paths for bubblewrap (linux-bwrap.ts)
+// ---------------------------------------------------------------------------------------------
+
+/** The Seatbelt profile's input as the Linux sandbox's paths: what may be written, and what may not be written or read.
+ *  A pattern (an SBPL regex: a glob-shaped deny, a control-plane or default-protection name at any depth, the
+ *  provider-state files) can only name what is on disk, so `expand(prefix, regex)` lists the existing paths under
+ *  `prefix` it matches (linux-bwrap.ts's `expandPattern`, bounded); see that file's header for the residuals. A regex
+ *  that doesn't compile refuses the command (thrown `SyntaxError`): a deny is never dropped. */
+export function linuxSandboxListsFor(
+  input: SeatbeltProfileInput,
+  expand: (prefix: string, regexes: readonly RegExp[]) => string[][],
+): { writableRoots: string[]; denyWrite: string[]; denyRead: string[] } {
+  const brand = input.brand ?? WINTER_BRAND;
+  const durableRoot = input.storeHome ?? input.winterHome;
+  const roots = [...new Set([input.cwd, ...(input.writableRoots ?? [])].map(canon))];
+  const winterRoot = input.home !== undefined ? canon(join(input.home, brand.homeDirName)) : undefined;
+  const anchors = [...new Set([winterRoot, durableRoot !== undefined ? canon(durableRoot) : undefined, input.winterHome !== undefined ? canon(input.winterHome) : undefined].filter((a): a is string => a !== undefined))];
+  const denyWrite = new Set<string>();
+  const denyRead = new Set<string>();
+  // Every pattern is gathered first and each prefix walked once for all of its patterns (`expand`), below.
+  const wanted = new Map<string, { re: RegExp; into: Set<string> }[]>();
+  const expandUnder = (prefixes: readonly string[], source: string, into: Set<string>): void => {
+    const re = new RegExp(source);
+    for (const prefix of new Set(prefixes.map(canon))) {
+      const list = wanted.get(prefix) ?? [];
+      list.push({ re, into });
+      wanted.set(prefix, list);
+    }
+  };
+
+  // filesystem.denyWrite and denyRead: plain paths, and the glob-shaped ones as what they match now (under their fixed
+  // prefixes, and under every writable root for a pattern anchored at `/`).
+  for (const p of input.denyWritePaths ?? []) denyWrite.add(canon(p));
+  for (const r of input.denyWriteRegexes ?? []) expandUnder([...(input.denyWriteGlobFixedPrefixes ?? []), ...roots], r, denyWrite);
+  for (const p of input.denyReadPaths ?? []) denyRead.add(canon(p));
+  for (const r of input.denyReadRegexes ?? []) expandUnder([...(input.denyReadGlobFixedPrefixes ?? []), ...roots], r, denyRead);
+  for (const e of input.denyReadGlobEntries ?? []) expandUnder([e.fixedPrefix], e.regex, denyRead);
+
+  // The default write protections at cwd (`buildDefaultWriteProtectionBlock`): plain, and at any depth under cwd.
+  const proj = brand.projectDirName;
+  const entries: { rel: string; isDir: boolean }[] = [
+    ...DEFAULT_PROTECTED_FILES.map((rel) => ({ rel, isDir: false })),
+    { rel: `${proj}/mcp.json`, isDir: false },
+    ...DEFAULT_PROTECTED_DIRS.map((rel) => ({ rel, isDir: true })),
+    ...PROJECT_DIR_PROTECTED_KINDS.map((kind) => ({ rel: `${proj}/${kind}`, isDir: true })),
+    { rel: ".git/hooks", isDir: true },
+    ...(input.allowGitConfigWrites === true ? [] : [{ rel: ".git/config", isDir: false }]),
+  ];
+  const cwd = canon(input.cwd);
+  for (const e of entries) {
+    denyWrite.add(join(cwd, e.rel));
+    expandUnder([cwd], recursiveGlobToSbplRegexSource(join(cwd, "**", e.rel)), denyWrite);
+  }
+  // The control plane under every writable root, and at any depth (case-folded, as the Seatbelt regexes are).
+  const controlPlaneDirs = [...new Set([brand.projectDirName, brand.homeDirName])];
+  for (const r of roots) for (const f of CONTROL_PLANE_FILES) denyWrite.add(join(r, proj, f));
+  for (const dir of controlPlaneDirs) {
+    const cp = controlPlaneRegexes(dir);
+    for (const source of [cp.rules, cp.settings, cp.settingsLocal]) expandUnder(roots, source, denyWrite);
+  }
+  // The home floor (`buildHomeSelfGrantFloor`), the checkpoint store and the image working folder.
+  for (const root of [...new Set([input.winterHome, input.storeHome].filter((a): a is string => a !== undefined && a.length > 0).map(canon))]) {
+    for (const name of ["settings.json", "settings.local.json", globalConfigFileName(brand), "agents", "plugins"]) denyWrite.add(join(root, name));
+  }
+  for (const a of anchors) {
+    denyWrite.add(join(a, "file-history"));
+    denyWrite.add(join(a, IMAGE_PREP_DIRNAME));
+  }
+  // The run folders and the provider-state files, read-denied.
+  if (winterRoot !== undefined) denyRead.add(join(winterRoot, "run"));
+  if (input.winterHome !== undefined) denyRead.add(join(canon(input.winterHome), "run"));
+  for (const a of anchors) expandUnder([join(a, "projects")], providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
+  for (const [prefix, list] of wanted) {
+    const found = expand(prefix, list.map((w) => w.re));
+    list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });
+  }
+  return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead] };
 }

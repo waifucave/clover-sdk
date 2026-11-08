@@ -4,6 +4,34 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.74
+
+### Bash, Monitor and background Bash run sandboxed on Linux (bubblewrap)
+
+- **`sandbox/linux-bwrap.ts`**, beside the macOS Seatbelt profile and with the same policy (profile.ts's
+  `linuxSandboxListsFor` maps it to paths). It's built after lane C's bubblewrap fence in Clover, which C reviews.
+  - Everything is read-only (`--ro-bind / /`) except the working folder and the writable roots.
+  - Denied paths are bound read-only again. A missing one holds its nearest folder read-only for new names.
+  - The folders between a root and a denied path are mount points, so they can't be renamed out of the way.
+  - Read-denied folders are an empty tmpfs, and read-denied files are `/dev/null`.
+  - No network (`--unshare-net`) unless the settings allow it.
+  - A seccomp filter on every command, network or not: no `socket(AF_UNIX)`, no io_uring, no other architecture.
+  - Its own pid, ipc, uts and cgroup namespaces, with no user namespace inside (`--disable-userns`, bwrap 0.8+)
+    and every capability dropped.
+  - `/run/user`, `/media`, `/run/media` and `/mnt` are hidden, and the session bus variables are unset.
+- **Never silent.** With no bubblewrap at a system path (`/usr/bin`, `/bin`, `/usr/local/bin`, never PATH), a probe
+  that fails, or an unknown architecture, a sandboxed command is refused (`SandboxUnavailableError`), as on a Mac
+  without sandbox-exec.
+- **Residuals**, which the header lists:
+  - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;
+  - a missing denied path directly in a writable root, or in `.git`, stays creatable;
+  - matching is case-sensitive.
+- **`SandboxSettings.hostFenced`** (Linux): the host already runs this process in its own sandbox, so a command runs
+  under it as is. Set only by a host that wraps.
+- `isSandboxAvailable()` is true on Linux where bubblewrap can sandbox. `commandSandboxAvailable(settings)`
+  adds `hostFenced`.
+- CI's Linux build installs bubblewrap and requires it (`WINTER_REQUIRE_LINUX_SANDBOX=1`).
+
 ## 0.0.73
 
 ### Clover's MCP client document (prepared; the owner hosts it)

@@ -180,6 +180,10 @@ export interface SandboxSettingsConfig {
   // LaunchServices, AppleEvents and job-submission services), so nothing a command starts escapes as launchd's.
   // Off by default (a coding agent's user may run `open`). Mirrors `sandbox/profile.ts`'s own field.
   denyLaunchServices?: boolean;
+  // Linux: the host already runs this process inside its own sandbox (Clover's fence wraps a bot's Bash in bubblewrap
+  // with no user namespaces), so a sandboxed command runs as it is, under the host's, instead of in one of its own,
+  // which couldn't start inside it. Set only by a host that does wrap. Mirrors `sandbox/profile.ts`'s own field.
+  hostFenced?: boolean;
 }
 
 // --- Phase 4 Task 2 (WS-09 derived-shapes item (a)/(d)): MCP server config + AgentDefinition -------

@@ -35,7 +35,8 @@ import {
   runCommand,
   SandboxUnavailableError,
   resolveExecutionPath,
-  isSandboxAvailable,
+  commandSandboxAvailable,
+  sandboxUnavailableMessage,
   type RunCommandResult,
 } from "../../sandbox/spawn.ts";
 import { adoptLeftBehind, leftBehindNote } from "./left-behind.ts";
@@ -562,11 +563,8 @@ async function runBackground(input: BashInput, ctx: ToolExecutionContext): Promi
     ...(input.dangerouslyDisableSandbox !== undefined ? { dangerouslyDisableSandbox: input.dangerouslyDisableSandbox } : {}),
   });
   if (decision.posture === "sandboxed") {
-    if (!isSandboxAvailable()) {
-      return {
-        output: "Error: sandbox is required by the effective configuration but /usr/bin/sandbox-exec is unavailable on this host (WS-12 §3) -- refusing to silently run unsandboxed",
-        isError: true,
-      };
+    if (!commandSandboxAvailable(ctx.sandboxSettings)) {
+      return { output: `Error: ${sandboxUnavailableMessage()}`, isError: true };
     }
     try {
       resolveNetworkPosture(ctx.sandboxSettings.network);
