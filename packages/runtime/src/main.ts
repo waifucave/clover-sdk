@@ -33,6 +33,7 @@ import { linuxConfineMain } from "./workflows/linux-confinement.ts";
 // installShutdownSignalHandlers's own header below for why this needs its OWN synchronous, frame-free
 // door rather than reusing engine.ts's ordinary teardown sweep.
 import { killAllTaskProcessGroups } from "./tools/impl/background-task-runtime.ts";
+import { sweepLinuxRuns } from "./sandbox/linux-runs.ts";
 import { liveProcessGroups } from "./process-groups.ts";
 
 // stdin as text chunks for `runEmbeddedSession`, which owns the framing (the one shared codec). The
@@ -108,6 +109,12 @@ function installShutdownSignalHandlers(): void {
         killAllTaskProcessGroups();
       } catch {
         /* a signal handler must never itself throw */
+      }
+      // Linux: what a killed sandboxed run made at a protected path is moved aside now (#74's review, check 2).
+      try {
+        sweepLinuxRuns();
+      } catch {
+        /* never throws */
       }
       process.removeAllListeners(signal);
       try {

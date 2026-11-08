@@ -30,17 +30,23 @@ corresponds to one `chore(release): vX.Y.Z` commit.
     unheld (`.mcp.json`, `.gitconfig`, the shell rc files, `.git/hooks` of a repo it made) is moved aside into the
     home's `quarantine/` folder, never through a link it planted, and said on stderr and in the tool result
     (`RunCommandResult.quarantined`);
-  - a protected folder that can't be made stays unheld: it is reported (`RunCommandResult.unheldProtectedPaths`, a
-    `[sandbox: not held …]` line in the Bash result), and while any is, the command doesn't count as sandboxed for
-    `autoAllowBashIfSandboxed` (`linuxUnheldProtectedPaths`).
+  - a protected folder that can't be made (or a link where one should be) stays unheld: it is reported
+    (`RunCommandResult.unheldProtectedPaths`, a `[sandbox: not held …]` line in the Bash result), and while any is, the
+    command doesn't count as sandboxed for `autoAllowBashIfSandboxed`. The engine and the host-code broker ask the one
+    check (`bashCountsAsSandboxed`);
+  - a run that doesn't reach its end is covered too: a SIGTERM or SIGINT to `winter` and an embedded session's abort
+    move every live run's plants aside in the same sweep as the process-group kill (`sweepLinuxRuns`), and each run's
+    at-risk paths are on disk (`<winter home>/sandbox-runs/`) from before its command starts, so the next sandboxed
+    run finishes one whose process crashed (`recoverCrashedLinuxRuns`);
+  - the folders made for a run are removed at its end while still empty and no other sandboxed run is live.
 - **Residuals**, which the header lists:
   - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;
   - a protected file made during a run exists until the run ends;
   - matching is case-sensitive.
 - **`SandboxSettings.hostFenced`** (Linux): the host already runs this process in its own sandbox, so a command runs
-  under it as is. Honoured only from the host's own `config.sandbox`, and only once this process is verified to be
-  confined (`NoNewPrivs: 1`, `Seccomp: 2`, and `unshare -U` refused; `linuxHostConfinement`). Otherwise the command
-  is refused.
+  under it as is. Honoured only from the host's own `config.sandbox`, and only once this process is checked to be
+  confined (`NoNewPrivs: 1`, `Seccomp: 2`, and `unshare -U` refused; `linuxHostConfinement`, a heuristic that guards a
+  host's mistake, acceptable because only the host can set it). Otherwise the command is refused.
 - `isSandboxAvailable()` is true on Linux where bubblewrap can sandbox. `commandSandboxAvailable(settings)`
   adds `hostFenced`.
 - CI's Linux build installs bubblewrap and requires it (`WINTER_REQUIRE_LINUX_SANDBOX=1`).

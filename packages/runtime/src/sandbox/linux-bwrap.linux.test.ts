@@ -4,12 +4,14 @@
 // bubblewrap, still enumerates them as skipped. CI sets WINTER_REQUIRE_LINUX_SANDBOX=1, which turns "no bubblewrap
 // here" into a failure, so a runner that lost it can't turn this file green by skipping.
 import { afterAll, describe, expect, test } from "bun:test";
-import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, symlinkSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { commandSandboxAvailable, isSandboxAvailable, linuxHostConfinement, linuxSandboxReady, linuxUnheldProtectedPaths, runCommand, SandboxUnavailableError } from "./spawn.ts";
 import { findBwrap, bwrapHasDisableUserns } from "./linux-bwrap.ts";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { buildHostCodePermissionContext, type HostCodePermissionSnapshot } from "../permissions/host-code.ts";
 import type { SandboxSettings } from "./profile.ts";
 
 const linux = process.platform === "linux";
@@ -137,8 +139,11 @@ describe("the Linux sandbox (bubblewrap)", () => {
     mkdirSync(join(repo, ".git"));
     const r = await run("(echo x > .git/hooks/pre-commit) 2>/dev/null && echo HOOK || echo nohook", repo, { home });
     expect(r.out).toContain("nohook");
-    expect(existsSync(join(repo, ".git", "hooks"))).toBe(true);
     expect(existsSync(join(repo, ".git", "hooks", "pre-commit"))).toBe(false);
+    // Made for the run, and removed at its end while still empty (no other run is live).
+    expect(existsSync(join(repo, ".git", "hooks"))).toBe(false);
+    expect(existsSync(join(repo, ".vscode"))).toBe(false);
+    expect(existsSync(join(repo, ".winter"))).toBe(false);
     const bare = temp("clover-a3-lx-cwd-");
     const r2 = await run("mkdir -p .git/hooks && echo x > .git/hooks/pre-commit && echo made", bare, { home });
     expect(r2.out).toContain("made");
@@ -163,6 +168,22 @@ describe("the Linux sandbox (bubblewrap)", () => {
     expect(existsSync(join(cwd, ".mcp.json"))).toBe(false);
     expect(r.quarantined).toEqual([join(cwd, ".mcp.json")]);
     expect(r.unheldProtectedPaths).toBeUndefined();
+  });
+
+  linuxTest("the host-code broker asks the engine's check: no auto-allow while a protected folder can't be held", async () => {
+    const snapshot = (cwd: string): HostCodePermissionSnapshot => ({
+      scope: { generationId: "g", sessionId: "s" }, policyRevision: 1,
+      config: { permissionMode: "default", sandbox: { enabled: true, autoAllowBashIfSandboxed: true } },
+      cwd, sessionRoot: cwd, home: temp("clover-a3-lx-home-"), trustedWorkspace: false, brand: WINTER_BRAND,
+    });
+    const call = { toolName: "Bash", input: { command: "ls" } };
+    const ok = temp("clover-a3-lx-cwd-");
+    expect(buildHostCodePermissionContext(snapshot(ok)).bashRunsSandboxed!(call as never)).toBe(true);
+    const locked = temp("clover-a3-lx-ro-");
+    // A link where .claude should be: .claude/commands can't be made, so it can't be held.
+    symlinkSync(temp("clover-a3-lx-elsewhere-"), join(locked, ".claude"));
+    expect(linuxUnheldProtectedPaths({ cwd: locked })).toContain(join(locked, ".claude", "commands"));
+    expect(buildHostCodePermissionContext(snapshot(locked)).bashRunsSandboxed!(call as never)).toBe(false);
   });
 
   linuxTest("a protected folder that can't be made stays unheld: reported, and the command isn't counted as sandboxed", async () => {

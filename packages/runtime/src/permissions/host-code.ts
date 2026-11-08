@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { BrandProfile, HostCodeProcessScope, PermissionResult, RuntimeConfig } from "@waifucave/clover-agent-sdk";
 import { buildBaselineDenyRules, type EngineSettingsRuleSeed } from "../engine.ts";
 import { DEFAULT_SANDBOX_SETTINGS } from "../sandbox/profile.ts";
-import { commandSandboxAvailable, resolveExecutionPath } from "../sandbox/spawn.ts";
+import { bashCountsAsSandboxed, resolveExecutionPath } from "../sandbox/spawn.ts";
 import { getRegisteredTool } from "../tools/registry.ts";
 import { evaluate, NO_OPINION_AUTO_ENGINE, NO_OPINION_HOOK_STAGE, REAL_SPECIAL_CHECKS, type EvaluationContext, type PermissionCall, type PermissionDecisionRecord, type AutoEngine, type HookStage } from "./evaluator.ts";
 import { PolicyStateStore, assertKnownPermissionMode, type AutoModeConfig } from "./policy-state.ts";
@@ -55,7 +55,8 @@ export function buildHostCodePermissionContext(snapshot:HostCodePermissionSnapsh
     hookStage:snapshot.hookStage??NO_OPINION_HOOK_STAGE,autoEngine:snapshot.autoEngine??NO_OPINION_AUTO_ENGINE,specialChecks:REAL_SPECIAL_CHECKS,
     promptStage:{async prompt(){return null;}},
     requiresInteraction:name=>getRegisteredTool(name)?.descriptor.interaction==="required",
-    bashRunsSandboxed:call=>call.toolName==="Bash"&&settings.autoAllowBashIfSandboxed===true&&posture(call,call.input.dangerouslyDisableSandbox===true)==="sandboxed"&&commandSandboxAvailable(settings),
+    // The engine's own check (`bashCountsAsSandboxed`): on Linux, not while a protected folder can't be held.
+    bashRunsSandboxed:call=>call.toolName==="Bash"&&settings.autoAllowBashIfSandboxed===true&&posture(call,call.input.dangerouslyDisableSandbox===true)==="sandboxed"&&bashCountsAsSandboxed(settings,{cwd:snapshot.cwd,writableRoots:[snapshot.sessionRoot,...(config.additionalDirectories??[]),...(snapshot.additionalDirectories??[])],home:snapshot.home,...(snapshot.winterHome?{winterHome:snapshot.winterHome}:{}),...(snapshot.storeHome?{storeHome:snapshot.storeHome}:{}),brand:snapshot.brand}),
     bashSandboxEscape:call=>call.toolName==="Bash"&&call.input.dangerouslyDisableSandbox===true&&posture(call,true)!=="sandboxed"&&posture(call,false)==="sandboxed",
   };
 }

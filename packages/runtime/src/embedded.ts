@@ -46,6 +46,7 @@ import { resolveProjectDirName } from "./paths/project-dir-name.ts";
 import { restoreChildRoster } from "./subagents/restore.ts";
 // Review r2 finding 9's process-group sweep -- the embedded ABORT's first act, as it is SIGTERM's.
 import { killAllTaskProcessGroups } from "./tools/impl/background-task-runtime.ts";
+import { sweepLinuxRuns } from "./sandbox/linux-runs.ts";
 import { setHostWorkflowWorkerCommand, type WorkerCommand } from "./workflows/sandbox.ts";
 import { EMBEDDED_ABORT_END_INPUT_REQUEST_ID, EMBEDDED_ABORT_INTERRUPT_REQUEST_ID } from "./embedded-protocol.ts";
 import { acquireProtectedStoreBootstrap, createProtectedRuntimeStore, protectedStoreOwnerSignal, protectedStoreStartupOutcome, releaseProtectedStoreBootstrap, retainProtectedStoreBootstrap, type ProtectedStoreBootstrap, type OpenedProtectedStoreBootstrap, type ProtectedStoreOwnershipOutcome } from "./guest/store-bootstrap.ts";
@@ -233,6 +234,12 @@ export async function runEmbeddedSession(opts: EmbeddedSessionOptions): Promise<
       killAllTaskProcessGroups();
     } catch {
       /* an abort path must never itself throw */
+    }
+    // Linux: what a killed sandboxed run made at a protected path is moved aside now (#74's review, check 2).
+    try {
+      sweepLinuxRuns();
+    } catch {
+      /* never throws */
     }
     settleAborted(ABORTED);
   };

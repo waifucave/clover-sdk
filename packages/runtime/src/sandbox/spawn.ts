@@ -14,6 +14,8 @@ import { accessSync, closeSync, constants as fsConstants, existsSync, lstatSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type UnheldPath } from "./linux-runs.ts";
+export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
 import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, expandPatterns, findBwrap, heldFolderNote, unixSocketFilter } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
 import {
@@ -71,6 +73,10 @@ let hostConfinement: { ok: true } | { ok: false; reason: string } | undefined;
  * assumed: `/proc/self/status` says no new privileges (`NoNewPrivs: 1`) and a seccomp filter (`Seccomp: 2`), and
  * making a user namespace fails (`unshare -U` refused, as under bubblewrap's `--disable-userns`). Anything else, or
  * anything that can't be checked, is not confined. Once per process.
+ *
+ * A heuristic, not a proof: these say a sandbox of some kind holds the process, not that it fences what the host's
+ * policy says. It is acceptable only because `hostFenced` is the host's alone now (`config.sandbox`; every settings
+ * file drops it, `tightenOnlySandbox`): the check guards a host that says so by mistake, not a hostile caller.
  */
 export function linuxHostConfinement(): { ok: true } | { ok: false; reason: string } {
   if (hostConfinement !== undefined) return hostConfinement;
@@ -543,8 +549,9 @@ function isRealDir(path: string): boolean {
  *  each made link-free (a link on the way refuses that folder), and `.git/hooks` only inside an existing real `.git`
  *  (never a `.git` of our own). Returns the folders that should exist and don't (they stay unheld, reported); with
  *  `make` false nothing is made and the answer is whether each could be (its nearest folder is a writable real one). */
-function ensureProtectedFolders(folders: readonly string[], cwd: string, make = true): string[] {
+function ensureProtectedFolders(folders: readonly string[], cwd: string, make = true): { failed: string[]; made: string[] } {
   const failed: string[] = [];
+  const made: string[] = [];
   const gitHooks = join(cwd, ".git", "hooks");
   for (const f of folders) {
     if (lexists(f)) continue;
@@ -569,12 +576,17 @@ function ensureProtectedFolders(folders: readonly string[], cwd: string, make = 
       continue;
     }
     try {
-      for (const c of chain) mkdirSync(c, { mode: 0o755 });
+      for (const c of chain) {
+        mkdirSync(c, { mode: 0o755 });
+        made.push(c);
+        // Made by us a moment ago: still a real folder, never a link someone put in its place.
+        if (!isRealDir(c)) throw new Error("not a real folder");
+      }
     } catch {
       failed.push(f);
     }
   }
-  return failed;
+  return { failed, made };
 }
 
 /**
@@ -585,75 +597,30 @@ function ensureProtectedFolders(folders: readonly string[], cwd: string, make = 
 export function linuxUnheldProtectedPaths(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" | "home" | "winterHome" | "storeHome" | "brand" | "allowGitConfigWrites">): string[] {
   if (process.platform !== "linux") return [];
   const lists = linuxSandboxListsFor(linuxListsInput(opts, false), (_p, regexes) => regexes.map(() => []));
-  return ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd), false);
-}
-
-/** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
-export interface UnheldPath { path: string; anchor: string }
-
-function lexists(p: string): boolean {
-  try {
-    lstatSync(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** The deepest ancestor of `path` that exists now (by `lstat`, links not followed). */
-function anchorOf(path: string): string {
-  let a = dirname(path);
-  while (a !== dirname(a) && !lexists(a)) a = dirname(a);
-  return a;
+  return ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd), false).failed;
 }
 
 /**
- * Moves aside whatever the command made at an unheld protected path (lane C's `quarantinePlanted`). It walks from the
- * path's anchor down, never through a link: the first link it meets (one the command made) is what moves, else the
- * path itself. It goes into the home's `quarantine/` folder, or is removed when it can't be moved there.
+ * Whether a Bash command counts as sandboxed for `autoAllowBashIfSandboxed`: the sandbox can run here and, on Linux
+ * under bubblewrap, no protected folder stays unheld (`linuxUnheldProtectedPaths`). The ONE check the engine and the
+ * host-code broker both ask (#74's review, check 2).
  */
-export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined): string[] {
-  const planted: string[] = [];
-  for (const { path, anchor } of unheld) {
-    const rest = path.slice(anchor.length).split("/").filter(Boolean);
-    let at = anchor;
-    let target: string | undefined;
-    for (const [i, part] of rest.entries()) {
-      at = join(at, part);
-      let st;
-      try {
-        st = lstatSync(at);
-      } catch {
-        break; // still missing
-      }
-      if (st.isSymbolicLink() || i === rest.length - 1) {
-        target = at;
-        break;
-      }
-    }
-    if (target === undefined || planted.includes(target)) continue;
-    try {
-      if (quarantineRoot === undefined) throw new Error("no quarantine folder");
-      mkdirSync(quarantineRoot, { recursive: true, mode: 0o700 });
-      renameSync(target, join(quarantineRoot, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
-    } catch {
-      try {
-        rmSync(target, { recursive: true, force: true });
-      } catch {
-        continue;
-      }
-    }
-    planted.push(target);
-  }
-  return planted;
+export function bashCountsAsSandboxed(settings: SandboxSettings, where: Pick<RunCommandOptions, "cwd" | "writableRoots" | "home" | "winterHome" | "storeHome" | "brand">): boolean {
+  if (!commandSandboxAvailable(settings)) return false;
+  if (process.platform === "linux" && settings.hostFenced !== true && linuxUnheldProtectedPaths(where).length > 0) return false;
+  return true;
 }
 
-function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; failed: string[]; quarantineRoot: string | undefined } {
+function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
   const bin = findBwrap();
   const filter = unixSocketFilter();
   if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
+  const brand = opts.brand ?? WINTER_BRAND;
+  const quarantineRoot = opts.winterHome !== undefined ? join(opts.winterHome, "quarantine") : opts.home !== undefined ? join(opts.home, brand.homeDirName, "quarantine") : undefined;
+  // A run whose process died before its end left its record: finish it first (`linux-runs.ts`).
+  recoverCrashedLinuxRuns(quarantineRoot);
   const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatterns(prefix, regexes));
-  const failed = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
+  const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
   const dir = mkdtempSync(join(tmpdir(), "clover-seccomp-"));
   let fd: number;
@@ -665,9 +632,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     rmSync(dir, { recursive: true, force: true });
   }
   const args = [...plan.args, "--", "/bin/bash", "-c", opts.command];
-  const brand = opts.brand ?? WINTER_BRAND;
-  const quarantineRoot = opts.winterHome !== undefined ? join(opts.winterHome, "quarantine") : opts.home !== undefined ? join(opts.home, brand.homeDirName, "quarantine") : undefined;
-  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, quarantineRoot };
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
 }
 
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
@@ -690,6 +655,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   // Linux: the protected paths the sandbox couldn't hold, checked at the command's end (B1), and where to move them.
   let unheld: UnheldPath[] = [];
   let failedFolders: string[] = [];
+  let madeFolders: string[] = [];
   let quarantineRoot: string | undefined;
 
   if (posture === "sandboxed") {
@@ -716,6 +682,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         heldNote = linux.heldNote;
         unheld = linux.unheld;
         failedFolders = linux.failed;
+        madeFolders = linux.made;
         quarantineRoot = linux.quarantineRoot;
       }
     } else {
@@ -794,6 +761,9 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   // starts, setsid'd and double-forked processes included, is found by the holder and stopped with it. Without one, the
   // command's process group stands for what it leaves (`(cmd) &`, `nohup … &`).
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
+  // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
+  // never comes (`linux-runs.ts`).
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 ? beginLinuxRun({ unheld, quarantineRoot, made: madeFolders }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
@@ -813,6 +783,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
     } catch (error) {
       violationMonitor?.stop(); // never leave a stream behind a command that did not start
       if (seccompFd !== undefined) closeSync(seccompFd);
+      endLinuxRun();
       throw error;
     }
     // The child holds its own copy of the seccomp filter's fd now.
@@ -927,7 +898,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       if (heldNote !== "" && exitCode !== 0 && !aborted && !streamKilled) opts.onStderr?.(Buffer.from(heldNote));
       // B1: what the command made at a protected path the sandbox couldn't hold is moved aside now, at ITS end (a
       // background command's too), and said.
-      const quarantined = quarantinePlanted(unheld, quarantineRoot);
+      const quarantined = endLinuxRun();
       if (quarantined.length > 0) opts.onStderr?.(Buffer.from(`\n[sandbox] moved aside what the command made at protected paths (they run later, outside the sandbox): ${quarantined.join(", ")}\n`));
       const result: RunCommandResult = {
         exitCode,
