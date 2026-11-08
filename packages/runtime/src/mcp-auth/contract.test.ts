@@ -100,5 +100,17 @@ describe("the public subpath", () => {
     expect(subpath.MCP_OAUTH_REFRESH_SUBTYPE).toBe("mcp_oauth_refresh");
     expect(subpath.MCP_STATUS_NEEDS_AUTH).toBe("needs-auth");
     expect(subpath.WINTER_MCP_CLIENT_METADATA_URL).toBe("https://yanlinglabs.com/winter/oauth-client.json");
+    expect(subpath.CLOVER_MCP_CLIENT_METADATA_URL).toBe("https://waifucave.com/clover/oauth-client.json");
+  });
+
+  test("Clover's client document is a CIMD for its own URL: a public client on the portless loopback redirect", () => {
+    const doc = subpath.CLOVER_MCP_CLIENT_DOCUMENT;
+    expect(doc.client_id).toBe(subpath.CLOVER_MCP_CLIENT_METADATA_URL);
+    expect(doc.client_name).toBe("Clover");
+    expect([...doc.redirect_uris]).toEqual([`http://127.0.0.1${subpath.MCP_OAUTH_CALLBACK_PATH}`]);
+    expect([...doc.grant_types]).toEqual(["authorization_code", "refresh_token"]);
+    expect([...doc.response_types]).toEqual(["code"]);
+    expect(doc.token_endpoint_auth_method).toBe("none");
+    expect(Object.isFrozen(doc) && Object.isFrozen(doc.redirect_uris)).toBe(true);
   });
 });

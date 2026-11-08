@@ -49,6 +49,8 @@ export {
   MCP_OAUTH_LOGIN_TIMEOUT_MS,
   MCP_OAUTH_SESSION_CACHE_MS,
   WINTER_MCP_CLIENT_METADATA_URL,
+  CLOVER_MCP_CLIENT_METADATA_URL,
+  CLOVER_MCP_CLIENT_DOCUMENT,
 } from "./mcp-auth/constants.ts";
 export { startMcpOAuthLogin, type McpOAuthLogin, type McpOAuthLoginOutcome, type StartMcpOAuthLoginOptions } from "./mcp-auth/login.ts";
 export { refreshMcpOAuthToken, type RefreshMcpOAuthTokenOptions, type RefreshMcpOAuthTokenResult } from "./mcp-auth/refresh.ts";

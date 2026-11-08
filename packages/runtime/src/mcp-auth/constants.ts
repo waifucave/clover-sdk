@@ -21,6 +21,28 @@
  */
 export const WINTER_MCP_CLIENT_METADATA_URL = "https://yanlinglabs.com/winter/oauth-client.json";
 
+/**
+ * Clover's Client ID Metadata Document: the URL Clover's MCP sign-ins send as their client id (Clover passes it as
+ * `clientMetadataUrl`; the default above stays the previous app's until Clover's is hosted). ONE constant: the owner
+ * decides the final URL and hosts the document there (`CLOVER_MCP_CLIENT_DOCUMENT`, which Clover's repository keeps as
+ * a file and its test holds equal to this).
+ */
+export const CLOVER_MCP_CLIENT_METADATA_URL = "https://waifucave.com/clover/oauth-client.json";
+
+/**
+ * The document to host at `CLOVER_MCP_CLIENT_METADATA_URL`: its `client_id` is that URL (a CIMD's own rule), it
+ * registers the loopback redirect with no port (RFC 8252 §7.3, as for Winter's above), and Clover is a public client.
+ */
+export const CLOVER_MCP_CLIENT_DOCUMENT = Object.freeze({
+  client_id: CLOVER_MCP_CLIENT_METADATA_URL,
+  client_name: "Clover",
+  client_uri: "https://waifucave.com",
+  redirect_uris: Object.freeze(["http://127.0.0.1/callback"]),
+  grant_types: Object.freeze(["authorization_code", "refresh_token"]),
+  response_types: Object.freeze(["code"]),
+  token_endpoint_auth_method: "none",
+});
+
 /** The loopback redirect's path. The CIMD document registers `http://127.0.0.1/callback` with it. */
 export const MCP_OAUTH_CALLBACK_PATH = "/callback";
 
