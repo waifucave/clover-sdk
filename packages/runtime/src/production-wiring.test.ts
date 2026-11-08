@@ -2717,7 +2717,9 @@ describe("fix round 10, item C: Edit/Read permission rules contribute to the san
     }
   });
 
-  test("an Edit(...) allow rule contributes its own resolved path to allowWrite", async () => {
+  // Clover #74's review (the ruling): a settings file only tightens the sandbox, so its Edit ALLOW rule no longer
+  // widens the writable roots (its deny rules still add denies, below).
+  test("an Edit(...) allow rule in a settings file contributes NO allowWrite", async () => {
     writeSettings(home, { permissions: { allow: ["Edit(//repo/scratch/**)"] } });
     const wiring = await buildProductionWiring({
       config: { sessionId: "s-c-edit-allow", cwd, model: "winter-test/echo", settingSources: ["user"] } as unknown as RuntimeConfig,
@@ -2725,7 +2727,7 @@ describe("fix round 10, item C: Edit/Read permission rules contribute to the san
       winterHome: home,
     });
     try {
-      expect(wiring.config.sandbox?.filesystem?.allowWrite).toEqual(["/repo/scratch"]);
+      expect(wiring.config.sandbox?.filesystem?.allowWrite).toBeUndefined();
     } finally {
       wiring.dispose();
     }
@@ -2767,7 +2769,7 @@ describe("fix round 10, item C: Edit/Read permission rules contribute to the san
     }
   });
 
-  test("fix round 17 (I-1): a ~/-anchored Edit(...) allow resolves under os.homedir() too, never as an allowWrite of the run folder", async () => {
+  test("fix round 17 (I-1), then #74's review: a ~/-anchored Edit(...) allow in a settings file adds no allowWrite, of the home or of the run folder", async () => {
     writeSettings(home, { permissions: { allow: ["Edit(~/notes/**)"] } });
     const wiring = await buildProductionWiring({
       config: { sessionId: "s-r17-tilde-allow", cwd, model: "winter-test/echo", settingSources: ["user"] } as unknown as RuntimeConfig,
@@ -2775,7 +2777,7 @@ describe("fix round 10, item C: Edit/Read permission rules contribute to the san
       winterHome: home,
     });
     try {
-      expect(wiring.config.sandbox?.filesystem?.allowWrite).toEqual([join(homedir(), "notes")]);
+      expect(wiring.config.sandbox?.filesystem?.allowWrite).toBeUndefined();
     } finally {
       wiring.dispose();
     }
@@ -3567,7 +3569,7 @@ describe("fix round 16, item 1: default write protection globs are ANCHORED at c
 // pattern. Together the two layers cover the full chain: settings.json -> RuntimeConfig.sandbox ->
 // ctx.sandboxSettings -> allowGitConfigWrites -> the rendered profile.
 describe("fix round 16, item 2: sandbox.filesystem.allowGitConfig is wired end to end", () => {
-  test.skipIf(process.platform !== "darwin")("end to end: settings.json's sandbox.filesystem.allowGitConfig: true allows a .git/config write; without it, the write is denied", async () => {
+  test.skipIf(process.platform !== "darwin")("end to end: the host's sandbox.filesystem.allowGitConfig: true allows a .git/config write; without it, or from settings.json, the write is denied", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "winter-r16-allowgitconfig-scratch-"));
     try {
       mkdirSync(join(scratch, ".git"), { recursive: true });
@@ -3598,10 +3600,22 @@ describe("fix round 16, item 2: sandbox.filesystem.allowGitConfig is wired end t
         wiringDenied.dispose();
       }
 
-      // With the setting: allowed.
+      // From a settings file: ignored (#74's review: a file only tightens the sandbox).
       writeSettings(home, { sandbox: { filesystem: { allowGitConfig: true } } });
+      const wiringFile = await buildProductionWiring({
+        config: { sessionId: "s-r16-allowgitconfig-file", cwd: scratch, model: "winter-test/echo", settingSources: ["user"] } as unknown as RuntimeConfig,
+        env: {},
+        winterHome: home,
+      });
+      try {
+        expect(wiringFile.config.sandbox?.filesystem?.allowGitConfig).toBeUndefined();
+      } finally {
+        wiringFile.dispose();
+      }
+
+      // From the host's own config: allowed.
       const wiringAllowed = await buildProductionWiring({
-        config: { sessionId: "s-r16-allowgitconfig-allowed", cwd: scratch, model: "winter-test/echo", settingSources: ["user"] } as unknown as RuntimeConfig,
+        config: { sessionId: "s-r16-allowgitconfig-allowed", cwd: scratch, model: "winter-test/echo", settingSources: ["user"], sandbox: { filesystem: { allowGitConfig: true } } } as unknown as RuntimeConfig,
         env: {},
         winterHome: home,
       });

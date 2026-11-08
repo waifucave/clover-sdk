@@ -72,6 +72,9 @@ describe("buildBwrapPlan", () => {
     expect(args.lastIndexOf("/w/a/b/.git/hooks")).toBeGreaterThan(args.lastIndexOf("/w/a/b/.git"));
   });
 
+  // The plan alone leaves a missing path directly in a root or in `.git` unheld; the spawn closes that (#74's review
+  // B1): it makes the protected folders before the run, and moves aside at the command's end what appeared at the rest
+  // (linux-protected.test.ts, and the live cases in linux-bwrap.linux.test.ts).
   test("a missing denied path holds its nearest folder inside a root (read-only, present children writable), never the root or .git", () => {
     const fs = fakeFs(["/w", "/w/proj", "/w/proj/.clover", "/w/proj/src", "/w/.git"], ["/w/proj/.clover/other.json"]);
     const { args, held, unheld } = buildBwrapPlan({

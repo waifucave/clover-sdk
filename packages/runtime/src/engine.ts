@@ -363,7 +363,7 @@ import { sessionTempDir, type SessionTempDirPaths } from "./paths/temp.ts";
 import { DEFAULT_SANDBOX_SETTINGS, resolveNetworkPosture } from "./sandbox/profile.ts";
 // B-H1(a): whether this HOST can actually sandbox -- a session that asked for one on a machine
 // without `sandbox-exec` gets no containment, and therefore earns no auto-allow.
-import { commandSandboxAvailable, resolveExecutionPath } from "./sandbox/spawn.ts";
+import { commandSandboxAvailable, linuxUnheldProtectedPaths, resolveExecutionPath } from "./sandbox/spawn.ts";
 // Phase 4 Task 8 (rider 3, WS-09 §10): Lane B's pure alias helpers -- single-hop canonical-identity
 // resolution for the permission/hook axis, and duplicate suppression over the advertised partition.
 // Both shipped as pure functions with no engine call site (R4-10 forbade Lane B from adding one);
@@ -3887,7 +3887,21 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     // An override takes the call OUT of the sandbox unless the policy forbids unsandboxed commands
     // (the flag is then ignored); an allowed `excludedCommands` entry runs unsandboxed too.
     if (bashPostureFor(call, call.input["dangerouslyDisableSandbox"] === true) !== "sandboxed") return false;
-    return commandSandboxAvailable(sandboxSettingsForSession);
+    if (!commandSandboxAvailable(sandboxSettingsForSession)) return false;
+    // Linux (#74's review B1): not while a protected folder the sandbox can't hold is missing and can't be made. The
+    // session's own roots; its temp and output folders are its own and always writable.
+    if (process.platform === "linux" && sandboxSettingsForSession.hostFenced !== true) {
+      const unheld = linuxUnheldProtectedPaths({
+        cwd: currentCwd,
+        writableRoots: boundedRoots(makeEvalCtx()),
+        home: permissionHome,
+        ...(resolvedWinterHome !== undefined ? { winterHome: resolvedWinterHome } : {}),
+        ...(config.storeHome !== undefined ? { storeHome: config.storeHome } : {}),
+        brand: sessionBrand,
+      });
+      if (unheld.length > 0) return false;
+    }
+    return true;
   };
 
   /** The in-flight turn's abort signal, read by `makeEvalCtx` -- see `EvaluationContext.signal`. */

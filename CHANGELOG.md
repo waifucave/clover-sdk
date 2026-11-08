@@ -22,15 +22,42 @@ corresponds to one `chore(release): vX.Y.Z` commit.
 - **Never silent.** With no bubblewrap at a system path (`/usr/bin`, `/bin`, `/usr/local/bin`, never PATH), a probe
   that fails, or an unknown architecture, a sandboxed command is refused (`SandboxUnavailableError`), as on a Mac
   without sandbox-exec.
+- **Missing protected paths.** A bind can only cover what exists, so:
+  - before a command runs, the missing protected folders are made, empty and link-free: each writable root's project
+    folder (`.winter`, so its settings files are held by it), and at the working folder `.vscode`, `.idea`,
+    `.claude/commands`, `.claude/agents`, and `.git/hooks` inside an existing `.git`;
+  - at the command's end (a background command's at ITS end), whatever it made at a protected path still left
+    unheld (`.mcp.json`, `.gitconfig`, the shell rc files, `.git/hooks` of a repo it made) is moved aside into the
+    home's `quarantine/` folder, never through a link it planted, and said on stderr and in the tool result
+    (`RunCommandResult.quarantined`);
+  - a protected folder that can't be made stays unheld: it is reported (`RunCommandResult.unheldProtectedPaths`, a
+    `[sandbox: not held …]` line in the Bash result), and while any is, the command doesn't count as sandboxed for
+    `autoAllowBashIfSandboxed` (`linuxUnheldProtectedPaths`).
 - **Residuals**, which the header lists:
   - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;
-  - a missing denied path directly in a writable root, or in `.git`, stays creatable;
+  - a protected file made during a run exists until the run ends;
   - matching is case-sensitive.
 - **`SandboxSettings.hostFenced`** (Linux): the host already runs this process in its own sandbox, so a command runs
-  under it as is. Set only by a host that wraps.
+  under it as is. Honoured only from the host's own `config.sandbox`, and only once this process is verified to be
+  confined (`NoNewPrivs: 1`, `Seccomp: 2`, and `unshare -U` refused; `linuxHostConfinement`). Otherwise the command
+  is refused.
 - `isSandboxAvailable()` is true on Linux where bubblewrap can sandbox. `commandSandboxAvailable(settings)`
   adds `hostFenced`.
 - CI's Linux build installs bubblewrap and requires it (`WINTER_REQUIRE_LINUX_SANDBOX=1`).
+
+### A settings file's sandbox only tightens it (every OS)
+
+- **The hole, on macOS too, through 0.0.73:** any settings file (user, project or local, and a project of an untrusted
+  workspace) could loosen the sandbox: `autoAllowBashIfSandboxed: true` auto-allowed Bash, and `enabled: false`,
+  `allowUnsandboxedCommands: true`, `excludedCommands`, `network` and `filesystem.allowWrite` were honoured.
+- **Now** a file's `sandbox` block keeps only `enabled: true`, `allowUnsandboxedCommands: false`,
+  `autoAllowBashIfSandboxed: false`, `denyLaunchServices: true`, `filesystem.denyWrite`/`denyRead` and
+  `filesystem.allowGitConfig: false` (`tightenOnlySandbox`). The rest is dropped and named on the tier's `error`; the
+  file's raw block stays on its source entry. The programmatic `managedSettings` is filtered the same way.
+- Only the host's own `config.sandbox` (the flag tier) and `serverManagedSettings` may loosen it, `hostFenced`
+  included.
+- A settings file's `Edit(...)` allow rule no longer adds a writable root to the sandbox. Its deny rules still add
+  denies.
 
 ## 0.0.73
 

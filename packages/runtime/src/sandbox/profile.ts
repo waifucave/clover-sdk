@@ -1061,7 +1061,7 @@ ${machRules})
 export function linuxSandboxListsFor(
   input: SeatbeltProfileInput,
   expand: (prefix: string, regexes: readonly RegExp[]) => string[][],
-): { writableRoots: string[]; denyWrite: string[]; denyRead: string[] } {
+): { writableRoots: string[]; denyWrite: string[]; denyRead: string[]; ensureFolders: string[] } {
   const brand = input.brand ?? WINTER_BRAND;
   const durableRoot = input.storeHome ?? input.winterHome;
   const roots = [...new Set([input.cwd, ...(input.writableRoots ?? [])].map(canon))];
@@ -1126,5 +1126,11 @@ export function linuxSandboxListsFor(
     const found = expand(prefix, list.map((w) => w.re));
     list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });
   }
-  return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead] };
+  // The protected folders a mount can only cover once they exist (#74's review B1): each root's project dot-dir (so its
+  // control-plane files are held by it), the cwd's protected folders, and the cwd's `.git/hooks` (the caller makes that
+  // one only inside an existing `.git`). Empty folders: git doesn't see them. Not the editors' and claude's folders in
+  // the home itself (a session there doesn't make another tool's config folder): there the end-of-run move covers them.
+  const inHome = input.home !== undefined && canon(input.home) === cwd;
+  const ensureFolders = [...new Set([...roots.map((r) => join(r, proj)), ...(inHome ? [] : DEFAULT_PROTECTED_DIRS.map((rel) => join(cwd, rel))), join(cwd, ".git", "hooks")])];
+  return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead], ensureFolders };
 }

@@ -4,11 +4,11 @@
 // bubblewrap, still enumerates them as skipped. CI sets WINTER_REQUIRE_LINUX_SANDBOX=1, which turns "no bubblewrap
 // here" into a failure, so a runner that lost it can't turn this file green by skipping.
 import { afterAll, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { commandSandboxAvailable, isSandboxAvailable, linuxSandboxReady, runCommand, SandboxUnavailableError } from "./spawn.ts";
+import { commandSandboxAvailable, isSandboxAvailable, linuxHostConfinement, linuxSandboxReady, linuxUnheldProtectedPaths, runCommand, SandboxUnavailableError } from "./spawn.ts";
 import { findBwrap, bwrapHasDisableUserns } from "./linux-bwrap.ts";
 import type { SandboxSettings } from "./profile.ts";
 
@@ -41,7 +41,8 @@ describe("the Linux sandbox (bubblewrap)", () => {
     if (!linux) return expect(linuxSandboxReady()).toBe(false);
     expect(isSandboxAvailable()).toBe(ready);
     expect(isSandboxAvailable("/nonexistent/bwrap")).toBe(false);
-    expect(commandSandboxAvailable({ hostFenced: true }, "/nonexistent/bwrap")).toBe(true);
+    // hostFenced counts only in a process verified to be confined; a CI runner's isn't.
+    expect(commandSandboxAvailable({ hostFenced: true }, "/nonexistent/bwrap")).toBe(linuxHostConfinement().ok);
     if (!ready) await expect(run("true", temp("clover-a3-lx-"))).rejects.toBeInstanceOf(SandboxUnavailableError);
   });
 
@@ -122,10 +123,61 @@ describe("the Linux sandbox (bubblewrap)", () => {
     expect(r.out.trim().split("\n").at(-1)).toBe("0");
   });
 
-  linuxTest("hostFenced: the command runs as it is, under the host's own sandbox", async () => {
+  linuxTest("hostFenced in a process that isn't confined: refused, never run unsandboxed", async () => {
     const cwd = temp("clover-a3-lx-cwd-");
-    const r = await run(`echo $$ > pid.txt; echo ran`, cwd, { settings: { hostFenced: true } });
-    expect(r.out).toContain("ran");
-    expect(r.profile).toBe("host-fenced");
+    expect(linuxHostConfinement().ok).toBe(false);
+    const err = await run(`echo ran > ran.txt`, cwd, { settings: { hostFenced: true } }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SandboxUnavailableError);
+    expect(String((err as Error).message)).toContain("hostFenced");
+    expect(existsSync(join(cwd, "ran.txt"))).toBe(false);
+  });
+
+  linuxTest("a missing .git/hooks is made before the run and holds; with no repo, what the command makes there is moved aside", async () => {
+    const repo = temp("clover-a3-lx-cwd-"), home = temp("clover-a3-lx-home-");
+    mkdirSync(join(repo, ".git"));
+    const r = await run("(echo x > .git/hooks/pre-commit) 2>/dev/null && echo HOOK || echo nohook", repo, { home });
+    expect(r.out).toContain("nohook");
+    expect(existsSync(join(repo, ".git", "hooks"))).toBe(true);
+    expect(existsSync(join(repo, ".git", "hooks", "pre-commit"))).toBe(false);
+    const bare = temp("clover-a3-lx-cwd-");
+    const r2 = await run("mkdir -p .git/hooks && echo x > .git/hooks/pre-commit && echo made", bare, { home });
+    expect(r2.out).toContain("made");
+    expect(r2.quarantined).toEqual([join(bare, ".git", "hooks")]);
+    expect(r2.err).toContain("moved aside");
+    expect(existsSync(join(bare, ".git", "hooks"))).toBe(false);
+    expect(readdirSync(join(home, ".winter", "quarantine")).length).toBeGreaterThan(0);
+  });
+
+  linuxTest("a planted .winter/settings.json: the folder is made before the run and held, so it can't be; a planted .mcp.json is moved aside", async () => {
+    const cwd = temp("clover-a3-lx-cwd-"), home = temp("clover-a3-lx-home-");
+    const r = await run([
+      `(echo '{"sandbox":{"enabled":false}}' > .winter/settings.json) 2>/dev/null && echo PLANTED || echo noplant`,
+      "(ln -s /tmp .winter/settings.local.json) 2>/dev/null && echo LINKED || echo nolink",
+      "echo '{}' > .mcp.json && echo mcp",
+    ].join("; "), cwd, { home });
+    expect(r.out).toContain("noplant");
+    expect(r.out).toContain("nolink");
+    expect(r.out).toContain("mcp");
+    expect(existsSync(join(cwd, ".winter", "settings.json"))).toBe(false);
+    expect(() => lstatSync(join(cwd, ".winter", "settings.local.json"))).toThrow();
+    expect(existsSync(join(cwd, ".mcp.json"))).toBe(false);
+    expect(r.quarantined).toEqual([join(cwd, ".mcp.json")]);
+    expect(r.unheldProtectedPaths).toBeUndefined();
+  });
+
+  linuxTest("a protected folder that can't be made stays unheld: reported, and the command isn't counted as sandboxed", async () => {
+    const cwd = temp("clover-a3-lx-cwd-");
+    expect(linuxUnheldProtectedPaths({ cwd })).toEqual([]);
+    const locked = temp("clover-a3-lx-ro-");
+    chmodSync(locked, 0o555);
+    try {
+      const unheld = linuxUnheldProtectedPaths({ cwd: locked });
+      expect(unheld).toContain(join(locked, ".winter"));
+      expect(unheld).toContain(join(locked, ".vscode"));
+      const r = await run("echo ran", locked);
+      expect(r.unheldProtectedPaths).toContain(join(locked, ".winter"));
+    } finally {
+      chmodSync(locked, 0o755);
+    }
   });
 });

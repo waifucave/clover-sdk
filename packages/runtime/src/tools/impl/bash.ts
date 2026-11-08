@@ -36,6 +36,7 @@ import {
   SandboxUnavailableError,
   resolveExecutionPath,
   commandSandboxAvailable,
+  linuxUnheldProtectedPaths,
   sandboxUnavailableMessage,
   type RunCommandResult,
 } from "../../sandbox/spawn.ts";
@@ -325,6 +326,17 @@ function capOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", raw: 
 // case where the flag was set yet a DIFFERENT row of the §4.1 table won first (e.g. `enabled:
 // false` beats a same-call override request) -- avoids the redundant "override-requested,
 // override-requested" this would otherwise read as.
+/**
+ * Linux (#74's review B1): the protected paths this command's sandbox couldn't hold -- they didn't exist, so no mount
+ * covers them -- and what the command made at any of them, moved aside at its end. Empty when there is nothing to say.
+ */
+export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined): string {
+  const lines: string[] = [];
+  if (unheld !== undefined && unheld.length > 0) lines.push(`[sandbox: not held (missing, checked at the command's end): ${unheld.join(", ")}]`);
+  if (quarantined !== undefined && quarantined.length > 0) lines.push(`[sandbox: moved aside (made at a protected path): ${quarantined.join(", ")}]`);
+  return lines.join("\n");
+}
+
 function formatSandboxAnnotation(posture: string, sandboxOverrideRequested: boolean): string {
   const overrideNote = sandboxOverrideRequested && posture !== "override-requested" ? ", override-requested" : "";
   return `[sandbox: ${posture}${overrideNote}]`;
@@ -361,6 +373,8 @@ function formatForegroundResult(parts: {
    * `[exit N]` / `[sandbox: ...]` tail, which stays the last two lines.
    */
   sandboxViolations?: string;
+  /** Linux: the protected paths the sandbox couldn't hold, and what was moved aside from them (`protectedPathsNote`). */
+  protectedNote?: string;
 }): string {
   const lines: string[] = [];
   lines.push(parts.stdout.text.length > 0 ? parts.stdout.text : "(no stdout)");
@@ -371,6 +385,7 @@ function formatForegroundResult(parts: {
     if (parts.stderr.persistedPath) lines.push(`[stderr truncated; full output: ${parts.stderr.persistedPath}]`);
   }
   if (parts.sandboxViolations) lines.push(parts.sandboxViolations);
+  if (parts.protectedNote) lines.push(parts.protectedNote);
   if (parts.streamKilled) lines.push("[streamed output exceeded 5GB, killed]");
   if (parts.aborted) lines.push("[aborted]");
   else if (parts.timedOut) lines.push(`[timed out after ${parts.timeoutMs}ms, killed]`);
@@ -522,6 +537,7 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
   // only a macOS Seatbelt run that failed with non-baseline denials carries any.
   const sandboxViolations = !success && !result.aborted && result.sandboxViolations !== undefined ? formatSandboxViolations(result.sandboxViolations) : "";
 
+  const protectedNote = result.aborted ? "" : protectedPathsNote(result.unheldProtectedPaths, result.quarantined);
   const formatted = formatForegroundResult({
       stdout: stdoutCapped,
       stderr: stderrCapped,
@@ -533,6 +549,7 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
       sandboxOverrideRequested: result.sandboxOverrideRequested,
       streamKilled: result.streamKilled,
       ...(sandboxViolations !== "" ? { sandboxViolations } : {}),
+      ...(protectedNote !== "" ? { protectedNote } : {}),
     });
   return { output: adopted !== undefined ? `${formatted}\n${leftBehindNote(adopted)}` : formatted };
 }
@@ -692,8 +709,10 @@ async function runBackground(input: BashInput, ctx: ToolExecutionContext): Promi
     },
   );
 
+  // Linux (B1): the protected paths its sandbox can't hold; what it makes there is moved aside at ITS end.
+  const backgroundUnheld = decision.posture === "sandboxed" ? protectedPathsNote(linuxUnheldProtectedPaths(sandboxRunInputs(ctx)), undefined) : "";
   return {
-    output: `background task ${taskId} started\noutput_file: ${outputPath}\n${formatSandboxAnnotation(decision.posture, decision.sandboxOverrideRequested)}\nRead or grep that file for output as it accumulates; use task_output to peek, task_stop to stop it.`,
+    output: `background task ${taskId} started\noutput_file: ${outputPath}\n${backgroundUnheld !== "" ? `${backgroundUnheld}\n` : ""}${formatSandboxAnnotation(decision.posture, decision.sandboxOverrideRequested)}\nRead or grep that file for output as it accumulates; use task_output to peek, task_stop to stop it.`,
   };
 }
 

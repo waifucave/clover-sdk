@@ -33,9 +33,11 @@
 //    provider-state file names) is matched against what is on disk when the command starts (`expandPattern`,
 //    bounded): a match made later by the command itself isn't covered. The direct literals (`<cwd>/.git/hooks`,
 //    `<root>/<projectDir>/settings.json`…) are covered whether or not they exist, through the naming folders.
-//  * A denied path that doesn't exist yet, directly in a writable root or in a `.git` folder, can be created: holding
-//    the root or `.git` read-only for new names would stop the command's own work (`unheld`). Everywhere else the
-//    nearest existing folder is held. Every tool call's own permission check still applies; this is the shell's gap.
+//  * A denied path that doesn't exist yet, directly in a writable root or in a `.git` folder, isn't held by the plan:
+//    holding the root or `.git` read-only for new names would stop the command's own work (`unheld`). Everywhere else
+//    the nearest existing folder is held. The spawn closes the gap (#74's review B1, spawn.ts): it makes the protected
+//    folders before the run, and at the command's end moves aside what appeared at the rest (`quarantinePlanted`); a
+//    protected file made during a run exists until the run ends.
 //  * A denied path is matched by name, case-sensitively (Seatbelt ignores case; Linux file systems mostly don't).
 //
 // Never silent: with no bubblewrap at a system path, a probe that fails, or an architecture the seccomp filter doesn't

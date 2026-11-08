@@ -233,6 +233,56 @@ function tierContribution(values: Settings, isProject: boolean, trustedWorkspace
 }
 
 /**
+ * Clover #74's review (the controller's ruling): a settings FILE's `sandbox` block may only TIGHTEN the sandbox, on
+ * every OS and from every file tier (user, project, local) and the programmatic managed one; only the host's own
+ * `config.sandbox` (the `flag` tier) and the server-managed policy may loosen it. Kept from a file: `enabled: true`, `allowUnsandboxedCommands: false`, `autoAllowBashIfSandboxed:
+ * false`, `denyLaunchServices: true`, and `filesystem.denyWrite`/`denyRead`/`allowGitConfig: false`. Everything else
+ * is dropped, and named on the tier's `error`: `enabled: false`, `autoAllowBashIfSandboxed: true`,
+ * `allowUnsandboxedCommands: true`, `excludedCommands`, `network`, `hostFenced`, `filesystem.allowWrite`/`allowRead`,
+ * `allowGitConfig: true`, and any key this module doesn't know.
+ */
+export function tightenOnlySandbox(values: Settings): { values: Settings; dropped: string[] } {
+  const sandbox = (values as Record<string, unknown>)["sandbox"];
+  if (sandbox === undefined) return { values, dropped: [] };
+  const dropped: string[] = [];
+  const kept: Record<string, unknown> = {};
+  if (!isPlainObject(sandbox)) {
+    dropped.push("sandbox");
+  } else {
+    const keepIf = (key: string, ok: (v: unknown) => boolean): void => {
+      if (!(key in sandbox)) return;
+      if (ok(sandbox[key])) kept[key] = sandbox[key];
+      else dropped.push(`sandbox.${key}`);
+    };
+    keepIf("enabled", (v) => v === true);
+    keepIf("allowUnsandboxedCommands", (v) => v === false);
+    keepIf("autoAllowBashIfSandboxed", (v) => v === false);
+    keepIf("denyLaunchServices", (v) => v === true);
+    for (const key of Object.keys(sandbox)) {
+      if (!["enabled", "allowUnsandboxedCommands", "autoAllowBashIfSandboxed", "denyLaunchServices", "filesystem"].includes(key)) dropped.push(`sandbox.${key}`);
+    }
+    const fs = sandbox["filesystem"];
+    if (fs !== undefined) {
+      if (!isPlainObject(fs)) dropped.push("sandbox.filesystem");
+      else {
+        const keptFs: Record<string, unknown> = {};
+        for (const key of Object.keys(fs)) {
+          if (key === "denyWrite" || key === "denyRead") keptFs[key] = fs[key];
+          else if (key === "allowGitConfig" && fs[key] === false) keptFs[key] = false;
+          else dropped.push(`sandbox.filesystem.${key}`);
+        }
+        if (Object.keys(keptFs).length > 0) kept["filesystem"] = keptFs;
+      }
+    }
+  }
+  if (dropped.length === 0) return { values, dropped };
+  const out: Record<string, unknown> = { ...(values as Record<string, unknown>) };
+  if (Object.keys(kept).length > 0) out["sandbox"] = kept;
+  else delete out["sandbox"];
+  return { values: out as Settings, dropped };
+}
+
+/**
  * The four `permissions` arrays that are RULE SETS rather than "the winning tier's value", and the
  * one place the ordinary replace-by-higher-tier merge would be actively unsafe.
  *
@@ -443,12 +493,15 @@ export async function resolveSettingsDetailed(
     // gate actually applies (untrusted), so a trusted project's ordinary `modelSlots` never carries
     // a spurious error line.
     const untrustedModelSlotsError = source === "project" && opts.trustedWorkspace !== true ? describeUntrustedModelSlotKeys(file.values) : undefined;
-    const mergedError = [file.error, valueError, plansError, neverKeyError, untrustedModelSlotsError].filter((e): e is string => e !== undefined).join("; ");
+    // The sandbox only tightens from a file (`tightenOnlySandbox`); what it dropped is reported, never silent.
+    const tightened = tightenOnlySandbox(file.values);
+    const sandboxError = tightened.dropped.length > 0 ? `a settings file's sandbox may only tighten it; ignored: ${tightened.dropped.join(", ")}` : undefined;
+    const mergedError = [file.error, valueError, plansError, neverKeyError, untrustedModelSlotsError, sandboxError].filter((e): e is string => e !== undefined).join("; ");
     lowestFirst.push({
       source,
       path,
       settings: file.values,
-      values: file.values,
+      values: tightened.values,
       loaded: file.loaded,
       ...(mergedError.length > 0 ? { error: mergedError } : {}),
     });
@@ -463,11 +516,15 @@ export async function resolveSettingsDetailed(
   // (`2838-2839`) where the programmatic tier is filtered restrictive-only, so it carries the
   // broader authority. A DOCUMENTED JUDGMENT CALL -- the declaration pins neither the relative order
   // nor the filter's exact rule, and no capture exercised two policy tiers at once.
-  if (opts.managedSettings !== undefined) {
-    lowestFirst.push({ source: "managed", policyOrigin: "file", settings: opts.managedSettings, values: opts.managedSettings, loaded: true });
-  }
-  if (opts.serverManagedSettings !== undefined) {
-    lowestFirst.push({ source: "managed", policyOrigin: "remote", settings: opts.serverManagedSettings, values: opts.serverManagedSettings, loaded: true });
+  // The programmatic managed tier is filtered restrictive-only (above): its sandbox only tightens, like a file's. The
+  // server-managed one is the documented unfiltered policy, and stays as it is.
+  for (const [origin, managed] of [["file", opts.managedSettings], ["remote", opts.serverManagedSettings]] as const) {
+    if (managed === undefined) continue;
+    const tightened = origin === "file" ? tightenOnlySandbox(managed) : { values: managed, dropped: [] };
+    lowestFirst.push({
+      source: "managed", policyOrigin: origin, settings: managed, values: tightened.values, loaded: true,
+      ...(tightened.dropped.length > 0 ? { error: `a settings file's sandbox may only tighten it; ignored: ${tightened.dropped.join(", ")}` } : {}),
+    });
   }
 
   const trustedWorkspace = opts.trustedWorkspace === true;
