@@ -9,13 +9,17 @@
 //   * registers the GENERIC adapters only (`createGenericAdapters`: the ones a declarative plugin's endpoint runs
 //     on), built against that catalog, so each declarative provider gets its own endpoint and rows;
 //   * registers a STUB for each adapter the host serves (`hostServedProviderAdapter`), whose calls ride the
-//     session's control bridge to the host, which runs them on the plugin (`model_adapter_*`).
-// No other adapter of this build is registered: a provider no plugin brings is a provider the session has not got.
+//     session's control bridge to the host, which runs them on the plugin (`model_adapter_*`);
+//   * registers THIS BUILD'S OWN adapter for a provider in the host's catalog whose adapter the host doesn't serve
+//     (a code plugin whose host can't start here: Bedrock and Vertex run on Node, which the plugin host doesn't start
+//     yet), so the provider stays on the compiled path rather than refusing every turn (Clover #302's review B3). The
+//     host decides which providers are in its catalog; this only gives a row the adapter its own id names.
+// No other adapter of this build is registered: a provider not in the host's catalog is one the session has not got.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { GENERIC_ADAPTER_IDS, validateCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
-import { createGenericAdapters, hostServedProviderAdapter, type HostModelAdapterSender, type HostServedAdapterIdentity, type ProviderAdapter } from "@waifucave/clover-provider-runtime";
+import { createGenericAdapters, createShippedAdapters, hostServedProviderAdapter, type HostModelAdapterSender, type HostServedAdapterIdentity, type ProviderAdapter } from "@waifucave/clover-provider-runtime";
 
 export type ModelProvidersConfig = NonNullable<RuntimeConfig["modelProviders"]>;
 
@@ -64,9 +68,16 @@ export function hostModelProviders(config: ModelProvidersConfig, sender: HostMod
   if (served.length > 0 && sender === undefined) throw new Error("clover runtime: the host serves model adapters but the session has no line to it");
   return {
     catalog,
-    adapters: (c) => [
-      ...createGenericAdapters(c),
-      ...served.map((a) => hostServedProviderAdapter({ ...(a as HostServedAdapterIdentity) }, sender!)),
-    ],
+    adapters: (c) => {
+      const servedIds = new Set(served.map((a) => a.id));
+      const named = new Set(c.providers.map((p) => p.adapterId));
+      // This build's own adapters for the catalog's providers that nothing else covers: not generic, not host-served.
+      const compiled = createShippedAdapters(c).filter((a) => named.has(a.id) && !GENERIC_ADAPTER_IDS.has(a.id) && !servedIds.has(a.id));
+      return [
+        ...createGenericAdapters(c),
+        ...served.map((a) => hostServedProviderAdapter({ ...(a as HostServedAdapterIdentity) }, sender!)),
+        ...compiled,
+      ];
+    },
   };
 }

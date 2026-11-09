@@ -53,6 +53,24 @@ describe("a session on the host's model plugins", () => {
     expect((openai as WinterProviderResolutionError).code).toBe("unknown-provider");
   });
 
+  test("a provider in the host's catalog whose adapter the host doesn't serve stays on this build's own adapter (Clover #302 B3)", () => {
+    const file = catalogFile(["groq", "bedrock", "vertex"]);
+    // The host serves nothing: Bedrock's and Vertex's plugins run on Node, which its plugin host doesn't start.
+    const providers = hostModelProviders({ catalogPath: file.path, catalogSha256: file.sha256 }, undefined);
+    const adapters = providers.adapters(providers.catalog);
+    const ids = adapters.map((a) => a.id);
+    expect(ids).toContain("winter.bedrock-converse");
+    expect(ids).toContain("winter.vertex-gemini");
+    // Only the catalog's own adapters: none for a provider the host didn't bring.
+    expect(ids).not.toContain("winter.codex-oauth");
+    const registry = createRegistry(providers.catalog);
+    for (const a of adapters) registry.register(a);
+    expect((registry.resolve({ model: "bedrock/amazon.nova-lite-v1:0" }) as { adapterId: string }).adapterId).toBe("winter.bedrock-converse");
+    // A served adapter wins over this build's own: one registration per id.
+    const served = hostModelProviders({ catalogPath: file.path, catalogSha256: file.sha256, hostAdapters: [{ id: "winter.bedrock-converse", version: "1", family: "bedrock", protocol: "bedrock-converse" }] }, sender);
+    expect(served.adapters(served.catalog).filter((a) => a.id === "winter.bedrock-converse")).toHaveLength(1);
+  });
+
   test("a catalog file that does not match its digest, or a host serving a generic adapter's id, fails the start", () => {
     const file = catalogFile(["groq"]);
     expect(() => readHostCatalog(file.path, "0".repeat(64))).toThrow(/does not match its digest/);
