@@ -23,7 +23,7 @@ import { isDisallowedAddress } from "@waifucave/clover-provider-runtime";
 import "../descriptors/monitor.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
 import { createBackgroundTask } from "../background-tasks.ts";
-import { runCommand, resolveExecutionPath, isSandboxAvailable, SandboxUnavailableError } from "../../sandbox/spawn.ts";
+import { runCommand, resolveExecutionPath, commandSandboxAvailable, sandboxUnavailableMessage, SandboxUnavailableError } from "../../sandbox/spawn.ts";
 import { SandboxConfigError, resolveNetworkPosture, type SandboxBrand } from "../../sandbox/profile.ts";
 import { startTracking, updateTask, getTask, listRunningTasks, toBackgroundTasksChangedEntry, killedTaskSummary, resolveBackgroundOutcome, killOrphanedSpawn } from "./background-task-runtime.ts";
 import { createMonitorEventRelay } from "../../subagents/notification-queue.ts";
@@ -180,9 +180,10 @@ async function runMonitorCommand(input: MonitorInput & { command: string }, ctx:
   // rejected promise by the time this caller could otherwise inspect it).
   const decision = resolveExecutionPath({ settings: ctx.sandboxSettings, command: input.command });
   if (decision.posture === "sandboxed") {
-    if (!isSandboxAvailable()) {
+    if (!commandSandboxAvailable(ctx.sandboxSettings)) {
       return {
-        output: "Error: Monitor: sandbox is required by the effective configuration but /usr/bin/sandbox-exec is unavailable on this host (WS-12 §3)",
+        // The macOS wording is kept as it was (without the "refusing" tail); Linux names bubblewrap.
+        output: process.platform === "linux" ? `Error: Monitor: ${sandboxUnavailableMessage()}` : "Error: Monitor: sandbox is required by the effective configuration but /usr/bin/sandbox-exec is unavailable on this host (WS-12 §3)",
         isError: true,
       };
     }

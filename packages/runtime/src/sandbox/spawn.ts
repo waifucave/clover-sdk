@@ -10,10 +10,18 @@ import type { HostOutputTransport } from "./host-output.ts";
 // "run a shell command under whatever fence the effective config selects" -- keeping the sandbox
 // MECHANISM (this file + profile.ts) independent of either tool's own contract (output capping,
 // background-task registration, WS message framing, ...).
-import { existsSync } from "node:fs";
+import { accessSync, closeSync, constants as fsConstants, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
+import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type UnheldPath } from "./linux-runs.ts";
+export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
+import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, expandPatterns, findBwrap, heldFolderNote, unixSocketFilter } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
 import {
   buildSeatbeltProfile,
+  linuxSandboxListsFor,
+  type SeatbeltProfileInput,
   type SandboxBrand,
   canonicalizePath,
   resolveNetworkPosture,
@@ -40,7 +48,71 @@ const REAL_SANDBOX_EXEC_PATH = "/usr/bin/sandbox-exec";
 // needs to be exercised on a machine that legitimately HAS sandbox-exec (this dev box does), so the
 // unavailable branch must be reachable without uninstalling anything.
 export function isSandboxAvailable(checkPath: string = REAL_SANDBOX_EXEC_PATH): boolean {
-  return process.platform === "darwin" && existsSync(checkPath);
+  if (process.platform === "darwin") return existsSync(checkPath);
+  // Linux: bubblewrap at a system path that can start a sandbox here, and a seccomp filter for this architecture
+  // (linux-bwrap.ts). A `checkPath` other than the default names the bwrap to check (the same test seam).
+  if (process.platform === "linux") return linuxSandboxReady(checkPath === REAL_SANDBOX_EXEC_PATH ? undefined : checkPath);
+  return false;
+}
+
+/** Linux: whether bubblewrap (at `bin`, or the first system path holding it) can sandbox a command here. */
+export function linuxSandboxReady(bin: string | undefined = findBwrap()): boolean {
+  return bin !== undefined && existsSync(bin) && unixSocketFilter() !== null && bwrapWorks(bin);
+}
+
+/** Whether a sandboxed command can run for a session with these settings: the platform's sandbox, or, on Linux, the
+ *  host's own (`hostFenced`), once this process is verified to be confined (`linuxHostConfinement`). */
+export function commandSandboxAvailable(settings: Pick<SandboxSettings, "hostFenced"> | undefined, checkPath?: string): boolean {
+  if (process.platform === "linux" && settings?.hostFenced === true) return linuxHostConfinement().ok;
+  return isSandboxAvailable(checkPath);
+}
+
+let hostConfinement: { ok: true } | { ok: false; reason: string } | undefined;
+/**
+ * Linux, `hostFenced`: is THIS process really confined, as a host that says so must have done? Verified, never
+ * assumed: `/proc/self/status` says no new privileges (`NoNewPrivs: 1`) and a seccomp filter (`Seccomp: 2`), and
+ * making a user namespace fails (`unshare -U` refused, as under bubblewrap's `--disable-userns`). Anything else, or
+ * anything that can't be checked, is not confined. Once per process.
+ *
+ * A heuristic, not a proof: these say a sandbox of some kind holds the process, not that it fences what the host's
+ * policy says. It is acceptable only because `hostFenced` is the host's alone now (`config.sandbox`; every settings
+ * file drops it, `tightenOnlySandbox`): the check guards a host that says so by mistake, not a hostile caller.
+ */
+export function linuxHostConfinement(): { ok: true } | { ok: false; reason: string } {
+  if (hostConfinement !== undefined) return hostConfinement;
+  if (process.platform !== "linux") return { ok: false, reason: "hostFenced is Linux's" };
+  let status: string | undefined;
+  try {
+    status = readFileSync("/proc/self/status", "utf8");
+  } catch {
+    status = undefined;
+  }
+  const unshareExists = existsSync("/usr/bin/unshare");
+  hostConfinement = judgeHostConfinement({ status, unshareExists, unshareStatus: () => spawnSync("/usr/bin/unshare", ["-U", "/bin/true"], { stdio: "ignore", timeout: 5_000 }).status });
+  return hostConfinement;
+}
+
+/** `linuxHostConfinement`'s verdict from what it read: the status file (undefined when unreadable), and whether
+ *  `unshare -U /bin/true` exists and how it ended (0 = a user namespace was made). */
+export function judgeHostConfinement(facts: { status: string | undefined; unshareExists: boolean; unshareStatus: () => number | null }): { ok: true } | { ok: false; reason: string } {
+  if (facts.status === undefined) return { ok: false, reason: "/proc/self/status can't be read" };
+  if (!/^NoNewPrivs:\s*1\s*$/m.test(facts.status)) return { ok: false, reason: "the process may still gain privileges (NoNewPrivs isn't 1)" };
+  if (!/^Seccomp:\s*2\s*$/m.test(facts.status)) return { ok: false, reason: "no seccomp filter applies to the process (Seccomp isn't 2)" };
+  if (!facts.unshareExists) return { ok: false, reason: "/usr/bin/unshare isn't there to check user namespaces" };
+  if (facts.unshareStatus() === 0) return { ok: false, reason: "the process can still make a user namespace" };
+  return { ok: true };
+}
+
+/** Test seam: forgets what `linuxHostConfinement` found. */
+export function resetHostConfinementForTest(): void {
+  hostConfinement = undefined;
+}
+
+/** What a sandboxed command is refused with when no sandbox can run here (WS-12 §3), per platform. */
+export function sandboxUnavailableMessage(): string {
+  return process.platform === "linux"
+    ? `sandbox is required by the effective configuration but bubblewrap is unavailable on this host (bwrap at ${BWRAP_SYSTEM_PATHS.join(", ")}, able to start a sandbox, on x64 or arm64) (WS-12 §3) -- refusing to silently run unsandboxed`
+    : "sandbox is required by the effective configuration but /usr/bin/sandbox-exec is unavailable on this host (WS-12 §3) -- refusing to silently run unsandboxed";
 }
 
 // WS-12 §3: "sandboxed execution MUST fail with a typed unavailability error -- never silently
@@ -402,6 +474,10 @@ function groupAlive(pgid: number): boolean {
 }
 
 export interface RunCommandResult {
+  /** Linux: the protected folders this command's sandbox couldn't hold (missing, and they couldn't be made). */
+  unheldProtectedPaths?: string[];
+  /** Linux: the protected paths the command made and that were moved aside at its end. */
+  quarantined?: string[];
   exitCode: number | null;
   timedOut: boolean;
   aborted: boolean;
@@ -433,6 +509,140 @@ export async function runCommand(opts: RunCommandOptions): Promise<RunCommandRes
 }
 
 /** Trusted parent entry; bypasses the child's RPC client, never its mandatory kernel floor. */
+/** Linux: the command under bubblewrap, with the Seatbelt profile's policy (profile.ts's `linuxSandboxListsFor`,
+ *  linux-bwrap.ts's plan) and the seccomp filter on the child's fd 3, written to a private file that is gone before the
+ *  command starts. */
+/** The Seatbelt profile's input from a command's options, as `linuxSandboxListsFor` takes it. */
+function linuxListsInput(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" | "denyWritePaths" | "denyReadPaths" | "denyWriteRegexes" | "denyReadRegexes" | "denyWriteGlobFixedPrefixes" | "denyReadGlobFixedPrefixes" | "denyReadGlobEntries" | "home" | "winterHome" | "storeHome" | "brand" | "allowGitConfigWrites">, allowNetwork: boolean): SeatbeltProfileInput {
+  const protection = currentHostCodeProtectionPaths();
+  const read = splitDenyPathsByGlobShape(protection.denyReadPaths), write = splitDenyPathsByGlobShape(protection.denyWritePaths);
+  return {
+    cwd: opts.cwd,
+    ...(opts.writableRoots !== undefined ? { writableRoots: opts.writableRoots } : {}),
+    denyWritePaths: [...(opts.denyWritePaths ?? []), ...new Set([...protection.denyWritePaths, ...write.paths])],
+    denyReadPaths: [...(opts.denyReadPaths ?? []), ...new Set([...protection.denyReadPaths, ...read.paths])],
+    denyWriteRegexes: [...(opts.denyWriteRegexes ?? []), ...write.regexes],
+    denyReadRegexes: [...(opts.denyReadRegexes ?? []), ...read.regexes],
+    denyWriteGlobFixedPrefixes: [...(opts.denyWriteGlobFixedPrefixes ?? []), ...write.globFixedPrefixes],
+    denyReadGlobFixedPrefixes: [...(opts.denyReadGlobFixedPrefixes ?? []), ...read.globFixedPrefixes],
+    denyReadGlobEntries: [...(opts.denyReadGlobEntries ?? []), ...globDenyEntriesOf(protection.denyReadPaths)],
+    allowNetwork,
+    ...(opts.home !== undefined ? { home: opts.home } : {}),
+    ...(opts.winterHome !== undefined ? { winterHome: opts.winterHome } : {}),
+    ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}),
+    ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
+    ...(opts.allowGitConfigWrites !== undefined ? { allowGitConfigWrites: opts.allowGitConfigWrites } : {}),
+  };
+}
+
+/** Whether `path` is a real folder (not a link to one). */
+function isRealDir(path: string): boolean {
+  try {
+    const st = lstatSync(path);
+    return st.isDirectory() && !st.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+/** The protected folders to make before a run (`linuxSandboxListsFor`'s `ensureFolders`), so a mount covers them:
+ *  each made link-free (a link on the way refuses that folder), and `.git/hooks` only inside an existing real `.git`
+ *  (never a `.git` of our own). Returns the folders that should exist and don't (they stay unheld, reported); with
+ *  `make` false nothing is made and the answer is whether each could be (its nearest folder is a writable real one). */
+function ensureProtectedFolders(folders: readonly string[], cwd: string, make = true): { failed: string[]; made: string[] } {
+  const failed: string[] = [];
+  const made: string[] = [];
+  const gitHooks = join(cwd, ".git", "hooks");
+  for (const f of folders) {
+    if (lexists(f)) continue;
+    if (f === gitHooks && !isRealDir(join(cwd, ".git"))) continue; // no repo: what `git init` makes is moved aside
+    // The missing chain, top first, inside the nearest existing folder; a link anywhere on it refuses the folder.
+    const chain: string[] = [];
+    let at = f;
+    while (at !== dirname(at) && !lexists(at)) {
+      chain.unshift(at);
+      at = dirname(at);
+    }
+    if (!isRealDir(at)) {
+      failed.push(f);
+      continue;
+    }
+    if (!make) {
+      try {
+        accessSync(at, fsConstants.W_OK);
+      } catch {
+        failed.push(f);
+      }
+      continue;
+    }
+    try {
+      for (const c of chain) {
+        mkdirSync(c, { mode: 0o755 });
+        made.push(c);
+        // Made by us a moment ago: still a real folder, never a link someone put in its place.
+        if (!isRealDir(c)) throw new Error("not a real folder");
+      }
+    } catch {
+      failed.push(f);
+    }
+  }
+  return { failed, made };
+}
+
+/**
+ * Linux: the protected folders a command's sandbox can't hold (they don't exist and can't be made, so no mount covers
+ * them). While any is, the command doesn't count as sandboxed for `autoAllowBashIfSandboxed` (#74's review B1). The
+ * missing protected FILES are covered at the command's end instead (`quarantinePlanted`). Empty off Linux.
+ */
+export function linuxUnheldProtectedPaths(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" | "home" | "winterHome" | "storeHome" | "brand" | "allowGitConfigWrites">): string[] {
+  if (process.platform !== "linux") return [];
+  const lists = linuxSandboxListsFor(linuxListsInput(opts, false), (_p, regexes) => regexes.map(() => []));
+  return ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd), false).failed;
+}
+
+/**
+ * Whether a Bash command counts as sandboxed for `autoAllowBashIfSandboxed`: the sandbox can run here and, on Linux
+ * under bubblewrap, no protected folder stays unheld (`linuxUnheldProtectedPaths`). The ONE check the engine and the
+ * host-code broker both ask (#74's review, check 2).
+ */
+export function bashCountsAsSandboxed(settings: SandboxSettings, where: Pick<RunCommandOptions, "cwd" | "writableRoots" | "home" | "winterHome" | "storeHome" | "brand">): boolean {
+  if (!commandSandboxAvailable(settings)) return false;
+  if (process.platform === "linux" && settings.hostFenced !== true && linuxUnheldProtectedPaths(where).length > 0) return false;
+  return true;
+}
+
+function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
+  const bin = findBwrap();
+  const filter = unixSocketFilter();
+  if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
+  const brand = opts.brand ?? WINTER_BRAND;
+  const quarantineRoot = opts.winterHome !== undefined ? join(opts.winterHome, "quarantine") : opts.home !== undefined ? join(opts.home, brand.homeDirName, "quarantine") : undefined;
+  // A run whose process died before its end left its record: finish it first (`linux-runs.ts`), acting only on what
+  // recomputes as protected under that run's roots, with this run's homes and brand.
+  recoverCrashedLinuxRuns(quarantineRoot, (roots) => {
+    const l = linuxSandboxListsFor(linuxListsInput({
+      cwd: roots.cwd, writableRoots: roots.writableRoots, allowGitConfigWrites: roots.allowGitConfigWrites === true,
+      ...(opts.home !== undefined ? { home: opts.home } : {}), ...(opts.winterHome !== undefined ? { winterHome: opts.winterHome } : {}),
+      ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}), ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
+    }, false), (_p, regexes) => regexes.map(() => []));
+    return { protectedPaths: new Set([...l.denyWrite, ...l.ensureFolders]), folders: new Set(l.ensureFolders), roots: l.writableRoots };
+  }, (line) => console.error(`winter: ${line}`));
+  const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatterns(prefix, regexes));
+  const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
+  const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
+  const dir = mkdtempSync(join(tmpdir(), "clover-seccomp-"));
+  let fd: number;
+  try {
+    const file = join(dir, "filter");
+    writeFileSync(file, filter, { mode: 0o600 });
+    fd = openSync(file, "r");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const args = [...plan.args, "--", "/bin/bash", "-c", opts.command];
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
+}
+
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
   const { posture, sandboxOverrideRequested } = resolveExecutionPath({
     settings: opts.settings,
@@ -447,57 +657,85 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   // for (`reportViolations`). `profile` itself stays untagged -- it is what the result reports.
   let spawnProfile: string | undefined;
   let violationTag: string | undefined;
+  // Linux: the seccomp filter's fd (the child's fd 3) and the note for a write refused in a held folder.
+  let seccompFd: number | undefined;
+  let heldNote = "";
+  // Linux: the protected paths the sandbox couldn't hold, checked at the command's end (B1), and where to move them.
+  let unheld: UnheldPath[] = [];
+  let failedFolders: string[] = [];
+  let madeFolders: string[] = [];
+  let quarantineRoot: string | undefined;
 
   if (posture === "sandboxed") {
     // §3: never silently degrade to an unsandboxed spawn -- a typed error, before any process
     // starts, is the only outcome when the sandbox is required but unavailable.
-    if (!isSandboxAvailable(opts.sandboxExecPath)) {
-      throw new SandboxUnavailableError(
-        "sandbox is required by the effective configuration but /usr/bin/sandbox-exec is unavailable on this host (WS-12 §3) -- refusing to silently run unsandboxed",
-      );
-    }
+    if (process.platform === "linux" && opts.settings.hostFenced === true) {
+      const confined = linuxHostConfinement();
+      if (!confined.ok) throw new SandboxUnavailableError(`the host says this process is already sandboxed (hostFenced), but it isn't: ${confined.reason} -- refusing to run unsandboxed`);
+    } else if (!commandSandboxAvailable(opts.settings, opts.sandboxExecPath)) throw new SandboxUnavailableError(sandboxUnavailableMessage());
     const allowNetwork = resolveNetworkPosture(opts.settings.network); // throws SandboxConfigError on a domain-list config -- propagates to the caller uncaught, by design (§2/§12)
-    const darwinUserTempDir = resolveDarwinUserTempDir();
-    // Before any process starts: refuses when a write root has an existing case variant. A snapshot --
-    // a variant made by someone else while the command runs is not caught (see the function's header).
-    const caseSensitiveWriteRoots = caseSensitiveWriteRootsOrRefuse([opts.cwd, ...(opts.writableRoots ?? [])]);
-    const protection = currentHostCodeProtectionPaths();
-    const read = splitDenyPathsByGlobShape(protection.denyReadPaths), write = splitDenyPathsByGlobShape(protection.denyWritePaths);
-    profile = buildSeatbeltProfile({
-      cwd: opts.cwd,
-      ...(opts.writableRoots !== undefined ? { writableRoots: opts.writableRoots } : {}),
-      denyWritePaths: [...(opts.denyWritePaths ?? []), ...new Set([...protection.denyWritePaths, ...write.paths])],
-      denyReadPaths: [...(opts.denyReadPaths ?? []), ...new Set([...protection.denyReadPaths, ...read.paths])],
-      denyWriteRegexes: [...(opts.denyWriteRegexes ?? []), ...write.regexes],
-      denyReadRegexes: [...(opts.denyReadRegexes ?? []), ...read.regexes],
-      denyWriteGlobFixedPrefixes: [...(opts.denyWriteGlobFixedPrefixes ?? []), ...write.globFixedPrefixes],
-      denyReadGlobFixedPrefixes: [...(opts.denyReadGlobFixedPrefixes ?? []), ...read.globFixedPrefixes],
-      denyReadGlobEntries: [...(opts.denyReadGlobEntries ?? []), ...globDenyEntriesOf(protection.denyReadPaths)],
-      allowNetwork,
-      ...(darwinUserTempDir !== null ? { darwinUserTempDir } : {}),
-      ...(opts.home !== undefined ? { home: opts.home } : {}),
-      // Phase 5 fix wave, I1: the RESOLVED winter root, so the run/backups denies land where a
-      // session's own storage actually is under a custom `<PREFIX>HOME`.
-      ...(opts.winterHome !== undefined ? { winterHome: opts.winterHome } : {}),
-      // WS-21 §3.7: the shared store home, when the router supplied one -- see `SeatbeltProfileInput.storeHome`.
-      ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}),
-      ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
-      ...(opts.allowGitConfigWrites !== undefined ? { allowGitConfigWrites: opts.allowGitConfigWrites } : {}),
-      ...(caseSensitiveWriteRoots.length > 0 ? { caseSensitiveWriteRoots } : {}),
-      ...(opts.settings.denyLaunchServices === true ? { denyLaunchServices: true } : {}),
-    });
-    spawnProfile = profile;
-    if (opts.reportViolations === true) {
-      const tag = newSandboxViolationTag();
-      const tagged = tagSeatbeltDenials(profile, tag);
-      // An untaggable profile (never produced by buildSeatbeltProfile) runs untagged, and reports nothing.
-      if (tagged !== undefined) {
-        spawnProfile = tagged;
-        violationTag = tag;
+    if (process.platform === "linux") {
+      if (opts.settings.hostFenced === true) {
+        // The host's own sandbox holds this process (verified above, `linuxHostConfinement`): the command runs under it
+        // as it is (`SandboxSettings.hostFenced`).
+        spawnFile = "/bin/bash";
+        spawnArgs = ["-c", opts.command];
+        profile = "host-fenced";
+      } else {
+        const linux = linuxBwrapSpawn(opts, allowNetwork);
+        spawnFile = linux.file;
+        spawnArgs = linux.args;
+        profile = linux.profile;
+        seccompFd = linux.seccompFd;
+        heldNote = linux.heldNote;
+        unheld = linux.unheld;
+        failedFolders = linux.failed;
+        madeFolders = linux.made;
+        quarantineRoot = linux.quarantineRoot;
       }
+    } else {
+      const darwinUserTempDir = resolveDarwinUserTempDir();
+      // Before any process starts: refuses when a write root has an existing case variant. A snapshot --
+      // a variant made by someone else while the command runs is not caught (see the function's header).
+      const caseSensitiveWriteRoots = caseSensitiveWriteRootsOrRefuse([opts.cwd, ...(opts.writableRoots ?? [])]);
+      const protection = currentHostCodeProtectionPaths();
+      const read = splitDenyPathsByGlobShape(protection.denyReadPaths), write = splitDenyPathsByGlobShape(protection.denyWritePaths);
+      profile = buildSeatbeltProfile({
+        cwd: opts.cwd,
+        ...(opts.writableRoots !== undefined ? { writableRoots: opts.writableRoots } : {}),
+        denyWritePaths: [...(opts.denyWritePaths ?? []), ...new Set([...protection.denyWritePaths, ...write.paths])],
+        denyReadPaths: [...(opts.denyReadPaths ?? []), ...new Set([...protection.denyReadPaths, ...read.paths])],
+        denyWriteRegexes: [...(opts.denyWriteRegexes ?? []), ...write.regexes],
+        denyReadRegexes: [...(opts.denyReadRegexes ?? []), ...read.regexes],
+        denyWriteGlobFixedPrefixes: [...(opts.denyWriteGlobFixedPrefixes ?? []), ...write.globFixedPrefixes],
+        denyReadGlobFixedPrefixes: [...(opts.denyReadGlobFixedPrefixes ?? []), ...read.globFixedPrefixes],
+        denyReadGlobEntries: [...(opts.denyReadGlobEntries ?? []), ...globDenyEntriesOf(protection.denyReadPaths)],
+        allowNetwork,
+        ...(darwinUserTempDir !== null ? { darwinUserTempDir } : {}),
+        ...(opts.home !== undefined ? { home: opts.home } : {}),
+        // Phase 5 fix wave, I1: the RESOLVED winter root, so the run/backups denies land where a
+        // session's own storage actually is under a custom `<PREFIX>HOME`.
+        ...(opts.winterHome !== undefined ? { winterHome: opts.winterHome } : {}),
+        // WS-21 §3.7: the shared store home, when the router supplied one -- see `SeatbeltProfileInput.storeHome`.
+        ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}),
+        ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
+        ...(opts.allowGitConfigWrites !== undefined ? { allowGitConfigWrites: opts.allowGitConfigWrites } : {}),
+        ...(caseSensitiveWriteRoots.length > 0 ? { caseSensitiveWriteRoots } : {}),
+        ...(opts.settings.denyLaunchServices === true ? { denyLaunchServices: true } : {}),
+      });
+      spawnProfile = profile;
+      if (opts.reportViolations === true) {
+        const tag = newSandboxViolationTag();
+        const tagged = tagSeatbeltDenials(profile, tag);
+        // An untaggable profile (never produced by buildSeatbeltProfile) runs untagged, and reports nothing.
+        if (tagged !== undefined) {
+          spawnProfile = tagged;
+          violationTag = tag;
+        }
+      }
+      spawnFile = REAL_SANDBOX_EXEC_PATH;
+      spawnArgs = ["-p", spawnProfile, "/bin/bash", "-c", opts.command];
     }
-    spawnFile = REAL_SANDBOX_EXEC_PATH;
-    spawnArgs = ["-p", spawnProfile, "/bin/bash", "-c", opts.command];
   } else {
     // config-disabled / override-requested / excluded: no seatbelt wrapper at all (§4.1 table).
     spawnFile = "/bin/bash";
@@ -505,7 +743,8 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   }
   const hostFloor = currentHostChildFloorProfile();
   if (hostFloor || (opts.mandatoryFloor && hasMandatoryFloor(opts.mandatoryFloor))) {
-    if (!isSandboxAvailable()) throw new SandboxUnavailableError("mandatory host control floor unavailable");
+    // The host floors are Seatbelt profiles: macOS only.
+    if (process.platform !== "darwin" || !isSandboxAvailable()) throw new SandboxUnavailableError("mandatory host control floor unavailable");
     const profiles = [hostFloor, opts.mandatoryFloor && hasMandatoryFloor(opts.mandatoryFloor) ? buildMandatoryFloorProfile(opts.mandatoryFloor) : undefined].filter((value): value is string => value !== undefined);
     const floor = profiles[0]! + profiles.slice(1).map(value => `\n${value.split("\n").slice(2).join("\n")}`).join("");
     profile = profile === undefined ? floor : `${profile}\n${floor.split("\n").slice(2).join("\n")}`;
@@ -530,6 +769,9 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   // starts, setsid'd and double-forked processes included, is found by the holder and stopped with it. Without one, the
   // command's process group stands for what it leaves (`(cmd) &`, `nohup … &`).
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
+  // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
+  // never comes (`linux-runs.ts`).
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 ? beginLinuxRun({ unheld, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
@@ -539,7 +781,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         ? spawn(holder, ["3", spawnFile, ...spawnArgs], { cwd: opts.cwd, stdio: ["ignore", out, err, "pipe"], detached: true, env: opts.env })
         : spawn(spawnFile, spawnArgs, {
           cwd: opts.cwd,
-          stdio: ["ignore", out, err],
+          stdio: seccompFd !== undefined ? ["ignore", out, err, seccompFd] : ["ignore", out, err],
           // Process-group kill (WS-12 §5.2, carried): `detached: true` makes this child its own group
           // leader (setsid), so a negative-pid signal below reaps sandbox-exec + bash + any forked or
           // backgrounded grandchildren -- closing every pipe fd so stream collection unblocks promptly.
@@ -548,8 +790,12 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         });
     } catch (error) {
       violationMonitor?.stop(); // never leave a stream behind a command that did not start
+      if (seccompFd !== undefined) closeSync(seccompFd);
+      endLinuxRun();
       throw error;
     }
+    // The child holds its own copy of the seccomp filter's fd now.
+    if (seccompFd !== undefined) closeSync(seccompFd);
     // WS-24: the group is live from here until its leader closes -- mirrored to an embedded session's
     // host, which reaps it if the Worker dies without running the kill doors below (process-groups.ts).
     // Recorded BEFORE `onSpawned`, so no caller can learn the pid ahead of the ledger.
@@ -655,6 +901,13 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       settled = true;
       clearTimeout(timer);
       opts.signal?.removeEventListener("abort", onAbort);
+      // Linux: a failed command whose sandbox held folders for missing protected paths says which, as lane C's fence
+      // does (a write there fails as a read-only file system, which alone doesn't say why).
+      if (heldNote !== "" && exitCode !== 0 && !aborted && !streamKilled) opts.onStderr?.(Buffer.from(heldNote));
+      // B1: what the command made at a protected path the sandbox couldn't hold is moved aside now, at ITS end (a
+      // background command's too), and said.
+      const quarantined = endLinuxRun();
+      if (quarantined.length > 0) opts.onStderr?.(Buffer.from(`\n[sandbox] moved aside what the command made at protected paths (they run later, outside the sandbox): ${quarantined.join(", ")}\n`));
       const result: RunCommandResult = {
         exitCode,
         timedOut,
@@ -665,6 +918,8 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         ...(profile !== undefined ? { profile } : {}),
         ...(spawnError !== undefined ? { spawnError } : {}),
         ...(leftBehind !== undefined ? { leftBehind } : {}),
+        ...(failedFolders.length > 0 ? { unheldProtectedPaths: failedFolders } : {}),
+        ...(quarantined.length > 0 ? { quarantined } : {}),
       };
       const monitor = violationMonitor;
       violationMonitor = undefined;

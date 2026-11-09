@@ -7,6 +7,7 @@ import { createServer, type AddressInfo } from "node:net";
 import {
   resolveExecutionPath,
   isSandboxAvailable,
+  linuxSandboxReady,
   resolveDarwinUserTempDir,
   resetDarwinUserTempDirCacheForTest,
   runCommand,
@@ -77,8 +78,8 @@ describe("resolveExecutionPath (WS-12 §4.1, first-match-wins)", () => {
 // genuinely HAS sandbox-exec (this dev machine does).
 // ---------------------------------------------------------------------------------------------
 describe("isSandboxAvailable", () => {
-  test("reflects the real binary's presence on darwin", () => {
-    expect(isSandboxAvailable()).toBe(process.platform === "darwin");
+  test("reflects the real binary's presence on darwin, and bubblewrap's on Linux", () => {
+    expect(isSandboxAvailable()).toBe(process.platform === "darwin" || (process.platform === "linux" && linuxSandboxReady()));
   });
 
   test("an injected nonexistent path reports unavailable regardless of the real binary", () => {

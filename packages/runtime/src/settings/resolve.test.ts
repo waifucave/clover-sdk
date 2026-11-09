@@ -44,7 +44,7 @@ function writeLocal(values: unknown): void {
   mkdirSync(join(cwd, ".winter"), { recursive: true });
   writeFileSync(join(cwd, ".winter", "settings.local.json"), JSON.stringify(values));
 }
-async function resolve(opts: { settingSources?: SettingSource[]; managedSettings?: Record<string, unknown>; serverManagedSettings?: Record<string, unknown>; inline?: Record<string, unknown> } = {}) {
+async function resolve(opts: { settingSources?: SettingSource[]; managedSettings?: Record<string, unknown>; serverManagedSettings?: Record<string, unknown>; inline?: Record<string, unknown>; trustedWorkspace?: boolean } = {}) {
   return resolveSettingsDetailed({ cwd, winterHome: home, ...opts });
 }
 
@@ -238,18 +238,17 @@ describe("SV-11: sandbox.filesystem union across all four arrays and tiers, incl
     expect((r.effective["sandbox"] as { filesystem: { denyWrite: string[] } }).filesystem.denyWrite).toEqual(["**/secrets/**", "**/*.pem"]);
   });
 
-  test("fix round 10, item C: allowWrite UNIONS across tiers too, reversing round 9's own replace-by-higher-tier ruling", async () => {
+  // Clover #74's review (the ruling): a settings file only TIGHTENS the sandbox, so its allowWrite/allowRead are
+  // dropped (and named on the tier's error); the host's own config still adds them.
+  test("allowWrite and allowRead from a settings file are dropped; the host's own config still adds them", async () => {
+    writeUser({ sandbox: { filesystem: { allowRead: ["/user-only"] } } });
     writeProject({ sandbox: { filesystem: { allowWrite: ["/project-only"] } } });
     writeLocal({ sandbox: { filesystem: { allowWrite: ["/local-only"] } } });
-    const r = await resolve();
-    expect((r.effective["sandbox"] as { filesystem: { allowWrite: string[] } }).filesystem.allowWrite).toEqual(["/project-only", "/local-only"]);
-  });
-
-  test("fix round 10, item C: allowRead unions the same way as the other three arrays", async () => {
-    writeUser({ sandbox: { filesystem: { allowRead: ["/user-only"] } } });
-    writeProject({ sandbox: { filesystem: { allowRead: ["/project-only"] } } });
-    const r = await resolve();
-    expect((r.effective["sandbox"] as { filesystem: { allowRead: string[] } }).filesystem.allowRead).toEqual(["/user-only", "/project-only"]);
+    const r = await resolve({ inline: { sandbox: { filesystem: { allowWrite: ["/host-only"] } } } });
+    const fs = (r.effective["sandbox"] as { filesystem: { allowWrite?: string[]; allowRead?: string[] } }).filesystem;
+    expect(fs.allowWrite).toEqual(["/host-only"]);
+    expect(fs.allowRead).toBeUndefined();
+    expect(r.perSource.find((e) => e.source === "local")?.error).toContain("sandbox.filesystem.allowWrite");
   });
 
   test("a non-sandbox key elsewhere in the file is unaffected -- the union touches only sandbox.filesystem.denyWrite/denyRead", async () => {
@@ -594,5 +593,43 @@ describe("P5-L: a PROJECT-tier plansDirectory must be a relative path under the 
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
+  });
+});
+
+// Clover #74's review B2 and the ruling: a settings file's sandbox block, any tier, may only tighten. The reviewer's
+// probe: a project file that switches the sandbox off on Linux (`hostFenced`) and auto-allows Bash.
+describe("a settings file's sandbox only tightens (#74's review)", () => {
+  test("the reviewer's probe: a project's hostFenced and autoAllowBashIfSandboxed are dropped, trusted or not", async () => {
+    for (const trustedWorkspace of [false, true]) {
+      writeProject({ sandbox: { hostFenced: true, autoAllowBashIfSandboxed: true } });
+      const r = await resolve({ trustedWorkspace });
+      const sandbox = r.effective["sandbox"] as Record<string, unknown> | undefined;
+      expect(sandbox?.["hostFenced"]).toBeUndefined();
+      expect(sandbox?.["autoAllowBashIfSandboxed"]).toBeUndefined();
+      const error = r.perSource.find((e) => e.source === "project")?.error ?? "";
+      expect(error).toContain("sandbox.hostFenced");
+      expect(error).toContain("sandbox.autoAllowBashIfSandboxed");
+    }
+  });
+
+  test("every loosening is dropped from the user and local tiers too; every tightening is kept", async () => {
+    writeUser({ sandbox: { enabled: false, allowUnsandboxedCommands: true, excludedCommands: ["git"], network: { allowedDomains: ["x.test"] } } });
+    writeLocal({ sandbox: { enabled: true, autoAllowBashIfSandboxed: false, allowUnsandboxedCommands: false, denyLaunchServices: true, filesystem: { denyWrite: ["/d"], allowGitConfig: true } } });
+    const r = await resolve();
+    expect(r.effective["sandbox"]).toEqual({ enabled: true, autoAllowBashIfSandboxed: false, allowUnsandboxedCommands: false, denyLaunchServices: true, filesystem: { denyWrite: ["/d"] } });
+    for (const key of ["sandbox.enabled", "sandbox.allowUnsandboxedCommands", "sandbox.excludedCommands", "sandbox.network"]) expect(r.perSource.find((e) => e.source === "user")?.error).toContain(key);
+    expect(r.perSource.find((e) => e.source === "local")?.error).toContain("sandbox.filesystem.allowGitConfig");
+  });
+
+  test("the host's own config.sandbox (the flag tier) may loosen, hostFenced included", async () => {
+    writeProject({ sandbox: { enabled: false } });
+    const r = await resolve({ inline: { sandbox: { enabled: true, hostFenced: true, autoAllowBashIfSandboxed: true } } });
+    expect(r.effective["sandbox"]).toEqual({ enabled: true, hostFenced: true, autoAllowBashIfSandboxed: true });
+  });
+
+  test("a file's raw sandbox block stays visible on its source entry (the escape hatch never lies)", async () => {
+    writeProject({ sandbox: { autoAllowBashIfSandboxed: true } });
+    const r = await resolve({ trustedWorkspace: true });
+    expect(r.perSource.find((e) => e.source === "project")?.settings["sandbox"]).toEqual({ autoAllowBashIfSandboxed: true });
   });
 });

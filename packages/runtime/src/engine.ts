@@ -363,7 +363,7 @@ import { sessionTempDir, type SessionTempDirPaths } from "./paths/temp.ts";
 import { DEFAULT_SANDBOX_SETTINGS, resolveNetworkPosture } from "./sandbox/profile.ts";
 // B-H1(a): whether this HOST can actually sandbox -- a session that asked for one on a machine
 // without `sandbox-exec` gets no containment, and therefore earns no auto-allow.
-import { isSandboxAvailable, resolveExecutionPath } from "./sandbox/spawn.ts";
+import { bashCountsAsSandboxed, commandSandboxAvailable, resolveExecutionPath } from "./sandbox/spawn.ts";
 // Phase 4 Task 8 (rider 3, WS-09 §10): Lane B's pure alias helpers -- single-hop canonical-identity
 // resolution for the permission/hook axis, and duplicate suppression over the advertised partition.
 // Both shipped as pure functions with no engine call site (R4-10 forbade Lane B from adding one);
@@ -3887,7 +3887,16 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     // An override takes the call OUT of the sandbox unless the policy forbids unsandboxed commands
     // (the flag is then ignored); an allowed `excludedCommands` entry runs unsandboxed too.
     if (bashPostureFor(call, call.input["dangerouslyDisableSandbox"] === true) !== "sandboxed") return false;
-    return isSandboxAvailable();
+    // The sandbox can run, and on Linux no protected folder stays unheld (#74's review B1): the one check the host-code
+    // broker asks too. The session's own roots; its temp and output folders are its own and always writable.
+    return bashCountsAsSandboxed(sandboxSettingsForSession, {
+      cwd: currentCwd,
+      writableRoots: boundedRoots(makeEvalCtx()),
+      home: permissionHome,
+      ...(resolvedWinterHome !== undefined ? { winterHome: resolvedWinterHome } : {}),
+      ...(config.storeHome !== undefined ? { storeHome: config.storeHome } : {}),
+      brand: sessionBrand,
+    });
   };
 
   /** The in-flight turn's abort signal, read by `makeEvalCtx` -- see `EvaluationContext.signal`. */
@@ -8724,7 +8733,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
    *     `SandboxUnavailableError`) -- that refusal tells the model what happened; the section would not.
    */
   const bashSandboxFacts = (): BashSandboxFacts | undefined => {
-    if (sandboxSettingsForSession.enabled === false || !isSandboxAvailable()) return undefined;
+    if (sandboxSettingsForSession.enabled === false || !commandSandboxAvailable(sandboxSettingsForSession)) return undefined;
     let networkAllowed = false;
     try {
       networkAllowed = resolveNetworkPosture(sandboxSettingsForSession.network);
@@ -10986,7 +10995,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
       const bashReadOnlyContext = (): BashReadOnlyContext => ({
         cwd: currentCwd,
         originalCwd: config.cwd,
-        sandboxEnabled: sandboxSettingsForSession.enabled !== false && isSandboxAvailable(),
+        sandboxEnabled: sandboxSettingsForSession.enabled !== false && commandSandboxAvailable(sandboxSettingsForSession),
       });
       for (let index = 0; index < turn.calls.length; index++) {
         const emitted = turn.calls[index]!;

@@ -4,6 +4,75 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.74
+
+### Bash, Monitor and background Bash run sandboxed on Linux (bubblewrap)
+
+- **`sandbox/linux-bwrap.ts`**, beside the macOS Seatbelt profile and with the same policy (profile.ts's
+  `linuxSandboxListsFor` maps it to paths). It's built after lane C's bubblewrap fence in Clover, which C reviews.
+  - Everything is read-only (`--ro-bind / /`) except the working folder and the writable roots.
+  - Denied paths are bound read-only again. A missing one holds its nearest folder read-only for new names.
+  - The folders between a root and a denied path are mount points, so they can't be renamed out of the way.
+  - Read-denied folders are an empty tmpfs, and read-denied files are `/dev/null`.
+  - No network (`--unshare-net`) unless the settings allow it.
+  - A seccomp filter on every command, network or not: no `socket(AF_UNIX)`, no io_uring, no other architecture.
+  - Its own pid, ipc, uts and cgroup namespaces, with no user namespace inside (`--disable-userns`, bwrap 0.8+)
+    and every capability dropped.
+  - `/run/user`, `/media`, `/run/media` and `/mnt` are hidden, and the session bus variables are unset.
+- **Never silent.** With no bubblewrap at a system path (`/usr/bin`, `/bin`, `/usr/local/bin`, never PATH), a probe
+  that fails, or an unknown architecture, a sandboxed command is refused (`SandboxUnavailableError`), as on a Mac
+  without sandbox-exec.
+- **Missing protected paths.** A bind can only cover what exists, so:
+  - before a command runs, the missing protected folders are made, empty and link-free: each writable root's project
+    folder (`.winter`, so its settings files are held by it), and at the working folder `.vscode`, `.idea`,
+    `.claude/commands`, `.claude/agents`, and `.git/hooks` inside an existing `.git`;
+  - at the command's end (a background command's at ITS end), whatever it made at a protected path still left
+    unheld (`.mcp.json`, `.gitconfig`, the shell rc files, `.git/hooks` of a repo it made) is moved aside into the
+    home's `quarantine/` folder, never through a link it planted, and said on stderr and in the tool result
+    (`RunCommandResult.quarantined`);
+  - a protected folder that can't be made (or a link where one should be) stays unheld: it is reported
+    (`RunCommandResult.unheldProtectedPaths`, a `[sandbox: not held …]` line in the Bash result), and while any is, the
+    command doesn't count as sandboxed for `autoAllowBashIfSandboxed`. The engine and the host-code broker ask the one
+    check (`bashCountsAsSandboxed`);
+  - a run that doesn't reach its end is covered too: a SIGTERM or SIGINT to `winter` and an embedded session's abort
+    move every live run's plants aside in the same sweep as the process-group kill (`sweepLinuxRuns`), and each run's
+    at-risk paths are on disk (`<winter home>/sandbox-runs/`) from before its command starts, so the next sandboxed
+    run finishes one whose process crashed (`recoverCrashedLinuxRuns`). That recovery trusts nothing a record says:
+    `sandbox-runs/` and `quarantine/` are write-denied in every sandbox and made before the run, a record that is a
+    link, not the user's or not 0600 is skipped, the current quarantine folder is used, and only entries that
+    recompute as protected paths under the run's own roots are acted on. A skipped record is set aside once into
+    `sandbox-runs/rejected/` (or said once). When the quarantine folder can't be used, a recovery leaves the path
+    where it is and says so (it may be the user's own, made after the crash). A reused pid is told apart by its start
+    time;
+  - the quarantine folder must be a real folder (never a link), and a planted path is never deleted recursively: at a
+    run's own end a file or a link is unlinked, an empty folder removed, and a folder with something in it stays;
+  - the folders made for a run are removed at its end while still empty and no other sandboxed run is live.
+- **Residuals**, which the header lists:
+  - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;
+  - a protected file made during a run exists until the run ends;
+  - matching is case-sensitive.
+- **`SandboxSettings.hostFenced`** (Linux): the host already runs this process in its own sandbox, so a command runs
+  under it as is. Honoured only from the host's own `config.sandbox`, and only once this process is checked to be
+  confined (`NoNewPrivs: 1`, `Seccomp: 2`, and `unshare -U` refused; `linuxHostConfinement`, a heuristic that guards a
+  host's mistake, acceptable because only the host can set it). Otherwise the command is refused.
+- `isSandboxAvailable()` is true on Linux where bubblewrap can sandbox. `commandSandboxAvailable(settings)`
+  adds `hostFenced`.
+- CI's Linux build installs bubblewrap and requires it (`WINTER_REQUIRE_LINUX_SANDBOX=1`).
+
+### A settings file's sandbox only tightens it (every OS)
+
+- **The hole, on macOS too, through 0.0.73:** any settings file (user, project or local, and a project of an untrusted
+  workspace) could loosen the sandbox: `autoAllowBashIfSandboxed: true` auto-allowed Bash, and `enabled: false`,
+  `allowUnsandboxedCommands: true`, `excludedCommands`, `network` and `filesystem.allowWrite` were honoured.
+- **Now** a file's `sandbox` block keeps only `enabled: true`, `allowUnsandboxedCommands: false`,
+  `autoAllowBashIfSandboxed: false`, `denyLaunchServices: true`, `filesystem.denyWrite`/`denyRead` and
+  `filesystem.allowGitConfig: false` (`tightenOnlySandbox`). The rest is dropped and named on the tier's `error`; the
+  file's raw block stays on its source entry. The programmatic `managedSettings` is filtered the same way.
+- Only the host's own `config.sandbox` (the flag tier) and `serverManagedSettings` may loosen it, `hostFenced`
+  included.
+- A settings file's `Edit(...)` allow rule no longer adds a writable root to the sandbox. Its deny rules still add
+  denies.
+
 ## 0.0.73
 
 ### Clover's MCP client document (prepared; the owner hosts it)

@@ -1726,8 +1726,11 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
   // open. A `/`-anchored rule's user-tier root is a separate value -- `buildSettingsRuleSeed`'s
   // `sourceDir`, which is `winterHome` for the user tier -- and is unchanged.
   const ruleSandboxPaths = deriveSandboxPathsFromRules(settingsRules.entries, { cwd: config.cwd, home: homedir() });
+  // Clover #74's review (the ruling): a settings file only tightens the sandbox, so an `Edit` ALLOW rule (a file's
+  // permission rule) no longer widens the writable roots; its deny rules still add denies. Only the host's own
+  // `config.sandbox` may add a writable root.
   const mergedSandboxFilesystem = {
-    allowWrite: unionStrings(effective.sandbox?.filesystem?.allowWrite, ruleSandboxPaths.allowWrite),
+    allowWrite: effective.sandbox?.filesystem?.allowWrite,
     denyWrite: unionStrings(effective.sandbox?.filesystem?.denyWrite, ruleSandboxPaths.denyWrite),
     allowRead: effective.sandbox?.filesystem?.allowRead,
     denyRead: unionStrings(effective.sandbox?.filesystem?.denyRead, ruleSandboxPaths.denyRead),
