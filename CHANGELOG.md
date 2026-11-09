@@ -4,6 +4,21 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.75
+
+### A host-catalog provider whose adapter the host doesn't serve stays on this build's own adapter
+
+- **`hostModelProviders`** (Clover A-M2's model plugins): a provider in the host's catalog whose adapter is neither
+  generic nor served by the host now gets this build's own adapter (`createShippedAdapters`, filtered to the
+  catalog's adapter ids), so it keeps answering instead of refusing every turn with `no-adapter`. Clover's Bedrock and
+  Vertex plugins run on Node, which its plugin host doesn't start yet: their rows stay on the compiled path (Clover
+  #302's review, B3). A served adapter still wins; a provider not in the host's catalog is still not the session's.
+- Only for a provider **this build ships**, on the adapter this build pairs it with. A row is never given a compiled
+  adapter by its `adapterId` alone: a provider this build doesn't ship (a third party's) that names a compiled
+  adapter's id gets none and refuses `no-adapter`. If a shipped provider in the same catalog keeps that adapter, the
+  adapter refuses every call made for any other provider (`no-adapter`), so a third party never gets this build's
+  adapter, endpoint or credential routing for a provider it invented.
+
 ## 0.0.74
 
 ### Bash, Monitor and background Bash run sandboxed on Linux (bubblewrap)
