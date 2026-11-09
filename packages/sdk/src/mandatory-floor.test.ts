@@ -54,10 +54,18 @@ test("floor renders narrow wildcard reads, full writes/link floor and literal an
   const profile = buildMandatoryFloorProfile({ denyReadPaths: [], denyWritePaths: ["/fixture/cowork"], denyReadGlobs: ["/fixture/cowork/workspaces/*/manifest.json", "/fixture/cowork/**/volume.ext4"] });
   expect(profile).toContain('(allow default)');
   expect(profile).toContain('workspaces/[^/]*/manifest\\.json$');
-  expect(profile).toContain('cowork/(?:.*/)?volume\\.ext4$');
+  expect(profile).toContain('cowork/(.*/)?volume\\.ext4$');
+  expect(profile).not.toContain("(?");
   expect(profile).toContain('deny file-link'); expect(profile).toContain('(literal "/fixture")');
   expect(() => buildMandatoryFloorProfile({ denyReadPaths: ["relative"], denyWritePaths: [] })).toThrow("absolute");
   expect(() => buildMandatoryFloorProfile({ denyReadPaths: [], denyWritePaths: [], denyReadGlobs: ["/fixture/{unsafe}"] })).toThrow("unsupported");
+});
+test("a host regex with a `(?...)` group is refused, never rendered: Seatbelt loads it and never matches it", () => {
+  for (const re of ["^/fixture/(?:.*/)?volume\\.ext4$", "(?i)^/fixture/x$", "^/fixture/a\\\\(?:b)$"]) {
+    expect(() => buildMandatoryFloorProfile({ denyReadPaths: [], denyWritePaths: [], denyReadRegexes: [re] })).toThrow("(?...) groups");
+  }
+  // An escaped parenthesis followed by `?` is a literal `(`, made optional: no group.
+  expect(buildMandatoryFloorProfile({ denyReadPaths: [], denyWritePaths: [], denyWriteRegexes: ["^/fixture/a\\(?b$"] })).toContain("(regex #\"^/fixture/a\\(?b$\")");
 });
 test('a regex or glob holding `"` renders as a plain SBPL string: Seatbelt reads `#"..."` raw, so `\\"` inside it ended the literal (exit 65)', () => {
   const quoted = buildMandatoryFloorProfile({ denyReadPaths: [], denyWritePaths: [], denyWriteGlobs: ['/fixture/q"t/*.key'], denyReadRegexes: ['^/fixture/a"b\\.c$'] });
@@ -82,6 +90,26 @@ describe.skipIf(!darwin)("real macOS persistent floor, disposable files only", (
     expect(readFileSync(join(q, "ok.txt"), "utf8")).toBe("ok\n");
     expect(existsSync(join(q, "a.key"))).toBe(false);
   });
+  test("a `**/` glob denies at every depth under real sandbox-exec, the folder's own level included (the old `(?:.*/)?` form held only that one)", async () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "winter-mandatory-floor-globstar-"))); dirs.push(dir);
+    const root = join(dir, "cowork");
+    for (const sub of ["", "w", "w/a/b"]) { mkdirSync(join(root, sub), { recursive: true }); writeFileSync(join(root, sub, "volume.ext4"), "planted-floor-needle\n"); }
+    writeFileSync(join(root, "w", "a", "b", "other.txt"), "ordinary-data\n");
+    const floor: HostExecutionFloor = { denyReadPaths: [], denyWritePaths: [], denyReadGlobs: [`${root}/**/volume.ext4`], denyWriteGlobs: [`${root}/**/*.lock`] };
+    const run = async (profile: string) => {
+      const script = 'for f in "$1/volume.ext4" "$1/w/volume.ext4" "$1/w/a/b/volume.ext4" "$1/w/a/b/other.txt"; do cat "$f" 2>/dev/null || echo DENIED; done; for f in "$1/x.lock" "$1/w/a/b/x.lock"; do (echo x > "$f") 2>/dev/null && echo WROTE || echo DENIED; done';
+      const proc = Bun.spawn(["/usr/bin/sandbox-exec", "-p", profile, "/bin/sh", "-c", script, "sh", root], { stdout: "pipe", stderr: "pipe", env: { PATH: "/usr/bin:/bin" } });
+      const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
+      return { code, lines: out.trim().split("\n") };
+    };
+    const profile = buildMandatoryFloorProfile(floor);
+    expect(await run(profile)).toEqual({ code: 0, lines: ["DENIED", "DENIED", "DENIED", "ordinary-data", "DENIED", "DENIED"] });
+    expect(existsSync(join(root, "w", "a", "b", "x.lock"))).toBe(false);
+    // The old rendering of the same profile: Seatbelt loads it and denies only at the folder's own level.
+    const old = await run(profile.split("(.*/)?").join("(?:.*/)?"));
+    expect(old.lines.slice(0, 4)).toEqual(["DENIED", "planted-floor-needle", "planted-floor-needle", "ordinary-data"]);
+  });
+
   test("control reads denied, shared reads allowed, own runtime/outside writes remain available", async () => {
     const f = fixture();
     for (const controlPath of [f.manifest, join(f.cowork, "workspaces", "w", "data.ext4"), join(f.cowork, "workspaces", "w", "env.ext4")]) {

@@ -1,6 +1,6 @@
 // Phase 3, Lane A, Task 4 -- Grep executor tests. Fresh mkdtemp fixture tree per test.
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import "./grep.ts";
@@ -281,6 +281,23 @@ describe("Grep (Phase 3, Lane A, Task 4)", () => {
       expect(r.files).toEqual([join(dir, "normal.txt")]);
       expect(r.skippedOversized).toBe(1);
       expect(r.truncated).toBe(true);
+    });
+
+    test("a file denied by the time it is scanned isn't counted as oversized: the path check comes before the size check", async () => {
+      const real = realpathSync(dir);
+      const bigFile = join(real, "huge.txt");
+      writeFileSync(bigFile, "needle\n".repeat(1_000_000));
+      writeFileSync(join(real, "normal.txt"), "needle");
+      // The file becomes denied between the candidate filter and the scan (a link retargeted, a rule landing): the
+      // denial shows only once every candidate has been probed.
+      let probed = 0;
+      const filesystem = { get denyRead() { return probed >= 2 ? [bigFile] : []; } };
+      const ctx = makeCtx(real, { permissions: { probeReadAccess: () => { probed++; return "silent"; } }, sandboxSettings: { filesystem } as never });
+      const r = parse(await runGrep({ pattern: "needle" }, ctx));
+      expect(probed).toBe(2);
+      expect(r.files).toEqual([join(real, "normal.txt")]);
+      expect(r.skippedOversized).toBe(0);
+      expect(r.truncated).toBe(false);
     });
 
     test("no oversized files: skippedOversized is 0 and never spuriously forces truncated", async () => {

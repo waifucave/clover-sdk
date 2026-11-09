@@ -547,6 +547,9 @@ async function execute(rawInput: unknown, ctx: ToolExecutionContext): Promise<To
     // never materialized into memory at all (previously: read unconditionally, then
     // `buf.toString("utf8")` on a huge buffer, whose failure the blanket catch below swallowed
     // silently with no trace in the result).
+    // The path check comes first: a file the session may not read is never stat'ed, so it can't show up in the
+    // oversized count either (Clover #347's review).
+    if (!hostCodePathAllowed(file, "read", ctx.sandboxSettings, ctx.cwd)) continue;
     let fileSize: number;
     try {
       fileSize = statSync(file).size;

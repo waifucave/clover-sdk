@@ -4,6 +4,24 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.76
+
+### The host floor's `**/` globs deny at every depth
+
+- **`buildMandatoryFloorProfile`** wrote a glob's `**/` as `(?:.*/)?`. Seatbelt's regex engine has no `(?...)` groups
+  and doesn't say so: the profile loads, and the group only matches when empty. So a floor glob with `**/` denied the
+  name at its folder's own level and nowhere below it (cowork's `**/volume.ext4` included). It is `(.*/)?` now, as the
+  runtime's own sandbox profile already writes it.
+- A host regex with a `(?...)` group (`denyReadRegexes`, `denyWriteRegexes`) is refused (`MandatoryFloorUnavailableError`)
+  instead of rendered into a deny that holds nothing. An escaped `\(` followed by `?` is still a literal.
+- Test: a real `sandbox-exec` with the generated profile refuses `**/volume.ext4` reads and `**/*.lock` writes at
+  every depth; the same profile in the old form lets the deeper reads through.
+
+### Grep: the path check before the size check
+
+- A file that is denied by the time Grep scans it is skipped before it is stat'ed, so it no longer counts in
+  `skippedOversized` (and no longer marks the result truncated).
+
 ## 0.0.75
 
 ### A host-catalog provider whose adapter the host doesn't serve stays on this build's own adapter

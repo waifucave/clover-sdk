@@ -32,7 +32,13 @@ function safePath(value: string): string {
 const quoted = (value: string) => `"${safeText(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 // Seatbelt reads `#"..."` RAW: it ends at the first `"`, so `\"` inside it broke the profile (exit 65).
 // A source holding a quote, or ending in a backslash, is a plain string instead, which Seatbelt unescapes.
-const regexClause = (value: string) => (/"|\\$/.test(safeText(value)) ? `(regex ${quoted(value)})` : `(regex #"${value}")`);
+// Seatbelt's regex engine has no `(?...)` groups and doesn't say so: `(?:.*/)?b` loads, and matches only `b` (the group
+// needs a literal `:`), so a deny written that way holds nothing below its folder. Refused here, not rendered.
+function seatbeltRegex(value: string): string {
+  if (/(^|[^\\])(\\\\)*\(\?/.test(safeText(value))) throw new MandatoryFloorUnavailableError("host floor regexes may not use (?...) groups: Seatbelt never matches them");
+  return value;
+}
+const regexClause = (value: string) => (/"|\\$/.test(seatbeltRegex(value)) ? `(regex ${quoted(value)})` : `(regex #"${value}")`);
 const pathClause = (value: string) => `(subpath ${quoted(safePath(value))})`;
 function globRegex(value: string): string {
   safeText(value);
@@ -43,7 +49,8 @@ function globRegex(value: string): string {
     if (c === "*") {
       if (value[i+1] === "*") {
         i++;
-        if (value[i+1] === "/") { i++; result += "(?:.*/)?"; }
+        // `**/` is any number of folders, none included. A plain group: Seatbelt never matches `(?:...)` (see `seatbeltRegex`).
+        if (value[i+1] === "/") { i++; result += "(.*/)?"; }
         else result += ".*";
       } else result += "[^/]*";
     } else if (c === "?") result += "[^/]";
