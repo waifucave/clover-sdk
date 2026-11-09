@@ -13,6 +13,11 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   catalog's adapter ids), so it keeps answering instead of refusing every turn with `no-adapter`. Clover's Bedrock and
   Vertex plugins run on Node, which its plugin host doesn't start yet: their rows stay on the compiled path (Clover
   #302's review, B3). A served adapter still wins; a provider not in the host's catalog is still not the session's.
+- Only for a provider **this build ships**, on the adapter this build pairs it with. A row is never given a compiled
+  adapter by its `adapterId` alone: a provider this build doesn't ship (a third party's) that names a compiled
+  adapter's id gets none and refuses `no-adapter`. If a shipped provider in the same catalog keeps that adapter, the
+  adapter refuses every call made for any other provider (`no-adapter`), so a third party never gets this build's
+  adapter, endpoint or credential routing for a provider it invented.
 
 ## 0.0.74
 

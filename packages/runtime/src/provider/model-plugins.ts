@@ -12,14 +12,17 @@
 //     session's control bridge to the host, which runs them on the plugin (`model_adapter_*`);
 //   * registers THIS BUILD'S OWN adapter for a provider in the host's catalog whose adapter the host doesn't serve
 //     (a code plugin whose host can't start here: Bedrock and Vertex run on Node, which the plugin host doesn't start
-//     yet), so the provider stays on the compiled path rather than refusing every turn (Clover #302's review B3). The
-//     host decides which providers are in its catalog; this only gives a row the adapter its own id names.
+//     yet), so the provider stays on the compiled path rather than refusing every turn (Clover #302's review B3).
+//     Only for a provider THIS BUILD SHIPS, on the adapter this build pairs it with: a row is never given a compiled
+//     adapter by its adapterId alone. A provider this build doesn't ship (a third party's) that names a compiled
+//     adapter's id gets none (`no-adapter`); if a shipped provider in the same catalog keeps that adapter, the adapter
+//     refuses every call made for any other provider.
 // No other adapter of this build is registered: a provider not in the host's catalog is one the session has not got.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { GENERIC_ADAPTER_IDS, validateCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
+import { GENERIC_ADAPTER_IDS, loadCatalog, validateCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
 import type { RuntimeConfig } from "@waifucave/clover-agent-sdk";
-import { createGenericAdapters, createShippedAdapters, hostServedProviderAdapter, type HostModelAdapterSender, type HostServedAdapterIdentity, type ProviderAdapter } from "@waifucave/clover-provider-runtime";
+import { createGenericAdapters, createShippedAdapters, hostServedProviderAdapter, WinterProviderResolutionError, type HostModelAdapterSender, type HostServedAdapterIdentity, type ProviderAdapter, type ProviderContext } from "@waifucave/clover-provider-runtime";
 
 export type ModelProvidersConfig = NonNullable<RuntimeConfig["modelProviders"]>;
 
@@ -70,9 +73,14 @@ export function hostModelProviders(config: ModelProvidersConfig, sender: HostMod
     catalog,
     adapters: (c) => {
       const servedIds = new Set(served.map((a) => a.id));
-      const named = new Set(c.providers.map((p) => p.adapterId));
-      // This build's own adapters for the catalog's providers that nothing else covers: not generic, not host-served.
-      const compiled = createShippedAdapters(c).filter((a) => named.has(a.id) && !GENERIC_ADAPTER_IDS.has(a.id) && !servedIds.has(a.id));
+      // This build's own adapters, for the catalog's providers that this build SHIPS on the adapter it pairs them
+      // with, that nothing else covers (not generic, not host-served).
+      const shipped = shippedAdapterOf();
+      const eligible = new Set(c.providers.filter((p) => shipped.get(p.id) === p.adapterId).map((p) => p.id));
+      const fallbackIds = new Set(c.providers.filter((p) => eligible.has(p.id)).map((p) => p.adapterId));
+      const compiled = createShippedAdapters(c)
+        .filter((a) => fallbackIds.has(a.id) && !GENERIC_ADAPTER_IDS.has(a.id) && !servedIds.has(a.id))
+        .map((a) => (c.providers.some((p) => p.adapterId === a.id && !eligible.has(p.id)) ? onlyForProviders(a, eligible) : a));
       return [
         ...createGenericAdapters(c),
         ...served.map((a) => hostServedProviderAdapter({ ...(a as HostServedAdapterIdentity) }, sender!)),
@@ -80,4 +88,50 @@ export function hostModelProviders(config: ModelProvidersConfig, sender: HostMod
       ];
     },
   };
+}
+
+/** providerId -> the adapter this build pairs it with, from this build's own catalog. */
+function shippedAdapterOf(): ReadonlyMap<string, string> {
+  return new Map(loadCatalog().providers.map((p) => [p.id, p.adapterId]));
+}
+
+/**
+ * A compiled adapter that answers only for `providers`: a catalog that also has a provider this build doesn't ship
+ * naming the same adapter id gets a refusal for that provider's calls, never this build's adapter (or its endpoint and
+ * credential routing) for a provider it invented.
+ */
+function onlyForProviders(adapter: ProviderAdapter, providers: ReadonlySet<string>): ProviderAdapter {
+  const check = (ctx: ProviderContext): void => {
+    const id = ctx.connection.providerId;
+    if (!providers.has(id)) throw new WinterProviderResolutionError("no-adapter", `no adapter registered for "${adapter.id}" (provider "${id}"): this build's adapter serves only the providers it ships`);
+  };
+  const guarded: ProviderAdapter = {
+    id: adapter.id,
+    version: adapter.version,
+    family: adapter.family,
+    protocol: adapter.protocol,
+    validateCredential: async (ref, ctx) => {
+      check(ctx);
+      return adapter.validateCredential(ref, ctx);
+    },
+    listModels: async (ctx) => {
+      check(ctx);
+      return adapter.listModels(ctx);
+    },
+    streamTurn: (req, ctx) =>
+      (async function* () {
+        check(ctx);
+        yield* adapter.streamTurn(req, ctx);
+      })(),
+    mapEffort: (effort, model) => adapter.mapEffort(effort, model),
+    capabilities: (model) => adapter.capabilities(model),
+  };
+  if (adapter.countTokens !== undefined) {
+    const count = adapter.countTokens.bind(adapter);
+    guarded.countTokens = async (req, ctx) => {
+      check(ctx);
+      return count(req, ctx);
+    };
+  }
+  return guarded;
 }
