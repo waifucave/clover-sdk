@@ -40,10 +40,12 @@ corresponds to one `chore(release): vX.Y.Z` commit.
     run finishes one whose process crashed (`recoverCrashedLinuxRuns`). That recovery trusts nothing a record says:
     `sandbox-runs/` and `quarantine/` are write-denied in every sandbox and made before the run, a record that is a
     link, not the user's or not 0600 is skipped, the current quarantine folder is used, and only entries that
-    recompute as protected paths under the run's own roots are acted on. A reused pid is told apart by its start
+    recompute as protected paths under the run's own roots are acted on. A skipped record is set aside once into
+    `sandbox-runs/rejected/` (or said once). When the quarantine folder can't be used, a recovery leaves the path
+    where it is and says so (it may be the user's own, made after the crash). A reused pid is told apart by its start
     time;
-  - the quarantine folder must be a real folder (never a link), and a planted path is never deleted recursively: a
-    file or a link is unlinked, an empty folder removed, and a folder with something in it stays;
+  - the quarantine folder must be a real folder (never a link), and a planted path is never deleted recursively: at a
+    run's own end a file or a link is unlinked, an empty folder removed, and a folder with something in it stays;
   - the folders made for a run are removed at its end while still empty and no other sandboxed run is live.
 - **Residuals**, which the header lists:
   - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;

@@ -59,10 +59,11 @@ function quarantineFolder(quarantineRoot: string | undefined): string | undefine
 /**
  * Moves aside whatever the command made at an unheld protected path (lane C's `quarantinePlanted`). It walks from the
  * path's anchor down, never through a link: the first link it meets (one the command made) is what moves, else the
- * path itself. It goes into the home's `quarantine/` folder when that is a real folder; otherwise a file or a link is
- * unlinked and an empty folder removed, and a folder with something in it stays. Never a recursive delete.
+ * path itself. It goes into the home's `quarantine/` folder when that is a real folder; otherwise, at a run's own end, a
+ * file or a link is unlinked and an empty folder removed, and a folder with something in it stays; a recovery
+ * (`removeWhenStuck: false`) leaves it in place and reports it in `kept`. Never a recursive delete.
  */
-export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined): string[] {
+export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { removeWhenStuck?: boolean; kept?: string[] } = {}): string[] {
   const planted: string[] = [];
   const folder = quarantineFolder(quarantineRoot);
   for (const { path, anchor } of unheld) {
@@ -89,6 +90,11 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
         renameSync(target, join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
         gone = true;
       } catch { /* below */ }
+    }
+    if (!gone && o.removeWhenStuck === false) {
+      // A recovery: the path may be the user's own, made after the crash, so it stays where it is, reported.
+      o.kept?.push(target);
+      continue;
     }
     if (!gone) {
       try {
@@ -251,6 +257,21 @@ export function sweepLinuxRuns(): string[] {
   return out;
 }
 
+const rejectedSaid = new Set<string>();
+function rejectRecord(dir: string, name: string, log: ((line: string) => void) | undefined): void {
+  const rejected = join(dir, "rejected");
+  try {
+    mkdirSync(rejected, { recursive: true, mode: 0o700 });
+    if (!realDir(rejected)) throw new Error("not a real folder");
+    renameSync(join(dir, name), join(rejected, `${name}.${Math.random().toString(16).slice(2, 10)}`));
+    log?.(`sandbox: a run record that isn't this user's own 0600 file was set aside, unread: ${name}`);
+  } catch {
+    if (rejectedSaid.has(name)) return;
+    rejectedSaid.add(name);
+    log?.(`sandbox: a run record that isn't this user's own 0600 file is skipped, unread: ${name}`);
+  }
+}
+
 const within = (p: string, root: string): boolean => p === root || p.startsWith(root.endsWith("/") ? root : `${root}/`);
 
 /**
@@ -259,7 +280,7 @@ const within = (p: string, root: string): boolean => p === root || p.startsWith(
  * is one of them, anchored at or under a root, or a made folder that is one of them or on the way to one, is acted on.
  * The quarantine folder is always `quarantineRoot` (the current one).
  */
-export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, check: (roots: LinuxRunRoots) => RecoveryCheck | undefined): string[] {
+export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, check: (roots: LinuxRunRoots) => RecoveryCheck | undefined, log?: (line: string) => void): string[] {
   const dir = runsDirOf(quarantineRoot);
   if (dir === undefined || !realDir(dir)) return [];
   let names: string[];
@@ -270,10 +291,16 @@ export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, chec
   }
   const out: string[] = [];
   for (const name of names) {
+    if (!name.endsWith(".json")) continue; // `rejected/`
     const path = join(dir, name);
     const pid = Number(name.split("-")[0]);
     const run = readRecord(path);
-    if (run === undefined) continue; // a link, not the user's, not 0600, or unreadable: skipped
+    if (run === undefined) {
+      // A link, not the user's, not 0600, or unreadable: never acted on, and moved aside once into `rejected/` (the
+      // link itself, never what it points at) so no later start reads it again; when it can't be moved, said once.
+      rejectRecord(dir, name, log);
+      continue;
+    }
     if (!Number.isSafeInteger(pid) || pidAlive(pid, typeof run.start === "string" ? run.start : undefined)) continue;
     const roots = run.roots;
     const ok = roots !== undefined && typeof roots.cwd === "string" && roots.cwd.startsWith("/") && Array.isArray(roots.writableRoots) && roots.writableRoots.every((r) => typeof r === "string" && r.startsWith("/"));
@@ -283,7 +310,9 @@ export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, chec
         u !== null && typeof u === "object" && typeof u.path === "string" && typeof u.anchor === "string"
         && facts.protectedPaths.has(u.path) && u.anchor !== u.path && within(u.path, u.anchor)
         && facts.roots.some((r) => within(u.anchor, r)));
-      out.push(...quarantinePlanted(unheld, quarantineRoot));
+      const kept: string[] = [];
+      out.push(...quarantinePlanted(unheld, quarantineRoot, { removeWhenStuck: false, kept }));
+      if (kept.length > 0) log?.(`sandbox: a crashed run's protected paths stay where they are (the quarantine folder can't be used): ${kept.join(", ")}`);
       const made = (Array.isArray(run.made) ? run.made : []).filter((m): m is string =>
         typeof m === "string" && !facts.roots.includes(m) && [...facts.folders].some((f) => f === m || f.startsWith(`${m}/`))
         && (facts.roots.some((r) => within(m, r)) || (quarantineRoot !== undefined && within(m, dirname(dirname(quarantineRoot))))));

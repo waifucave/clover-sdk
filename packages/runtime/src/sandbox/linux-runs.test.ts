@@ -121,7 +121,10 @@ describe("live sandboxed runs", () => {
     expect(readFileSync(join(outside, "precious.txt"), "utf8")).toBe("the user's");
     expect(existsSync(join(outside, ".vscode", "tasks.json"))).toBe(true);
     expect(existsSync(join(w.cwd, ".mcp.json"))).toBe(true);
-    expect(records(w.runsDir).sort()).toEqual([`${dead}-8-loose.json`, `${dead}-9-link.json`]);
+    // The loose record and the link are set aside once (the link itself), into rejected/, and not read again.
+    expect(records(w.runsDir)).toEqual(["rejected"]);
+    expect(readdirSync(join(w.runsDir, "rejected"))).toHaveLength(2);
+    expect(readFileSync(join(outside, "target.json"), "utf8")).toContain("unheld");
   });
 
   test("a link as the quarantine folder is refused: nothing goes through it, and a planted folder with something in it is never deleted", () => {
@@ -145,5 +148,18 @@ describe("live sandboxed runs", () => {
     writeFileSync(join(w.cwd, ".mcp.json"), "{}");
     expect(recoverCrashedLinuxRuns(w.quarantineRoot, checkFor(w.cwd))).toEqual([join(w.cwd, ".mcp.json")]);
     expect(records(w.runsDir)).toEqual([]);
+  });
+
+  test("a crash recovery that can't use the quarantine folder leaves the protected file in place and reports it", () => {
+    const w = setup();
+    mkdirSync(w.runsDir, { recursive: true });
+    const dead = spawnSync("/bin/sh", ["-c", "exit 0"]).pid!;
+    symlinkSync(temp("clover-a3-runs-elsewhere-"), w.quarantineRoot);
+    writeRecord(w.runsDir, `${dead}-0-dead.json`, { unheld: w.unheld, quarantineRoot: w.quarantineRoot, made: [], roots: { cwd: w.cwd, writableRoots: [] } });
+    writeFileSync(join(w.cwd, ".mcp.json"), "{}");
+    const said: string[] = [];
+    expect(recoverCrashedLinuxRuns(w.quarantineRoot, checkFor(w.cwd), (l) => said.push(l))).toEqual([]);
+    expect(existsSync(join(w.cwd, ".mcp.json"))).toBe(true);
+    expect(said.join("\n")).toContain(join(w.cwd, ".mcp.json"));
   });
 });

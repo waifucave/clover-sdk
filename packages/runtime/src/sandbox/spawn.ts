@@ -626,7 +626,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
       ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}), ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
     }, false), (_p, regexes) => regexes.map(() => []));
     return { protectedPaths: new Set([...l.denyWrite, ...l.ensureFolders]), folders: new Set(l.ensureFolders), roots: l.writableRoots };
-  });
+  }, (line) => console.error(`winter: ${line}`));
   const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatterns(prefix, regexes));
   const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
