@@ -643,6 +643,26 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
   return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
 }
 
+/** The write roots whose own name is a link right now (`lstat`, a trailing `/` ignored). The profile builders resolve a
+ *  root to where it points (Seatbelt's `canonicalizePath`) or bind it (bubblewrap), so a root swapped for a link after
+ *  the host built its settings would make wherever the link points writable. Such a root is dropped at spawn instead. */
+export function linkedWriteRoots(roots: readonly string[]): string[] {
+  return roots.filter((root) => {
+    const bare = root.length > 1 ? root.replace(/\/+$/, "") || "/" : root;
+    try {
+      return lstatSync(bare).isSymbolicLink();
+    } catch {
+      return false; // not there: nothing to follow
+    }
+  });
+}
+
+/** What a failed command is told about write roots dropped at spawn for being links. */
+export function linkedWriteRootsNote(dropped: readonly string[]): string {
+  if (dropped.length === 0) return "";
+  return `\n[sandbox] not writable: a write root that is a link (followed, it could lead anywhere): ${dropped.join(", ")}\n`;
+}
+
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
   const { posture, sandboxOverrideRequested } = resolveExecutionPath({
     settings: opts.settings,
@@ -665,6 +685,16 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   let failedFolders: string[] = [];
   let madeFolders: string[] = [];
   let quarantineRoot: string | undefined;
+
+  // A write root that is a link at spawn is dropped, never followed (`linkedWriteRoots`); a failed command says so.
+  let linkedNote = "";
+  if (posture === "sandboxed" && opts.writableRoots !== undefined) {
+    const linked = linkedWriteRoots(opts.writableRoots);
+    if (linked.length > 0) {
+      opts = { ...opts, writableRoots: opts.writableRoots.filter((root) => !linked.includes(root)) };
+      linkedNote = linkedWriteRootsNote(linked);
+    }
+  }
 
   if (posture === "sandboxed") {
     // §3: never silently degrade to an unsandboxed spawn -- a typed error, before any process
@@ -904,6 +934,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       // Linux: a failed command whose sandbox held folders for missing protected paths says which, as lane C's fence
       // does (a write there fails as a read-only file system, which alone doesn't say why).
       if (heldNote !== "" && exitCode !== 0 && !aborted && !streamKilled) opts.onStderr?.(Buffer.from(heldNote));
+      if (linkedNote !== "" && exitCode !== 0 && !aborted && !streamKilled) opts.onStderr?.(Buffer.from(linkedNote));
       // B1: what the command made at a protected path the sandbox couldn't hold is moved aside now, at ITS end (a
       // background command's too), and said.
       const quarantined = endLinuxRun();

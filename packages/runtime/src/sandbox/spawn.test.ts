@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, realpathSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, existsSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
@@ -12,6 +12,8 @@ import {
   resetDarwinUserTempDirCacheForTest,
   runCommand,
   SandboxUnavailableError,
+  linkedWriteRoots,
+  linkedWriteRootsNote,
 } from "./spawn.ts";
 import { SandboxConfigError, buildSeatbeltProfile, type SandboxSettings } from "./profile.ts";
 
@@ -404,5 +406,47 @@ describe("runCommand: real spawn (darwin)", () => {
     expect(res.posture).toBe("config-disabled");
     expect(res.spawnError).toBeUndefined();
     expect(res.exitCode).toBe(0);
+  });
+});
+
+// A write root swapped for a link after the host built its settings: dropped at spawn, never followed.
+describe("write roots that are links at spawn", () => {
+  test("linkedWriteRoots names a root whose own name is a link (a trailing slash too), not a real folder, a missing one or a link above it", () => {
+    const base = realTmp();
+    const real = join(base, "real");
+    const elsewhere = join(base, "elsewhere");
+    mkdirSync(real);
+    mkdirSync(elsewhere);
+    symlinkSync(elsewhere, join(base, "link"));
+    symlinkSync(base, join(base, "up"));
+    const roots = [real, join(base, "link"), `${join(base, "link")}/`, join(base, "missing"), join(base, "up", "real")];
+    expect(linkedWriteRoots(roots)).toEqual([join(base, "link"), `${join(base, "link")}/`]);
+    expect(linkedWriteRootsNote([])).toBe("");
+    expect(linkedWriteRootsNote([join(base, "link")])).toContain(join(base, "link"));
+  });
+
+  test.skipIf(process.platform !== "darwin")("a sandboxed command can't write through a root that is a link; a real root stays writable, and the failure says why", async () => {
+    const base = realTmp();
+    const cwd = join(base, "cwd");
+    const real = join(base, "real");
+    const elsewhere = join(base, "elsewhere");
+    for (const d of [cwd, real, elsewhere]) mkdirSync(d);
+    symlinkSync(elsewhere, join(base, "link"));
+    let err = "";
+    const res = await runCommand({
+      command: `echo ok > ${JSON.stringify(join(real, "a"))} && echo x > ${JSON.stringify(join(base, "link", "b"))}`,
+      cwd,
+      writableRoots: [real, join(base, "link")],
+      env: { ...process.env, TMPDIR: cwd },
+      timeoutMs: 5000,
+      settings: {},
+      onStderr: (c) => { err += c.toString("utf8"); },
+    });
+    expect(res.posture).toBe("sandboxed");
+    expect(res.exitCode).not.toBe(0);
+    expect(existsSync(join(real, "a"))).toBe(true);
+    expect(existsSync(join(elsewhere, "b"))).toBe(false);
+    expect(err).toContain("a write root that is a link");
+    expect(res.profile).not.toContain(elsewhere);
   });
 });

@@ -4,6 +4,17 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## Unreleased
+
+### A write root that is a link at spawn is dropped, never followed
+
+- **`runCommandLocally`** (Bash, Monitor, background Bash): before the profile is built, a `writableRoots` entry
+  whose own name is a link (`lstat`) is dropped. Seatbelt's profile resolves each root to where it points, so a root
+  swapped for a link between the host's settings build and the spawn made the link's target writable. The working
+  folder is unchanged. A command that then fails says which roots were dropped (`linkedWriteRootsNote`).
+- Test: a real sandboxed command writes its real root and can't write through a link root, and the link's target
+  stays untouched; it fails without the drop.
+
 ## 0.0.76
 
 ### The host floor's `**/` globs deny at every depth
