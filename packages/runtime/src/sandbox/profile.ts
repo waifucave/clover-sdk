@@ -1131,6 +1131,11 @@ export function linuxSandboxListsFor(
   // one only inside an existing `.git`). Empty folders: git doesn't see them. Not the editors' and claude's folders in
   // the home itself (a session there doesn't make another tool's config folder): there the end-of-run move covers them.
   const inHome = input.home !== undefined && canon(input.home) === cwd;
-  const ensureFolders = [...new Set([...roots.map((r) => join(r, proj)), ...(inHome ? [] : DEFAULT_PROTECTED_DIRS.map((rel) => join(cwd, rel))), join(cwd, ".git", "hooks")])];
+  // The sandbox's own bookkeeping (`linux-runs.ts`), read by the host's unsandboxed recovery: write-denied, and made
+  // before the run so a mount holds them (#74's review, check 3).
+  const runsBase = input.winterHome !== undefined ? canon(input.winterHome) : winterRoot;
+  const bookkeeping = runsBase === undefined ? [] : [join(runsBase, "quarantine"), join(runsBase, "sandbox-runs")];
+  for (const b of bookkeeping) denyWrite.add(b);
+  const ensureFolders = [...new Set([...roots.map((r) => join(r, proj)), ...(inHome ? [] : DEFAULT_PROTECTED_DIRS.map((rel) => join(cwd, rel))), join(cwd, ".git", "hooks"), ...bookkeeping])];
   return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead], ensureFolders };
 }

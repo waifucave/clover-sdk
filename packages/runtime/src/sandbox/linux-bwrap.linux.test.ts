@@ -170,6 +170,24 @@ describe("the Linux sandbox (bubblewrap)", () => {
     expect(r.unheldProtectedPaths).toBeUndefined();
   });
 
+  linuxTest("a forged run record from inside the sandbox does nothing: the bookkeeping folders are read-only to it, even with the home as the working folder", async () => {
+    const home = temp("clover-a3-lx-home-");
+    const outside = temp("clover-a3-lx-outside-");
+    writeFileSync(join(outside, "precious.txt"), "the user's");
+    const forged = JSON.stringify({ unheld: [{ path: join(outside, "precious.txt"), anchor: outside }], quarantineRoot: outside, made: [outside], roots: { cwd: outside, writableRoots: ["/"] } });
+    const r = await run([
+      `(printf '%s' '${forged}' > .winter/sandbox-runs/1-0-forged.json) 2>/dev/null && echo FORGED || echo noforge`,
+      "(ln -s /tmp .winter/quarantine/x) 2>/dev/null && echo LINKED || echo nolink",
+      "echo '{}' > .mcp.json",
+    ].join("; "), home, { home });
+    expect(r.out).toContain("noforge");
+    expect(r.out).toContain("nolink");
+    expect(existsSync(join(home, ".winter", "sandbox-runs", "1-0-forged.json"))).toBe(false);
+    // The next run's recovery finds nothing to act on, and the user's file is untouched.
+    await run("true", temp("clover-a3-lx-cwd-"), { home });
+    expect(readFileSync(join(outside, "precious.txt"), "utf8")).toBe("the user's");
+  });
+
   linuxTest("the host-code broker asks the engine's check: no auto-allow while a protected folder can't be held", async () => {
     const snapshot = (cwd: string): HostCodePermissionSnapshot => ({
       scope: { generationId: "g", sessionId: "s" }, policyRevision: 1,

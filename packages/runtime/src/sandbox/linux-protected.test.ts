@@ -42,7 +42,13 @@ describe("the protected folders made before a run", () => {
 
   test("in the home itself, not the editors' or claude's folders (the end-of-run move covers them)", () => {
     const lists = linuxSandboxListsFor({ cwd: "/hh/u", home: "/hh/u", allowNetwork: false }, (_p, r) => r.map(() => []));
-    expect(lists.ensureFolders.sort()).toEqual(["/hh/u/.git/hooks", "/hh/u/.winter"]);
+    expect(lists.ensureFolders.sort()).toEqual(["/hh/u/.git/hooks", "/hh/u/.winter", "/hh/u/.winter/quarantine", "/hh/u/.winter/sandbox-runs"]);
+  });
+
+  test("the sandbox's own bookkeeping (quarantine/, sandbox-runs/) is write-denied and made before the run (#74's review, check 3)", () => {
+    const lists = linuxSandboxListsFor({ cwd: "/hh/u", home: "/hh/u", allowNetwork: false }, (_p, r) => r.map(() => []));
+    expect(lists.denyWrite).toContain("/hh/u/.winter/quarantine");
+    expect(lists.denyWrite).toContain("/hh/u/.winter/sandbox-runs");
   });
 });
 
@@ -67,12 +73,13 @@ describe("quarantinePlanted: what a command made at a protected path is moved as
     expect(() => lstatSync(join(cwd, ".claude"))).toThrow();
   });
 
-  test("with no quarantine folder it is removed instead", () => {
+  test("with no quarantine folder a planted file is unlinked, and a folder with something in it is never deleted", () => {
     const cwd = temp("clover-a3-q-");
     mkdirSync(join(cwd, ".git", "hooks"), { recursive: true });
     writeFileSync(join(cwd, ".git", "hooks", "pre-commit"), "#!/bin/sh");
-    expect(quarantinePlanted([{ path: join(cwd, ".git", "hooks"), anchor: cwd }], undefined)).toEqual([join(cwd, ".git", "hooks")]);
-    expect(existsSync(join(cwd, ".git", "hooks"))).toBe(false);
-    expect(existsSync(join(cwd, ".git"))).toBe(true);
+    writeFileSync(join(cwd, ".gitconfig"), "[x]");
+    expect(quarantinePlanted([{ path: join(cwd, ".git", "hooks"), anchor: cwd }, { path: join(cwd, ".gitconfig"), anchor: cwd }], undefined)).toEqual([join(cwd, ".gitconfig")]);
+    expect(existsSync(join(cwd, ".gitconfig"))).toBe(false);
+    expect(existsSync(join(cwd, ".git", "hooks", "pre-commit"))).toBe(true);
   });
 });

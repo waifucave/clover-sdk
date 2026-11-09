@@ -19,6 +19,10 @@ export interface HostCodePermissionSnapshot {
   cwd:string;sessionRoot:string;home:string;winterHome?:string;storeHome?:string;
   trustedWorkspace:boolean;brand:BrandProfile;outputsDir?:string;
   additionalDirectories?:readonly string[];
+  /** The writable roots the host passes the run (`HostCodeCanonicalContext.commandOptions.writableRoots`, the same list):
+   *  the auto-allow check reads the run's own roots (#74's review, check 3). Absent: the session root and the extra
+   *  folders. */
+  writableRoots?:readonly string[];
   autoConfig?:AutoModeConfig;
   /** An actual host-owned reviewer/classifier. Missing produces no verdict and never an allow. */
   autoEngine?:AutoEngine;
@@ -56,7 +60,7 @@ export function buildHostCodePermissionContext(snapshot:HostCodePermissionSnapsh
     promptStage:{async prompt(){return null;}},
     requiresInteraction:name=>getRegisteredTool(name)?.descriptor.interaction==="required",
     // The engine's own check (`bashCountsAsSandboxed`): on Linux, not while a protected folder can't be held.
-    bashRunsSandboxed:call=>call.toolName==="Bash"&&settings.autoAllowBashIfSandboxed===true&&posture(call,call.input.dangerouslyDisableSandbox===true)==="sandboxed"&&bashCountsAsSandboxed(settings,{cwd:snapshot.cwd,writableRoots:[snapshot.sessionRoot,...(config.additionalDirectories??[]),...(snapshot.additionalDirectories??[])],home:snapshot.home,...(snapshot.winterHome?{winterHome:snapshot.winterHome}:{}),...(snapshot.storeHome?{storeHome:snapshot.storeHome}:{}),brand:snapshot.brand}),
+    bashRunsSandboxed:call=>call.toolName==="Bash"&&settings.autoAllowBashIfSandboxed===true&&posture(call,call.input.dangerouslyDisableSandbox===true)==="sandboxed"&&bashCountsAsSandboxed(settings,{cwd:snapshot.cwd,writableRoots:snapshot.writableRoots!==undefined?[...snapshot.writableRoots]:[snapshot.sessionRoot,...(config.additionalDirectories??[]),...(snapshot.additionalDirectories??[])],home:snapshot.home,...(snapshot.winterHome?{winterHome:snapshot.winterHome}:{}),...(snapshot.storeHome?{storeHome:snapshot.storeHome}:{}),brand:snapshot.brand}),
     bashSandboxEscape:call=>call.toolName==="Bash"&&call.input.dangerouslyDisableSandbox===true&&posture(call,true)!=="sandboxed"&&posture(call,false)==="sandboxed",
   };
 }
@@ -75,7 +79,7 @@ export function createHostCodePermissionEvaluator(input:{getCurrentSnapshot(requ
     async evaluate(request:HostCodePermissionRequest,signal?:AbortSignal):Promise<{status:"allow"|"deny"|"needs_prompt"|"stale"|"cancelled";policyRevision:number;record?:PermissionDecisionRecord}> {
       const captured:HostCodePermissionRequest=structuredClone(request);
       const live=input.getCurrentSnapshot(captured);
-      const snapshot:HostCodePermissionSnapshot={...live,scope:{...live.scope},config:structuredClone(live.config),brand:structuredClone(live.brand),...(live.settingsRules?{settingsRules:structuredClone(live.settingsRules)}:{}),...(live.autoConfig?{autoConfig:structuredClone(live.autoConfig)}:{}),...(live.additionalDirectories?{additionalDirectories:[...live.additionalDirectories]}:{})};
+      const snapshot:HostCodePermissionSnapshot={...live,scope:{...live.scope},config:structuredClone(live.config),brand:structuredClone(live.brand),...(live.settingsRules?{settingsRules:structuredClone(live.settingsRules)}:{}),...(live.autoConfig?{autoConfig:structuredClone(live.autoConfig)}:{}),...(live.additionalDirectories?{additionalDirectories:[...live.additionalDirectories]}:{}),...(live.writableRoots?{writableRoots:[...live.writableRoots]}:{})};
       if(!sameOwner(captured.scope,snapshot))throw new Error("foreign host permission scope");
       if(signal?.aborted)return{status:"cancelled",policyRevision:snapshot.policyRevision};
       const context=buildHostCodePermissionContext(snapshot);let needsPrompt=false;

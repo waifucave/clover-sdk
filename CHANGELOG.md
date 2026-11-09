@@ -37,7 +37,13 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   - a run that doesn't reach its end is covered too: a SIGTERM or SIGINT to `winter` and an embedded session's abort
     move every live run's plants aside in the same sweep as the process-group kill (`sweepLinuxRuns`), and each run's
     at-risk paths are on disk (`<winter home>/sandbox-runs/`) from before its command starts, so the next sandboxed
-    run finishes one whose process crashed (`recoverCrashedLinuxRuns`);
+    run finishes one whose process crashed (`recoverCrashedLinuxRuns`). That recovery trusts nothing a record says:
+    `sandbox-runs/` and `quarantine/` are write-denied in every sandbox and made before the run, a record that is a
+    link, not the user's or not 0600 is skipped, the current quarantine folder is used, and only entries that
+    recompute as protected paths under the run's own roots are acted on. A reused pid is told apart by its start
+    time;
+  - the quarantine folder must be a real folder (never a link), and a planted path is never deleted recursively: a
+    file or a link is unlinked, an empty folder removed, and a folder with something in it stays;
   - the folders made for a run are removed at its end while still empty and no other sandboxed run is live.
 - **Residuals**, which the header lists:
   - a pattern-shaped deny (a glob, a name at any depth) covers only what is on disk when the command starts;

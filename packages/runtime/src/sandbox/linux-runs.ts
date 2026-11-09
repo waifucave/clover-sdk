@@ -5,12 +5,18 @@
 // one is moved aside (`quarantinePlanted`). A run that doesn't reach its end is covered twice over:
 // * the realm's own sweep (`sweepLinuxRuns`): a SIGTERM or SIGINT to `winter` (main.ts) and an embedded session's
 //   abort (embedded.ts) run it right after their process-group kill, synchronously, and leave the record for the next;
-// * a record on disk (`<winter home>/sandbox-runs/<pid>-<n>.json`), written before the command starts and removed at
-//   its end: a run whose process died without either (a crash, a SIGKILL) is finished by the next sandboxed run on
-//   this computer (`recoverCrashedLinuxRuns`).
+// * a record on disk (`<winter home>/sandbox-runs/<pid>-<n>.json`, 0600), written before the command starts and
+//   removed at its end: a run whose process died without either (a crash, a SIGKILL) is finished by the next
+//   sandboxed run on this computer (`recoverCrashedLinuxRuns`).
+//
+// A RECORD IS NOT TRUSTED (#74's review, check 3). The recovery runs unsandboxed, so it acts only on what it can
+// recompute: `sandbox-runs/` and `quarantine/` are write-denied in every sandbox (`linuxSandboxListsFor`), a record
+// that is a link, not the user's or not 0600 is skipped, the record's quarantine folder is ignored for the current
+// one, and only entries that recompute as protected paths under the run's roots are acted on (`RecoveryCheck`). The
+// quarantine folder must be a real folder (never a link), and nothing here ever deletes recursively.
 // The protected folders a run made before it started (`ensureProtectedFolders`) are removed at its end when they are
 // still empty and no other sandboxed run is live (none in this realm, no record of a live process).
-import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmdirSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
@@ -25,6 +31,15 @@ export function lexists(p: string): boolean {
   }
 }
 
+function realDir(p: string): boolean {
+  try {
+    const st = lstatSync(p);
+    return st.isDirectory() && !st.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
 /** The deepest ancestor of `path` that exists now (by `lstat`, links not followed). */
 export function anchorOf(path: string): string {
   let a = dirname(path);
@@ -32,13 +47,24 @@ export function anchorOf(path: string): string {
   return a;
 }
 
+/** The quarantine folder, made if missing, when it (and the folder holding it) is a real folder and never a link. */
+function quarantineFolder(quarantineRoot: string | undefined): string | undefined {
+  if (quarantineRoot === undefined) return undefined;
+  try {
+    mkdirSync(quarantineRoot, { recursive: true, mode: 0o700 });
+  } catch { /* checked below */ }
+  return realDir(quarantineRoot) && realDir(dirname(quarantineRoot)) ? quarantineRoot : undefined;
+}
+
 /**
  * Moves aside whatever the command made at an unheld protected path (lane C's `quarantinePlanted`). It walks from the
  * path's anchor down, never through a link: the first link it meets (one the command made) is what moves, else the
- * path itself. It goes into the home's `quarantine/` folder, or is removed when it can't be moved there.
+ * path itself. It goes into the home's `quarantine/` folder when that is a real folder; otherwise a file or a link is
+ * unlinked and an empty folder removed, and a folder with something in it stays. Never a recursive delete.
  */
 export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined): string[] {
   const planted: string[] = [];
+  const folder = quarantineFolder(quarantineRoot);
   for (const { path, anchor } of unheld) {
     const rest = path.slice(anchor.length).split("/").filter(Boolean);
     let at = anchor;
@@ -57,22 +83,32 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
       }
     }
     if (target === undefined || planted.includes(target)) continue;
-    try {
-      if (quarantineRoot === undefined) throw new Error("no quarantine folder");
-      mkdirSync(quarantineRoot, { recursive: true, mode: 0o700 });
-      renameSync(target, join(quarantineRoot, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
-    } catch {
+    let gone = false;
+    if (folder !== undefined) {
       try {
-        rmSync(target, { recursive: true, force: true });
-      } catch {
-        continue;
-      }
+        renameSync(target, join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
+        gone = true;
+      } catch { /* below */ }
     }
-    planted.push(target);
+    if (!gone) {
+      try {
+        const st = lstatSync(target);
+        if (st.isDirectory() && !st.isSymbolicLink()) rmdirSync(target); // only when empty
+        else unlinkSync(target);
+        gone = true;
+      } catch { /* a folder with something in it stays */ }
+    }
+    if (gone) planted.push(target);
   }
   return planted;
 }
 
+/** What a run's protected paths are computed from: its own roots (the homes and the brand are the recovering run's). */
+export interface LinuxRunRoots {
+  cwd: string;
+  writableRoots: string[];
+  allowGitConfigWrites?: boolean;
+}
 
 /** One live run. */
 export interface LinuxRun {
@@ -80,6 +116,15 @@ export interface LinuxRun {
   quarantineRoot: string | undefined;
   /** The folders made for it before it started, top first. */
   made: string[];
+  /** Its roots, so a recovery can recompute its protected paths. */
+  roots?: LinuxRunRoots;
+}
+
+/** What a recovery may act on for a record's roots: the protected paths (deny and folder literals) and the roots. */
+export interface RecoveryCheck {
+  protectedPaths: ReadonlySet<string>;
+  folders: ReadonlySet<string>;
+  roots: readonly string[];
 }
 
 const live = new Map<number, LinuxRun & { record?: string }>();
@@ -89,12 +134,40 @@ function runsDirOf(quarantineRoot: string | undefined): string | undefined {
   return quarantineRoot === undefined ? undefined : join(dirname(quarantineRoot), "sandbox-runs");
 }
 
-function pidAlive(pid: number): boolean {
+/** A process's start time (Linux: `/proc/<pid>/stat`'s field 22), so a reused pid isn't the record's process. */
+function startTimeOf(pid: number): string | undefined {
+  if (process.platform !== "linux") return undefined;
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    return stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+  } catch {
+    return undefined;
+  }
+}
+const ownStart = startTimeOf(process.pid);
+
+function pidAlive(pid: number, start?: string): boolean {
   try {
     process.kill(pid, 0);
-    return true;
   } catch (err) {
-    return (err as NodeJS.ErrnoException).code === "EPERM";
+    if ((err as NodeJS.ErrnoException).code !== "EPERM") return false;
+  }
+  if (start === undefined) return true;
+  const now = startTimeOf(pid);
+  return now === undefined || now === start;
+}
+
+/** A record file as the user's own 0600 file, never a link; its parsed contents, or undefined. */
+function readRecord(path: string): (LinuxRun & { pid?: number; start?: string }) | undefined {
+  try {
+    const st = lstatSync(path);
+    if (!st.isFile() || st.isSymbolicLink()) return undefined;
+    if (process.getuid !== undefined && st.uid !== process.getuid()) return undefined;
+    if ((st.mode & 0o777) !== 0o600) return undefined;
+    const run = JSON.parse(readFileSync(path, "utf8")) as LinuxRun & { pid?: number; start?: string };
+    return run !== null && typeof run === "object" ? run : undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -112,7 +185,8 @@ function otherLiveRecords(dir: string | undefined, own: ReadonlySet<string>): nu
     const path = join(dir, name);
     if (own.has(path)) continue;
     const pid = Number(name.split("-")[0]);
-    if (Number.isSafeInteger(pid) && pidAlive(pid)) n++;
+    const start = readRecord(path)?.start;
+    if (Number.isSafeInteger(pid) && pidAlive(pid, typeof start === "string" ? start : undefined)) n++;
   }
   return n;
 }
@@ -136,8 +210,9 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
   if (dir !== undefined) {
     try {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
+      if (!realDir(dir)) throw new Error("not a real folder");
       record = join(dir, `${process.pid}-${id}-${Math.random().toString(16).slice(2, 10)}.json`);
-      writeFileSync(record, JSON.stringify(run), { mode: 0o600 });
+      writeFileSync(record, JSON.stringify({ ...run, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
     } catch {
       record = undefined;
     }
@@ -176,10 +251,17 @@ export function sweepLinuxRuns(): string[] {
   return out;
 }
 
-/** Finishes the runs whose process died without reaching their end (their record is still on disk). */
-export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined): string[] {
+const within = (p: string, root: string): boolean => p === root || p.startsWith(root.endsWith("/") ? root : `${root}/`);
+
+/**
+ * Finishes the runs whose process died without reaching their end (their record is still on disk), trusting nothing
+ * the record says: `check(roots)` recomputes the run's protected paths from its roots, and only an unheld entry that
+ * is one of them, anchored at or under a root, or a made folder that is one of them or on the way to one, is acted on.
+ * The quarantine folder is always `quarantineRoot` (the current one).
+ */
+export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, check: (roots: LinuxRunRoots) => RecoveryCheck | undefined): string[] {
   const dir = runsDirOf(quarantineRoot);
-  if (dir === undefined) return [];
+  if (dir === undefined || !realDir(dir)) return [];
   let names: string[];
   try {
     names = readdirSync(dir);
@@ -188,15 +270,25 @@ export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined): str
   }
   const out: string[] = [];
   for (const name of names) {
-    const pid = Number(name.split("-")[0]);
-    if (!Number.isSafeInteger(pid) || pidAlive(pid)) continue;
     const path = join(dir, name);
-    try {
-      const run = JSON.parse(readFileSync(path, "utf8")) as LinuxRun;
-      if (!Array.isArray(run.unheld)) throw new Error("not a run record");
-      out.push(...quarantinePlanted(run.unheld, run.quarantineRoot ?? quarantineRoot));
-      if (Array.isArray(run.made)) removeMadeFolders(run.made);
-    } catch { /* an unreadable record is dropped */ }
+    const pid = Number(name.split("-")[0]);
+    const run = readRecord(path);
+    if (run === undefined) continue; // a link, not the user's, not 0600, or unreadable: skipped
+    if (!Number.isSafeInteger(pid) || pidAlive(pid, typeof run.start === "string" ? run.start : undefined)) continue;
+    const roots = run.roots;
+    const ok = roots !== undefined && typeof roots.cwd === "string" && roots.cwd.startsWith("/") && Array.isArray(roots.writableRoots) && roots.writableRoots.every((r) => typeof r === "string" && r.startsWith("/"));
+    const facts = ok ? check({ cwd: roots.cwd, writableRoots: [...roots.writableRoots], ...(roots.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) }) : undefined;
+    if (facts !== undefined) {
+      const unheld = (Array.isArray(run.unheld) ? run.unheld : []).filter((u): u is UnheldPath =>
+        u !== null && typeof u === "object" && typeof u.path === "string" && typeof u.anchor === "string"
+        && facts.protectedPaths.has(u.path) && u.anchor !== u.path && within(u.path, u.anchor)
+        && facts.roots.some((r) => within(u.anchor, r)));
+      out.push(...quarantinePlanted(unheld, quarantineRoot));
+      const made = (Array.isArray(run.made) ? run.made : []).filter((m): m is string =>
+        typeof m === "string" && !facts.roots.includes(m) && [...facts.folders].some((f) => f === m || f.startsWith(`${m}/`))
+        && (facts.roots.some((r) => within(m, r)) || (quarantineRoot !== undefined && within(m, dirname(dirname(quarantineRoot))))));
+      removeMadeFolders(made);
+    }
     rmSync(path, { force: true });
   }
   return out;

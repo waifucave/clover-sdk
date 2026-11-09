@@ -617,8 +617,16 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
   if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
   const brand = opts.brand ?? WINTER_BRAND;
   const quarantineRoot = opts.winterHome !== undefined ? join(opts.winterHome, "quarantine") : opts.home !== undefined ? join(opts.home, brand.homeDirName, "quarantine") : undefined;
-  // A run whose process died before its end left its record: finish it first (`linux-runs.ts`).
-  recoverCrashedLinuxRuns(quarantineRoot);
+  // A run whose process died before its end left its record: finish it first (`linux-runs.ts`), acting only on what
+  // recomputes as protected under that run's roots, with this run's homes and brand.
+  recoverCrashedLinuxRuns(quarantineRoot, (roots) => {
+    const l = linuxSandboxListsFor(linuxListsInput({
+      cwd: roots.cwd, writableRoots: roots.writableRoots, allowGitConfigWrites: roots.allowGitConfigWrites === true,
+      ...(opts.home !== undefined ? { home: opts.home } : {}), ...(opts.winterHome !== undefined ? { winterHome: opts.winterHome } : {}),
+      ...(opts.storeHome !== undefined ? { storeHome: opts.storeHome } : {}), ...(opts.brand !== undefined ? { brand: opts.brand } : {}),
+    }, false), (_p, regexes) => regexes.map(() => []));
+    return { protectedPaths: new Set([...l.denyWrite, ...l.ensureFolders]), folders: new Set(l.ensureFolders), roots: l.writableRoots };
+  });
   const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatterns(prefix, regexes));
   const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
@@ -763,7 +771,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
   // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
   // never comes (`linux-runs.ts`).
-  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 ? beginLinuxRun({ unheld, quarantineRoot, made: madeFolders }) : () => [];
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 ? beginLinuxRun({ unheld, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
