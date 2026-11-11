@@ -515,7 +515,9 @@ export interface ToolExecutionContext {
    * the classifier -- or that this context was hand-built. An executor must read absence as "not
    * explicitly approved", never the other way round.
    *
-   * One consumer today: `WebFetch`, for a private-address target under the `"ask"` policy.
+   * Consumers: `WebFetch`, for a private-address target under the `"ask"` policy; and (0.0.77) `Write`,
+   * `Edit` and `NotebookEdit`, where `"prompt"` means the host's `canUseTool` allowed this call and waives
+   * the session's write roots for it (`tools/no-follow-write.ts`'s `checkPlannedTarget`).
    */
   permission?: ToolCallPermission;
   session: {

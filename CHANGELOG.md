@@ -4,6 +4,81 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.77
+
+### The file tools write the file they checked
+
+- **Write, Edit and NotebookEdit** used to check a path and then write it with a plain write that follows links. In
+  between, a sandboxed command (a background shell, a monitor) could put a link where the checked file was, or swap
+  a folder above it for one, and the write landed wherever the link pointed. Now each path is resolved once to the
+  real file it names. The deny checks run on both the name given and that real file, and the write opens exactly
+  that real file:
+  - with no-follow on its last name. On macOS `O_NOFOLLOW_ANY` refuses a link in any part of the path, so a folder
+    swapped for a link can't redirect the open either.
+  - an existing file is opened without truncating it. Before the first byte is written, the tool checks that it is a
+    regular file, that its folder still resolves where it did, and that the name there is still the open file (same
+    device and inode, and on Linux `/proc/self/fd` agrees). Then it is rewritten in place, so its inode, mode and owner
+    stay the same.
+  - a new file is created exclusively (`O_CREAT|O_EXCL`, mode `0666` less the umask). Missing folders are made one at
+    a time, each checked after it is made, never with a recursive mkdir.
+  - Edit and NotebookEdit read and write through the same descriptor, so the file read is the file written.
+  - a FIFO, socket, device or folder at the path is refused.
+- A link the user really has (a dotfile managed elsewhere, say) keeps working: it is followed once, when the path is
+  resolved, and the write lands on the file it was checked as.
+- **What is left.** On macOS, nothing for file content: a folder swapped while missing folders are being made can
+  leave an empty folder outside for a moment, which is removed. On Linux there is no `O_NOFOLLOW_ANY`: a folder
+  swapped between the check and the open can make a new file's open create an empty file at the link's target. The
+  check after the open sees it and removes it. An existing file elsewhere is never truncated or written. On Windows
+  there is no `O_NOFOLLOW`: the last name is checked right before the open instead, which leaves the gap between the
+  two. Processes running as the same user outside any sandbox are out of scope, as before.
+- The same writer makes the runtime's own new files in the session temp folder, which a sandboxed command can write:
+  ReadMcpResource's binary blobs (`mcp-resources`), Bash's overflow output (`bash-output`) and the MCP output spill
+  (`mcp-output`). A link planted at one of those folders no longer sends the file elsewhere: the save is refused (the
+  MCP result stays an excerpt). It also restores files on a checkpoint rewind.
+- **Removals.** A checkpoint rewind that deletes a file the session created, and the Linux sandbox's clean-up of
+  something a command made at a protected path, no longer delete through a folder swapped for a link. Node has no
+  `unlinkat`, so the file is first renamed to a random name in its own folder, then checked to be the same file in the
+  same real folder, and only then unlinked. A swapped folder means the rename is undone, and the rewind counts the
+  file as skipped (`skippedLinks`). Only a regular file (or, for the clean-up, the link itself) is ever removed.
+- **Background-task output files** (`<session temp>/tasks/<id>.output`, for background Bash, Monitor, a command's
+  leftover children, agents and workflows). The session temp folder is a sandboxed command's own to write, so it
+  could rename `tasks/` and put a link in its place (measured on macOS under the real sandbox profile). Each output is
+  now opened once through the same writer, created exclusively in the `tasks/` folder as it was made, and written
+  through that descriptor; an output reopened later is appended to (`O_APPEND`). TaskOutput reads it the same way, so a
+  link planted at the file or the folder is never read back.
+  - The folder's real path is remembered when the runtime makes it, built from its parent's real path (a folder the
+    command can't move) and its own name, never by following the folder itself. A link swapped in there before that
+    is refused, and nothing is remembered.
+  - Every level of the session temp folder gets its 0700 mode through a descriptor opened no-follow as a folder,
+    checked to be the folder that was validated. A plain chmod would follow a link swapped in after the check. On
+    Windows (no `O_DIRECTORY`/`O_NOFOLLOW`, and a folder can't be opened that way) it stays the plain chmod it was,
+    after the same lstat validation.
+- **The checkpoint's copy of a file before a tool changes it** no longer follows links. A symbolic link, or a file with
+  more than one hard link, gets no copy. The record says so (`linked`), and a rewind skips it. Before, a command could
+  point a name at a file it can't read: the model's write would be refused, but the copy was already in the store, and
+  a later rewind wrote it back where the command reads it. Copies are read through one verified descriptor.
+- When a check fails after a new file was created, the empty file is removed only where its folder is known: where
+  `/proc` says it is on Linux, or the planned place when that place checked out. It is never removed through a folder
+  that failed the check, and the error says where the file was left.
+- The opens add `O_NOCTTY`. Path comparisons fold case only on a macOS volume that ignores case
+  (`pathconf(_PC_CASE_SENSITIVE)`); a case-sensitive APFS volume compares exactly.
+
+### `sandbox.filesystem.enforceWriteRootsInFileTools`: the file tools stay in the write roots
+
+- New, off by default. When on, Write, Edit and NotebookEdit write only inside the session's write roots: the same
+  set its sandboxed commands may write (the session temp folder, the working folders, the outputs folder,
+  `filesystem.allowWrite`), each resolved to its real path. The one exception is a call the host's `canUseTool`
+  allowed, and only when the approved name is the real file, with no link on the way. A link means the target could
+  have changed after the answer. A refusal through a link names the real file, so the model can ask for that path
+  and the host sees it.
+- To carry that exception, these tools' permission records now get `explicitApproval: "prompt"` for a `canUseTool`
+  answer only. A PermissionRequest hook's allow doesn't count. WebFetch's records are unchanged.
+- While it is on, a file with more than one hard link is refused: a hard link is the one way to forge the roots
+  check. `sandbox.filesystem.allowHardLinkWrites: true` allows them. With the setting off, hard links are written as
+  before, and path-based deny lists don't see them: a deny on one name doesn't cover another name of the same file.
+- A settings file may turn `enforceWriteRootsInFileTools` on, never off, and can't set `allowHardLinkWrites`. Only
+  the host's own `sandbox` option can.
+
 ## 0.0.76
 
 ### The host floor's `**/` globs deny at every depth

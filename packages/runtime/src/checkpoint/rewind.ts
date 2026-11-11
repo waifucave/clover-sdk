@@ -14,7 +14,8 @@
 // returns a typed result, so a rejected promise would leave a host unable to tell "there is nothing
 // to rewind to" from a transport fault.
 import type { RewindFilesResult } from "@waifucave/clover-agent-sdk";
-import { lstatSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { closeTarget, NoFollowWriteError, openPlanned, planWrite, removePlanned, replaceContents, samePath } from "../tools/no-follow-write.ts";
 import { join, relative, resolve, sep } from "node:path";
 import { blobName, nearestExistingAncestor, parentRealPathOf, readCheckpointIndex, sessionCheckpointDir, type CheckpointRecord } from "./file-history.ts";
 
@@ -278,6 +279,13 @@ export function rewindToCheckpoint(opts: RewindOptions): RewindFilesResult {
       continue;
     }
 
+    // 0.0.77: a snapshot taken of a link or a hard-linked file holds no bytes (`readPreImage`): nothing to
+    // restore, and nothing this rewind may delete. Path-identity class: skipped on both paths.
+    if (record.linked !== undefined) {
+      if (!opts.dryRun) skippedLinks++;
+      continue;
+    }
+
     const identityRefusal = pathIdentityRefusal(record);
     if (identityRefusal !== undefined) {
       if (!opts.dryRun) skippedLinks++;
@@ -304,17 +312,36 @@ export function rewindToCheckpoint(opts: RewindOptions): RewindFilesResult {
     if (unchanged) continue;
 
     const delta = countLineDelta(splitLines(current), splitLines(restored));
+    if (!opts.dryRun) {
+      // 0.0.77: the restore and the delete both go through the shared no-follow writer
+      // (tools/no-follow-write.ts) -- the checks above ran before this point, and a link or a folder swapped
+      // in since then must redirect neither. Resolved once; the folder must still be the one the checkpoint
+      // recorded. A refusal counts as a skipped link, like the checks above, never as a changed file.
+      try {
+        const plan = planWrite(record.path, { followLeafLink: false, createParents: false });
+        if (record.parentRealPath !== undefined && !samePath(plan.realParent, record.parentRealPath)) {
+          throw new NoFollowWriteError("moved", "its parent directory no longer resolves where it did at checkpoint time");
+        }
+        if (restored === undefined) {
+          // The file did not exist at checkpoint time: the rewind removes it again.
+          removePlanned(plan);
+        } else {
+          const target = openPlanned(plan, { mode: plan.existing !== undefined ? "existing" : "create", refuseHardLinks: true });
+          try {
+            replaceContents(target.fd, restored);
+          } finally {
+            closeTarget(target);
+          }
+        }
+      } catch (err) {
+        if (!(err instanceof NoFollowWriteError)) throw err;
+        skippedLinks++;
+        continue;
+      }
+    }
     insertions += delta.insertions;
     deletions += delta.deletions;
     filesChanged.push(record.path);
-
-    if (opts.dryRun) continue;
-    if (restored === undefined) {
-      // The file did not exist at checkpoint time: the rewind removes it again.
-      rmSync(record.path, { force: true });
-    } else {
-      writeFileSync(record.path, restored);
-    }
   }
 
   return {

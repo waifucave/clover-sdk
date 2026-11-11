@@ -63,7 +63,9 @@ export function currentHostCodeProtectionPaths(): Pick<HostCodeProtection, "deny
   return { denyReadPaths: [...new Set([...owners.values()].flatMap(value => [...value.denyReadPaths]))], denyWritePaths: [...new Set([...owners.values()].flatMap(value => [...value.denyWritePaths]))] };
 }
 /** Canonical spelling/symlink checks for SDK tool operations. Defense in depth: does not prevent
- * arbitrary same-user access, hardlink aliases or an external race after this synchronous check. */
+ * arbitrary same-user access, hardlink aliases or an external race after this synchronous check. The
+ * writing file tools close that race for their writes by checking and opening the same resolved real
+ * file (`tools/no-follow-write.ts`). */
 export function hostCodePathAllowed(path: string, access: "read" | "write", settings?: SandboxSettings, cwd = "/"): boolean {
   const active = currentHostCodeProtectionPaths();
   const paths = [...active[access === "read" ? "denyReadPaths" : "denyWritePaths"], ...(settings?.filesystem?.[access === "read" ? "denyRead" : "denyWrite"] ?? []).map(path => isAbsolute(path) ? path : resolve(cwd, path))];

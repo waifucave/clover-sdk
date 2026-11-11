@@ -37,7 +37,8 @@
 // a rewind's history is invisible to a transcript reader. Raised as a spine request in the task
 // report.
 import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { closeTarget, NoFollowWriteError, openPlanned, planWrite, readAll } from "../tools/no-follow-write.ts";
 import { dirname, join } from "node:path";
 
 /** The directory name under `~/.winter`. One constant so a fixture and the sink cannot disagree. */
@@ -66,6 +67,11 @@ export interface CheckpointRecord {
   version: number;
   /** The file did not exist at checkpoint time -- there are no bytes, and a rewind DELETES it. */
   absent?: boolean;
+  /**
+   * 0.0.77: the path was a symbolic link, or a file with more than one hard link, at checkpoint time. No bytes
+   * were copied (`readPreImage`), and a rewind skips the record, counting it in `skippedLinks`.
+   */
+  linked?: "symbolic-link" | "hard-link";
   /**
    * `realpath(dirname(path))` at checkpoint time. Item (e)'s rule: a path whose parent no longer
    * resolves where it did is REFUSED rather than restored -- otherwise a rewind follows a directory
@@ -168,12 +174,38 @@ export function appendCheckpointRecord(home: string, sessionUuid: string, record
   appendFileSync(join(dir, CHECKPOINT_INDEX_FILENAME), `${JSON.stringify(record)}\n`);
 }
 
-/** The pre-image bytes, or undefined when the file does not exist / is not a regular file. */
-export function readPreImage(absolutePath: string): Buffer | undefined {
+/**
+ * What a checkpoint keeps of a file before a tool changes it:
+ *   - `{ bytes }`: a regular file with one name, read through one verified descriptor that follows no link;
+ *   - `{ absent: true }`: nothing there (or not a regular file), as before -- a rewind deletes what is then there;
+ *   - `{ linked }` (0.0.77): a symbolic link, or a file with more than one hard link. NO bytes are copied. A
+ *     sandboxed command can point such a name at a file it can't read; the tool's write may then be refused, but
+ *     a copy taken here would sit in the store and a later rewind would write it back where the command reads
+ *     it. The record says so, and a rewind skips it (`skippedLinks`).
+ */
+export type PreImage = { bytes: Buffer } | { absent: true } | { linked: "symbolic-link" | "hard-link" };
+
+export function readPreImage(absolutePath: string): PreImage {
+  let st;
   try {
-    if (!statSync(absolutePath).isFile()) return undefined;
-    return readFileSync(absolutePath);
+    st = lstatSync(absolutePath);
   } catch {
-    return undefined;
+    return { absent: true };
+  }
+  if (st.isSymbolicLink()) return { linked: "symbolic-link" };
+  if (!st.isFile()) return { absent: true };
+  if (st.nlink > 1) return { linked: "hard-link" };
+  try {
+    const plan = planWrite(absolutePath, { followLeafLink: false, createParents: false });
+    const target = openPlanned(plan, { mode: "read", refuseHardLinks: true });
+    try {
+      return { bytes: readAll(target.fd) };
+    } finally {
+      closeTarget(target);
+    }
+  } catch (err) {
+    // Changed under the read (a link swapped in, a second name made): no bytes, and the record says why.
+    if (err instanceof NoFollowWriteError) return { linked: err.code === "hard_link" ? "hard-link" : "symbolic-link" };
+    return { absent: true };
   }
 }

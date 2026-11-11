@@ -174,7 +174,9 @@ export interface SandboxSettingsConfig {
   // false, as in Claude Code) lets sandboxed commands write `.git/config`, which the default write
   // protection otherwise denies (sandbox/profile.ts's `SeatbeltProfileInput.allowGitConfigWrites`). Must stay in sync
   // with `sandbox/profile.ts`'s own `SandboxFilesystemSettings`, per this interface's own header.
-  filesystem?: { allowWrite?: string[]; denyWrite?: string[]; allowRead?: string[]; denyRead?: string[]; allowGitConfig?: boolean };
+  // `enforceWriteRootsInFileTools` / `allowHardLinkWrites` (0.0.77): the file tools' own write-root check and
+  // its hard-link escape; see `sandbox/profile.ts`'s `SandboxFilesystemSettings` for both.
+  filesystem?: { allowWrite?: string[]; denyWrite?: string[]; allowRead?: string[]; denyRead?: string[]; allowGitConfig?: boolean; enforceWriteRootsInFileTools?: boolean; allowHardLinkWrites?: boolean };
   network?: { allowedDomains?: string[]; deniedDomains?: string[]; [key: string]: unknown };
   // Clover F8: closes the paths to launchd for a sandboxed command (running launchctl, open and osascript, and the
   // LaunchServices, AppleEvents and job-submission services), so nothing a command starts escapes as launchd's.

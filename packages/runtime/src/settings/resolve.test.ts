@@ -621,6 +621,17 @@ describe("a settings file's sandbox only tightens (#74's review)", () => {
     expect(r.perSource.find((e) => e.source === "local")?.error).toContain("sandbox.filesystem.allowGitConfig");
   });
 
+  test("0.0.77: a file may turn the file tools' write roots on, never off, and can't allow hard links; the host can do both", async () => {
+    writeUser({ sandbox: { filesystem: { enforceWriteRootsInFileTools: true, allowHardLinkWrites: true } } });
+    writeLocal({ sandbox: { filesystem: { enforceWriteRootsInFileTools: false } } });
+    const r = await resolve();
+    expect(r.effective["sandbox"]).toEqual({ filesystem: { enforceWriteRootsInFileTools: true } });
+    expect(r.perSource.find((e) => e.source === "user")?.error).toContain("sandbox.filesystem.allowHardLinkWrites");
+    expect(r.perSource.find((e) => e.source === "local")?.error).toContain("sandbox.filesystem.enforceWriteRootsInFileTools");
+    const host = await resolve({ inline: { sandbox: { filesystem: { enforceWriteRootsInFileTools: true, allowHardLinkWrites: true } } } });
+    expect((host.effective["sandbox"] as { filesystem?: unknown } | undefined)?.filesystem).toEqual({ enforceWriteRootsInFileTools: true, allowHardLinkWrites: true });
+  });
+
   test("the host's own config.sandbox (the flag tier) may loosen, hostFenced included", async () => {
     writeProject({ sandbox: { enabled: false } });
     const r = await resolve({ inline: { sandbox: { enabled: true, hostFenced: true, autoAllowBashIfSandboxed: true } } });

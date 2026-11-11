@@ -2,9 +2,8 @@
 // (foreground and background) and Monitor's command half, so the same doors reach them: TaskStop, the session's end
 // and a host's `stopTask`.
 import { randomUUID } from "node:crypto";
-import { createWriteStream } from "node:fs";
 import type { ToolExecutionContext } from "../registry.ts";
-import { createBackgroundTask } from "../background-tasks.ts";
+import { createBackgroundTask, openTaskOutputStream } from "../background-tasks.ts";
 import type { LeftBehind } from "../../sandbox/spawn.ts";
 import { startTracking, updateTask, getTask, listRunningTasks, toBackgroundTasksChangedEntry } from "./background-task-runtime.ts";
 
@@ -27,7 +26,14 @@ export function adoptLeftBehind(left: LeftBehind, input: { command: string; desc
     taskId = randomUUID();
     outputPath = "";
   }
-  const out = outputPath !== "" ? createWriteStream(outputPath, { flags: "a" }) : undefined;
+  // 0.0.77: opened once through the no-follow writer (background-tasks.ts); a `tasks/` folder that was swapped
+  // for a link leaves the row without an output file, as a bare engine has.
+  let out: ReturnType<typeof openTaskOutputStream> | undefined;
+  try {
+    out = outputPath !== "" ? openTaskOutputStream(outputPath) : undefined;
+  } catch {
+    out = undefined;
+  }
   left.onOutput((chunk) => out?.write(chunk));
   const escaped = left.escaped === true;
   const description = `Left running by: ${input.description}${escaped ? " (one escaped the process holder)" : ""}`;

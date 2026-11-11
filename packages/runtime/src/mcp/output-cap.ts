@@ -19,8 +19,7 @@
 // posture for other capture-pending numeric defaults, e.g. mcp/env.ts's "unset" branch). The
 // heuristic is intentionally a named, overridable constant (not buried inline) so a future capture
 // or a shared token-counting utility can replace it in one place.
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { writeNewFileUnder } from "../tools/no-follow-write.ts";
 
 // A widely-used rough approximation (ordinary English-shaped text averages ~4 characters per
 // token across common tokenizers) -- conservative in the sense that it UNDER-counts tokens for
@@ -116,14 +115,12 @@ export function capMcpOutput(text: string, maxOutputTokens: number, target: McpP
   const body = excerpt(text);
   let persistedPath: string | undefined;
   try {
-    const dir = join(target.sessionDir(), MCP_PERSISTED_OUTPUT_DIRNAME);
-    mkdirSync(dir, { recursive: true });
-    const path = join(dir, persistFileName(target));
     // BYTE-EXACT: the file holds the tool's own result text and nothing else -- no envelope, no
     // header, no trailing newline. The whole point of the envelope is that the model can `Read` the
     // real payload; a decorated file would make the elision unrecoverable.
-    writeFileSync(path, text, "utf8");
-    persistedPath = path;
+    // 0.0.77: through the shared no-follow writer -- the session temp folder is one a sandboxed command
+    // can write, so the spill folder may be a link it planted (tools/no-follow-write.ts).
+    persistedPath = writeNewFileUnder(target.sessionDir(), [MCP_PERSISTED_OUTPUT_DIRNAME, persistFileName(target)], text);
   } catch (err) {
     // NEVER throw from here. This runs inside an MCP tool executor, and a throw would surface as
     // engine.ts's whole-ROUND `error_during_execution` (Ruling P1-H) -- the wrong severity for "the

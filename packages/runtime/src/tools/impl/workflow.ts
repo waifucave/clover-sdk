@@ -14,7 +14,7 @@ import { guestToolUnsupported } from "../../guest/file-session.ts";
 // `projectKey` -- come from `workflows/host-registry.ts`, the registration seam this lane had to add
 // because `tools/registry.ts` and `engine.ts` are both frozen (R5-12). See that module's header.
 import { randomUUID } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { writeInFolder } from "../no-follow-write.ts";
 import { isAbsolute, join } from "node:path";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import "../descriptors/workflow.ts"; // self-sufficiency: the "Workflow" stub must be registered before replaceExecutor runs
@@ -211,7 +211,7 @@ function emitBackgroundTasksChanged(ctx: ToolExecutionContext): void {
 /** Best-effort by construction: a run whose result cannot be written must still report its terminal state. */
 function writeTaskOutput(outputPath: string, text: string): void {
   try {
-    writeFileSync(outputPath, text, { mode: 0o600 });
+    writeInFolder(outputPath, text, "replace", 0o600); // 0.0.77: through the no-follow writer (background-tasks.ts)
   } catch {
     /* the directory was ensured by createBackgroundTask; a failure here must never swallow the notification below */
   }

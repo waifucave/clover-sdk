@@ -646,3 +646,42 @@ describe("WebSearch rules", () => {
     expect((await evaluate(fetchCall("https://example.com/"), harness({ mode: "dontAsk", rules: [rule("WebSearch", "allow")] }).ctx)).decision).toBe("deny");
   });
 });
+
+// 0.0.77: Write, Edit and NotebookEdit consume `explicitApproval` too (tools/no-follow-write.ts waives the
+// session's write roots for a call the host's canUseTool allowed). For them it is stamped for a canUseTool
+// answer ONLY: a PermissionRequest hook's allow, an allow rule or a mode allow is no statement from the host.
+describe("explicitApproval on the file-writing tools: a canUseTool answer only", () => {
+  const writeCall = (toolName: "Write" | "Edit" | "NotebookEdit"): PermissionCall => ({
+    toolName,
+    input: toolName === "NotebookEdit" ? { notebook_path: "/elsewhere/n.ipynb", new_source: "x", cell_id: "c1" } : { file_path: "/elsewhere/f.txt", content: "x", old_string: "a", new_string: "b" },
+    toolUseId: "toolu_write",
+  });
+
+  test("a canUseTool allow is stamped 'prompt'", async () => {
+    for (const tool of ["Write", "Edit", "NotebookEdit"] as const) {
+      const h = harness({ answer: ALLOW });
+      const record = await evaluate(writeCall(tool), h.ctx);
+      expect(h.prompts).toHaveLength(1);
+      expect(record).toMatchObject({ decision: "allow", mechanism: "canUseTool", explicitApproval: "prompt" });
+    }
+  });
+
+  test("a PermissionRequest hook's allow, an allow rule and a mode allow are not stamped", async () => {
+    const hookStage: HookStage = { ...NO_OPINION_HOOK_STAGE, async permissionRequest() { return { decision: "allow" }; } };
+    const byHook = await evaluate(writeCall("Write"), harness({ answer: ALLOW, hookStage }).ctx);
+    expect(byHook.decision).toBe("allow");
+    expect(byHook.explicitApproval).toBeUndefined();
+    const byRule = await evaluate(writeCall("Write"), harness({ rules: [rule("Write", "allow")] }).ctx);
+    expect(byRule.decision).toBe("allow");
+    expect(byRule.explicitApproval).toBeUndefined();
+    const byMode = await evaluate(writeCall("Write"), harness({ mode: "bypassPermissions", sessionBypassEnabled: true }).ctx);
+    expect(byMode.decision).toBe("allow");
+    expect(byMode.explicitApproval).toBeUndefined();
+  });
+
+  test("a canUseTool deny carries no stamp", async () => {
+    const record = await evaluate(writeCall("Edit"), harness({ answer: REFUSE }).ctx);
+    expect(record.decision).toBe("deny");
+    expect(record.explicitApproval).toBeUndefined();
+  });
+});
