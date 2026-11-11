@@ -1,4 +1,4 @@
-import { lstatSync, mkdirSync, chmodSync, realpathSync } from "node:fs";
+import { closeSync, constants, fchmodSync, fstatSync, lstatSync, mkdirSync, openSync, realpathSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { join } from "node:path";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
@@ -68,7 +68,24 @@ function ensureValidatedDir(path: string): void {
   }
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught, not followed
   assertOwnedDir(stat, path);
-  chmodSync(path, 0o700); // idempotent self-heal — this whole chain is Winter-owned
+  ensureDirSeam?.(path);
+  // Idempotent self-heal — this whole chain is Winter-owned. 0.0.77: through a descriptor opened as a directory
+  // with no-follow, and only when it is the folder the lstat just validated (same device and inode): a plain
+  // chmod follows a link swapped in after the lstat and would set an outside folder to 0700.
+  const fd = openSync(path, constants.O_RDONLY | (constants.O_DIRECTORY ?? 0) | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const opened = fstatSync(fd);
+    if (!opened.isDirectory() || opened.dev !== stat.dev || opened.ino !== stat.ino) throw new WinterPathsError(`a level Winter must own changed while it was being checked: ${path}`);
+    fchmodSync(fd, 0o700);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+// Test seam: called between a level's lstat and its mode change, so a test can swap a link in. Nothing sets it in the runtime.
+let ensureDirSeam: ((path: string) => void) | undefined;
+export function _setEnsureDirSeamForTests(fn: ((path: string) => void) | undefined): void {
+  ensureDirSeam = fn;
 }
 
 // `<PREFIX>TMPDIR` || "/tmp" (blank = unset, same rule as `<PREFIX>HOME` — see home.ts's isUnset).

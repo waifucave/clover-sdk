@@ -18,6 +18,7 @@ import type { SandboxSettings } from "../sandbox/profile.ts";
 import { _setNoFollowWriteSeamForTests, planWrite, readInFolder, writeInFolder, writeNewFileUnder } from "./no-follow-write.ts";
 import { configureBackgroundTaskRoot, createBackgroundTask, openTaskOutputStream, resetBackgroundTaskRootForTest } from "./background-tasks.ts";
 import { runCommand } from "../sandbox/spawn.ts";
+import { _setEnsureDirSeamForTests } from "../paths/temp.ts";
 import { buildRunCommandOptions } from "./impl/bash.ts";
 import { readCheckpointIndex, sessionCheckpointDir } from "../checkpoint/file-history.ts";
 import { capMcpOutput } from "../mcp/output-cap.ts";
@@ -619,6 +620,62 @@ describe("background-task output files (<session temp>/tasks/<id>.output)", () =
     expect(() => openTaskOutputStream(outputPath)).toThrow();
     expectOutsideUntouched();
     void sessionRoot;
+  });
+
+  test("tasks/ swapped for a link between its check and the remembered real path: refused, nothing remembered, nothing made or chmod'ed outside", () => {
+    const sessionRoot = sessionTemp();
+    const tasks = join(sessionRoot, "tasks");
+    chmodSync(outside, 0o755);
+    let swapped = false;
+    _setNoFollowWriteSeamForTests((stage, plan) => {
+      if (stage !== "beforeRemember" || swapped || plan.lexicalPath !== tasks) return;
+      swapped = true;
+      renameSync(tasks, join(sessionRoot, "t2"));
+      symlinkSync(outside, tasks);
+    });
+    expect(() => createBackgroundTask("bash")).toThrow();
+    expect(swapped).toBe(true);
+    _setNoFollowWriteSeamForTests(undefined);
+    // Nothing was remembered: the next task refuses the link too (the folder check sees it), and once the folder
+    // is put back the real one is the one remembered.
+    expect(() => createBackgroundTask("bash")).toThrow();
+    expect(statSync(outside).mode & 0o777).toBe(0o755);
+    expectOutsideUntouched();
+    rmSync(tasks);
+    renameSync(join(sessionRoot, "t2"), tasks);
+    const { outputPath } = createBackgroundTask("bash");
+    writeInFolder(outputPath, "ok", "replace");
+    expect(readFileSync(outputPath, "utf8")).toBe("ok");
+  });
+
+  test("tasks/ swapped for a link between its lstat and its mode change: refused, the outside folder's mode unchanged", () => {
+    const sessionRoot = sessionTemp();
+    const tasks = join(sessionRoot, "tasks");
+    chmodSync(outside, 0o755);
+    let swapped = false;
+    _setEnsureDirSeamForTests((path) => {
+      if (path !== tasks || swapped) return;
+      swapped = true;
+      renameSync(tasks, join(sessionRoot, "t2"));
+      symlinkSync(outside, tasks);
+    });
+    try {
+      expect(() => createBackgroundTask("bash")).toThrow();
+    } finally {
+      _setEnsureDirSeamForTests(undefined);
+    }
+    expect(swapped).toBe(true);
+    expect(statSync(outside).mode & 0o777).toBe(0o755);
+    expectOutsideUntouched();
+  });
+
+  test("a stream reopened on an existing output appends, never writes over its start", async () => {
+    sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    writeInFolder(outputPath, "first\n", "replace");
+    const stream = openTaskOutputStream(outputPath);
+    await new Promise<void>((done) => stream.end("second\n", () => done()));
+    expect(readInFolder(outputPath).toString("utf8")).toBe("first\nsecond\n");
   });
 
   test("a normal output: written once through the descriptor, appended, and read back", async () => {

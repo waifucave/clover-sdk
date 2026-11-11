@@ -171,7 +171,7 @@ export function planWrite(path: string, opts: PlanOptions, depth = 0): WritePlan
 // --- Test seam ---------------------------------------------------------------------------------------
 // Called between the plan (and the caller's checks on it) and the open, and before each folder is made,
 // so a test can swap a link in deterministically. Nothing in the runtime sets it.
-type SeamStage = "beforeMkdir" | "beforeOpen" | "beforeRemove";
+type SeamStage = "beforeMkdir" | "beforeOpen" | "beforeRemove" | "beforeRemember";
 let seam: ((stage: SeamStage, plan: WritePlan) => void) | undefined;
 export function _setNoFollowWriteSeamForTests(fn: ((stage: SeamStage, plan: WritePlan) => void) | undefined): void {
   seam = fn;
@@ -185,6 +185,8 @@ export interface OpenOptions {
   refuseHardLinks: boolean;
   /** Mode bits for a new file (umask applies). */
   fileMode?: number;
+  /** Open an existing file for appending (`O_APPEND`): every write lands at its end. */
+  append?: boolean;
 }
 
 export interface OpenedTarget {
@@ -298,7 +300,7 @@ export function openPlanned(plan: WritePlan, opts: OpenOptions): OpenedTarget {
   }
   let fd: number;
   try {
-    fd = opts.mode === "create" ? openSync(plan.realPath, flagsFor("create"), opts.fileMode ?? 0o666) : openSync(plan.realPath, flagsFor(opts.mode));
+    fd = opts.mode === "create" ? openSync(plan.realPath, flagsFor("create"), opts.fileMode ?? 0o666) : openSync(plan.realPath, flagsFor(opts.mode) | (opts.append === true ? constants.O_APPEND : 0));
   } catch (err) {
     removeCreatedDirs(createdDirs);
     const code = (err as { code?: unknown }).code;
@@ -443,7 +445,17 @@ const knownFolders = new Map<string, string>();
  *  open of a file in it (`openInFolder`, `readInFolder`) can tell it from a link swapped in since. */
 export function rememberFolder(folder: string): void {
   const key = normalize(folder);
-  if (!knownFolders.has(key)) knownFolders.set(key, realpathSync(folder)); // the first look counts; never re-learned
+  if (knownFolders.has(key)) return; // the first good look counts; never re-learned
+  seam?.("beforeRemember", { lexicalPath: key, realPath: key, realParent: dirname(key), base: basename(key), missingDirs: [], existing: undefined, throughLink: false });
+  // Built from the PARENT's real path (a folder the command can't move) and the folder's own name, never by
+  // following the folder itself: a link swapped in at the folder since the runtime validated it must not
+  // become the remembered "real" folder. The folder at that place must be a real folder, and resolve to it.
+  const expected = join(realpathSync(dirname(key)), basename(key));
+  const st = lstatOrUndefined(expected);
+  if (st === undefined || st.isSymbolicLink() || !st.isDirectory() || !samePath(realpathSync(key), expected)) {
+    throw new NoFollowWriteError("moved", `"${key}" is not the folder the runtime made; refusing to use it`);
+  }
+  knownFolders.set(key, expected);
 }
 
 function planInFolder(path: string): WritePlan {
@@ -456,10 +468,10 @@ function planInFolder(path: string): WritePlan {
 }
 
 /** Open (creating it exclusively when missing) a file in a runtime-made folder, verified (`planInFolder`). */
-export function openInFolder(path: string, opts: { create?: boolean; fileMode?: number } = {}): OpenedTarget {
+export function openInFolder(path: string, opts: { create?: boolean; fileMode?: number; append?: boolean } = {}): OpenedTarget {
   const plan = planInFolder(path);
   if (plan.existing === undefined && opts.create === false) throw new NoFollowWriteError("missing", `"${path}" does not exist`);
-  return openPlanned(plan, { mode: plan.existing === undefined ? "create" : "existing", refuseHardLinks: true, ...(opts.fileMode !== undefined ? { fileMode: opts.fileMode } : {}) });
+  return openPlanned(plan, { mode: plan.existing === undefined ? "create" : "existing", refuseHardLinks: true, ...(opts.fileMode !== undefined ? { fileMode: opts.fileMode } : {}), ...(opts.append === true ? { append: true } : {}) });
 }
 
 /** Append (or replace) the contents of a file in a runtime-made folder, through one verified descriptor. */

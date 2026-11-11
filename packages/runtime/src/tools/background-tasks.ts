@@ -102,7 +102,8 @@ export function wireTaskType(kind: BackgroundTaskKind): string {
  * Throws `NoFollowWriteError` when it refuses.
  */
 export function openTaskOutputStream(outputPath: string): WriteStream {
-  const target = openInFolder(outputPath);
+  // `append`: an output that already exists (reopened) is added to, never written over from its start.
+  const target = openInFolder(outputPath, { append: true });
   return createWriteStream("", { fd: target.fd });
 }
 

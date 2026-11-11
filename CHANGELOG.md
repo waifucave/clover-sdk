@@ -43,9 +43,14 @@ corresponds to one `chore(release): vX.Y.Z` commit.
 - **Background-task output files** (`<session temp>/tasks/<id>.output`, for background Bash, Monitor, a command's
   leftover children, agents and workflows). The session temp folder is a sandboxed command's own to write, so it
   could rename `tasks/` and put a link in its place (measured on macOS under the real sandbox profile). Each output is
-  now opened once through the same writer, created exclusively in the `tasks/` folder as it was made (its real path is
-  remembered when the runtime makes it), and written through that descriptor. TaskOutput reads it the same way, so a
+  now opened once through the same writer, created exclusively in the `tasks/` folder as it was made, and written
+  through that descriptor; an output reopened later is appended to (`O_APPEND`). TaskOutput reads it the same way, so a
   link planted at the file or the folder is never read back.
+  - The folder's real path is remembered when the runtime makes it, built from its parent's real path (a folder the
+    command can't move) and its own name, never by following the folder itself. A link swapped in there before that
+    is refused, and nothing is remembered.
+  - Every level of the session temp folder gets its 0700 mode through a descriptor opened no-follow as a folder,
+    checked to be the folder that was validated. A plain chmod would follow a link swapped in after the check.
 - **The checkpoint's copy of a file before a tool changes it** no longer follows links. A symbolic link, or a file with
   more than one hard link, gets no copy. The record says so (`linked`), and a rewind skips it. Before, a command could
   point a name at a file it can't read: the model's write would be refused, but the copy was already in the store, and
