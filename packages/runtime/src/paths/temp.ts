@@ -1,4 +1,4 @@
-import { closeSync, constants, fchmodSync, fstatSync, lstatSync, mkdirSync, openSync, realpathSync } from "node:fs";
+import { chmodSync, closeSync, constants, fchmodSync, fstatSync, lstatSync, mkdirSync, openSync, realpathSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { join } from "node:path";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
@@ -69,6 +69,12 @@ function ensureValidatedDir(path: string): void {
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught, not followed
   assertOwnedDir(stat, path);
   ensureDirSeam?.(path);
+  // Windows: no O_DIRECTORY / O_NOFOLLOW, and opening a folder with a plain open fails there, so the mode change
+  // stays the plain chmod it was (a POSIX mode means little there anyway); the lstat validation above still holds.
+  if (platformOf() === "win32") {
+    chmodSync(path, 0o700);
+    return;
+  }
   // Idempotent self-heal — this whole chain is Winter-owned. 0.0.77: through a descriptor opened as a directory
   // with no-follow, and only when it is the folder the lstat just validated (same device and inode): a plain
   // chmod follows a link swapped in after the lstat and would set an outside folder to 0700.
@@ -80,6 +86,15 @@ function ensureValidatedDir(path: string): void {
   } finally {
     closeSync(fd);
   }
+}
+
+// Test seam: the platform `ensureValidatedDir` branches on, so the Windows branch runs in a test on any OS.
+let platformOverride: NodeJS.Platform | undefined;
+function platformOf(): NodeJS.Platform {
+  return platformOverride ?? process.platform;
+}
+export function _setTempPlatformForTests(platform: NodeJS.Platform | undefined): void {
+  platformOverride = platform;
 }
 
 // Test seam: called between a level's lstat and its mode change, so a test can swap a link in. Nothing sets it in the runtime.

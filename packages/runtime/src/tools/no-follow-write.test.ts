@@ -18,7 +18,7 @@ import type { SandboxSettings } from "../sandbox/profile.ts";
 import { _setNoFollowWriteSeamForTests, planWrite, readInFolder, writeInFolder, writeNewFileUnder } from "./no-follow-write.ts";
 import { configureBackgroundTaskRoot, createBackgroundTask, openTaskOutputStream, resetBackgroundTaskRootForTest } from "./background-tasks.ts";
 import { runCommand } from "../sandbox/spawn.ts";
-import { _setEnsureDirSeamForTests } from "../paths/temp.ts";
+import { _setEnsureDirSeamForTests, _setTempPlatformForTests, ensureTasksDir } from "../paths/temp.ts";
 import { buildRunCommandOptions } from "./impl/bash.ts";
 import { readCheckpointIndex, sessionCheckpointDir } from "../checkpoint/file-history.ts";
 import { capMcpOutput } from "../mcp/output-cap.ts";
@@ -666,6 +666,26 @@ describe("background-task output files (<session temp>/tasks/<id>.output)", () =
     }
     expect(swapped).toBe(true);
     expect(statSync(outside).mode & 0o777).toBe(0o755);
+    expectOutsideUntouched();
+  });
+
+  test("Windows branch (forced): a temp level is still lstat-validated and made 0700, without opening the folder", () => {
+    const tasks = join(base, "win-tasks");
+    _setTempPlatformForTests("win32");
+    let swapped = false;
+    try {
+      expect(ensureTasksDir({ tasks })).toBe(tasks);
+      expect(lstatSync(tasks).isDirectory()).toBe(true);
+      expect(statSync(tasks).mode & 0o777).toBe(0o700);
+      // The lstat validation still refuses a link at the level on that branch.
+      rmSync(tasks, { recursive: true });
+      symlinkSync(outside, tasks);
+      expect(() => ensureTasksDir({ tasks })).toThrow("symlink");
+      swapped = true;
+    } finally {
+      _setTempPlatformForTests(undefined);
+    }
+    expect(swapped).toBe(true);
     expectOutsideUntouched();
   });
 

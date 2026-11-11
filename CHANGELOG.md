@@ -50,7 +50,9 @@ corresponds to one `chore(release): vX.Y.Z` commit.
     command can't move) and its own name, never by following the folder itself. A link swapped in there before that
     is refused, and nothing is remembered.
   - Every level of the session temp folder gets its 0700 mode through a descriptor opened no-follow as a folder,
-    checked to be the folder that was validated. A plain chmod would follow a link swapped in after the check.
+    checked to be the folder that was validated. A plain chmod would follow a link swapped in after the check. On
+    Windows (no `O_DIRECTORY`/`O_NOFOLLOW`, and a folder can't be opened that way) it stays the plain chmod it was,
+    after the same lstat validation.
 - **The checkpoint's copy of a file before a tool changes it** no longer follows links. A symbolic link, or a file with
   more than one hard link, gets no copy. The record says so (`linked`), and a rewind skips it. Before, a command could
   point a name at a file it can't read: the model's write would be refused, but the copy was already in the store, and
