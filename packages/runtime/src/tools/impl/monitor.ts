@@ -16,13 +16,12 @@ import { MONITOR_PERSISTENT_TIMEOUT_MS as PERSISTENT_STAND_IN_TIMEOUT_MS } from 
 // protocol capability, just a shape nobody downstream could consume. A future phase that grows a
 // real per-line event type is expected to upgrade this file, not the other way around.
 import { randomUUID } from "node:crypto";
-import { createWriteStream } from "node:fs";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { isDisallowedAddress } from "@waifucave/clover-provider-runtime";
 import "../descriptors/monitor.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
-import { createBackgroundTask } from "../background-tasks.ts";
+import { createBackgroundTask, openTaskOutputStream } from "../background-tasks.ts";
 import { runCommand, resolveExecutionPath, commandSandboxAvailable, sandboxUnavailableMessage, SandboxUnavailableError } from "../../sandbox/spawn.ts";
 import { SandboxConfigError, resolveNetworkPosture, type SandboxBrand } from "../../sandbox/profile.ts";
 import { startTracking, updateTask, getTask, listRunningTasks, toBackgroundTasksChangedEntry, killedTaskSummary, resolveBackgroundOutcome, killOrphanedSpawn } from "./background-task-runtime.ts";
@@ -195,7 +194,12 @@ async function runMonitorCommand(input: MonitorInput & { command: string }, ctx:
   }
 
   const { taskId, outputPath } = createBackgroundTask("monitor");
-  const outStream = createWriteStream(outputPath, { flags: "a" });
+  let outStream: ReturnType<typeof openTaskOutputStream>;
+  try {
+    outStream = openTaskOutputStream(outputPath); // 0.0.77: once, through the no-follow writer (background-tasks.ts)
+  } catch (err) {
+    return { output: `Error: ${(err as Error).message}`, isError: true };
+  }
   const effectiveTimeout = input.persistent ? PERSISTENT_STAND_IN_TIMEOUT_MS : input.timeout_ms;
   // Task-frames parity (contract §4 "Summary wording"): the pin's own completed-with/without-output
   // distinction needs to know whether the process ever wrote anything, tracked as the run happens
@@ -503,7 +507,17 @@ export async function connectMonitorWs(
   // `is_backgrounded` field at all) than the command half's `local_bash` -- a separate internal kind
   // so `wireTaskType` (the one mapping) decides both, with no second "half" parameter to thread.
   const { taskId, outputPath } = createBackgroundTask("monitor_ws");
-  const outStream = createWriteStream(outputPath, { flags: "a" });
+  let outStream: ReturnType<typeof openTaskOutputStream>;
+  try {
+    outStream = openTaskOutputStream(outputPath); // 0.0.77: once, through the no-follow writer (background-tasks.ts)
+  } catch (err) {
+    try {
+      socket.close();
+    } catch {
+      /* already closing */
+    }
+    return { output: `Error: ${(err as Error).message}`, isError: true };
+  }
   const emitter = { emitFrame: ctx.emitFrame, sessionId: ctx.sessionId };
   // SDK 0.0.16 Lane N: the MODEL-facing stream relay. A monitor exists to tell the
   // model that something happened on this socket, and before this the model could only learn that by

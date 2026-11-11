@@ -21,11 +21,11 @@ import { guestBash } from "../../guest/process-tools.ts";
 //   - `$OUTDIR` is now exported into the spawned shell's env alongside `$TMPDIR`, when `ctx.outDir`
 //     is configured (WS-12 §5.3: "The OUTDIR export remains a Winter extension").
 import { randomUUID } from "node:crypto";
-import { readFileSync, unlinkSync, createWriteStream } from "node:fs";
+import { readFileSync, unlinkSync } from "node:fs";
 import { join, sep } from "node:path";
 import "../descriptors/bash.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
-import { createBackgroundTask } from "../background-tasks.ts";
+import { createBackgroundTask, openTaskOutputStream } from "../background-tasks.ts";
 import { writeNewFileUnder } from "../no-follow-write.ts";
 import { splitCompound, extractRedirectTargets, leadingWord, dequoteShellWord } from "../../permissions/grammar.ts";
 import { type GlobDenyEntry } from "../../permissions/file-rules.ts";
@@ -591,7 +591,12 @@ async function runBackground(input: BashInput, ctx: ToolExecutionContext): Promi
 
   const { taskId, outputPath } = createBackgroundTask("bash");
   const description = input.description ?? summarizeCommand(input.command);
-  const outStream = createWriteStream(outputPath, { flags: "a" });
+  let outStream: ReturnType<typeof openTaskOutputStream>;
+  try {
+    outStream = openTaskOutputStream(outputPath);
+  } catch (err) {
+    return { output: `Error: ${(err as Error).message}`, isError: true };
+  }
 
   // Task 8 (found via a real differential-scenario repro, not assumed): register the task BEFORE
   // spawning, not only inside onSpawned below -- the very next lines emit task_started and,

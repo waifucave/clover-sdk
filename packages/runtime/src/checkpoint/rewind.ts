@@ -279,6 +279,13 @@ export function rewindToCheckpoint(opts: RewindOptions): RewindFilesResult {
       continue;
     }
 
+    // 0.0.77: a snapshot taken of a link or a hard-linked file holds no bytes (`readPreImage`): nothing to
+    // restore, and nothing this rewind may delete. Path-identity class: skipped on both paths.
+    if (record.linked !== undefined) {
+      if (!opts.dryRun) skippedLinks++;
+      continue;
+    }
+
     const identityRefusal = pathIdentityRefusal(record);
     if (identityRefusal !== undefined) {
       if (!opts.dryRun) skippedLinks++;

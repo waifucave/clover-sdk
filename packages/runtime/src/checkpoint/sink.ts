@@ -175,18 +175,19 @@ export function createFileCheckpointSink(opts: FileCheckpointSinkOptions): FileC
         tool: req.tool,
         at: new Date().toISOString(),
         version,
-        ...(preImage === undefined ? { absent: true } : {}),
+        ...("absent" in preImage ? { absent: true } : {}),
+        ...("linked" in preImage ? { linked: preImage.linked } : {}),
         ...(parentRealPath !== undefined ? { parentRealPath } : {}),
         ...anchorFields,
       };
-      if (preImage !== undefined) {
+      if ("bytes" in preImage) {
         const dir = sessionCheckpointDir(home, sessionUuid);
         mkdirSync(dir, { recursive: true });
         // The BLOB IS WRITTEN BEFORE THE RECORD that names it. A crash between the two leaves an
         // orphan blob no rewind reads; the other order would leave a record pointing at bytes that
         // do not exist, which `refusalReason` would then have to treat as a refused file -- an
         // unexplainable one, since nothing about the user's tree had changed.
-        writeFileSync(join(dir, blobName(pathHash, version)), preImage);
+        writeFileSync(join(dir, blobName(pathHash, version)), preImage.bytes);
       }
       appendCheckpointRecord(home, sessionUuid, record);
       await mirrorToTranscript(record);

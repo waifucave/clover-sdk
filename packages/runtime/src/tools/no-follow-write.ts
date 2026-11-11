@@ -46,6 +46,7 @@ import { resolveRealTarget, resolveSymlinkTargetChain } from "../permissions/pat
 import { assertHostCodePathAccess } from "../sandbox/host-code-protection.ts";
 import type { ToolExecutionContext } from "./registry.ts";
 import { computeWritableRoots } from "./sandbox-run-inputs.ts";
+import { isOnCaseSensitiveVolume } from "../sandbox/case-variants.ts";
 
 /** darwin's `O_NOFOLLOW_ANY` (sys/fcntl.h): refuse a symbolic link in ANY component of the path. Node/Bun don't export it. */
 const DARWIN_O_NOFOLLOW_ANY = 0x20000000;
@@ -83,19 +84,23 @@ export interface PlanOptions {
   createParents: boolean;
 }
 
-function fold(path: string): string {
-  return process.platform === "darwin" ? path.toLowerCase() : path;
+/** Case is folded only on a macOS volume that ignores it (`pathconf(_PC_CASE_SENSITIVE)`, probed at `where`); an
+ *  unknown answer counts as case-sensitive, which only makes these comparisons stricter. */
+function foldsCase(where: string): boolean {
+  return process.platform === "darwin" && !isOnCaseSensitiveVolume(where);
 }
 
-/** `a` names the same place as `b` (case-folded on macOS, as the deny checks are). */
+/** `a` names the same place as `b`: exact, or case-folded on a case-insensitive macOS volume. */
 export function samePath(a: string, b: string): boolean {
-  return fold(a) === fold(b);
+  if (a === b) return true;
+  return foldsCase(b) && a.toLowerCase() === b.toLowerCase();
 }
 
-/** `path` is `root` or under it (both real paths; case-folded on macOS). */
+/** `path` is `root` or under it (both real paths): exact, or case-folded on a case-insensitive macOS volume. */
 export function isUnder(path: string, root: string): boolean {
-  const p = fold(path), r = fold(root);
-  return p === r || r === "/" || p.startsWith(r.endsWith("/") ? r : r + "/");
+  const under = (p: string, r: string) => p === r || r === "/" || p.startsWith(r.endsWith("/") ? r : r + "/");
+  if (under(path, root)) return true;
+  return foldsCase(root) && under(path.toLowerCase(), root.toLowerCase());
 }
 
 function lstatOrUndefined(path: string): Stats | undefined {
@@ -173,8 +178,9 @@ export function _setNoFollowWriteSeamForTests(fn: ((stage: SeamStage, plan: Writ
 }
 
 export interface OpenOptions {
-  /** "existing": the plan saw a file and the open must find the same kind of thing; "create": nothing may be there. */
-  mode: "existing" | "create";
+  /** "existing": the plan saw a file and the open must find the same kind of thing (read and write); "read": the
+   *  same, read-only; "create": nothing may be there. */
+  mode: "existing" | "create" | "read";
   /** Refuse a file with more than one hard link. */
   refuseHardLinks: boolean;
   /** Mode bits for a new file (umask applies). */
@@ -241,8 +247,10 @@ function makeMissingDirs(plan: WritePlan): string[] {
 function flagsFor(mode: OpenOptions["mode"]): number {
   // macOS: `O_NOFOLLOW_ANY` alone -- it covers the leaf too, and darwin refuses it beside `O_NOFOLLOW` (EINVAL).
   const nofollow = process.platform === "darwin" ? DARWIN_O_NOFOLLOW_ANY : (constants.O_NOFOLLOW ?? 0);
-  const base = nofollow | (constants.O_NONBLOCK ?? 0);
-  return mode === "create" ? constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | base : constants.O_RDWR | base;
+  // O_NONBLOCK: a FIFO swapped in can't hang the open. O_NOCTTY: a terminal device never becomes the process's.
+  const base = nofollow | (constants.O_NONBLOCK ?? 0) | (constants.O_NOCTTY ?? 0);
+  if (mode === "create") return constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | base;
+  return (mode === "read" ? constants.O_RDONLY : constants.O_RDWR) | base;
 }
 
 /** Linux: where the descriptor really is, or undefined when /proc can't say. */
@@ -256,21 +264,25 @@ function procPathOf(fd: number): string | undefined {
   }
 }
 
-/** A file this call created landed somewhere it shouldn't: remove it when the name there is still that file. */
-function removeStrayCreated(fd: number, stat: Stats, plan: WritePlan): boolean {
-  for (const where of [procPathOf(fd), plan.realPath]) {
-    if (where === undefined) continue;
-    const st = lstatOrUndefined(where);
-    if (st !== undefined && !st.isSymbolicLink() && st.dev === stat.dev && st.ino === stat.ino) {
-      try {
-        unlinkSync(where);
-        return true;
-      } catch {
-        /* try the next name */
-      }
-    }
+/**
+ * A file this call created must go, after a failed check: removed through `removePlanned` (rename to a random
+ * name, check, unlink) and only at a place whose folder is known -- where Linux's `/proc` says the descriptor is,
+ * or the planned place when the location check PASSED. Never by a path through a folder that failed the check:
+ * between a look and an unlink the link could be re-pointed and a same-named file elsewhere deleted. Returns
+ * where the file was left, or undefined when it was removed.
+ */
+function removeStrayCreated(fd: number, stat: Stats, plan: WritePlan, locationOk: boolean): string | undefined {
+  const proc = procPathOf(fd);
+  const where = proc ?? (locationOk ? plan.realPath : undefined);
+  if (where === undefined) return "an unknown place (the folder it was made in moved)";
+  try {
+    const parent = dirname(where);
+    if (realpathSync(parent) !== parent) return where;
+    removePlanned({ lexicalPath: where, realPath: where, realParent: parent, base: basename(where), missingDirs: [], existing: stat, throughLink: false });
+    return undefined;
+  } catch {
+    return where;
   }
-  return false;
 }
 
 /** Steps 2-4. Opens the planned real path, verified, or throws having changed nothing outside. */
@@ -286,31 +298,18 @@ export function openPlanned(plan: WritePlan, opts: OpenOptions): OpenedTarget {
   }
   let fd: number;
   try {
-    fd = opts.mode === "create" ? openSync(plan.realPath, flagsFor("create"), opts.fileMode ?? 0o666) : openSync(plan.realPath, flagsFor("existing"));
+    fd = opts.mode === "create" ? openSync(plan.realPath, flagsFor("create"), opts.fileMode ?? 0o666) : openSync(plan.realPath, flagsFor(opts.mode));
   } catch (err) {
     removeCreatedDirs(createdDirs);
     const code = (err as { code?: unknown }).code;
     if (code === "ELOOP" || code === "EMLINK" || code === "EFTYPE") throw new NoFollowWriteError("link_refused", `a symbolic link appeared in "${plan.lexicalPath}" while it was being written; nothing was written`);
     if (code === "EEXIST") throw new NoFollowWriteError("exists", `"${plan.lexicalPath}" appeared while it was being written; nothing was written`);
-    if (code === "ENOENT" && opts.mode === "existing") throw new NoFollowWriteError("moved", `"${plan.lexicalPath}" disappeared while it was being written; nothing was written`);
+    if (code === "ENOENT" && opts.mode !== "create") throw new NoFollowWriteError("moved", `"${plan.lexicalPath}" disappeared while it was being written; nothing was written`);
     if (code === "ENXIO" || code === "EISDIR") throw new NoFollowWriteError("not_regular", `"${plan.lexicalPath}" is not a regular file`);
     throw err;
   }
   const created = opts.mode === "create";
-  const fail = (code: NoFollowWriteError["code"], message: string, stat?: Stats): never => {
-    let left = false;
-    if (created && stat !== undefined) left = !removeStrayCreated(fd, stat, plan);
-    try {
-      closeSync(fd);
-    } catch {
-      /* already closed */
-    }
-    removeCreatedDirs(createdDirs);
-    throw new NoFollowWriteError(code, left ? `${message} (an empty file this call created could not be found to remove)` : message);
-  };
   const stat = fstatSync(fd);
-  if (!stat.isFile()) fail("not_regular", `"${plan.lexicalPath}" is not a regular file`, stat);
-  if (opts.refuseHardLinks && stat.nlink > 1) fail("hard_link", `"${plan.lexicalPath}" has ${stat.nlink} hard links; refusing to write a file that other names share`, stat);
   // Step 4: the place is still the planned one, and the name there is this descriptor's file.
   let parentNow: string | undefined;
   try {
@@ -320,11 +319,22 @@ export function openPlanned(plan: WritePlan, opts: OpenOptions): OpenedTarget {
   }
   const named = lstatOrUndefined(plan.realPath);
   const proc = procPathOf(fd);
-  if (parentNow === undefined || !samePath(parentNow, plan.realParent) || named === undefined || named.isSymbolicLink() || named.dev !== stat.dev || named.ino !== stat.ino || (proc !== undefined && proc !== plan.realPath)) {
-    fail("moved", `"${plan.lexicalPath}" moved while it was being written; nothing was written`, stat);
-  }
-  if (opts.mode === "existing" && plan.existing !== undefined && (plan.existing.dev !== stat.dev || plan.existing.ino !== stat.ino)) {
-    fail("moved", `"${plan.lexicalPath}" was replaced while it was being written; nothing was written`, stat);
+  const locationOk = parentNow !== undefined && samePath(parentNow, plan.realParent) && named !== undefined && !named.isSymbolicLink() && named.dev === stat.dev && named.ino === stat.ino && (proc === undefined || proc === plan.realPath);
+  const fail = (code: NoFollowWriteError["code"], message: string): never => {
+    const left = created ? removeStrayCreated(fd, stat, plan, locationOk) : undefined;
+    try {
+      closeSync(fd);
+    } catch {
+      /* already closed */
+    }
+    removeCreatedDirs(createdDirs);
+    throw new NoFollowWriteError(code, left !== undefined ? `${message} (an empty file this call created was left at ${left})` : message);
+  };
+  if (!stat.isFile()) fail("not_regular", `"${plan.lexicalPath}" is not a regular file`);
+  if (opts.refuseHardLinks && stat.nlink > 1) fail("hard_link", `"${plan.lexicalPath}" has ${stat.nlink} hard links; refusing to write a file that other names share`);
+  if (!locationOk) fail("moved", `"${plan.lexicalPath}" moved while it was being written; nothing was written`);
+  if (opts.mode !== "create" && plan.existing !== undefined && (plan.existing.dev !== stat.dev || plan.existing.ino !== stat.ino)) {
+    fail("moved", `"${plan.lexicalPath}" was replaced while it was being written; nothing was written`);
   }
   return { fd, plan, created, createdDirs, stat };
 }
@@ -368,7 +378,7 @@ export function removePlanned(plan: WritePlan, opts: { allowLink?: boolean } = {
       same = false;
     }
   } else try {
-    const fd = openSync(parked, constants.O_RDONLY | (process.platform === "darwin" ? DARWIN_O_NOFOLLOW_ANY : (constants.O_NOFOLLOW ?? 0)) | (constants.O_NONBLOCK ?? 0));
+    const fd = openSync(parked, flagsFor("read"));
     try {
       const st = fstatSync(fd);
       const parentNow = realpathSync(plan.realParent);
@@ -420,6 +430,71 @@ export function writeNewFileUnder(root: string, parts: readonly string[], data: 
     closeTarget(target);
   }
   return path;
+}
+
+/**
+ * A file directly in a folder the runtime made and validated (its path is already real, e.g. a session's
+ * `tasks/`): the folder must still be exactly that folder -- no link at it or above it -- and the file is
+ * never followed. Throws `NoFollowWriteError` otherwise.
+ */
+const knownFolders = new Map<string, string>();
+
+/** Remember a runtime-made folder's real path, taken right after the runtime made and validated it, so a later
+ *  open of a file in it (`openInFolder`, `readInFolder`) can tell it from a link swapped in since. */
+export function rememberFolder(folder: string): void {
+  const key = normalize(folder);
+  if (!knownFolders.has(key)) knownFolders.set(key, realpathSync(folder)); // the first look counts; never re-learned
+}
+
+function planInFolder(path: string): WritePlan {
+  const plan = planWrite(path, { followLeafLink: false, createParents: false });
+  const folder = dirname(normalize(path));
+  const expected = knownFolders.get(folder);
+  const ok = expected !== undefined ? samePath(plan.realParent, expected) : !plan.throughLink && samePath(plan.realParent, folder);
+  if (!ok) throw new NoFollowWriteError("moved", `the folder of "${path}" is not the folder it was made as; nothing was written`);
+  return plan;
+}
+
+/** Open (creating it exclusively when missing) a file in a runtime-made folder, verified (`planInFolder`). */
+export function openInFolder(path: string, opts: { create?: boolean; fileMode?: number } = {}): OpenedTarget {
+  const plan = planInFolder(path);
+  if (plan.existing === undefined && opts.create === false) throw new NoFollowWriteError("missing", `"${path}" does not exist`);
+  return openPlanned(plan, { mode: plan.existing === undefined ? "create" : "existing", refuseHardLinks: true, ...(opts.fileMode !== undefined ? { fileMode: opts.fileMode } : {}) });
+}
+
+/** Append (or replace) the contents of a file in a runtime-made folder, through one verified descriptor. */
+export function writeInFolder(path: string, data: string | Uint8Array, how: "append" | "replace", fileMode?: number): void {
+  const target = openInFolder(path, fileMode !== undefined ? { fileMode } : {});
+  try {
+    if (how === "replace") replaceContents(target.fd, data);
+    else appendContents(target.fd, data);
+  } finally {
+    closeTarget(target);
+  }
+}
+
+/** Read a file in a runtime-made folder through one verified descriptor (never through a link planted at it or above it). */
+export function readInFolder(path: string): Buffer {
+  const plan = planInFolder(path);
+  if (plan.existing === undefined) throw new NoFollowWriteError("missing", `"${path}" does not exist`);
+  const target = openPlanned(plan, { mode: "read", refuseHardLinks: true });
+  try {
+    return readAll(target.fd);
+  } finally {
+    closeTarget(target);
+  }
+}
+
+/** Append through the descriptor, at the file's current end. */
+export function appendContents(fd: number, data: string | Uint8Array): void {
+  const bytes = typeof data === "string" ? Buffer.from(data, "utf8") : data;
+  let at = fstatSync(fd).size;
+  let written = 0;
+  while (written < bytes.length) {
+    const n = writeSync(fd, bytes, written, bytes.length - written, at);
+    written += n;
+    at += n;
+  }
 }
 
 /** The whole file, from the start, through the descriptor. */

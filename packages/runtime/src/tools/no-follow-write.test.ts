@@ -15,7 +15,11 @@ import { join } from "node:path";
 import { createSessionReadState, type SessionReadState } from "./read-state.ts";
 import { getRegisteredTool, type ToolExecutionContext, type ToolCallPermission } from "./registry.ts";
 import type { SandboxSettings } from "../sandbox/profile.ts";
-import { _setNoFollowWriteSeamForTests, planWrite, writeNewFileUnder } from "./no-follow-write.ts";
+import { _setNoFollowWriteSeamForTests, planWrite, readInFolder, writeInFolder, writeNewFileUnder } from "./no-follow-write.ts";
+import { configureBackgroundTaskRoot, createBackgroundTask, openTaskOutputStream, resetBackgroundTaskRootForTest } from "./background-tasks.ts";
+import { runCommand } from "../sandbox/spawn.ts";
+import { buildRunCommandOptions } from "./impl/bash.ts";
+import { readCheckpointIndex, sessionCheckpointDir } from "../checkpoint/file-history.ts";
 import { capMcpOutput } from "../mcp/output-cap.ts";
 import { quarantinePlanted } from "../sandbox/linux-runs.ts";
 import { saveBlobToTempDir } from "./impl/read-mcp-resource-tool.ts";
@@ -549,6 +553,123 @@ describe("the Linux quarantine of a planted protected path (sandbox/linux-runs.t
     expect(removed.sort()).toEqual([planted, link].sort());
     expect(existsSync(planted)).toBe(false);
     expect(() => lstatSync(link)).toThrow();
+    expectOutsideUntouched();
+  });
+});
+
+describe("background-task output files (<session temp>/tasks/<id>.output)", () => {
+  function sessionTemp() {
+    const sessionRoot = join(base, "session");
+    mkdirSync(join(sessionRoot, "scratchpad"), { recursive: true });
+    configureBackgroundTaskRoot(() => ({ root: sessionRoot, scratchpad: join(sessionRoot, "scratchpad"), tasks: join(sessionRoot, "tasks") }));
+    return sessionRoot;
+  }
+  afterEach(() => resetBackgroundTaskRootForTest());
+
+  // Settles whether `tasks/` is a sandboxed command's to rename: the session temp folder (its ROOT, not just the
+  // scratchpad) is the tools' `tempDir`, and `tempDir` is a write root of every sandboxed command.
+  test.skipIf(process.platform !== "darwin")("macOS, the real sandbox profile: a sandboxed command CAN rename tasks/ and put a link in its place", async () => {
+    const sessionRoot = sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    const tasks = join(sessionRoot, "tasks");
+    expect(outputPath.startsWith(tasks)).toBe(true);
+    const ctx = { ...makeCtx(), tempDir: sessionRoot } as ToolExecutionContext;
+    const { signal: _s, ...opts } = buildRunCommandOptions({ command: "true" } as never, ctx) as Record<string, unknown>;
+    const result = await runCommand({ ...(opts as unknown as Parameters<typeof runCommand>[0]), command: `mv "${tasks}" "${join(sessionRoot, "t2")}" && ln -s "${outside}" "${tasks}"`, timeoutMs: 8000 });
+    expect(result.exitCode).toBe(0);
+    expect(lstatSync(tasks).isSymbolicLink()).toBe(true);
+    // ...and the output's open refuses the swapped folder, so nothing is created where the link points.
+    expect(() => openTaskOutputStream(outputPath)).toThrow("not the folder it was made as");
+    expectOutsideUntouched();
+  });
+
+  test("tasks/ swapped for a link before the open (the seam): refused, nothing created outside", () => {
+    const sessionRoot = sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    const tasks = join(sessionRoot, "tasks");
+    _setNoFollowWriteSeamForTests(() => undefined);
+    renameSync(tasks, join(sessionRoot, "t2"));
+    symlinkSync(outside, tasks);
+    expect(() => openTaskOutputStream(outputPath)).toThrow();
+    expect(() => writeInFolder(outputPath, "stub", "replace")).toThrow();
+    expectOutsideUntouched();
+  });
+
+  test("tasks/ swapped for a link between the folder check and the open: refused, nothing created outside", () => {
+    const sessionRoot = sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    const tasks = join(sessionRoot, "tasks");
+    let swapped = false;
+    _setNoFollowWriteSeamForTests((stage) => {
+      if (stage !== "beforeOpen" || swapped) return;
+      swapped = true;
+      renameSync(tasks, join(sessionRoot, "t2"));
+      symlinkSync(outside, tasks);
+    });
+    expect(() => openTaskOutputStream(outputPath)).toThrow();
+    expect(swapped).toBe(true);
+    expectOutsideUntouched();
+  });
+
+  test("a link planted at the output file itself: TaskOutput's read refuses it (a secret is never read back)", () => {
+    const sessionRoot = sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    symlinkSync(secret, outputPath);
+    expect(() => readInFolder(outputPath)).toThrow();
+    expect(() => openTaskOutputStream(outputPath)).toThrow();
+    expectOutsideUntouched();
+    void sessionRoot;
+  });
+
+  test("a normal output: written once through the descriptor, appended, and read back", async () => {
+    sessionTemp();
+    const { outputPath } = createBackgroundTask("bash");
+    const stream = openTaskOutputStream(outputPath);
+    await new Promise<void>((done) => {
+      stream.write("line one\n");
+      stream.end("line two\n", () => done());
+    });
+    writeInFolder(outputPath, "appended\n", "append");
+    expect(readInFolder(outputPath).toString("utf8")).toBe("line one\nline two\nappended\n");
+  });
+});
+
+describe("the checkpoint's pre-image never copies a file through a link", () => {
+  test("a link at the path: no bytes in the store, and a later rewind restores nothing there", async () => {
+    const home = join(base, "home");
+    mkdirSync(home);
+    const x = join(root, "x");
+    symlinkSync(secret, x);
+    const sink = createFileCheckpointSink({ home, cwd: root, sessionUuid: "sess-1" });
+    await sink.beforeMutation({ path: x, tool: "Write", userMessageUuid: "u-1", sessionUuid: "sess-1" });
+    const records = readCheckpointIndex(home, "sess-1");
+    expect(records).toHaveLength(1);
+    expect(records[0]!.linked).toBe("symbolic-link");
+    for (const name of readdirSync(sessionCheckpointDir(home, "sess-1"))) {
+      expect(readFileSync(join(sessionCheckpointDir(home, "sess-1"), name, ...[]), "utf8")).not.toContain(SECRET.trim());
+    }
+    // The command removes the link and leaves a file of its own; the rewind must not fill it with the secret.
+    rmSync(x);
+    writeFileSync(x, "the command's own file\n");
+    const result = await sink.rewind("u-1");
+    expect(result.skippedLinks).toBe(1);
+    expect(result.filesChanged).toEqual([]);
+    expect(readFileSync(x, "utf8")).toBe("the command's own file\n");
+  });
+
+  test("a hard link at the path: the same", async () => {
+    const home = join(base, "home");
+    mkdirSync(home);
+    const x = join(root, "x");
+    linkSync(secret, x);
+    const sink = createFileCheckpointSink({ home, cwd: root, sessionUuid: "sess-1" });
+    await sink.beforeMutation({ path: x, tool: "Write", userMessageUuid: "u-1", sessionUuid: "sess-1" });
+    expect(readCheckpointIndex(home, "sess-1")[0]!.linked).toBe("hard-link");
+    rmSync(x);
+    writeFileSync(x, "the command's own file\n");
+    const result = await sink.rewind("u-1");
+    expect(result.skippedLinks).toBe(1);
+    expect(readFileSync(x, "utf8")).toBe("the command's own file\n");
     expectOutsideUntouched();
   });
 });

@@ -21,7 +21,9 @@
 // SAME memoized closure. Configuring this is cheap and side-effect-free; only actually CALLING
 // createBackgroundTask (or reading ctx.tempDir) touches the filesystem.
 import { randomUUID } from "node:crypto";
+import { createWriteStream, type WriteStream } from "node:fs";
 import { join } from "node:path";
+import { openInFolder, rememberFolder } from "./no-follow-write.ts";
 import { ensureTasksDir, type SessionTempDirPaths } from "../paths/temp.ts";
 
 export type SessionTempRootResolver = () => SessionTempDirPaths;
@@ -92,6 +94,18 @@ export function wireTaskType(kind: BackgroundTaskKind): string {
 // this phase's own test suite (and every live session) makes. T2's own scripted-tool proof
 // (provider/mock.ts's registerBgTaskTestTool) remains a SEPARATE, still-fixed-literal path -- it
 // simply is no longer the ONLY caller.
+/**
+ * 0.0.77: a task's output file, opened ONCE through the shared no-follow writer and written through that
+ * descriptor. The session temp folder is a sandboxed command's own to write, so `tasks/` may be renamed and a
+ * link put in its place after `ensureTasksDir` checked it: the open refuses a `tasks/` that is no longer the
+ * folder it was made as (a link at it or above it), creates the file exclusively, and checks the descriptor.
+ * Throws `NoFollowWriteError` when it refuses.
+ */
+export function openTaskOutputStream(outputPath: string): WriteStream {
+  const target = openInFolder(outputPath);
+  return createWriteStream("", { fd: target.fd });
+}
+
 export function createBackgroundTask(kind: BackgroundTaskKind): { taskId: string; outputPath: string } {
   if (!activeResolver) {
     throw new Error(
@@ -100,6 +114,7 @@ export function createBackgroundTask(kind: BackgroundTaskKind): { taskId: string
   }
   const paths = activeResolver();
   const tasksDir = ensureTasksDir(paths); // lazy: creates `tasks/` on first call, validated no-op after
+  rememberFolder(tasksDir); // 0.0.77: its real path as made, for the outputs' verified opens (openTaskOutputStream)
   const taskId = randomUUID();
   return { taskId, outputPath: join(tasksDir, `${taskId}.output`) };
 }

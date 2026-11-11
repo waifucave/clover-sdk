@@ -13,7 +13,7 @@
 //     coexist" holds in a live session, not only in this lane's own unit tests.
 // child-engine.ts's own header still discloses the remaining subsystem-level seams.
 import { randomUUID } from "node:crypto";
-import { writeFileSync, appendFileSync } from "node:fs";
+import { writeInFolder } from "../no-follow-write.ts";
 import { envName, type RuntimeAgentDefinition, requireBrand } from "@waifucave/clover-agent-sdk";
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { AGENT_TOOL_CANONICAL_NAME } from "../../provider/slots.ts";
@@ -196,12 +196,19 @@ function foregroundResultToPayload(record: ChildSessionRecord, result: ChildResu
 // spec violation; the symlink branch is left as a follow-up. The stub is written once at spawn and
 // APPENDED to (never rewritten with a growing copy) once the child settles.
 function writeAgentTaskStub(outputPath: string, handle: ChildHandle): void {
-  writeFileSync(
-    outputPath,
-    `Background agent task (agentId ${handle.record.id}) is running.\n` +
-      `Its durable transcript is the authoritative record: ${handle.record.transcript}\n` +
-      `Read that file directly for the child's real output; this stub is never rewritten with a growing copy (WS-12 §7.2).\n`,
-  );
+  // 0.0.77: through the no-follow writer (the session's `tasks/` may have been swapped for a link by a sandboxed
+  // command). Best-effort, like the append below: a refused stub leaves the task without its convenience file.
+  try {
+    writeInFolder(
+      outputPath,
+      `Background agent task (agentId ${handle.record.id}) is running.\n` +
+        `Its durable transcript is the authoritative record: ${handle.record.transcript}\n` +
+        `Read that file directly for the child's real output; this stub is never rewritten with a growing copy (WS-12 §7.2).\n`,
+      "replace",
+    );
+  } catch {
+    /* refused or failed: the transcript is the record */
+  }
 }
 
 // Task-frames parity: the ONE registration door for an agent task, foreground and background alike
@@ -330,7 +337,7 @@ function finishBackgroundAgentTaskLater(handle: ChildHandle, ctx: ToolExecutionC
       // and background_tasks_changed (updateTask itself would refuse the late change anyway).
       if (getTask(taskId)?.status !== "running") return;
       try {
-        appendFileSync(outputPath, `\n[${new Date().toISOString()}] subagent ${handle.record.id} ${result.status}.\n`);
+        writeInFolder(outputPath, `\n[${new Date().toISOString()}] subagent ${handle.record.id} ${result.status}.\n`, "append");
       } catch {
         /* the stub file is a best-effort convenience; its own write failure must never crash this callback */
       }

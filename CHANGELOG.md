@@ -40,6 +40,21 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   `unlinkat`, so the file is first renamed to a random name in its own folder, then checked to be the same file in the
   same real folder, and only then unlinked. A swapped folder means the rename is undone, and the rewind counts the
   file as skipped (`skippedLinks`). Only a regular file (or, for the clean-up, the link itself) is ever removed.
+- **Background-task output files** (`<session temp>/tasks/<id>.output`, for background Bash, Monitor, a command's
+  leftover children, agents and workflows). The session temp folder is a sandboxed command's own to write, so it
+  could rename `tasks/` and put a link in its place (measured on macOS under the real sandbox profile). Each output is
+  now opened once through the same writer, created exclusively in the `tasks/` folder as it was made (its real path is
+  remembered when the runtime makes it), and written through that descriptor. TaskOutput reads it the same way, so a
+  link planted at the file or the folder is never read back.
+- **The checkpoint's copy of a file before a tool changes it** no longer follows links. A symbolic link, or a file with
+  more than one hard link, gets no copy. The record says so (`linked`), and a rewind skips it. Before, a command could
+  point a name at a file it can't read: the model's write would be refused, but the copy was already in the store, and
+  a later rewind wrote it back where the command reads it. Copies are read through one verified descriptor.
+- When a check fails after a new file was created, the empty file is removed only where its folder is known: where
+  `/proc` says it is on Linux, or the planned place when that place checked out. It is never removed through a folder
+  that failed the check, and the error says where the file was left.
+- The opens add `O_NOCTTY`. Path comparisons fold case only on a macOS volume that ignores case
+  (`pathconf(_PC_CASE_SENSITIVE)`); a case-sensitive APFS volume compares exactly.
 
 ### `sandbox.filesystem.enforceWriteRootsInFileTools`: the file tools stay in the write roots
 

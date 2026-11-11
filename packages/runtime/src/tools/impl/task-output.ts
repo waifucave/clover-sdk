@@ -3,7 +3,8 @@ import { guestToolUnsupported } from "../../guest/file-session.ts";
 // Deprecated in favor of `Read` on the task's output file (model-readable per WS-06 §3.5's own
 // "Read supersedes TaskOutput") -- Winter preserves the tool for pinned compatibility and the file
 // as the primary path. Shares the background-task-runtime.ts registry with bash.ts/monitor.ts.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
+import { readInFolder } from "../no-follow-write.ts";
 import { join, sep } from "node:path";
 import "../descriptors/task-output.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext } from "../registry.ts";
@@ -115,7 +116,8 @@ const taskOutputExecutor: ToolExecutor = {
 
     let content: string;
     try {
-      content = readFileSync(outputPath, "utf8");
+      // 0.0.77: never through a link a sandboxed command put at `tasks/` or at the file (no-follow-write.ts).
+      content = readInFolder(outputPath).toString("utf8");
     } catch {
       return { output: `Error: TaskOutput: output file for task_id "${parsed.task_id}" could not be read`, isError: true };
     }
