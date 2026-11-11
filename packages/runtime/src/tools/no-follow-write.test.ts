@@ -750,3 +750,74 @@ describe("the checkpoint's pre-image never copies a file through a link", () => 
     expectOutsideUntouched();
   });
 });
+
+// The link-swap race that ended a turn (Clover's leftover-child battery): Bun's `realpathSync` throws EINVAL (as an
+// `lstat`) when the leaf link it is reading becomes a file. The plan treats a resolution that meets a path changing
+// under it as the write's refusal ("moved"), or plans again, never as a raw filesystem error; the seam's
+// "beforeResolve" stage stands in for the race, which a test can't time.
+describe("a path that changes while it is being resolved", () => {
+  const einval = (path: string) => Object.assign(new Error(`EINVAL: invalid argument, lstat '${path}'`), { code: "EINVAL", syscall: "lstat", path });
+
+  test("the leaf link becomes a file mid-resolution, once: planned again, the plan is the file's", () => {
+    const file = join(root, "x");
+    symlinkSync(secret, file);
+    let thrown = 0;
+    _setNoFollowWriteSeamForTests((stage, plan) => {
+      if (stage !== "beforeResolve" || plan.lexicalPath !== file || thrown > 0) return;
+      thrown++;
+      // The race: the link is now a plain file, and the resolution in flight fails with EINVAL.
+      rmSync(file);
+      writeFileSync(file, "plain");
+      throw einval(file);
+    });
+    const plan = planWrite(file, { followLeafLink: true, createParents: false });
+    expect(thrown).toBe(1);
+    expect(plan.realPath).toBe(file);
+    expect(plan.throughLink).toBe(false);
+    expectOutsideUntouched();
+  });
+
+  test("still changing every time: refused as moved, nothing written, never the raw EINVAL", () => {
+    const file = join(root, "x");
+    symlinkSync(secret, file);
+    _setNoFollowWriteSeamForTests((stage, plan) => {
+      if (stage === "beforeResolve" && plan.lexicalPath === file) throw einval(file);
+    });
+    let err: unknown;
+    try { planWrite(file, { followLeafLink: true, createParents: false }); } catch (e) { err = e; }
+    expect((err as { code?: string }).code).toBe("moved");
+    expect((err as Error).message).toContain("changed while it was being written");
+    expectOutsideUntouched();
+  });
+
+  test("the folder above goes away between its lstat and its resolution: refused as moved", () => {
+    const sub = join(root, "sub");
+    mkdirSync(sub);
+    const file = join(sub, "new.txt");
+    _setNoFollowWriteSeamForTests((stage, plan) => {
+      if (stage === "beforeResolve" && plan.lexicalPath === sub) throw Object.assign(new Error(`ENOENT: no such file or directory, realpath '${sub}'`), { code: "ENOENT" });
+    });
+    let err: unknown;
+    try { planWrite(file, { followLeafLink: true, createParents: true }); } catch (e) { err = e; }
+    expect((err as { code?: string }).code).toBe("moved");
+  });
+
+  for (const writer of ["Write", "Edit"] as const) {
+    test(`${writer}: the race is the call's error, returned to the model, never thrown out of the tool`, async () => {
+      const file = join(root, "x");
+      writeFileSync(file, "plain");
+      const state = createSessionReadState({ cwd: root });
+      readFully(state, file);
+      rmSync(file);
+      symlinkSync(secret, file);
+      _setNoFollowWriteSeamForTests((stage, plan) => {
+        if (stage === "beforeResolve" && plan.lexicalPath === file) throw einval(file);
+      });
+      const tool = getRegisteredTool(writer)!;
+      const input = writer === "Write" ? { file_path: file, content: "REDIRECTED" } : { file_path: file, old_string: "plain", new_string: "REDIRECTED" };
+      const result = await tool.executor!.execute(input, makeCtx({ readState: state }));
+      expect(result.isError).toBe(true);
+      expectOutsideUntouched();
+    });
+  }
+});

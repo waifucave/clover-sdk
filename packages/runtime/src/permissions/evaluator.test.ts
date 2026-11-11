@@ -4497,3 +4497,22 @@ describe("findAgentDenyRule / agentTypeDeniedMessage (SDK 0.0.16 Lane P, R3b §4
     expect(agentTypeDeniedMessage("Explore", entry)).toBe("Agent type 'Explore' has been denied by permission rule 'Agent(Explore)' from sdk.");
   });
 });
+
+// A filesystem error while the check resolves a path the call names (the link-swap race: Bun's realpath throws
+// EINVAL when a link it reads becomes a file) denies the call, fail closed, never ends the turn.
+describe("a filesystem error inside the check", () => {
+  test("EINVAL from a stage: the call is denied (mechanism crash), the error isn't thrown", async () => {
+    const ctx = baseCtx({
+      hookStage: spyHookStage(() => { throw Object.assign(new Error("EINVAL: invalid argument, lstat '/tmp/x'"), { code: "EINVAL" }); }).stage,
+    });
+    const record = await evaluate(call("Write", { file_path: "/tmp/x", content: "y" }), ctx);
+    expect(record.decision).toBe("deny");
+    expect(record.mechanism).toBe("crash");
+    expect(record.message).toContain("EINVAL");
+  });
+
+  test("anything else still throws", async () => {
+    const ctx = baseCtx({ hookStage: spyHookStage(() => { throw new Error("a bug"); }).stage });
+    await expect(evaluate(call("Write", { file_path: "/tmp/x", content: "y" }), ctx)).rejects.toThrow("a bug");
+  });
+});

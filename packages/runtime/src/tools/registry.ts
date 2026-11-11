@@ -1955,7 +1955,16 @@ export function buildRegistryToolExecutor(deps: RegistryToolExecutorDeps): Engin
           bindGuestFileSession(ctx, deps.guestFiles);
         } catch (error) { return foldResult(guestFileError(error)); }
       } else if (deps.guestFiles) return foldResult({ output: "Error [guest_file_posture_mismatch]: guest helper requires confined posture", isError: true });
-      const result = await registered.executor.execute(call.input, ctx);
+      let result: ToolResultPayload;
+      try {
+        result = await registered.executor.execute(call.input, ctx);
+      } catch (error) {
+        // An unexpected filesystem error inside a tool (a path that changed under it): the call's error, returned to
+        // the model, never the turn's failure. Anything else is still thrown.
+        const code = (error as { code?: unknown } | null)?.code;
+        if (!(error instanceof Error) || typeof code !== "string" || !/^E[A-Z]+$/.test(code)) throw error;
+        return foldResult({ output: `Error: ${error.message}`, isError: true });
+      }
       return foldResult(result);
     },
   };

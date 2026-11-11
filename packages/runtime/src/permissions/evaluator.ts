@@ -2306,6 +2306,17 @@ export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Pr
   try {
     staged = await evaluateStages(call, ctx);
   } catch (err) {
+    // A filesystem error while the check resolved a path the call names (the path changed while it was being looked
+    // at: a link swapped for a file, a folder removed): the call is denied, never the turn ended. Fail closed.
+    const code = (err as { code?: unknown } | null)?.code;
+    if (err instanceof Error && typeof code === "string" && /^E[A-Z]+$/.test(code)) {
+      return {
+        decision: "deny",
+        mechanism: "crash",
+        policyVersion: ctx.policy.version,
+        message: `The ${call.toolName} permission check couldn't read a path the call names (${code}: it may have changed while it was being checked). The call is denied; try again.`,
+      };
+    }
     if (!(err instanceof FileRuleCompileError)) throw err;
     return {
       decision: "deny",
