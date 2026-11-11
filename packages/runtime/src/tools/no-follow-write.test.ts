@@ -15,7 +15,9 @@ import { join } from "node:path";
 import { createSessionReadState, type SessionReadState } from "./read-state.ts";
 import { getRegisteredTool, type ToolExecutionContext, type ToolCallPermission } from "./registry.ts";
 import type { SandboxSettings } from "../sandbox/profile.ts";
-import { _setNoFollowWriteSeamForTests, planWrite } from "./no-follow-write.ts";
+import { _setNoFollowWriteSeamForTests, planWrite, writeNewFileUnder } from "./no-follow-write.ts";
+import { capMcpOutput } from "../mcp/output-cap.ts";
+import { quarantinePlanted } from "../sandbox/linux-runs.ts";
 import { saveBlobToTempDir } from "./impl/read-mcp-resource-tool.ts";
 import { createFileCheckpointSink } from "../checkpoint/sink.ts";
 import "./impl/write.ts";
@@ -418,5 +420,135 @@ describe("checkpoint rewind", () => {
     const result = await sink.rewind("u-1");
     expect(result.filesChanged).toEqual([file]);
     expect(readFileSync(file, "utf8")).toBe("original\n");
+  });
+});
+
+describe("checkpoint rewind's delete (a file that didn't exist at the checkpoint)", () => {
+  async function checkpointed(file: string) {
+    const home = join(base, "home");
+    mkdirSync(home, { recursive: true });
+    const sink = createFileCheckpointSink({ home, cwd: root, sessionUuid: "sess-1" });
+    await sink.beforeMutation({ path: file, tool: "Write", userMessageUuid: "u-1", sessionUuid: "sess-1" });
+    return sink;
+  }
+
+  test("a normal delete still removes the file the session created", async () => {
+    const file = join(root, "new.ts");
+    const sink = await checkpointed(file);
+    writeFileSync(file, "made after the checkpoint\n");
+    const result = await sink.rewind("u-1");
+    expect(result.filesChanged).toEqual([file]);
+    expect(existsSync(file)).toBe(false);
+  });
+
+  test("the folder swapped for a link after rewind's own checks: skipped and counted, the outside file of the same name untouched", async () => {
+    const sub = join(root, "sub");
+    mkdirSync(sub);
+    const file = join(sub, "secret.txt"); // the outside file's own name, so a followed delete would remove it
+    const sink = await checkpointed(file);
+    writeFileSync(file, "made after the checkpoint\n");
+    let swapped = false;
+    _setNoFollowWriteSeamForTests((stage) => {
+      if (stage !== "beforeRemove" || swapped) return;
+      swapped = true;
+      renameSync(sub, join(root, "sub-old"));
+      symlinkSync(outside, sub);
+    });
+    const result = await sink.rewind("u-1");
+    expect(swapped).toBe(true);
+    expect(result.skippedLinks).toBe(1);
+    expect(result.filesChanged).toEqual([]);
+    expectOutsideUntouched();
+    expect(readFileSync(join(root, "sub-old", "secret.txt"), "utf8")).toBe("made after the checkpoint\n");
+  });
+
+  test("a link at the name: skipped, the link and its target untouched", async () => {
+    const file = join(root, "new.ts");
+    const sink = await checkpointed(file);
+    symlinkSync(secret, file);
+    const result = await sink.rewind("u-1");
+    expect(result.skippedLinks).toBe(1);
+    expect(lstatSync(file).isSymbolicLink()).toBe(true);
+    expectOutsideUntouched();
+  });
+
+  test("a link swapped in at the name after rewind's own checks: skipped, the link's target untouched", async () => {
+    const file = join(root, "new.ts");
+    const sink = await checkpointed(file);
+    writeFileSync(file, "made after the checkpoint\n");
+    let swapped = false;
+    _setNoFollowWriteSeamForTests((stage) => {
+      if (stage !== "beforeRemove" || swapped) return;
+      swapped = true;
+      rmSync(file);
+      symlinkSync(secret, file);
+    });
+    const result = await sink.rewind("u-1");
+    expect(swapped).toBe(true);
+    expect(result.skippedLinks).toBe(1);
+    expect(lstatSync(file).isSymbolicLink()).toBe(true);
+    expectOutsideUntouched();
+  });
+});
+
+describe("the runtime's own new files in the session temp folder (Bash's overflow output, the MCP output spill)", () => {
+  test("a link planted where the folder should be: refused, nothing written outside", () => {
+    const tempDir = join(base, "session-tmp");
+    mkdirSync(tempDir);
+    symlinkSync(outside, join(tempDir, "bash-output"));
+    expect(() => writeNewFileUnder(tempDir, ["bash-output", "x-stdout.txt"], "output")).toThrow();
+    expectOutsideUntouched();
+  });
+
+  test("the MCP spill: a planted link leaves the result an excerpt with no saved file, nothing outside", () => {
+    const tempDir = join(base, "session-tmp");
+    mkdirSync(tempDir);
+    symlinkSync(outside, join(tempDir, "mcp-output"));
+    const result = capMcpOutput("word ".repeat(5000), 10, { sessionDir: () => tempDir, serverName: "srv", toolName: "tool" });
+    expect(result.truncated).toBe(true);
+    expect(result.persistedPath).toBeUndefined();
+    expectOutsideUntouched();
+  });
+
+  test("an ordinary spill is saved under the temp folder", () => {
+    const tempDir = join(base, "session-tmp");
+    const text = "word ".repeat(5000);
+    const result = capMcpOutput(text, 10, { sessionDir: () => tempDir, serverName: "srv", toolName: "tool" });
+    expect(result.persistedPath?.startsWith(join(tempDir, "mcp-output"))).toBe(true);
+    expect(readFileSync(result.persistedPath!, "utf8")).toBe(text);
+  });
+});
+
+describe("the Linux quarantine of a planted protected path (sandbox/linux-runs.ts)", () => {
+  test("a folder above it swapped for a link before the removal: nothing outside is removed", () => {
+    const planted = join(root, "a", "b", "hook");
+    mkdirSync(join(root, "a", "b"), { recursive: true });
+    writeFileSync(planted, "planted\n");
+    mkdirSync(join(outside, "b"));
+    writeFileSync(join(outside, "b", "hook"), SECRET);
+    let swapped = false;
+    _setNoFollowWriteSeamForTests((stage) => {
+      if (stage !== "beforeRemove" || swapped) return;
+      swapped = true;
+      renameSync(join(root, "a"), join(root, "a-old"));
+      symlinkSync(outside, join(root, "a"));
+    });
+    quarantinePlanted([{ path: planted, anchor: root }], undefined);
+    expect(swapped).toBe(true);
+    expect(readFileSync(join(outside, "b", "hook"), "utf8")).toBe(SECRET);
+    expect(readdirSync(join(outside, "b"))).toEqual(["hook"]);
+  });
+
+  test("an ordinary planted file is removed, and a planted link is removed as a link (its target untouched)", () => {
+    const planted = join(root, "a", "hook");
+    mkdirSync(join(root, "a"));
+    writeFileSync(planted, "planted\n");
+    const link = join(root, "a", "hook2");
+    symlinkSync(secret, link);
+    const removed = quarantinePlanted([{ path: planted, anchor: root }, { path: link, anchor: root }], undefined);
+    expect(removed.sort()).toEqual([planted, link].sort());
+    expect(existsSync(planted)).toBe(false);
+    expect(() => lstatSync(link)).toThrow();
+    expectOutsideUntouched();
   });
 });

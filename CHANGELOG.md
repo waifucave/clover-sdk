@@ -31,9 +31,15 @@ corresponds to one `chore(release): vX.Y.Z` commit.
   check after the open sees it and removes it. An existing file elsewhere is never truncated or written. On Windows
   there is no `O_NOFOLLOW`: the last name is checked right before the open instead, which leaves the gap between the
   two. Processes running as the same user outside any sandbox are out of scope, as before.
-- The same writer saves ReadMcpResource's binary blobs: the session temp folder is one a sandboxed command can write,
-  so a link planted at `mcp-resources` no longer sends the file elsewhere. It also restores files on a checkpoint
-  rewind.
+- The same writer makes the runtime's own new files in the session temp folder, which a sandboxed command can write:
+  ReadMcpResource's binary blobs (`mcp-resources`), Bash's overflow output (`bash-output`) and the MCP output spill
+  (`mcp-output`). A link planted at one of those folders no longer sends the file elsewhere: the save is refused (the
+  MCP result stays an excerpt). It also restores files on a checkpoint rewind.
+- **Removals.** A checkpoint rewind that deletes a file the session created, and the Linux sandbox's clean-up of
+  something a command made at a protected path, no longer delete through a folder swapped for a link. Node has no
+  `unlinkat`, so the file is first renamed to a random name in its own folder, then checked to be the same file in the
+  same real folder, and only then unlinked. A swapped folder means the rename is undone, and the rewind counts the
+  file as skipped (`skippedLinks`). Only a regular file (or, for the clean-up, the link itself) is ever removed.
 
 ### `sandbox.filesystem.enforceWriteRootsInFileTools`: the file tools stay in the write roots
 

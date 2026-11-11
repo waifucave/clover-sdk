@@ -21,11 +21,12 @@ import { guestBash } from "../../guest/process-tools.ts";
 //   - `$OUTDIR` is now exported into the spawned shell's env alongside `$TMPDIR`, when `ctx.outDir`
 //     is configured (WS-12 §5.3: "The OUTDIR export remains a Winter extension").
 import { randomUUID } from "node:crypto";
-import { readFileSync, writeFileSync, mkdirSync, unlinkSync, createWriteStream } from "node:fs";
+import { readFileSync, unlinkSync, createWriteStream } from "node:fs";
 import { join, sep } from "node:path";
 import "../descriptors/bash.ts";
 import { replaceExecutor, type ToolExecutor, type ToolExecutionContext, type ToolResultPayload } from "../registry.ts";
 import { createBackgroundTask } from "../background-tasks.ts";
+import { writeNewFileUnder } from "../no-follow-write.ts";
 import { splitCompound, extractRedirectTargets, leadingWord, dequoteShellWord } from "../../permissions/grammar.ts";
 import { type GlobDenyEntry } from "../../permissions/file-rules.ts";
 import { buildSandboxChildEnv, computeDenyPaths as sharedComputeDenyPaths, computeWritableRoots as sharedComputeWritableRoots, sandboxRunInputs } from "../sandbox-run-inputs.ts";
@@ -295,11 +296,9 @@ interface CappedOutput {
 }
 
 function persistOverflowOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", text: string): string {
-  const dir = join(ctx.tempDir, "bash-output");
-  mkdirSync(dir, { recursive: true });
-  const filePath = join(dir, `${randomUUID()}-${stream}.txt`);
-  writeFileSync(filePath, text, "utf8");
-  return filePath;
+  // 0.0.77: the temp folder is the command's own to write, so `bash-output` may be a link it planted: the
+  // shared no-follow writer makes the folder and the file and refuses one that lands outside the temp folder.
+  return writeNewFileUnder(ctx.tempDir, ["bash-output", `${randomUUID()}-${stream}.txt`], text);
 }
 
 function capOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", raw: string, success: boolean): CappedOutput {

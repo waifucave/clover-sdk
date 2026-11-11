@@ -5,8 +5,7 @@
 // Same constructor-injected-resolver pattern as list-mcp-resources-tool.ts (see that file's own
 // header for the full rationale -- registry.ts is closed, ToolExecutionContext has no MCP field,
 // mirrors advisor.ts's own precedent).
-import { closeTarget, isUnder, NoFollowWriteError, openPlanned, planWrite, replaceContents } from "../no-follow-write.ts";
-import { resolveRealTarget } from "../../permissions/paths.ts";
+import { writeNewFileUnder } from "../no-follow-write.ts";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import "../descriptors/read-mcp-resource-tool.ts";
@@ -61,18 +60,7 @@ function extensionFor(mimeType: string | undefined): string {
 // `mcp-resources` (or a folder swapped for one) must not send the blob elsewhere: the shared no-follow
 // writer makes the folder and the new file, and the file must really land under the temp folder.
 export function saveBlobToTempDir(tempDir: string, blobBase64: string, mimeType: string | undefined): string {
-  const filePath = join(tempDir, "mcp-resources", `${randomUUID()}${extensionFor(mimeType)}`);
-  const plan = planWrite(filePath, { followLeafLink: false, createParents: true });
-  if (!isUnder(plan.realPath, resolveRealTarget(tempDir))) {
-    throw new NoFollowWriteError("outside_roots", `the MCP resource folder under "${tempDir}" leads somewhere else; nothing was saved`);
-  }
-  const target = openPlanned(plan, { mode: "create", refuseHardLinks: true });
-  try {
-    replaceContents(target.fd, Buffer.from(blobBase64, "base64"));
-  } finally {
-    closeTarget(target);
-  }
-  return filePath;
+  return writeNewFileUnder(tempDir, ["mcp-resources", `${randomUUID()}${extensionFor(mimeType)}`], Buffer.from(blobBase64, "base64"));
 }
 
 export function createReadMcpResourceExecutor(deps: ReadMcpResourceDeps): ToolExecutor {

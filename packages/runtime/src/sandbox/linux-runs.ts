@@ -16,8 +16,9 @@
 // quarantine folder must be a real folder (never a link), and nothing here ever deletes recursively.
 // The protected folders a run made before it started (`ensureProtectedFolders`) are removed at its end when they are
 // still empty and no other sandboxed run is live (none in this realm, no record of a live process).
-import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmdirSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { removePlanned } from "../tools/no-follow-write.ts";
 
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
 export interface UnheldPath { path: string; anchor: string }
@@ -84,8 +85,25 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
       }
     }
     if (target === undefined || planted.includes(target)) continue;
+    // 0.0.77: the folder above the target as the walk found it (no link from the anchor down). A command still
+    // running (a leftover child) could swap a folder for a link after the walk: the move and the removal both
+    // check it again first, and the removal goes through the shared no-follow remover, which never deletes
+    // through a swapped folder (tools/no-follow-write.ts's `removePlanned`).
+    let parentReal: string;
+    try {
+      parentReal = realpathSync(dirname(target));
+    } catch {
+      continue;
+    }
+    const parentStill = (): boolean => {
+      try {
+        return realpathSync(dirname(target!)) === parentReal;
+      } catch {
+        return false;
+      }
+    };
     let gone = false;
-    if (folder !== undefined) {
+    if (folder !== undefined && parentStill()) {
       try {
         renameSync(target, join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
         gone = true;
@@ -96,13 +114,16 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
       o.kept?.push(target);
       continue;
     }
-    if (!gone) {
+    if (!gone && parentStill()) {
       try {
-        const st = lstatSync(target);
-        if (st.isDirectory() && !st.isSymbolicLink()) rmdirSync(target); // only when empty
-        else unlinkSync(target);
+        const real = join(parentReal, basename(target));
+        const st = lstatSync(real);
+        if (st.isDirectory() && !st.isSymbolicLink()) rmdirSync(real); // only when empty
+        else {
+          removePlanned({ lexicalPath: target, realPath: real, realParent: parentReal, base: basename(target), missingDirs: [], existing: st, throughLink: false }, { allowLink: true });
+        }
         gone = true;
-      } catch { /* a folder with something in it stays */ }
+      } catch { /* a folder with something in it stays; a folder that moved meanwhile stays too */ }
     }
     if (gone) planted.push(target);
   }

@@ -1,5 +1,7 @@
 // THE ONE WRITER behind every file tool that writes a model-named path (Write, Edit, NotebookEdit), the
-// MCP resource saver and the checkpoint rewind. It exists to close one hole: the tools used to check a
+// runtime's own new files in the session temp folder (MCP resource blobs, Bash's overflow output, the MCP
+// output spill: `writeNewFileUnder`), the checkpoint rewind's restore and delete, and the Linux sandbox's
+// clean-up of planted protected paths (`removePlanned`). It exists to close one hole: the tools used to check a
 // path and then write it with `writeFileSync`, which follows links. Between the check and the write a
 // sandboxed shell (a background command, a monitor) could put a link where the checked file was, or
 // swap a folder above it for one, and the write landed wherever the link pointed.
@@ -37,7 +39,8 @@
 //   - Windows: no `O_NOFOLLOW`. The leaf is lstat'ed right before the open instead, which leaves the gap
 //     between that lstat and the open; step 4 still runs.
 //   - Processes running as the same user outside any sandbox are out of scope (README).
-import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, readlinkSync, realpathSync, rmdirSync, unlinkSync, ftruncateSync, writeSync, type Stats } from "node:fs";
+import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, readlinkSync, realpathSync, renameSync, rmdirSync, unlinkSync, ftruncateSync, writeSync, type Stats } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { basename, dirname, isAbsolute, join, normalize, resolve } from "node:path";
 import { resolveRealTarget, resolveSymlinkTargetChain } from "../permissions/paths.ts";
 import { assertHostCodePathAccess } from "../sandbox/host-code-protection.ts";
@@ -163,7 +166,7 @@ export function planWrite(path: string, opts: PlanOptions, depth = 0): WritePlan
 // --- Test seam ---------------------------------------------------------------------------------------
 // Called between the plan (and the caller's checks on it) and the open, and before each folder is made,
 // so a test can swap a link in deterministically. Nothing in the runtime sets it.
-type SeamStage = "beforeMkdir" | "beforeOpen";
+type SeamStage = "beforeMkdir" | "beforeOpen" | "beforeRemove";
 let seam: ((stage: SeamStage, plan: WritePlan) => void) | undefined;
 export function _setNoFollowWriteSeamForTests(fn: ((stage: SeamStage, plan: WritePlan) => void) | undefined): void {
   seam = fn;
@@ -324,6 +327,99 @@ export function openPlanned(plan: WritePlan, opts: OpenOptions): OpenedTarget {
     fail("moved", `"${plan.lexicalPath}" was replaced while it was being written; nothing was written`, stat);
   }
   return { fd, plan, created, createdDirs, stat };
+}
+
+/**
+ * Remove the planned file -- a regular file, never a link or a folder -- and nothing else, even if a folder
+ * above it is swapped for a link meanwhile (the checkpoint rewind's delete). Node has no `unlinkat`, so a
+ * plain `unlink(path)` would follow a swapped folder to an outside file of the same name. Instead:
+ *   1. RENAME the name to a fresh random name in the same folder. Wherever the folder really is at that
+ *      moment, a rename destroys nothing.
+ *   2. VERIFY that the renamed file is the planned one: opened at the planned real place with no link
+ *      anywhere (`O_NOFOLLOW_ANY` on macOS; on Linux the folder's realpath is checked again), and the
+ *      same device and inode the plan saw. If not, the rename is undone and the call fails.
+ *   3. UNLINK the random name. If a folder is swapped between 2 and 3, the unlink meets a name that
+ *      exists nowhere else (ENOENT) and the call fails having deleted nothing.
+ * What remains: if a folder is swapped during step 1 and back before the undo, an outside file can be left
+ * under the random name (renamed, never deleted); the error says so.
+ */
+export function removePlanned(plan: WritePlan, opts: { allowLink?: boolean } = {}): void {
+  const existing = plan.existing;
+  if (existing === undefined) return;
+  const isLink = existing.isSymbolicLink();
+  if (isLink && opts.allowLink !== true) throw new NoFollowWriteError("link_refused", `"${plan.lexicalPath}" is a symbolic link; not removed`);
+  if (!isLink && !existing.isFile()) throw new NoFollowWriteError("not_regular", `"${plan.lexicalPath}" is not a regular file; not removed`);
+  seam?.("beforeRemove", plan);
+  const parked = join(plan.realParent, `.${plan.base}.removing-${randomUUID()}`);
+  try {
+    renameSync(plan.realPath, parked);
+  } catch (err) {
+    const code = (err as { code?: unknown }).code;
+    if (code === "ENOENT") throw new NoFollowWriteError("moved", `"${plan.lexicalPath}" moved before it could be removed; nothing was removed`);
+    throw err;
+  }
+  let same = false;
+  if (isLink) {
+    // A link (`allowLink`: the link itself is what goes): the folder still the planned one, and the parked name the same link.
+    try {
+      const st = lstatSync(parked);
+      same = st.isSymbolicLink() && st.dev === existing.dev && st.ino === existing.ino && samePath(realpathSync(plan.realParent), plan.realParent);
+    } catch {
+      same = false;
+    }
+  } else try {
+    const fd = openSync(parked, constants.O_RDONLY | (process.platform === "darwin" ? DARWIN_O_NOFOLLOW_ANY : (constants.O_NOFOLLOW ?? 0)) | (constants.O_NONBLOCK ?? 0));
+    try {
+      const st = fstatSync(fd);
+      const parentNow = realpathSync(plan.realParent);
+      same = st.isFile() && st.dev === existing.dev && st.ino === existing.ino && samePath(parentNow, plan.realParent) && (procPathOf(fd) ?? parked) === parked;
+    } finally {
+      closeSync(fd);
+    }
+  } catch {
+    same = false;
+  }
+  if (!same) {
+    let restored = false;
+    try {
+      renameSync(parked, plan.realPath);
+      restored = true;
+    } catch {
+      /* the folder moved again: say so below */
+    }
+    throw new NoFollowWriteError(
+      "moved",
+      restored
+        ? `"${plan.lexicalPath}" moved while it was being removed; nothing was removed`
+        : `"${plan.lexicalPath}" moved while it was being removed; nothing was removed, but a file was left renamed to "${basename(parked)}" in the folder the path then led to`,
+    );
+  }
+  try {
+    unlinkSync(parked);
+  } catch (err) {
+    throw new NoFollowWriteError("moved", `"${plan.lexicalPath}" moved while it was being removed; nothing was removed (left as "${basename(parked)}"): ${(err as Error).message}`);
+  }
+}
+
+/**
+ * A NEW file the runtime itself names (a random or counted name) under a folder of the session temp tree --
+ * which a sandboxed command can write, so it can plant a link where the file's folder should be. Made with
+ * the same writer: folders one at a time, exclusive create, and the real file must land under `root`.
+ * Returns the path as named (under `root`).
+ */
+export function writeNewFileUnder(root: string, parts: readonly string[], data: string | Uint8Array): string {
+  const path = join(root, ...parts);
+  const plan = planWrite(path, { followLeafLink: false, createParents: true });
+  if (!isUnder(plan.realPath, resolveRealTarget(root))) {
+    throw new NoFollowWriteError("outside_roots", `a folder under "${root}" leads somewhere else; nothing was written`);
+  }
+  const target = openPlanned(plan, { mode: "create", refuseHardLinks: true });
+  try {
+    replaceContents(target.fd, data);
+  } finally {
+    closeTarget(target);
+  }
+  return path;
 }
 
 /** The whole file, from the start, through the descriptor. */
