@@ -514,12 +514,26 @@ export interface SymlinkBothEndsResult {
 // maintained copy that could silently drift from it.
 export function resolveRealTarget(path: string): string {
   try {
-    return realpathSync(path);
+    return realpathOnce(path);
   } catch (err) {
     if ((err as { code?: unknown }).code !== "ENOENT") throw err;
     const dir = dirname(path);
     if (dir === path) return path; // reached the fs root and still nothing resolves -- give up
     return join(resolveRealTarget(dir), basename(path));
+  }
+}
+
+/** How many times a resolution that met a path changing under it (EINVAL: Bun's realpath read a link that had
+ *  become a file) is tried again before its error is let through (`evaluate()` then denies the call). */
+const PATH_CHANGE_RETRIES = 3;
+
+function realpathOnce(path: string): string {
+  for (let tries = 0; ; tries++) {
+    try {
+      return realpathSync(path);
+    } catch (err) {
+      if ((err as { code?: unknown }).code !== "EINVAL" || tries >= PATH_CHANGE_RETRIES) throw err;
+    }
   }
 }
 

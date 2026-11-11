@@ -126,9 +126,16 @@ export function planWrite(path: string, opts: PlanOptions, depth = 0): WritePlan
     if (depth >= MAX_LEAF_LINKS) throw new NoFollowWriteError("link_refused", `"${lexicalPath}": too many symbolic links`);
     let target: string;
     try {
-      target = realpathSync(lexicalPath);
+      target = resolveReal(lexicalPath);
     } catch (err) {
-      if ((err as { code?: unknown }).code !== "ENOENT") throw err;
+      const code = (err as { code?: unknown }).code;
+      // The link became something else while it was being followed (Bun's realpath reads a link that is no longer
+      // one: EINVAL, reported as an `lstat`): plan again from the start, bounded; still changing, nothing is written.
+      if (code === "EINVAL" || code === "ENOTDIR") {
+        if (depth + 1 >= MAX_LEAF_LINKS) throw changedUnderUs(lexicalPath);
+        return planWrite(path, opts, depth + 1);
+      }
+      if (code !== "ENOENT") throw err;
       // A link to a file that doesn't exist yet: the write creates THAT file, in a folder that must exist.
       const chain = resolveSymlinkTargetChain(lexicalPath);
       if (chain === undefined) throw new NoFollowWriteError("link_refused", `"${lexicalPath}" is a symbolic link that can't be followed`);
@@ -150,7 +157,14 @@ export function planWrite(path: string, opts: PlanOptions, depth = 0): WritePlan
     ancestor = up;
   }
   if (missing.length > 0 && !opts.createParents) throw new NoFollowWriteError("missing", `the folder of "${lexicalPath}" does not exist`);
-  const realAncestor = realpathSync(ancestor);
+  let realAncestor: string;
+  try {
+    realAncestor = resolveReal(ancestor);
+  } catch (err) {
+    // The folder went away, or a part of it changed, between its lstat and its resolution: nothing is written.
+    if (isPathChange(err)) throw changedUnderUs(lexicalPath);
+    throw err;
+  }
   const missingDirs: string[] = [];
   let realParent = realAncestor;
   for (const name of missing) {
@@ -168,10 +182,29 @@ export function planWrite(path: string, opts: PlanOptions, depth = 0): WritePlan
   return { lexicalPath, realPath, realParent, base, missingDirs, existing, throughLink: !samePath(realPath, lexicalPath) };
 }
 
+/** The errors resolving a path gives when the path changed while it was being resolved (a link swapped for a file,
+ *  a folder removed or replaced): never a turn's failure, always the write's refusal. */
+const PATH_CHANGE_CODES: ReadonlySet<string> = new Set(["EINVAL", "ENOENT", "ENOTDIR", "ELOOP"]);
+
+function isPathChange(err: unknown): boolean {
+  const code = (err as { code?: unknown }).code;
+  return typeof code === "string" && PATH_CHANGE_CODES.has(code);
+}
+
+function changedUnderUs(lexicalPath: string): NoFollowWriteError {
+  return new NoFollowWriteError("moved", `"${lexicalPath}" changed while it was being written; nothing was written`);
+}
+
+/** `realpathSync`, with the test seam's "beforeResolve" stage first (a test throws a resolution error from it). */
+function resolveReal(path: string): string {
+  seam?.("beforeResolve", { lexicalPath: path, realPath: path, realParent: dirname(path), base: basename(path), missingDirs: [], existing: undefined, throughLink: false });
+  return realpathSync(path);
+}
+
 // --- Test seam ---------------------------------------------------------------------------------------
 // Called between the plan (and the caller's checks on it) and the open, and before each folder is made,
 // so a test can swap a link in deterministically. Nothing in the runtime sets it.
-type SeamStage = "beforeMkdir" | "beforeOpen" | "beforeRemove" | "beforeRemember";
+type SeamStage = "beforeMkdir" | "beforeOpen" | "beforeRemove" | "beforeRemember" | "beforeResolve";
 let seam: ((stage: SeamStage, plan: WritePlan) => void) | undefined;
 export function _setNoFollowWriteSeamForTests(fn: ((stage: SeamStage, plan: WritePlan) => void) | undefined): void {
   seam = fn;
