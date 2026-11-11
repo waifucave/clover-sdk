@@ -399,8 +399,11 @@ describe("checkpoint rewind", () => {
       rmSync(file);
       symlinkSync(secret, file);
     });
-    await sink.rewind("u-1").catch(() => undefined);
+    const result = await sink.rewind("u-1");
     expect(swapped).toBe(true);
+    expect(result.skippedLinks).toBe(1);
+    expect(result.filesChanged).toEqual([]);
+    expect(lstatSync(file).isSymbolicLink()).toBe(true);
     expectOutsideUntouched();
   });
 
