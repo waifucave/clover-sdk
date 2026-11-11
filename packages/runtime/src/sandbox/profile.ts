@@ -54,6 +54,18 @@ export interface SandboxFilesystemSettings {
    * it into the profile-builder's own dedicated param" pattern in this file.
    */
   allowGitConfig?: boolean;
+  /**
+   * The file tools (Write, Edit, NotebookEdit) write only inside the session's write roots -- the same set
+   * its sandboxed commands may write (`computeWritableRoots`) -- unless the host's `canUseTool` allowed
+   * this exact call and the approved name is the real file (no link on the way). Off by default; a
+   * settings file may only turn it on. `tools/no-follow-write.ts` enforces it.
+   */
+  enforceWriteRootsInFileTools?: boolean;
+  /**
+   * While `enforceWriteRootsInFileTools` is on, a file with more than one hard link is refused (a hard link
+   * is the one way to forge the roots check); `true` allows it. The host's alone: a settings file can't set it.
+   */
+  allowHardLinkWrites?: boolean;
 }
 
 // WS-12 §12 open question 1: v1 enforces a boolean network posture only (Seatbelt filters by

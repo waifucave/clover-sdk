@@ -1,5 +1,4 @@
 import { guestFileSessionOf, guestFileError } from "../../guest/file-session.ts";
-import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts";
 import { guestWrite } from "../../guest/file-tools.ts";
 // WS-06 §3.1 "Write" -- implement-now, pinned schema `{file_path, content}`. Create or COMPLETE
 // overwrite, never append/merge; same read-before-overwrite ladder as Edit for EXISTING files (via
@@ -17,8 +16,10 @@ import { guestWrite } from "../../guest/file-tools.ts";
 // this lane's scope" is STALE as of T8 -- engine.ts now force-imports tools/impl/index.ts (which
 // imports this file), so this module's registration reaches every real session, not merely tests
 // that import it directly.
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts";
+import { fstatSync } from "node:fs";
+import { resolve } from "node:path";
+import { checkPlannedTarget, closeTarget, openPlanned, planWrite, readAll, refuseHardLinks, replaceContents, type OpenedTarget } from "../no-follow-write.ts";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "Write" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
@@ -89,36 +90,48 @@ const writeExecutor: ToolExecutor = {
     // this tool actually writes.
     const resolvedPath = resolve(ctx.cwd, parsed.file_path.trim());
     const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
+    let newMtimeMs = 0;
 
     try {
+      // 0.0.77: resolve ONCE to the real file, check THAT, write THAT through one verified descriptor
+      // (tools/no-follow-write.ts) -- a link or a folder swapped in after the check can't redirect it.
       assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
+      const plan = planWrite(resolvedPath, { followLeafLink: true, createParents: true });
+      checkPlannedTarget(plan, ctx, ["write"]);
       let previousContent: string | undefined;
       let type: "create" | "update";
+      let target: OpenedTarget;
 
-      if (existsSync(resolvedPath)) {
-        assertHostCodePathAccess(resolvedPath, "read", ctx.sandboxSettings, ctx.cwd);
-        const stat = statSync(resolvedPath);
-        if (stat.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
-
-        // Same ladder as Edit for an EXISTING file -- "overwrite" operation (read-ladder.ts folds in
-        // the notebook/partial-read override; Write has no substring match, so no
-        // hasUnambiguousCurrentMatch is ever passed -- profile omitted: unpopulated-until-P6 seam,
-        // see read-ladder.ts's own header).
-        const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: stat.mtimeMs, operation: "overwrite" }, deps);
-        if (!decision.eligible) return errorResult(decision.reason);
-
-        assertHostCodePathAccess(resolvedPath, "read", ctx.sandboxSettings, ctx.cwd);
-        previousContent = readFileSync(resolvedPath, "utf8");
-        type = "update";
+      if (plan.existing !== undefined) {
+        if (plan.existing.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
+        if (!plan.existing.isFile()) return errorResult(`"${resolvedPath}" is not a regular file`);
+        checkPlannedTarget(plan, ctx, ["read"]);
+        target = openPlanned(plan, { mode: "existing", refuseHardLinks: refuseHardLinks(ctx) });
+        try {
+          // Same ladder as Edit for an EXISTING file -- "overwrite" operation (read-ladder.ts folds in
+          // the notebook/partial-read override; Write has no substring match, so no
+          // hasUnambiguousCurrentMatch is ever passed). Judged on the descriptor's own file.
+          const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: target.stat.mtimeMs, operation: "overwrite" }, deps);
+          if (!decision.eligible) return errorResult(decision.reason);
+          previousContent = readAll(target.fd).toString("utf8");
+          type = "update";
+          replaceContents(target.fd, parsed.content);
+          newMtimeMs = fstatSync(target.fd).mtimeMs;
+        } finally {
+          closeTarget(target);
+        }
       } else {
         // New files have no precondition (WS-06 §3.1, verbatim) -- the ladder is never consulted.
         type = "create";
-        mkdirSync(dirname(resolvedPath), { recursive: true });
+        target = openPlanned(plan, { mode: "create", refuseHardLinks: refuseHardLinks(ctx) });
+        try {
+          replaceContents(target.fd, parsed.content);
+          newMtimeMs = fstatSync(target.fd).mtimeMs;
+        } finally {
+          closeTarget(target);
+        }
       }
 
-      assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      writeFileSync(resolvedPath, parsed.content, "utf8");
-      const newMtimeMs = statSync(resolvedPath).mtimeMs;
       // Write always ends up knowing the COMPLETE new content, regardless of how much of the
       // previous content (if any) was ever read -- "full", never "carryForward".
       recordPostOperationRead(deps, resolvedPath, "full", newMtimeMs);

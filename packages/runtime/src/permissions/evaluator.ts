@@ -478,9 +478,11 @@ export interface PermissionDecisionRecord {
    * ABSENT for everything else: a mode allow, a bare / `Tool(*)` / glob rule, a PreToolUse hook's
    * pre-approval, the classifier. None of those is a statement about THIS target.
    *
-   * STAMPED ONLY FOR THE TOOLS THAT CONSUME IT -- today `WebFetch`, whose executor must know whether
-   * a private-address target was consented to (it cannot prompt mid-call). Every other tool's record
-   * is byte-identical to what it was before this field existed.
+   * STAMPED ONLY FOR THE TOOLS THAT CONSUME IT -- `WebFetch`, whose executor must know whether
+   * a private-address target was consented to (it cannot prompt mid-call), and (0.0.77) `Write`, `Edit`
+   * and `NotebookEdit`, stamped `"prompt"` only for a `canUseTool` answer: their executors waive the
+   * session's write roots (`sandbox.filesystem.enforceWriteRootsInFileTools`) for that call alone. Every
+   * other tool's record is byte-identical to what it was before this field existed.
    */
   explicitApproval?: "prompt" | "rule";
 }
@@ -1662,6 +1664,9 @@ function certainlyUnfetchableWebFetchTarget(call: PermissionCall): { hostname: s
 // pre-approval, and those two are not the same kind of consent.
 const PROMPT_ANSWERED = new WeakSet<PermissionDecisionRecord>();
 
+/** The file tools whose executor reads `explicitApproval` (the write-root check's waiver). */
+const FILE_WRITE_TOOLS: ReadonlySet<string> = new Set(["Write", "Edit", "NotebookEdit"]);
+
 function markPromptAnswered(record: PermissionDecisionRecord): PermissionDecisionRecord {
   if (record.decision === "allow") PROMPT_ANSWERED.add(record);
   return record;
@@ -1669,6 +1674,12 @@ function markPromptAnswered(record: PermissionDecisionRecord): PermissionDecisio
 
 /** See `PermissionDecisionRecord.explicitApproval`. `"rule"` outranks `"prompt"`: it is the stronger, standing consent. */
 function stampExplicitApproval(record: PermissionDecisionRecord, call: PermissionCall, ctx: EvaluationContext): PermissionDecisionRecord {
+  // 0.0.77: the file-writing tools consume `"prompt"` too (tools/no-follow-write.ts's write-root check),
+  // and for them it means the HOST'S `canUseTool` answered -- never a PermissionRequest hook's allow,
+  // which settings files and plugins can supply. No `"rule"` arm: no allow rule waives the roots.
+  if (record.decision === "allow" && FILE_WRITE_TOOLS.has(call.toolName)) {
+    return record.mechanism === "canUseTool" && PROMPT_ANSWERED.has(record) ? { ...record, explicitApproval: "prompt" } : record;
+  }
   if (record.decision !== "allow" || call.toolName !== WEB_FETCH_TOOL) return record;
   // Judged against the input that will actually EXECUTE: a hook's or a prompt answer's transformed
   // input replaces the call's own, and a rule naming the original host says nothing about a new one.

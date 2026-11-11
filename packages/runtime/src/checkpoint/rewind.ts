@@ -14,7 +14,8 @@
 // returns a typed result, so a rejected promise would leave a host unable to tell "there is nothing
 // to rewind to" from a transport fault.
 import type { RewindFilesResult } from "@waifucave/clover-agent-sdk";
-import { lstatSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, rmSync, statSync } from "node:fs";
+import { closeTarget, openPlanned, planWrite, replaceContents } from "../tools/no-follow-write.ts";
 import { join, relative, resolve, sep } from "node:path";
 import { blobName, nearestExistingAncestor, parentRealPathOf, readCheckpointIndex, sessionCheckpointDir, type CheckpointRecord } from "./file-history.ts";
 
@@ -313,7 +314,15 @@ export function rewindToCheckpoint(opts: RewindOptions): RewindFilesResult {
       // The file did not exist at checkpoint time: the rewind removes it again.
       rmSync(record.path, { force: true });
     } else {
-      writeFileSync(record.path, restored);
+      // 0.0.77: through the shared no-follow writer -- the leaf checks above ran before this point, and
+      // a link or a folder swapped in since then must not redirect the restore (tools/no-follow-write.ts).
+      const plan = planWrite(record.path, { followLeafLink: false, createParents: false });
+      const target = openPlanned(plan, { mode: plan.existing !== undefined ? "existing" : "create", refuseHardLinks: true });
+      try {
+        replaceContents(target.fd, restored);
+      } finally {
+        closeTarget(target);
+      }
     }
   }
 

@@ -7,12 +7,21 @@ import { guestEdit } from "../../guest/file-tools.ts";
 // "edit" operation) and MUST retain Read-deny enforcement on the target -- the latter is the
 // STANDING P2 evaluator's job (findReadDenyBlockingEdit + boundedRoots), composed in BEFORE this
 // executor ever runs; this file never re-implements a permission check of its own.
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { fstatSync, lstatSync } from "node:fs";
+import { checkPlannedTarget, closeTarget, openPlanned, planWrite, readAll, refuseHardLinks, replaceContents } from "../no-follow-write.ts";
 import { resolve } from "node:path";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "Edit" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
 import { computeLineDiff, type DiffLine } from "./write.ts";
+
+function lstatOrMissing(path: string): ReturnType<typeof lstatSync> | undefined {
+  try {
+    return lstatSync(path);
+  } catch {
+    return undefined;
+  }
+}
 
 interface EditInput {
   file_path: string;
@@ -94,38 +103,49 @@ const editExecutor: ToolExecutor = {
     try {
       assertHostCodePathAccess(resolvedPath, "read", ctx.sandboxSettings, ctx.cwd);
       assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      if (!existsSync(resolvedPath)) return errorResult(`"${resolvedPath}" does not exist -- Edit can only modify an existing file`);
-      const stat = statSync(resolvedPath);
-      if (stat.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
+      // 0.0.77: resolve ONCE to the real file, check THAT, then read and write it through ONE verified
+      // descriptor (tools/no-follow-write.ts): the file read is the file written, and a link or a folder
+      // swapped in after the check can't redirect either.
+      if (lstatOrMissing(resolvedPath) === undefined) return errorResult(`"${resolvedPath}" does not exist -- Edit can only modify an existing file`);
+      const plan = planWrite(resolvedPath, { followLeafLink: true, createParents: false });
+      if (plan.existing === undefined) return errorResult(`"${resolvedPath}" does not exist -- Edit can only modify an existing file`);
+      if (plan.existing.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
+      if (!plan.existing.isFile()) return errorResult(`"${resolvedPath}" is not a regular file`);
+      checkPlannedTarget(plan, ctx, ["read", "write"]);
+      const target = openPlanned(plan, { mode: "existing", refuseHardLinks: refuseHardLinks(ctx) });
+      let originalContent: string;
+      let updatedContent: string;
+      let newMtimeMs: number;
+      try {
+        originalContent = readAll(target.fd).toString("utf8");
+        const occurrences = countOccurrences(originalContent, parsed.old_string);
 
-      assertHostCodePathAccess(resolvedPath, "read", ctx.sandboxSettings, ctx.cwd);
-      assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      const originalContent = readFileSync(resolvedPath, "utf8");
-      const occurrences = countOccurrences(originalContent, parsed.old_string);
+        const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
+        const decision = evaluateReadLadder(
+          {
+            filePath: resolvedPath,
+            currentMtimeMs: target.stat.mtimeMs,
+            operation: "edit",
+            hasUnambiguousCurrentMatch: occurrences === 1,
+          },
+          deps,
+        );
+        if (!decision.eligible) return errorResult(decision.reason);
 
-      const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
-      const decision = evaluateReadLadder(
-        {
-          filePath: resolvedPath,
-          currentMtimeMs: stat.mtimeMs,
-          operation: "edit",
-          hasUnambiguousCurrentMatch: occurrences === 1,
-        },
-        deps,
-      );
-      if (!decision.eligible) return errorResult(decision.reason);
+        if (occurrences === 0) return errorResult(`old_string not found in "${resolvedPath}"`);
+        if (occurrences > 1 && !parsed.replace_all) {
+          return errorResult(`old_string appears ${occurrences} times in "${resolvedPath}" -- pass replace_all:true, or include more surrounding context to make it unique`);
+        }
 
-      if (occurrences === 0) return errorResult(`old_string not found in "${resolvedPath}"`);
-      if (occurrences > 1 && !parsed.replace_all) {
-        return errorResult(`old_string appears ${occurrences} times in "${resolvedPath}" -- pass replace_all:true, or include more surrounding context to make it unique`);
+        updatedContent = parsed.replace_all
+          ? replaceAllLiteral(originalContent, parsed.old_string, parsed.new_string)
+          : replaceFirstLiteral(originalContent, parsed.old_string, parsed.new_string);
+        replaceContents(target.fd, updatedContent);
+        newMtimeMs = fstatSync(target.fd).mtimeMs;
+      } finally {
+        closeTarget(target);
       }
-
-      const updatedContent = parsed.replace_all
-        ? replaceAllLiteral(originalContent, parsed.old_string, parsed.new_string)
-        : replaceFirstLiteral(originalContent, parsed.old_string, parsed.new_string);
-      assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      writeFileSync(resolvedPath, updatedContent, "utf8");
-      const newMtimeMs = statSync(resolvedPath).mtimeMs;
+      const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
       // A targeted, known delta on top of whatever was already known -- carry the prior
       // completeness forward rather than asserting "full" (see read-ladder.ts's own header).
       recordPostOperationRead(deps, resolvedPath, "carryForward", newMtimeMs);

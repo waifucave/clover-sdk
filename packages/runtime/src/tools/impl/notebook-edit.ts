@@ -21,12 +21,21 @@ import { assertHostCodePathAccess } from "../../sandbox/host-code-protection.ts"
 // still does not implement any of that itself -- read-deny composition remains the standing
 // evaluator's job, never re-implemented in a tool; this comment is updated in place because it had
 // documented the gap as open.
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, fstatSync, lstatSync } from "node:fs";
+import { checkPlannedTarget, closeTarget, openPlanned, planWrite, readAll, refuseHardLinks, replaceContents } from "../no-follow-write.ts";
 import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "NotebookEdit" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
 import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
+
+function isLink(path: string): boolean {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
 
 type CellType = "code" | "markdown";
 type EditMode = "replace" | "insert" | "delete";
@@ -154,92 +163,102 @@ const notebookEditExecutor: ToolExecutor = {
     try {
       assertHostCodePathAccess(resolvedPath, "read", ctx.sandboxSettings, ctx.cwd);
       assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      if (!existsSync(resolvedPath)) return errorResult(`"${resolvedPath}" does not exist -- NotebookEdit can only modify an existing notebook`);
-      const stat = statSync(resolvedPath);
-      if (stat.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
-
-      const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
-      // No hasUnambiguousCurrentMatch -- notebooks are matched by cell id, not content -- so a
-      // drifted notebook (rung 3) is never rescuable here, by construction (see module header).
-      const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: stat.mtimeMs, operation: "edit" }, deps);
-      if (!decision.eligible) return errorResult(decision.reason);
-
-      let notebook: Record<string, unknown>;
+      // 0.0.77: resolve ONCE to the real file, check THAT, then read and write it through ONE verified
+      // descriptor (tools/no-follow-write.ts) -- see edit.ts's identical note.
+      if (!existsSync(resolvedPath) && !isLink(resolvedPath)) return errorResult(`"${resolvedPath}" does not exist -- NotebookEdit can only modify an existing notebook`);
+      const plan = planWrite(resolvedPath, { followLeafLink: true, createParents: false });
+      if (plan.existing === undefined) return errorResult(`"${resolvedPath}" does not exist -- NotebookEdit can only modify an existing notebook`);
+      if (plan.existing.isDirectory()) return errorResult(`"${resolvedPath}" is a directory, not a file`);
+      if (!plan.existing.isFile()) return errorResult(`"${resolvedPath}" is not a regular file`);
+      checkPlannedTarget(plan, ctx, ["read", "write"]);
+      const opened = openPlanned(plan, { mode: "existing", refuseHardLinks: refuseHardLinks(ctx) });
       try {
-        notebook = JSON.parse(readFileSync(resolvedPath, "utf8")) as Record<string, unknown>;
-      } catch {
-        return errorResult(`"${resolvedPath}" is not valid JSON`);
-      }
-      if (!Array.isArray(notebook["cells"])) return errorResult(`"${resolvedPath}" is not a valid notebook (missing a "cells" array)`);
-      const cells = notebook["cells"] as NotebookCell[];
-      const language = extractLanguage(notebook["metadata"]);
+        const stat = opened.stat;
 
-      let resultCellId: string;
-      let resultCellType: CellType | undefined;
-      let oldSource: string | undefined;
-      let newSourceOut: string | undefined;
+        const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
+        // No hasUnambiguousCurrentMatch -- notebooks are matched by cell id, not content -- so a
+        // drifted notebook (rung 3) is never rescuable here, by construction (see module header).
+        const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: stat.mtimeMs, operation: "edit" }, deps);
+        if (!decision.eligible) return errorResult(decision.reason);
 
-      if (parsed.edit_mode === "replace") {
-        const idx = findCellIndex(cells, parsed.cell_id!);
-        if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}"`);
-        const target = cells[idx]!;
-        oldSource = sourceToString(target["source"]);
-        target["source"] = parsed.new_source;
-        if (parsed.cell_type !== undefined && parsed.cell_type !== target["cell_type"]) {
-          target["cell_type"] = parsed.cell_type;
-          // Keep the cell structurally valid nbformat across a type change: code-only fields must
-          // exist on a code cell and must not linger on a markdown one.
-          if (parsed.cell_type === "code") {
-            target["execution_count"] = null;
-            target["outputs"] = [];
-          } else {
-            delete target["execution_count"];
-            delete target["outputs"];
+        let notebook: Record<string, unknown>;
+        try {
+          notebook = JSON.parse(readAll(opened.fd).toString("utf8")) as Record<string, unknown>;
+        } catch {
+          return errorResult(`"${resolvedPath}" is not valid JSON`);
+        }
+        if (!Array.isArray(notebook["cells"])) return errorResult(`"${resolvedPath}" is not a valid notebook (missing a "cells" array)`);
+        const cells = notebook["cells"] as NotebookCell[];
+        const language = extractLanguage(notebook["metadata"]);
+
+        let resultCellId: string;
+        let resultCellType: CellType | undefined;
+        let oldSource: string | undefined;
+        let newSourceOut: string | undefined;
+
+        if (parsed.edit_mode === "replace") {
+          const idx = findCellIndex(cells, parsed.cell_id!);
+          if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}"`);
+          const target = cells[idx]!;
+          oldSource = sourceToString(target["source"]);
+          target["source"] = parsed.new_source;
+          if (parsed.cell_type !== undefined && parsed.cell_type !== target["cell_type"]) {
+            target["cell_type"] = parsed.cell_type;
+            // Keep the cell structurally valid nbformat across a type change: code-only fields must
+            // exist on a code cell and must not linger on a markdown one.
+            if (parsed.cell_type === "code") {
+              target["execution_count"] = null;
+              target["outputs"] = [];
+            } else {
+              delete target["execution_count"];
+              delete target["outputs"];
+            }
           }
+          resultCellId = parsed.cell_id!;
+          resultCellType = isCellType(target["cell_type"]) ? target["cell_type"] : undefined;
+          newSourceOut = parsed.new_source;
+        } else if (parsed.edit_mode === "delete") {
+          const idx = findCellIndex(cells, parsed.cell_id!);
+          if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}"`);
+          const removed = cells[idx]!;
+          oldSource = sourceToString(removed["source"]);
+          cells.splice(idx, 1);
+          resultCellId = parsed.cell_id!;
+          resultCellType = isCellType(removed["cell_type"]) ? removed["cell_type"] : undefined;
+        } else {
+          // insert
+          let insertAt = 0;
+          if (parsed.cell_id !== undefined) {
+            const idx = findCellIndex(cells, parsed.cell_id);
+            if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}" to insert after`);
+            insertAt = idx + 1;
+          }
+          const created = newCell(parsed.cell_type!, parsed.new_source);
+          cells.splice(insertAt, 0, created);
+          resultCellId = created["id"] as string;
+          resultCellType = parsed.cell_type;
+          newSourceOut = parsed.new_source;
         }
-        resultCellId = parsed.cell_id!;
-        resultCellType = isCellType(target["cell_type"]) ? target["cell_type"] : undefined;
-        newSourceOut = parsed.new_source;
-      } else if (parsed.edit_mode === "delete") {
-        const idx = findCellIndex(cells, parsed.cell_id!);
-        if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}"`);
-        const removed = cells[idx]!;
-        oldSource = sourceToString(removed["source"]);
-        cells.splice(idx, 1);
-        resultCellId = parsed.cell_id!;
-        resultCellType = isCellType(removed["cell_type"]) ? removed["cell_type"] : undefined;
-      } else {
-        // insert
-        let insertAt = 0;
-        if (parsed.cell_id !== undefined) {
-          const idx = findCellIndex(cells, parsed.cell_id);
-          if (idx === -1) return errorResult(`no cell with id "${parsed.cell_id}" in "${resolvedPath}" to insert after`);
-          insertAt = idx + 1;
-        }
-        const created = newCell(parsed.cell_type!, parsed.new_source);
-        cells.splice(insertAt, 0, created);
-        resultCellId = created["id"] as string;
-        resultCellType = parsed.cell_type;
-        newSourceOut = parsed.new_source;
+
+        // nbformat/nbformat_minor/top-level metadata are carried verbatim -- only `cells` was mutated,
+        // in place, above.
+        replaceContents(opened.fd, JSON.stringify(notebook, null, 1));
+        const newMtimeMs = fstatSync(opened.fd).mtimeMs;
+        recordPostOperationRead(deps, resolvedPath, "carryForward", newMtimeMs);
+
+        const result: NotebookEditToolResult = {
+          notebookPath: resolvedPath,
+          editMode: parsed.edit_mode,
+          cellId: resultCellId,
+          ...(resultCellType !== undefined ? { cellType: resultCellType } : {}),
+          ...(language !== undefined ? { language } : {}),
+          ...(oldSource !== undefined ? { oldSource } : {}),
+          ...(newSourceOut !== undefined ? { newSource: newSourceOut } : {}),
+        };
+        return { output: JSON.stringify(result) };
+      } finally {
+        closeTarget(opened);
       }
-
-      // nbformat/nbformat_minor/top-level metadata are carried verbatim -- only `cells` was mutated,
-      // in place, above.
-      assertHostCodePathAccess(resolvedPath, "write", ctx.sandboxSettings, ctx.cwd);
-      writeFileSync(resolvedPath, JSON.stringify(notebook, null, 1), "utf8");
-      const newMtimeMs = statSync(resolvedPath).mtimeMs;
-      recordPostOperationRead(deps, resolvedPath, "carryForward", newMtimeMs);
-
-      const result: NotebookEditToolResult = {
-        notebookPath: resolvedPath,
-        editMode: parsed.edit_mode,
-        cellId: resultCellId,
-        ...(resultCellType !== undefined ? { cellType: resultCellType } : {}),
-        ...(language !== undefined ? { language } : {}),
-        ...(oldSource !== undefined ? { oldSource } : {}),
-        ...(newSourceOut !== undefined ? { newSource: newSourceOut } : {}),
-      };
-      return { output: JSON.stringify(result) };
     } catch (err) {
       return errorResult(err instanceof Error ? err.message : String(err));
     }

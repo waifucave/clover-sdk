@@ -33,7 +33,10 @@ context. The fixed own global MCP control read and durable-store distinction are
 specified in the [source-reader coverage report](research/2026-10-12-host-context-read-coverage.md).
 The marker alone is not independent review acceptance or a Worker acknowledgement
 and does not authorize lifting an activation gate requiring those checks. In-process path checks are
-defense in depth, with same-user, hardlink and post-check race residuals.
+defense in depth, with same-user, hardlink and post-check race residuals. Since 0.0.77 the
+writing file tools (Write, Edit, NotebookEdit) check and open the same resolved real file with
+no-follow and verify it before writing (`tools/no-follow-write.ts`), which closes the post-check race
+for their writes; hard links are refused only under `sandbox.filesystem.enforceWriteRootsInFileTools`.
 
 The first version now defers per-workspace disk encryption by explicit user
 choice; direct same-user/copied-image protection is correspondingly weaker.

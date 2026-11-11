@@ -4,6 +4,53 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.77
+
+### The file tools write the file they checked
+
+- **Write, Edit and NotebookEdit** used to check a path and then write it with a plain write that follows links. In
+  between, a sandboxed command (a background shell, a monitor) could put a link where the checked file was, or swap
+  a folder above it for one, and the write landed wherever the link pointed. Now each path is resolved once to the
+  real file it names. The deny checks run on both the name given and that real file, and the write opens exactly
+  that real file:
+  - with no-follow on its last name. On macOS `O_NOFOLLOW_ANY` refuses a link in any part of the path, so a folder
+    swapped for a link can't redirect the open either.
+  - an existing file is opened without truncating it. Before the first byte is written, the tool checks that it is a
+    regular file, that its folder still resolves where it did, and that the name there is still the open file (same
+    device and inode, and on Linux `/proc/self/fd` agrees). Then it is rewritten in place, so its inode, mode and owner
+    stay the same.
+  - a new file is created exclusively (`O_CREAT|O_EXCL`, mode `0666` less the umask). Missing folders are made one at
+    a time, each checked after it is made, never with a recursive mkdir.
+  - Edit and NotebookEdit read and write through the same descriptor, so the file read is the file written.
+  - a FIFO, socket, device or folder at the path is refused.
+- A link the user really has (a dotfile managed elsewhere, say) keeps working: it is followed once, when the path is
+  resolved, and the write lands on the file it was checked as.
+- **What is left.** On macOS, nothing for file content: a folder swapped while missing folders are being made can
+  leave an empty folder outside for a moment, which is removed. On Linux there is no `O_NOFOLLOW_ANY`: a folder
+  swapped between the check and the open can make a new file's open create an empty file at the link's target. The
+  check after the open sees it and removes it. An existing file elsewhere is never truncated or written. On Windows
+  there is no `O_NOFOLLOW`: the last name is checked right before the open instead, which leaves the gap between the
+  two. Processes running as the same user outside any sandbox are out of scope, as before.
+- The same writer saves ReadMcpResource's binary blobs: the session temp folder is one a sandboxed command can write,
+  so a link planted at `mcp-resources` no longer sends the file elsewhere. It also restores files on a checkpoint
+  rewind.
+
+### `sandbox.filesystem.enforceWriteRootsInFileTools`: the file tools stay in the write roots
+
+- New, off by default. When on, Write, Edit and NotebookEdit write only inside the session's write roots: the same
+  set its sandboxed commands may write (the session temp folder, the working folders, the outputs folder,
+  `filesystem.allowWrite`), each resolved to its real path. The one exception is a call the host's `canUseTool`
+  allowed, and only when the approved name is the real file, with no link on the way. A link means the target could
+  have changed after the answer. A refusal through a link names the real file, so the model can ask for that path
+  and the host sees it.
+- To carry that exception, these tools' permission records now get `explicitApproval: "prompt"` for a `canUseTool`
+  answer only. A PermissionRequest hook's allow doesn't count. WebFetch's records are unchanged.
+- While it is on, a file with more than one hard link is refused: a hard link is the one way to forge the roots
+  check. `sandbox.filesystem.allowHardLinkWrites: true` allows them. With the setting off, hard links are written as
+  before, and path-based deny lists don't see them: a deny on one name doesn't cover another name of the same file.
+- A settings file may turn `enforceWriteRootsInFileTools` on, never off, and can't set `allowHardLinkWrites`. Only
+  the host's own `sandbox` option can.
+
 ## 0.0.76
 
 ### The host floor's `**/` globs deny at every depth

@@ -5,7 +5,8 @@
 // Same constructor-injected-resolver pattern as list-mcp-resources-tool.ts (see that file's own
 // header for the full rationale -- registry.ts is closed, ToolExecutionContext has no MCP field,
 // mirrors advisor.ts's own precedent).
-import { mkdirSync, writeFileSync } from "node:fs";
+import { closeTarget, isUnder, NoFollowWriteError, openPlanned, planWrite, replaceContents } from "../no-follow-write.ts";
+import { resolveRealTarget } from "../../permissions/paths.ts";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import "../descriptors/read-mcp-resource-tool.ts";
@@ -56,11 +57,21 @@ function extensionFor(mimeType: string | undefined): string {
 
 // Exported for read-mcp-resource-dir-tool.ts's own tests (and any future direct caller) to reuse
 // the exact same "where do binary blobs land" convention without duplicating it.
+// 0.0.77: the session temp folder is one a sandboxed shell can write, so a link planted at
+// `mcp-resources` (or a folder swapped for one) must not send the blob elsewhere: the shared no-follow
+// writer makes the folder and the new file, and the file must really land under the temp folder.
 export function saveBlobToTempDir(tempDir: string, blobBase64: string, mimeType: string | undefined): string {
-  const dir = join(tempDir, "mcp-resources");
-  mkdirSync(dir, { recursive: true });
-  const filePath = join(dir, `${randomUUID()}${extensionFor(mimeType)}`);
-  writeFileSync(filePath, Buffer.from(blobBase64, "base64"));
+  const filePath = join(tempDir, "mcp-resources", `${randomUUID()}${extensionFor(mimeType)}`);
+  const plan = planWrite(filePath, { followLeafLink: false, createParents: true });
+  if (!isUnder(plan.realPath, resolveRealTarget(tempDir))) {
+    throw new NoFollowWriteError("outside_roots", `the MCP resource folder under "${tempDir}" leads somewhere else; nothing was saved`);
+  }
+  const target = openPlanned(plan, { mode: "create", refuseHardLinks: true });
+  try {
+    replaceContents(target.fd, Buffer.from(blobBase64, "base64"));
+  } finally {
+    closeTarget(target);
+  }
   return filePath;
 }
 

@@ -236,10 +236,12 @@ function tierContribution(values: Settings, isProject: boolean, trustedWorkspace
  * Clover #74's review (the controller's ruling): a settings FILE's `sandbox` block may only TIGHTEN the sandbox, on
  * every OS and from every file tier (user, project, local) and the programmatic managed one; only the host's own
  * `config.sandbox` (the `flag` tier) and the server-managed policy may loosen it. Kept from a file: `enabled: true`, `allowUnsandboxedCommands: false`, `autoAllowBashIfSandboxed:
- * false`, `denyLaunchServices: true`, and `filesystem.denyWrite`/`denyRead`/`allowGitConfig: false`. Everything else
+ * false`, `denyLaunchServices: true`, `filesystem.denyWrite`/`denyRead`/`allowGitConfig: false` and
+ * `filesystem.enforceWriteRootsInFileTools: true`. Everything else
  * is dropped, and named on the tier's `error`: `enabled: false`, `autoAllowBashIfSandboxed: true`,
  * `allowUnsandboxedCommands: true`, `excludedCommands`, `network`, `hostFenced`, `filesystem.allowWrite`/`allowRead`,
- * `allowGitConfig: true`, and any key this module doesn't know.
+ * `allowGitConfig: true`, `enforceWriteRootsInFileTools: false`, `allowHardLinkWrites`, and any key this module
+ * doesn't know.
  */
 export function tightenOnlySandbox(values: Settings): { values: Settings; dropped: string[] } {
   const sandbox = (values as Record<string, unknown>)["sandbox"];
@@ -269,6 +271,7 @@ export function tightenOnlySandbox(values: Settings): { values: Settings; droppe
         for (const key of Object.keys(fs)) {
           if (key === "denyWrite" || key === "denyRead") keptFs[key] = fs[key];
           else if (key === "allowGitConfig" && fs[key] === false) keptFs[key] = false;
+          else if (key === "enforceWriteRootsInFileTools" && fs[key] === true) keptFs[key] = true;
           else dropped.push(`sandbox.filesystem.${key}`);
         }
         if (Object.keys(keptFs).length > 0) kept["filesystem"] = keptFs;
