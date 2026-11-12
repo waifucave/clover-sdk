@@ -66,6 +66,8 @@ export function currentHostCodeProtectionPaths(): Pick<HostCodeProtection, "deny
  * arbitrary same-user access, hardlink aliases or an external race after this synchronous check. The
  * writing file tools close that race for their writes by checking and opening the same resolved real
  * file (`tools/no-follow-write.ts`). */
+/** The errors a denied place's resolution may meet and still deny by its literal spelling (`hostCodePathAllowed`). */
+const UNRESOLVABLE_DENY_CODES: ReadonlySet<string> = new Set(["EPERM", "EACCES", "ENOTDIR", "ELOOP"]);
 export function hostCodePathAllowed(path: string, access: "read" | "write", settings?: SandboxSettings, cwd = "/"): boolean {
   const active = currentHostCodeProtectionPaths();
   const paths = [...active[access === "read" ? "denyReadPaths" : "denyWritePaths"], ...(settings?.filesystem?.[access === "read" ? "denyRead" : "denyWrite"] ?? []).map(path => isAbsolute(path) ? path : resolve(cwd, path))];
@@ -80,7 +82,18 @@ export function hostCodePathAllowed(path: string, access: "read" | "write", sett
     // Also match the original literal spelling. A reserved host directory may contain bracket
     // or wildcard characters; interpreting those as a glob must not lose its actual subtree.
     for (const denied of [...new Set([...paths, ...split.paths])]) {
-      const roots = resolveSymlinkEnds(denied);
+      // Each denied place is resolved on its own. One the process can't resolve (a folder macOS keeps it out of
+      // without Full Disk Access: EPERM; mode 000: EACCES; a name under a file: ENOTDIR; a link loop: ELOOP) still
+      // denies itself and everything under it by its literal spelling; it never refuses every other path. Any other
+      // error stays fail-closed. The target's own resolution above is unchanged: a target that can't be resolved
+      // (a link into such a folder) is still refused.
+      let roots: { target?: string; chainTarget?: string | undefined };
+      try {
+        roots = resolveSymlinkEnds(denied);
+      } catch (err) {
+        if (!UNRESOLVABLE_DENY_CODES.has((err as { code?: unknown } | null)?.code as string)) return false;
+        roots = {};
+      }
       for (const root of [denied, roots.target, roots.chainTarget].filter((value): value is string => value !== undefined)) {
         const target = fold(root);
         if (candidates.some(value => fold(value) === target || target === "/" || fold(value).startsWith(target + "/"))) return false;

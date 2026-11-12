@@ -10502,6 +10502,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
               );
             } catch (err) {
               if (err instanceof FileRuleCompileError) return true;
+              // SDK 0.0.79: the same for a path the probe can't read (EACCES/EPERM in a folder the process is kept out
+              // of, a name under a file): treated as matching, so `evaluate()` meets the same error inside its own catch
+              // and denies this one call. It used to end the turn with `error_during_execution`.
+              const code = (err as { code?: unknown } | null)?.code;
+              if (err instanceof Error && typeof code === "string" && /^E[A-Z]+$/.test(code)) return true;
               throw err;
             }
           };
