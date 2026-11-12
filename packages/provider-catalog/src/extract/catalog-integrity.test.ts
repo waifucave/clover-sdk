@@ -2033,7 +2033,8 @@ describe("SDK 0.0.4: codex-oauth serves the whole GPT-5.6 slot row", () => {
     // its own evidence was read). Every self-reference -- the key itself and `continuationDomain`'s
     // single entry -- is then normalised to one token, so "names ITSELF" is what is compared rather
     // than "names sol".
-    const DIFFERING = new Set(["key", "upstreamId", "displayName", "canonicalModelId", "$comment", "defaultEffort", "observedAt"]);
+    // 0.0.80: `strength` is each model's own hand-set class (luna is medium where sol is strong).
+    const DIFFERING = new Set(["key", "upstreamId", "displayName", "canonicalModelId", "$comment", "defaultEffort", "observedAt", "strength"]);
     const strip = (m: WinterModelDescriptor): unknown =>
       JSON.parse(
         JSON.stringify(m, (key, value: unknown) => (DIFFERING.has(key) ? undefined : value))

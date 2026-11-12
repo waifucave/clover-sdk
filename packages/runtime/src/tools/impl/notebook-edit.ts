@@ -27,7 +27,7 @@ import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "NotebookEdit" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
-import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
+import { evaluateEditRead, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
 
 function isLink(path: string): boolean {
   try {
@@ -176,9 +176,9 @@ const notebookEditExecutor: ToolExecutor = {
         const stat = opened.stat;
 
         const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
-        // No hasUnambiguousCurrentMatch -- notebooks are matched by cell id, not content -- so a
-        // drifted notebook (rung 3) is never rescuable here, by construction (see module header).
-        const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: stat.mtimeMs, operation: "edit" }, deps);
+        // 0.0.80: the read rule by the turn's model class (read-ladder.ts `evaluateEditRead`): strong and medium need no
+        // read; a weak model needs a read of this version of the notebook (cells are matched by id, not by line).
+        const decision = evaluateEditRead({ filePath: resolvedPath, currentMtimeMs: stat.mtimeMs, operation: "notebook-edit", ...(ctx.editStrength !== undefined ? { strength: ctx.editStrength } : {}) }, deps);
         if (!decision.eligible) return errorResult(decision.reason);
 
         let notebook: Record<string, unknown>;

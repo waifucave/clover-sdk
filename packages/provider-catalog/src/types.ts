@@ -185,6 +185,12 @@ export interface PricingTier {
  * that keeps the user's key phrase); `vendor-doc` cites the vendor's model page; `winter-curated` is
  * Winter's own editorial judgement and enters `candidate` until the user reviews it (§9).
  */
+/** 0.0.80: a model's class for the file tools' read-before-edit rule (`WinterModelDescriptor.strength`). */
+export type ModelStrength = "strong" | "medium" | "weak";
+
+/** The classes, strongest first. */
+export const MODEL_STRENGTHS: readonly ModelStrength[] = ["strong", "medium", "weak"];
+
 export type SlotBasis = "user-ruling" | "vendor-doc" | "winter-curated";
 
 /** A slot's promotion state, mirroring `ModelStatus`'s two reviewed values (WS-13c §2/§9). */
@@ -266,6 +272,13 @@ export interface WinterModelDescriptor {
    * same canonical model as `moonshot/kimi-k3`.
    */
   canonicalModelId: string;
+  /**
+   * 0.0.80: how strong the model is, set BY HAND per canonical model (`model-strength.ts`, the owner's ruling) and
+   * STAMPED AT BUILD by `stampFamilyFields`; a row that states its own (a third-party model plugin's) keeps it. The
+   * runtime reads it for the file tools' read-before-edit rule: `strong` and `medium` may edit what they haven't read,
+   * `weak` must have read the lines it edits. ABSENT is weak.
+   */
+  strength?: ModelStrength;
   displayName: string;
   aliases: string[];
   endpoints: Array<"chat" | "responses" | "embeddings" | "image" | "audio" | "video">;

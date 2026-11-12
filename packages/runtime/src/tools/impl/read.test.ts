@@ -146,7 +146,8 @@ describe("Read (Phase 3, Lane A, Task 4)", () => {
       const result = await runRead({ file_path: p }, ctx);
       expect(result.isError).toBeUndefined();
       expect(result.output).toBe("line1\nline2\nline3");
-      expect(ctx.readState.lookup(p)).toEqual({ complete: true, mtimeMs: expect.any(Number) as unknown as number });
+      // 0.0.80: the lines shown and the text are kept too, for the read-before-edit rule by model class.
+      expect(ctx.readState.lookup(p)).toEqual({ complete: true, mtimeMs: expect.any(Number) as unknown as number, ranges: [[1, 3]], content: "line1\nline2\nline3" });
     });
 
     test("a relative file_path resolves against ctx.cwd, and readState is keyed by the resolved absolute path", async () => {

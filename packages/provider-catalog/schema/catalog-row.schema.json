@@ -67,6 +67,14 @@
           "minLength": 1,
           "description": "WS-13c §1: the vendor's model identity with the provider's spelling removed. DERIVED at build; an overlay row MAY set it as an override."
         },
+        "strength": {
+          "enum": [
+            "strong",
+            "medium",
+            "weak"
+          ],
+          "description": "0.0.80: how strong the model is, set by hand per canonical model (`model-strength.ts`) and stamped at build; a row may state its own. The runtime's read-before-edit rule: strong and medium may edit what they haven't read, weak must have read the lines it edits. Absent is weak."
+        },
         "displayName": {
           "type": "string",
           "minLength": 1

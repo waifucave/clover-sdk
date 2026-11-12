@@ -771,6 +771,8 @@ export interface ModelDescription {
   maxOutputTokens?: number;
   /** WS-23 (reasoning-state, decision 9): `false` when the row reads no images (its input modalities omit them). Absent: unknown, read as yes. */
   readsImages?: boolean;
+  /** 0.0.80: the row's hand-set class (`strength`) for the file tools' read-before-edit rule. Absent: weak. */
+  strength?: "strong" | "medium" | "weak";
 }
 
 // --- Phase 5 Task 2 (R5-3): the provider seam extension -------------------------------------------
@@ -4759,6 +4761,9 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
       // Code-mode images: the LIVE model's catalog row decides, per call, whether Read may hand it an
       // image (a `set_model` to a text-only row turns the next image Read into a text refusal).
       modelReadsImages: () => currentModelDescription()?.readsImages !== false,
+      // 0.0.80: the LIVE model's class decides, per call, how much the file tools need it to have read before an edit
+      // (tools/impl/read-ladder.ts). A model the catalog doesn't class, or no catalog at all, is weak.
+      editStrength: () => currentModelDescription()?.strength ?? "weak",
       // I1: the RESOLVED winter root, so `tools/impl/agent.ts` finds the user agent tier where the
       // skills index and the command resolver already look, and any tool naming Winter's own storage
       // uses one address.

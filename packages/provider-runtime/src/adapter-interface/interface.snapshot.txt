@@ -28,6 +28,9 @@ export interface ModelPricing {
 // packages/provider-catalog/src/types.ts ModelStatus
 export type ModelStatus = "candidate" | "experimental" | "supported" | "deprecated" | "blocked";
 
+// packages/provider-catalog/src/types.ts ModelStrength
+export type ModelStrength = "strong" | "medium" | "weak";
+
 // packages/provider-catalog/src/types.ts PerMessageEffortMechanism
 export type PerMessageEffortMechanism = {
     beta: "mid-conversation-output-config-2026-07-01";
@@ -81,6 +84,7 @@ export interface WinterModelDescriptor {
     upstreamId: string;
     modelFamily: string;
     canonicalModelId: string;
+    strength?: ModelStrength;
     displayName: string;
     aliases: string[];
     endpoints: Array<"chat" | "responses" | "embeddings" | "image" | "audio" | "video">;

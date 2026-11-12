@@ -33,6 +33,47 @@ export interface ReadRecord {
   mtimeMs: number;
   /** Guest descriptor identity; mtime alone cannot detect replaced files or same-timestamp edits. */
   fileVersion?: string;
+  /**
+   * 0.0.80: the lines the model has seen of this version of the file, 1-based and inclusive, merged. Absent with
+   * `complete: false`: nothing line-shaped is known (an image, a PDF, a notebook). `complete: true` covers every line.
+   */
+  ranges?: ReadonlyArray<readonly [number, number]>;
+  /**
+   * 0.0.80: the file's text as the model last saw it (a Read, or its own Edit/Write), so a change made outside the file
+   * tools (a `sed` in the shell) can be shown to it as the lines that changed. Kept up to `READ_CONTENT_MAX` characters.
+   */
+  content?: string;
+}
+
+/** 0.0.80: the largest text a read record keeps for showing later changes (characters). */
+export const READ_CONTENT_MAX = 1_000_000;
+
+/** 0.0.80: merged line ranges (1-based, inclusive), sorted, adjacent ones joined. */
+export function mergeRanges(ranges: Iterable<readonly [number, number]>): Array<[number, number]> {
+  const sorted = [...ranges].filter(([a, b]) => a >= 1 && b >= a).map(([a, b]) => [a, b] as [number, number]).sort((x, y) => x[0] - y[0]);
+  const out: Array<[number, number]> = [];
+  for (const [a, b] of sorted) {
+    const last = out[out.length - 1];
+    if (last !== undefined && a <= last[1] + 1) last[1] = Math.max(last[1], b);
+    else out.push([a, b]);
+  }
+  return out;
+}
+
+/**
+ * 0.0.80: a new read of a file joins what was already read of the SAME version (its lines add up: two partial reads
+ * cover both windows); a read of a changed file replaces the old record. Same version: the same `fileVersion` (guest)
+ * or mtime, and the same text where both kept it (a same-second change keeps the mtime).
+ */
+export function mergeReadRecord(prev: ReadRecord | undefined, next: ReadRecord): ReadRecord {
+  if (prev === undefined) return { ...next };
+  const sameVersion = prev.fileVersion !== undefined && next.fileVersion !== undefined ? prev.fileVersion === next.fileVersion : prev.mtimeMs === next.mtimeMs;
+  const sameText = prev.content === undefined || next.content === undefined || prev.content === next.content;
+  if (!sameVersion || !sameText) return { ...next };
+  const complete = prev.complete || next.complete;
+  const ranges = complete ? undefined : prev.ranges !== undefined || next.ranges !== undefined ? mergeRanges([...(prev.ranges ?? []), ...(next.ranges ?? [])]) : undefined;
+  const content = next.content ?? prev.content;
+  return { ...next, complete, ...(ranges !== undefined ? { ranges } : {}), ...(content !== undefined ? { content } : {}) };
 }
 
 export interface SessionReadState {
@@ -63,7 +104,8 @@ export function createSessionReadState(opts: SessionReadStateOptions): SessionRe
 
   return {
     recordRead(p, o) {
-      reads.set(canonicalKey(p), { ...o });
+      const key = canonicalKey(p);
+      reads.set(key, mergeReadRecord(reads.get(key), o));
     },
     lookup(p) {
       return reads.get(canonicalKey(p));

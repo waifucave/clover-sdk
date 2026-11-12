@@ -12,6 +12,7 @@ export type {
   FamilySlot,
   ModelFamilyDescriptor,
   ModelPricing,
+  ModelStrength,
   PricingTier,
   ModelStatus,
   ProviderAuthKind,
@@ -25,6 +26,9 @@ export type {
   WinterProviderDescriptor,
 } from "./types.ts";
 
+// 0.0.80: each model's class for the read-before-edit rule, set by hand per canonical model.
+export { MODEL_STRENGTHS } from "./types.ts";
+export { MODEL_STRENGTH, strengthOfCanonicalModel } from "./model-strength.ts";
 export { CATALOG_VOCABULARIES, scanForSecrets, validateCatalog, validateCatalogRows } from "./validate.ts";
 // Clover A-M1: the catalog row schema every model plugin's rows follow, pinned and versioned.
 export { CATALOG_ROW_SCHEMA, CATALOG_ROW_SCHEMA_ID, CATALOG_ROW_SCHEMA_SHA256, CATALOG_ROW_SCHEMA_VERSION, buildCatalogRowSchema, canonicalJson } from "./row.ts";

@@ -1,7 +1,7 @@
 import { posix } from "node:path";
 import { createGuestFileHelper, GuestFileHelperError, type GuestFileAuthority, type GuestFileHelperPort, type GuestFileRoot, type GuestFileSnapshot } from "./file-helper.ts";
 import type { ToolExecutionContext, ToolResultPayload } from "../tools/registry.ts";
-import type { ReadRecord, SessionReadState } from "../tools/read-state.ts";
+import { mergeReadRecord, type ReadRecord, type SessionReadState } from "../tools/read-state.ts";
 import type { ReadAccessProbe } from "../permissions/evaluator.ts";
 import { createGuestProcessHelper, type GuestProcessPort, type GuestProcessResult } from "./process-helper.ts";
 
@@ -42,8 +42,10 @@ export function createGuestFileSession(options: {
     // An existing lexical record remains visible after replacement so the ladder still detects drift.
     readState: {
       recordRead(path: string, record: ReadRecord) {
-        records.set(pathKey(path), { ...record });
-        if (record.fileVersion) identityReads.set(identityOf(record.fileVersion), { ...record });
+        // 0.0.80: a read of the same version joins the lines already read (tools/read-state.ts).
+        const merged = mergeReadRecord(session.readState.lookup(path), record);
+        records.set(pathKey(path), merged);
+        if (record.fileVersion) identityReads.set(identityOf(record.fileVersion), { ...merged });
       },
       lookup(path: string) {
         const key = pathKey(path), identity = identities.get(key), lexical = records.get(key);

@@ -180,6 +180,8 @@ describe("T8 production wiring: the guards it carries", () => {
         // WS-23 (reasoning-state, decision 5): the switch fit check's budget and the accountant's limit.
         contextWindow: 1_000_000,
         maxOutputTokens: 128_000,
+        // 0.0.80: the row's hand-set class for the read-before-edit rule.
+        strength: "strong",
       });
       // Sonnet 5: effort via output_config, but neither per-message effort nor tool search -- only the
       // WS-24 live-probe evidence that it takes a call to a tool absent from `tools`.
@@ -195,6 +197,7 @@ describe("T8 production wiring: the guards it carries", () => {
           wire: { perMessageEffort: true, deferredToolLoading: true, midConversationSystem: true, toolChanges: "inline" },
           contextWindow: 1_000_000,
           maxOutputTokens: 128_000,
+          strength: "medium",
         });
       }
       // A provider-local id resolves UNDER ITS PROVIDER (E4): this row's id is also `console`'s, so

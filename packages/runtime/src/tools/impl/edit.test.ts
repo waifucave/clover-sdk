@@ -158,7 +158,7 @@ describe("Edit -- the read-before-edit ladder gates the target", () => {
     }
   });
 
-  test("a drifted file with an unambiguous current match + silent probe is rescued (rung 3)", async () => {
+  test("a drifted file with an unambiguous current match + silent probe is rescued for a strong model; a weak one (no class) whose earlier text wasn't kept must read it again", async () => {
     const { dir, cleanup } = fixtureDir();
     try {
       const filePath = join(dir, "a.txt");
@@ -166,7 +166,10 @@ describe("Edit -- the read-before-edit ladder gates the target", () => {
       const state = createSessionReadState({ cwd: process.cwd() });
       readFully(state, filePath);
       utimesSync(filePath, new Date(Date.now() + 10_000), new Date(Date.now() + 10_000));
-      const result = await editExecutor().execute({ file_path: "a.txt", old_string: "hello", new_string: "goodbye" }, makeCtx(dir, { readState: state, probe: "silent" }));
+      const weak = await editExecutor().execute({ file_path: "a.txt", old_string: "hello", new_string: "goodbye" }, makeCtx(dir, { readState: state, probe: "silent" }));
+      expect(weak.isError).toBe(true);
+      expect(weak.output).toContain("Read line 1 first");
+      const result = await editExecutor().execute({ file_path: "a.txt", old_string: "hello", new_string: "goodbye" }, { ...makeCtx(dir, { readState: state, probe: "silent" }), editStrength: "strong" });
       expect(result.isError).toBeUndefined();
       expect(readFileSync(filePath, "utf8")).toBe("goodbye world");
     } finally {

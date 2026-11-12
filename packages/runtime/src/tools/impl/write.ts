@@ -22,7 +22,7 @@ import { resolve } from "node:path";
 import { checkPlannedTarget, closeTarget, openPlanned, planWrite, readAll, refuseHardLinks, replaceContents, type OpenedTarget } from "../no-follow-write.ts";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "Write" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
-import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
+import { evaluateEditRead, recordAfterWrite, type ReadLadderDeps } from "./read-ladder.ts";
 
 // ---------------------------------------------------------------------------------------------------
 // computeLineDiff -- a small, self-contained LCS line diff. No new dependency (a diff library would
@@ -74,6 +74,8 @@ interface WriteToolResult {
   diff: DiffLine[];
   previousContent?: string;
   userEdited: boolean;
+  /** 0.0.80: the file changed on disk since the model last saw it: its changed lines (read-ladder.ts). */
+  note?: string;
 }
 
 const writeExecutor: ToolExecutor = {
@@ -91,6 +93,7 @@ const writeExecutor: ToolExecutor = {
     const resolvedPath = resolve(ctx.cwd, parsed.file_path.trim());
     const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
     let newMtimeMs = 0;
+    let note: string | undefined;
 
     try {
       // 0.0.77: resolve ONCE to the real file, check THAT, write THAT through one verified descriptor
@@ -108,12 +111,16 @@ const writeExecutor: ToolExecutor = {
         checkPlannedTarget(plan, ctx, ["read"]);
         target = openPlanned(plan, { mode: "existing", refuseHardLinks: refuseHardLinks(ctx) });
         try {
-          // Same ladder as Edit for an EXISTING file -- "overwrite" operation (read-ladder.ts folds in
-          // the notebook/partial-read override; Write has no substring match, so no
-          // hasUnambiguousCurrentMatch is ever passed). Judged on the descriptor's own file.
-          const decision = evaluateReadLadder({ filePath: resolvedPath, currentMtimeMs: target.stat.mtimeMs, operation: "overwrite" }, deps);
-          if (!decision.eligible) return errorResult(decision.reason);
+          // 0.0.80: the read rule by the turn's model class, as Edit's, for an EXISTING file ("overwrite": a weak
+          // model must have read every line). Judged on the descriptor's own file.
           previousContent = readAll(target.fd).toString("utf8");
+          const decision = evaluateEditRead({
+            filePath: resolvedPath, currentMtimeMs: target.stat.mtimeMs, operation: "overwrite",
+            ...(ctx.editStrength !== undefined ? { strength: ctx.editStrength } : {}),
+            currentContent: previousContent,
+          }, deps);
+          if (!decision.eligible) return errorResult(decision.reason);
+          note = decision.note;
           type = "update";
           replaceContents(target.fd, parsed.content);
           newMtimeMs = fstatSync(target.fd).mtimeMs;
@@ -134,7 +141,7 @@ const writeExecutor: ToolExecutor = {
 
       // Write always ends up knowing the COMPLETE new content, regardless of how much of the
       // previous content (if any) was ever read -- "full", never "carryForward".
-      recordPostOperationRead(deps, resolvedPath, "full", newMtimeMs);
+      recordAfterWrite(deps, resolvedPath, { before: previousContent, after: parsed.content, mtimeMs: newMtimeMs, kind: "full" });
 
       const result: WriteToolResult = {
         type,
@@ -143,6 +150,7 @@ const writeExecutor: ToolExecutor = {
         diff: computeLineDiff(previousContent ?? "", parsed.content),
         ...(previousContent !== undefined ? { previousContent } : {}),
         userEdited: false,
+        ...(note !== undefined ? { note } : {}),
       };
       return { output: JSON.stringify(result) };
     } catch (err) {

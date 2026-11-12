@@ -91,6 +91,7 @@ export {
   sniffImageType,
 } from "../image-prep.ts";
 import { emptyPathSet, type ExtractedPaths } from "../paths-seam.ts";
+import { READ_CONTENT_MAX } from "../read-state.ts";
 
 // --- Input (WS-06 §3.1, verbatim) -----------------------------------------------------------------
 
@@ -170,10 +171,13 @@ function readPlainText(target: string, st: Pick<Stats, "mtimeMs"> & { fileVersio
       isError: true,
     };
   }
+  // 0.0.80: the last line the model is actually shown in full (the read-before-edit rule counts only those).
+  let shownEnd = endIdx;
   if (!hasExplicitLimit && body.length > MAX_RESULT_CHARS) {
     // Implicit default window still overflowed the char budget (pathologically long lines) --
     // clip further rather than error (never explicitly requested, so we're free to truncate more).
     body = body.slice(0, MAX_RESULT_CHARS);
+    shownEnd = startIdx + Math.max(0, body.split("\n").length - 1);
   }
 
   // Two DIFFERENT questions, deliberately kept separate (a bug caught by hand-tracing an
@@ -194,8 +198,13 @@ function readPlainText(target: string, st: Pick<Stats, "mtimeMs"> & { fileVersio
   }
 
   const coveredWholeFile = startIdx === 0 && reachedEnd;
-  const complete = !usedWindow && coveredWholeFile;
-  ctx.readState.recordRead(target, { complete, mtimeMs: st.mtimeMs, ...(st.fileVersion === undefined ? {} : { fileVersion: st.fileVersion }) });
+  const complete = !usedWindow && coveredWholeFile && shownEnd === endIdx;
+  // 0.0.80: the lines shown (1-based, inclusive) and the text, for the read-before-edit rule by model class.
+  ctx.readState.recordRead(target, {
+    complete, mtimeMs: st.mtimeMs, ...(st.fileVersion === undefined ? {} : { fileVersion: st.fileVersion }),
+    ...(shownEnd > startIdx ? { ranges: [[startIdx + 1, shownEnd] as const] } : {}),
+    ...(content.length <= READ_CONTENT_MAX ? { content } : {}),
+  });
   return { output: body };
 }
 

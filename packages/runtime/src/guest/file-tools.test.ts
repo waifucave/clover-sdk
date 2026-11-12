@@ -53,11 +53,13 @@ test("strict unread/partial overwrite refusals preserve source; bounded text con
   expect(f.calls.every(call=>call.operation==="read")).toBe(true);
   expect(f.guest.readState.lookup("/workspace/source/file.txt")?.complete).toBe(false);
 });
-test("same mtime replacement is drift; unique permitted Edit rescues while Write requires fresh Read",async()=>{
-  const f=fixture();f.put("/workspace/source/file","hello");await f.run("Read",{file_path:"file"});f.put("/workspace/source/file","hello changed");
-  expect((await f.run("Write",{file_path:"file",content:"wrong"})).isError).toBe(true);
+test("same mtime replacement is drift; (weak, 0.0.80) the changed lines are handed over and count as read, so an Edit of them goes through while a Write needs the rest read again",async()=>{
+  const f=fixture();f.put("/workspace/source/file","hello\nworld");await f.run("Read",{file_path:"file"});f.put("/workspace/source/file","hello changed\nworld");
+  const write=await f.run("Write",{file_path:"file",content:"wrong"});
+  expect(write.isError).toBe(true);
+  expect(write.output).toContain("1\thello changed");
   expect((await f.run("Edit",{file_path:"file",old_string:"hello",new_string:"updated"})).isError).not.toBe(true);
-  expect(f.files.get("/workspace/source/file")?.content).toBe("updated changed");
+  expect(f.files.get("/workspace/source/file")?.content).toBe("updated changed\nworld");
   const denied=fixture({probe:"deny"});denied.put("/workspace/source/file","hello");await denied.run("Read",{file_path:"file"});denied.put("/workspace/source/file","hello changed");
   expect((await denied.run("Edit",{file_path:"file",old_string:"hello",new_string:"updated"})).isError).toBe(true);
 });
