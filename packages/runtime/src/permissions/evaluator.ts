@@ -2314,7 +2314,9 @@ export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Pr
         decision: "deny",
         mechanism: "crash",
         policyVersion: ctx.policy.version,
-        message: `The ${call.toolName} permission check couldn't read a path the call names (${code}: it may have changed while it was being checked). The call is denied; try again.`,
+        message: code === "EACCES" || code === "EPERM"
+          ? `The ${call.toolName} permission check couldn't read a path the call names (${code}: the system doesn't let this process read it). The call is denied.`
+          : `The ${call.toolName} permission check couldn't read a path the call names (${code}: it may have changed while it was being checked). The call is denied; try again.`,
       };
     }
     if (!(err instanceof FileRuleCompileError)) throw err;

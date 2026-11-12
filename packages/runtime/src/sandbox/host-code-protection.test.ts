@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND, query } from "@waifucave/clover-agent-sdk";
@@ -159,3 +159,35 @@ test("pre-start update is retained and initial snapshot mutation cannot weaken h
     expect(out).toContain("protected host path access refused"); expect(out).not.toContain("synthetic-policy-needle");
   } finally { proc.kill(); proc.terminate(); await proc.exited; }
 }, 30_000);
+
+// SDK 0.0.79: a denied place the process can't resolve (macOS keeps it out of ~/Library/Mail without Full Disk Access;
+// a mode-000 folder stands in for that here) denies itself by its literal spelling and never refuses every other path.
+test("a denied place that can't be resolved still denies itself, its subtree and its other letter cases, and no other path", () => {
+  const home = realpathSync(mkdtempSync(join(tmpdir(), "winter-hcp-closed-")));
+  const mail = join(home, "Library", "Mail");
+  mkdirSync(join(mail, "V10"), { recursive: true });
+  mkdirSync(join(home, "Desktop"), { recursive: true });
+  writeFileSync(join(home, "Desktop", "a.md"), "desk");
+  symlinkSync(join(mail, "V10"), join(home, "Desktop", "into-mail"));
+  chmodSync(mail, 0o000);
+  try {
+    const settings = { filesystem: { denyRead: [mail], denyWrite: [mail] } } as never;
+    for (const access of ["read", "write"] as const) {
+      expect(hostCodePathAllowed(join(home, "Desktop", "a.md"), access, settings)).toBe(true);
+      expect(hostCodePathAllowed(join(home, "Desktop", "new.md"), access, settings)).toBe(true);
+      expect(hostCodePathAllowed(mail, access, settings)).toBe(false);
+      expect(hostCodePathAllowed(join(mail, "x"), access, settings)).toBe(false);
+      expect(hostCodePathAllowed(join(mail, "V10", "inbox.mbox"), access, settings)).toBe(false);
+      // A link on the Desktop into the closed folder: its target can't be resolved, so it is refused (fail closed).
+      expect(hostCodePathAllowed(join(home, "Desktop", "into-mail", "inbox.mbox"), access, settings)).toBe(false);
+      if (process.platform === "darwin") expect(hostCodePathAllowed(join(home, "library", "MAIL", "x"), access, settings)).toBe(false);
+    }
+    // An entry under a file (ENOTDIR) denies nothing else either.
+    const underFile = { filesystem: { denyRead: [join(home, "Desktop", "a.md", "x")] } } as never;
+    expect(hostCodePathAllowed(join(home, "Desktop", "a.md"), "read", underFile)).toBe(true);
+    expect(hostCodePathAllowed(join(home, "Desktop", "a.md", "x"), "read", underFile)).toBe(false);
+  } finally {
+    chmodSync(mail, 0o755);
+    rmSync(home, { recursive: true, force: true });
+  }
+});
