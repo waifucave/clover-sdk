@@ -35,7 +35,7 @@ export const CATALOG_ROW_SCHEMA_VERSION = 1 as const;
  * change to the row's shape changes it; `row.test.ts` then fails until the version and this pin move
  * together.
  */
-export const CATALOG_ROW_SCHEMA_SHA256 = "b49824cf42f093fb751a2d93b28bbcb8d2a85466678e13e908aaa68b643ae57e";
+export const CATALOG_ROW_SCHEMA_SHA256 = "f5ef543339006619b9fa979082ca021e2d9854d9f0b899f7aafd3530f407f8c9";
 
 /** The row schema's `$id`: a name, not a URL to fetch (the schema ships in this package). */
 export const CATALOG_ROW_SCHEMA_ID = `urn:waifucave:clover:catalog-row:${CATALOG_ROW_SCHEMA_VERSION}`;

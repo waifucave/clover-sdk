@@ -740,6 +740,8 @@ export function describeCatalogModel(catalog: WinterCatalog, model: string, prov
     ...(typeof row.maxOutputTokens?.value === "number" ? { maxOutputTokens: row.maxOutputTokens.value } : {}),
     // WS-23 (decision 9): only the negative is stated -- a row that reads images needs nothing said.
     ...(Array.isArray(row.inputModalities?.value) && !row.inputModalities.value.includes("image") ? { readsImages: false as const } : {}),
+    // 0.0.80: the row's hand-set class for the read-before-edit rule (absent: weak).
+    ...(row.strength !== undefined ? { strength: row.strength } : {}),
   };
   return Object.keys(description).length > 0 ? description : undefined;
 }

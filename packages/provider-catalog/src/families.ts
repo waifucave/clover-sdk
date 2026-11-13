@@ -4,7 +4,8 @@
 // fetch, no filesystem. Everything here is a total function over data the caller already holds, so
 // the build pipeline, the validator, the runtime's slot resolver and the listing builder all reach
 // the SAME answer rather than three near-identical re-derivations of "which family is this".
-import type { FamilySlot, ModelFamilyDescriptor, WinterCatalog, WinterModelDescriptor } from "./types.ts";
+import type { FamilySlot, ModelFamilyDescriptor, ModelStrength, WinterCatalog, WinterModelDescriptor } from "./types.ts";
+import { strengthOfCanonicalModel } from "./model-strength.ts";
 
 export const SLOT_NAME_RE = /^[a-z0-9][a-z0-9.-]{0,31}$/;
 export const FAMILY_ID_RE = /^[a-z0-9][a-z0-9-]{0,31}$/;
@@ -75,14 +76,17 @@ export function familyIdOf(canonicalModelId: string, families: readonly ModelFam
   return OTHER_FAMILY_ID;
 }
 
-export function stampFamilyFields<T extends { upstreamId: string; canonicalModelId?: string; modelFamily?: string }>(
+export function stampFamilyFields<T extends { upstreamId: string; canonicalModelId?: string; modelFamily?: string; strength?: ModelStrength }>(
   rows: readonly T[],
   families: readonly ModelFamilyDescriptor[],
 ): Array<T & { canonicalModelId: string; modelFamily: string }> {
   return rows.map((row) => {
     const canonicalModelId = row.canonicalModelId ?? canonicalModelIdOf(row.upstreamId);
     const modelFamily = row.modelFamily ?? familyIdOf(canonicalModelId, families);
-    return { ...row, canonicalModelId, modelFamily };
+    // 0.0.80: the hand-set class (`model-strength.ts`) by canonical id; a row's own `strength` is kept. No entry: none
+    // stamped (the runtime reads a row without one as weak).
+    const strength = row.strength ?? strengthOfCanonicalModel(canonicalModelId);
+    return { ...row, canonicalModelId, modelFamily, ...(strength === undefined ? {} : { strength }) };
   });
 }
 

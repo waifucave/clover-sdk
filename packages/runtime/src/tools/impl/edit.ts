@@ -12,7 +12,7 @@ import { checkPlannedTarget, closeTarget, openPlanned, planWrite, readAll, refus
 import { resolve } from "node:path";
 import "../descriptors/index.ts"; // side-effect only: guarantees the "Edit" stub exists first.
 import { replaceExecutor, type ToolExecutionContext, type ToolExecutor, type ToolResultPayload } from "../registry.ts";
-import { evaluateReadLadder, recordPostOperationRead, type ReadLadderDeps } from "./read-ladder.ts";
+import { evaluateEditRead, recordAfterWrite, type ReadLadderDeps } from "./read-ladder.ts";
 import { computeLineDiff, type DiffLine } from "./write.ts";
 
 function lstatOrMissing(path: string): ReturnType<typeof lstatSync> | undefined {
@@ -84,6 +84,8 @@ interface EditToolResult {
   originalContent: string;
   replaceAll: boolean;
   userModified: boolean;
+  /** 0.0.80: the file changed on disk since the model last saw it: its changed lines (read-ladder.ts). */
+  note?: string;
 }
 
 const editExecutor: ToolExecutor = {
@@ -116,25 +118,32 @@ const editExecutor: ToolExecutor = {
       let originalContent: string;
       let updatedContent: string;
       let newMtimeMs: number;
+      let note: string | undefined;
+      const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
       try {
         originalContent = readAll(target.fd).toString("utf8");
         const occurrences = countOccurrences(originalContent, parsed.old_string);
 
-        const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
-        const decision = evaluateReadLadder(
+        // 0.0.80: the read rule by the turn's model class (read-ladder.ts `evaluateEditRead`).
+        const decision = evaluateEditRead(
           {
             filePath: resolvedPath,
             currentMtimeMs: target.stat.mtimeMs,
             operation: "edit",
-            hasUnambiguousCurrentMatch: occurrences === 1,
+            ...(ctx.editStrength !== undefined ? { strength: ctx.editStrength } : {}),
+            currentContent: originalContent,
+            oldString: parsed.old_string,
+            replaceAll: parsed.replace_all,
           },
           deps,
         );
         if (!decision.eligible) return errorResult(decision.reason);
+        note = decision.note;
+        const withNote = (message: string) => (note !== undefined ? `${message}\n\n${note}` : message);
 
-        if (occurrences === 0) return errorResult(`old_string not found in "${resolvedPath}"`);
+        if (occurrences === 0) return errorResult(withNote(`old_string not found in "${resolvedPath}"`));
         if (occurrences > 1 && !parsed.replace_all) {
-          return errorResult(`old_string appears ${occurrences} times in "${resolvedPath}" -- pass replace_all:true, or include more surrounding context to make it unique`);
+          return errorResult(withNote(`old_string appears ${occurrences} times in "${resolvedPath}" -- pass replace_all:true, or include more surrounding context to make it unique`));
         }
 
         updatedContent = parsed.replace_all
@@ -145,10 +154,9 @@ const editExecutor: ToolExecutor = {
       } finally {
         closeTarget(target);
       }
-      const deps: ReadLadderDeps = { readState: ctx.readState, probeReadAccess: ctx.permissions.probeReadAccess };
-      // A targeted, known delta on top of whatever was already known -- carry the prior
-      // completeness forward rather than asserting "full" (see read-ladder.ts's own header).
-      recordPostOperationRead(deps, resolvedPath, "carryForward", newMtimeMs);
+      // A targeted, known delta on top of whatever was already known: what was read carries through the edit, and
+      // the lines it wrote count as read (read-ladder.ts `recordAfterWrite`).
+      recordAfterWrite(deps, resolvedPath, { before: originalContent, after: updatedContent, mtimeMs: newMtimeMs, kind: "carryForward" });
 
       const result: EditToolResult = {
         filePath: resolvedPath,
@@ -156,6 +164,7 @@ const editExecutor: ToolExecutor = {
         originalContent,
         replaceAll: parsed.replace_all,
         userModified: false,
+        ...(note !== undefined ? { note } : {}),
       };
       return { output: JSON.stringify(result) };
     } catch (err) {

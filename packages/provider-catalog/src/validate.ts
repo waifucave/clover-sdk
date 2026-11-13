@@ -34,6 +34,7 @@ import type {
 // WS-13c: the grammars and the reserved-name list have ONE definition, in `families.ts`, because the
 // validator, the runtime's slot resolver and the Agent tool's renderer all key on them. A second
 // copy of `^[a-z0-9][a-z0-9.-]{0,31}$` here would be a second answer to "is this a legal slot name".
+import { MODEL_STRENGTHS } from "./types.ts";
 import { CLAUDE_FAMILY_ID, CLAUDE_RESERVED_SLOT_NAMES, CURRENCY_RE, FAMILY_ID_RE, isSlotServableRow, OTHER_FAMILY_ID, SLOT_NAME_RE } from "./families.ts";
 
 // --- the closed vocabularies. An UNKNOWN value fails (WS-13 §13's acceptance test: "unknown
@@ -753,6 +754,10 @@ function checkModel(errs: Errors, v: unknown, path: string): void {
   }
   if (typeof v["canonicalModelId"] !== "string" || v["canonicalModelId"].length === 0) {
     errs.add(`${path}.canonicalModelId`, `required — WS-13c §1: the vendor's model identity with the provider's spelling removed, stamped at build. Got ${describe(v["canonicalModelId"])}`, "model-canonical-missing");
+  }
+  // 0.0.80: optional (absent is weak); when present, one of the three classes.
+  if (v["strength"] !== undefined && !(MODEL_STRENGTHS as readonly unknown[]).includes(v["strength"])) {
+    errs.add(`${path}.strength`, `must be one of ${MODEL_STRENGTHS.map((s) => JSON.stringify(s)).join(", ")} when present (absent is weak). Got ${describe(v["strength"])}`, "model-strength-invalid");
   }
 
   // WS-13 §8.3: the key IS `<providerId>/<upstreamId-or-alias>`; a key that does not start with its

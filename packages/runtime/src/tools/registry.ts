@@ -39,6 +39,7 @@ import { bindGuestFileSession, type GuestFileSession, guestFileError } from "../
 import type { PermissionMode, BackgroundTaskMessage, BrandProfile, SettingSource } from "@waifucave/clover-agent-sdk";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { parseRule } from "../permissions/grammar.ts";
+import type { EditStrength } from "./impl/read-ladder.ts";
 // Fix round 1, RULING P3-B: probeReadWouldPrompt's boolean widened to this named 3-state result --
 // imported (type-only, erased at build time; no runtime cycle since evaluator.ts never imports this
 // file) rather than hand-copying the `"silent" | "prompt" | "deny"` literal union in two places.
@@ -339,6 +340,12 @@ export interface ToolExecutionContext {
    * a row with no modality facts, the same default `ModelDescription.readsImages` has.
    */
   modelReadsImages?: boolean;
+  /**
+   * 0.0.80: the class of the model the session is on RIGHT NOW (its catalog row's `strength`), for the read-before-edit
+   * rule (`tools/impl/read-ladder.ts`): strong and medium may edit what they haven't read; weak must have read the lines
+   * it edits. Absent reads as weak.
+   */
+  editStrength?: EditStrength;
   sessionId: string;
   readState: SessionReadState;
   // Phase 3 Task 2 (WS-06 §3.5): narrowed from Task 1's placeholder `unknown` now that the real,
@@ -1795,6 +1802,8 @@ export interface RegistryToolExecutorDeps {
   home: string;
   /** Code-mode images: read per call, so a `set_model` since the last call is seen -- see `ToolExecutionContext.modelReadsImages`. */
   modelReadsImages?: () => boolean;
+  /** 0.0.80: read per call, so a `set_model` since the last call is seen -- see `ToolExecutionContext.editStrength`. */
+  editStrength?: () => EditStrength;
   /** Phase 5 fix wave, I1: the resolved winter root -- see `ToolExecutionContext.winterHome`. */
   winterHome?: string;
   /** WS-21 fix round 1, item 4: the shared store home -- see `ToolExecutionContext.storeHome`. */
@@ -1914,6 +1923,7 @@ export function buildRegistryToolExecutor(deps: RegistryToolExecutorDeps): Engin
         ...(deps.settingSources !== undefined ? { settingSources: deps.settingSources } : {}),
         ...(deps.brand !== undefined ? { brand: deps.brand } : {}),
         ...(deps.modelReadsImages !== undefined ? { modelReadsImages: deps.modelReadsImages() } : {}),
+        ...(deps.editStrength !== undefined ? { editStrength: deps.editStrength() } : {}),
         sessionId: deps.sessionId,
         readState: deps.readState,
         emitFrame: deps.emitFrame,

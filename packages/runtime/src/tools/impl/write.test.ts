@@ -139,12 +139,10 @@ describe("Write -- overwriting an existing file honors the ladder", () => {
       const result = await writeExecutor().execute({ file_path: "existing.txt", content: "changed" }, makeCtx(dir));
       expect(result.isError).toBe(true);
       expect(readFileSync(filePath, "utf8")).toBe("original");
-      // T8 rider (Lane B review, "executor-level deny mirror"): a NEVER-read denial surfaces
-      // read-ladder.ts's own ORDINARY rung-2 reason, never the Write-overwrite-only override's
-      // distinct wording -- the model-visible message is what actually lets a caller tell these two
-      // denial classes apart, not just an opaque isError flag.
-      expect(result.output).toContain("has not been read");
-      expect(result.output).not.toContain("partially-read");
+      // 0.0.80: no class is weak; a weak model's Write over an existing file needs every line read, and the refusal
+      // names the lines to read (read-ladder.ts `evaluateEditRead`).
+      expect(result.output).toContain("Write replaces the whole file");
+      expect(result.output).toContain("Read line 1 first (offset 1, limit 1)");
     } finally {
       cleanup();
     }
@@ -178,13 +176,9 @@ describe("Write -- overwriting an existing file honors the ladder", () => {
       const result = await writeExecutor().execute({ file_path: "existing.txt", content: "changed" }, makeCtx(dir, { readState: state, probe: "silent" }));
       expect(result.isError).toBe(true);
       expect(readFileSync(filePath, "utf8")).toBe("original");
-      // T8 rider (Lane B review, "executor-level deny mirror"): mirrors the read-ladder.ts unit
-      // fixture's own distinction end to end -- a PARTIAL-read denial surfaces the override's own
-      // distinct wording, never the generic "has not been read" reason a never-read file gets (the
-      // two are different failure classes with different remediation: "read it first" vs "read it
-      // AGAIN, completely, before overwriting").
-      expect(result.output).toContain("needs a complete, up-to-date read");
-      expect(result.output).not.toContain("has not been read in this session");
+      // 0.0.80: a partial read with no lines recorded covers nothing, so the weak rule names the lines still to read.
+      expect(result.output).toContain("Write replaces the whole file");
+      expect(result.output).toContain("Read line 1 first");
     } finally {
       cleanup();
     }
