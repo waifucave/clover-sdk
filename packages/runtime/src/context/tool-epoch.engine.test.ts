@@ -395,6 +395,30 @@ describe("a tool that is removed and comes back (an eager tool must never be ref
     expect(attachments.map((a) => a.type)).toEqual(["tool_epoch", "tool_changes", "tool_epoch"]);
   });
 
+  test("a plugin tool eager in the first request that is removed and installed again with a CHANGED definition: by value on an inline row, a new epoch on a reference-only row; never a reference", async () => {
+    for (const row of [INLINE_ROW, REFERENCE_ROW]) {
+      addTool("zz_readd_a");
+      addTool("mcp__zz_readd_plugin__echo");
+      const { requests } = await drive({
+        describe: row,
+        steps: [
+          { user: "one" },
+          { act: () => dropTool("mcp__zz_readd_plugin__echo") },
+          { user: "two" },
+          { act: () => addTool("mcp__zz_readd_plugin__echo", "echo, updated by a plugin update") },
+          { user: "three" },
+        ],
+      });
+      expect(requests).toHaveLength(3);
+      for (const req of requests) expect(undeferredReferences(req)).toEqual([]);
+      const last = changesOf(requests[2]!).flatMap((c) => c.add.map((a) => a.type));
+      if (row === INLINE_ROW) expect(last).toEqual(["definition"]);
+      else expect(changesOf(requests[2]!)).toEqual([]);
+      dropTool("zz_readd_a");
+      dropTool("mcp__zz_readd_plugin__echo");
+    }
+  });
+
   test("a tool the epoch declared DEFERRED late may still come back by reference (the reference is to a deferred declaration)", async () => {
     addTool("zz_readd_a");
     const { requests } = await drive({
