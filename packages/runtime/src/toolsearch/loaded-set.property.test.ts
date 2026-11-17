@@ -85,14 +85,27 @@ async function session(seed: number): Promise<void> {
   try {
     let history: ProviderMessage[] = [];
     let deferred = rand() < 0.5;
+    let present = true;
     register(deferred);
-    for (let phase = 0; phase < 4; phase++) {
-      if (phase > 0 && rand() < 0.6) {
-        deferred = !deferred; // the person flips the setting; the runtime is reopened (this run) on the same history
-        register(deferred);
+    for (let phase = 0; phase < 5; phase++) {
+      if (phase > 0) {
+        const roll = rand();
+        if (present && roll < 0.3) {
+          // The person turns the tool OFF: it leaves the live registry (a tool_removal for the epoch that declared it).
+          unregisterMcpServerTools(server);
+          present = false;
+        } else if (!present && roll < 0.7) {
+          // ... and later back on, eager or on demand.
+          deferred = rand() < 0.5;
+          register(deferred);
+          present = true;
+        } else if (present && roll < 0.8) {
+          deferred = !deferred; // the setting flips; the runtime is reopened (this run) on the same history
+          register(deferred);
+        }
       }
-      const search = rand() < 0.35;
-      trace.push(`${deferred ? "D" : "E"}${search ? "+search" : ""}`);
+      const search = present && rand() < 0.35;
+      trace.push(`${!present ? "OFF" : deferred ? "D" : "E"}${search ? "+search" : ""}`);
       const script: ProviderTurn[] = search
         ? [{ kind: "tool_use", calls: [{ id: "s1", name: select, input: {} }] }, { kind: "tool_use", calls: [{ id: "c1", name: canonical, input: {} }] }, { kind: "text", text: "done" }]
         : [{ kind: "tool_use", calls: [{ id: "c1", name: canonical, input: {} }] }, { kind: "text", text: "done" }];
@@ -108,7 +121,7 @@ async function session(seed: number): Promise<void> {
         if (m.toolChanges.remove.includes(canonical)) changeState = false;
         for (const a of m.toolChanges.add) if (a.name === canonical) changeState = true;
       }
-      const offered = declared !== undefined && changeState !== false && (declared.deferLoading !== true || referencedInHistory || changeState === true);
+      const offered = present && declared !== undefined && changeState !== false && (declared.deferLoading !== true || referencedInHistory || changeState === true);
       const userFrames = frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
       const results = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content);
       const call = results.find((b) => b.tool_use_id === "c1");
@@ -117,7 +130,11 @@ async function session(seed: number): Promise<void> {
         throw new Error(`seed ${seed}: ${why}\n  trace: ${trace.join(" | ")}\n  declared=${JSON.stringify(declared)} offered=${offered} answered=${answered.slice(0, 120)}`);
       };
       if (offered && answered !== "real result") fail("a tool the request offers as callable was refused");
-      if (!offered && answered === "real result") fail("a tool the request does not offer ran");
+      // A tool the live registry has (on demand) and the history already loaded may still run when the epoch
+      // withdrew and the person re-enabled it: the setting allows it and the gate's loaded set says so. A tool
+      // that is OFF in the live registry never runs, whatever any request offered.
+      const mayRun = offered || (present && referencedInHistory);
+      if (!mayRun && answered === "real result") fail(present ? "a tool the request does not offer ran" : "a tool that is off in the registry ran");
       // The history the next reopen reads: the user turn, this run's attachments, the tool round, the reply.
       history = [
         ...history,
@@ -135,7 +152,7 @@ async function session(seed: number): Promise<void> {
 
 describe("loaded set across reopens (generated, seeded)", () => {
   test("a tool a request offers as callable is never refused by the load-first gate; one it does not offer never runs", async () => {
-    for (let seed = 1; seed <= 60; seed++) await session(seed);
+    for (let seed = 1; seed <= 80; seed++) await session(seed);
   });
   test("reproducible", async () => {
     await session(7);
