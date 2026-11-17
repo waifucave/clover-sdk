@@ -222,23 +222,46 @@ function diffAnthropic(live: readonly ProviderToolSpec[], state: ToolState, mech
         // definitions into context, which is the cost deferral exists to avoid.
         if (!hasEagerDeclared) return { kind: "new-epoch", reason: "no non-deferred tool is declared, so a late deferred declaration would be refused" };
         declarations.push({ ...spec });
+        // Already callable by a by-value definition (an earlier addition of this name): a changed
+        // definition is redefined now, not a request later.
+        if (have !== undefined && toolDefinitionKey(have) !== toolDefinitionKey(spec)) add.push(definition(spec));
         continue;
       }
-      if (toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) continue;
-      // The declared (deferred) definition is stale. Visible already -> redefine it by value where the row
-      // can; still hidden -> a later reference would surface the OLD definition, so the epoch restarts.
+      // What the model has now: the by-value definition if one was sent, else the frozen declaration.
+      // Compared FIRST and always: a revert to the frozen bytes after a by-value redefinition is a change
+      // too (the model still holds the redefinition), and once a definition was sent by value the frozen
+      // bytes stay stale forever, so comparing to them re-sent it on every request.
+      const current = have ?? declaredAs;
+      if (toolDefinitionKey(current) === toolDefinitionKey(spec)) {
+        // Hidden (nothing available) behind an EAGER declaration: ToolSearch surfaces every live deferred
+        // tool with a `tool_reference` (`loadedTools`, engine.ts `planToolsForRequest`), and that would name
+        // a declaration without `defer_loading` -- the stricter reading refuses it. Restart the epoch: the
+        // new declaration comes out deferred. (An eager tool that stays AVAILABLE while set to on demand
+        // keeps its eager declaration and stays callable; nothing here hides it.)
+        if (have === undefined && declaredAs.deferLoading !== true) return { kind: "new-epoch", reason: `the tool "${spec.name}" is now deferred, but its declaration is not` };
+        continue;
+      }
+      // Stale. Visible already -> redefine it by value where the row can; still hidden -> a later reference
+      // would surface the OLD definition, so the epoch restarts.
       if (have !== undefined && inline) add.push(definition(spec));
       else return { kind: "new-epoch", reason: `the deferred tool "${spec.name}" changed its definition` };
       continue;
     }
     if (have === undefined) {
-      if (declaredAs !== undefined && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) add.push({ type: "reference", name: spec.name });
+      // A tool `tools` declares EAGER is in context from the first request; the tool-search page says a
+      // referenced tool is "normally" declared `defer_loading: true`, and a host's request check can refuse
+      // a reference to anything else (`tool_reference_unresolved`). The mid-conversation page, read alone,
+      // lets `tool_addition` re-offer a withdrawn tool, so this takes the STRICTER reading on purpose: a
+      // returning eager tool is re-added by value, or the epoch restarts on a row that cannot.
+      const eagerDeclared = declaredAs !== undefined && declaredAs.deferLoading !== true;
+      if (declaredAs !== undefined && !eagerDeclared && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) add.push({ type: "reference", name: spec.name });
       else if (inline) add.push(definition(spec));
       else if (declaredAs === undefined) {
         if (!hasEagerDeclared) return { kind: "new-epoch", reason: "no non-deferred tool is declared, so a late deferred declaration would be refused" };
         declarations.push({ ...spec, deferLoading: true });
         add.push({ type: "reference", name: spec.name });
-      } else return { kind: "new-epoch", reason: `the tool "${spec.name}" changed its definition, which a reference-only row cannot express` };
+      } else if (eagerDeclared && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) return { kind: "new-epoch", reason: `the tool "${spec.name}" returned but is declared non-deferred, which a reference-only row cannot re-add` };
+      else return { kind: "new-epoch", reason: `the tool "${spec.name}" changed its definition, which a reference-only row cannot express` };
       continue;
     }
     if (toolDefinitionKey(have) === toolDefinitionKey(spec)) continue;
@@ -268,6 +291,18 @@ function diffOpenAi(live: readonly ProviderToolSpec[], state: ToolState, caps: T
   const extra = allowedTools !== undefined ? { allowedTools } : {};
   if (add.length === 0) return { kind: "same", ...extra };
   return { kind: "change", change: { declare: [], remove: [], add }, ...extra };
+}
+
+/**
+ * The names of a ToolSearch result that may ride it as a `tool_reference`: those `declared` declares
+ * DEFERRED. A name whose frozen declaration is eager (a tool set to "on demand" mid-session, still
+ * available) is already in context -- it stays callable, the search answers with no reference, and
+ * "on demand" takes full effect at the next epoch. A name `declared` does not list is kept (not this
+ * epoch's to judge).
+ */
+export function referenceableLoadedNames(declared: readonly ProviderToolSpec[], names: readonly string[]): string[] {
+  const eager = new Set(declared.filter((t) => t.deferLoading !== true).map((t) => t.name));
+  return names.filter((name) => !eager.has(name));
 }
 
 function definition(spec: ProviderToolSpec): ToolChangeSet["add"][number] {
