@@ -5,7 +5,7 @@
 import { describe, expect, test } from "bun:test";
 import type { ProviderMessage, ProviderToolSpec } from "../engine.ts";
 import { attachmentMessage } from "./attachments.ts";
-import { activeToolEpoch, diffToolState, epochChangeMessages, epochToolsFor, foldToolState, toolDefinitionKey, type ToolChangeMechanism, type ToolChangesAttachment, type ToolEpochAttachment } from "./tool-epoch.ts";
+import { activeToolEpoch, diffToolState, epochChangeMessages, epochToolsFor, foldToolState, referenceableLoadedNames, toolDefinitionKey, type ToolChangeMechanism, type ToolChangesAttachment, type ToolEpochAttachment } from "./tool-epoch.ts";
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -72,9 +72,12 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
       } else if (kind === "surface") {
         const hidden = [...live.values()].filter((t) => t.deferLoading === true);
         if (hidden.length > 0) {
+          // ANY live deferred tool, including one whose frozen declaration is eager (set to on demand while
+          // available). The engine's own filter decides what rides the result as a `tool_reference`.
           const t = pick(hidden);
-          referenced.add(t.name);
-          trace.push(`?${t.name}`);
+          const surfaced = referenceableLoadedNames(stateNow().declared, [t.name]);
+          for (const name of surfaced) referenced.add(name);
+          trace.push(`?${t.name}${surfaced.length === 0 ? "(no ref)" : ""}`);
         }
       } else if (kind === "change" && present.length > 0) {
         const t = pick(present);
@@ -126,6 +129,12 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
       }
       if (declaration === undefined) fail(`live deferred tool "${spec.name}" is not declared`);
       else if (have === undefined || toolDefinitionKey(have) !== toolDefinitionKey(spec)) fail(`live deferred tool "${spec.name}" has an eager declaration and is hidden or stale`);
+    }
+    // Every reference a ToolSearch result carried names a deferred declaration (checked over the results, not
+    // only over the diff's rows).
+    for (const name of referenced) {
+      const declaration = after.declared.find((t) => t.name === name);
+      if (declaration !== undefined && declaration.deferLoading !== true) fail(`a ToolSearch result referenced "${name}", whose declaration is eager`);
     }
     const liveNames = new Set(liveList().map((t) => t.name));
     for (const name of after.available.keys()) if (!liveNames.has(name)) fail(`withdrawn tool "${name}" is still callable`);

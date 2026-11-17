@@ -11,6 +11,7 @@ import {
   epochChangeMessages,
   epochToolsFor,
   foldToolState,
+  referenceableLoadedNames,
   type ToolChangeMechanism,
   type ToolChangesAttachment,
   type ToolEpochAttachment,
@@ -267,5 +268,12 @@ describe("the request layout replays the entries", () => {
   test("a deferred tool announced by reference in the CURRENT epoch counts as referenced; an earlier epoch's announcement does not", () => {
     expect(referencedToolNames(history).has("C")).toBe(true);
     expect(referencedToolNames([...history, epoch([spec("A")])]).has("C")).toBe(false);
+  });
+});
+
+describe("what a ToolSearch result may reference", () => {
+  test("a name whose frozen declaration is eager is left out of the references (it is already callable); a deferred one and an unknown one are kept", () => {
+    const declared = [spec("A"), spec("B", "B tool", { deferLoading: true })];
+    expect(referenceableLoadedNames(declared, ["A", "B", "Z"])).toEqual(["B", "Z"]);
   });
 });

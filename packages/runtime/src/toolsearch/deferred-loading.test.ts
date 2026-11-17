@@ -45,7 +45,7 @@ function fixture(tag: string): Fixture {
   };
 }
 
-async function drive(opts: { f: Fixture; script: ProviderTurn[]; describe?: ModelDescription; initialMessages?: ProviderMessage[] }): Promise<{ requests: ProviderRequest[]; frames: WinterFrame[] }> {
+async function drive(opts: { f: Fixture; script: ProviderTurn[]; describe?: ModelDescription; initialMessages?: ProviderMessage[]; onRequest?: (index: number) => void }): Promise<{ requests: ProviderRequest[]; frames: WinterFrame[] }> {
   const requests: ProviderRequest[] = [];
   const { host, runtime } = createInMemoryChannel();
   const config: RuntimeConfig = { sessionId: `ws23-deferred-${Math.random().toString(36).slice(2)}`, cwd: "/tmp/x", model: "winter-test/echo", permissionMode: "bypassPermissions", allowDangerouslySkipPermissions: true, toolSearchEnabled: true, capabilities: ["winter.mcp"] };
@@ -57,6 +57,7 @@ async function drive(opts: { f: Fixture; script: ProviderTurn[]; describe?: Mode
     provider: {
       async generate(req) {
         requests.push({ ...req, messages: structuredClone(req.messages), ...(req.tools !== undefined ? { tools: structuredClone(req.tools) } : {}) });
+        opts.onRequest?.(requests.length - 1);
         return opts.script[requests.length - 1] ?? { kind: "text", text: "done" };
       },
     },
@@ -101,6 +102,40 @@ describe("deferred tool loading (WS-23 item 3)", () => {
       const call2 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-2");
       expect(call2?.content).toBe("real result");
       expect(isSorted(names(requests[0]!))).toBe(true);
+    } finally {
+      f.dispose();
+    }
+  });
+
+  test("a tool eager at the first request and set to ON DEMAND mid-session is never surfaced by reference (its declaration is eager); it stays callable", async () => {
+    const f = fixture("ondemand");
+    const server = f.canonical.split("__")[1]!;
+    // The fixture registers the tool deferred; start it EAGER, then move it to on demand while the model works.
+    unregisterMcpServerTools(server);
+    registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: false });
+    replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+    try {
+      const { requests, frames } = await drive({
+        f,
+        describe: { wire: { deferredToolLoading: true, toolChanges: "inline" } },
+        onRequest: (index) => {
+          if (index !== 0) return;
+          unregisterMcpServerTools(server);
+          registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: true });
+          replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+        },
+        script: [{ kind: "tool_use", calls: [{ id: "call-1", name: f.select, input: {} }] }, { kind: "tool_use", calls: [{ id: "call-2", name: f.canonical, input: {} }] }, { kind: "text", text: "done" }],
+      });
+      expect(requests).toHaveLength(3);
+      // The frozen declaration is eager, and nothing later references it.
+      expect(requests[0]!.tools!.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      expect(toolResults(requests[1]!).find((b) => b.tool_use_id === "call-1")?.loadedTools).toBeUndefined();
+      const everyReference = requests[2]!.messages.flatMap((m) => (m.toolChanges?.add ?? []).filter((a) => a.type === "reference").map((a) => a.name));
+      expect(everyReference).not.toContain(f.canonical);
+      // Already callable: the load still counted for the dispatch.
+      const userFrames = frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
+      const call2 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-2");
+      expect(call2?.content).toBe("real result");
     } finally {
       f.dispose();
     }

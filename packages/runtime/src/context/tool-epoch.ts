@@ -293,6 +293,18 @@ function diffOpenAi(live: readonly ProviderToolSpec[], state: ToolState, caps: T
   return { kind: "change", change: { declare: [], remove: [], add }, ...extra };
 }
 
+/**
+ * The names of a ToolSearch result that may ride it as a `tool_reference`: those `declared` declares
+ * DEFERRED. A name whose frozen declaration is eager (a tool set to "on demand" mid-session, still
+ * available) is already in context -- it stays callable, the search answers with no reference, and
+ * "on demand" takes full effect at the next epoch. A name `declared` does not list is kept (not this
+ * epoch's to judge).
+ */
+export function referenceableLoadedNames(declared: readonly ProviderToolSpec[], names: readonly string[]): string[] {
+  const eager = new Set(declared.filter((t) => t.deferLoading !== true).map((t) => t.name));
+  return names.filter((name) => !eager.has(name));
+}
+
 function definition(spec: ProviderToolSpec): ToolChangeSet["add"][number] {
   return { type: "definition", name: spec.name, description: spec.description, inputSchema: spec.inputSchema };
 }

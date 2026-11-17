@@ -257,6 +257,7 @@ import {
   epochChangeMessages,
   epochToolsFor,
   foldToolState,
+  referenceableLoadedNames,
   TOOL_CHANGES_ATTACHMENT,
   TOOL_EPOCH_ATTACHMENT,
   isToolBookkeeping,
@@ -3514,6 +3515,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   };
   let forceNewToolEpoch = false;
   let toolEpochRestartLogged = false;
+  // This request's declared `tools` (an Anthropic epoch's frozen list), or undefined when no epoch rules. A ToolSearch result must never carry a `tool_reference` to one of them:
+  // a tool set to "on demand" mid-session keeps its eager declaration and stays callable, so the search
+  // answers for it with no reference (it is already loaded); "on demand" takes full effect at the next
+  // epoch. Set by `planToolsForRequest`, read where a tool round records its `loadedTools`.
+  let epochDeclaredTools: readonly ProviderToolSpec[] | undefined;
   // WS-23: the last MAIN-LOOP response's id and the model it came from -- the next request's
   // `cacheDiagnostics.previousMessageId`. Cleared by a compaction (the history it fingerprinted is gone).
   let lastMainResponse: { id: string; modelKey: string | undefined } | undefined;
@@ -8968,6 +8974,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
    * vendor's opt-in rides the request. Appends (and persists) a new epoch or change entry when needed.
    */
   const planToolsForRequest = async (): Promise<ToolPlan> => {
+    epochDeclaredTools = undefined;
     const live = providerToolSpecs();
     const chosen = toolChangeMechanism();
     if (chosen === undefined) return { tools: live };
@@ -9043,6 +9050,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
         if (restricted.length < base.length || allowedTools !== undefined) allowedTools = restricted;
       }
     }
+    if (mechanism !== "openai") epochDeclaredTools = state.declared;
     return { tools, ...(allowedTools !== undefined ? { allowedTools } : {}), toolChanges: { render: new Set(changes) }, ...optIn };
   };
 
@@ -10869,7 +10877,9 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           // An interrupt walks away from the execution below, but a LANE stays held until it has really stopped.
           mode.onExecution?.(execution);
           const raced = await raceInterrupt(execution, interruptSignal);
-          const loadedTools = mode.concurrent ? [] : advertisedNamesFor(toolReferenceCollector);
+          // Loaded for the dispatch either way (`emitToolReference` did), but only a tool declared deferred is
+          // surfaced BY REFERENCE: one whose frozen declaration is eager is already in context.
+          const loadedTools = mode.concurrent ? [] : epochDeclaredTools !== undefined ? referenceableLoadedNames(epochDeclaredTools, advertisedNamesFor(toolReferenceCollector)) : advertisedNamesFor(toolReferenceCollector);
           if (!mode.concurrent) toolReferenceCollector = undefined;
           const loadedToolDefinitions = loadedDefinitionsFor(loadedTools);
           // WS-24: a FORK's frozen `tools` cannot carry what it just loaded (see `providerToolSpecs`), so
