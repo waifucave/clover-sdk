@@ -40,16 +40,19 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
   };
   const epochMessage = (tools: ProviderToolSpec[]): ProviderMessage => attachmentMessage({ type: "tool_epoch", mechanism, modelKey: "m", tools } satisfies ToolEpochAttachment)!;
   let history: ProviderMessage[] = [{ role: "user", content: "go" }, epochMessage(epochToolsFor(liveList(), mechanism))];
+  // Deferred tools the host's ToolSearch surfaced (`loadedTools`): the engine surfaces ANY live deferred
+  // tool by `tool_reference`, so one is callable through its declaration. A new epoch retires them.
+  const referenced = new Set<string>();
   const stateNow = () => {
     const active = activeToolEpoch(history, mechanism, "m")!;
-    return foldToolState(active.epoch, epochChangeMessages(history, active.index, mechanism));
+    return foldToolState(active.epoch, epochChangeMessages(history, active.index, mechanism), referenced);
   };
   for (let step = 0; step < 14; step++) {
     // One turn: one to three events.
     for (let n = 1 + Math.floor(rand() * 3); n > 0; n--) {
       const absent = POOL.filter((t) => !live.has(t));
       const present = [...live.keys()].filter((t) => t !== "zz_anchor");
-      const kind = pick(["remove", "back-same", "back-changed", "new", "change"]);
+      const kind = pick(["remove", "back-same", "back-changed", "new", "change", "flip", "surface"]);
       if (kind === "remove" && present.length > 0) {
         const t = pick(present);
         live.delete(t);
@@ -60,6 +63,19 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
         if (!version.has(t) || kind === "new") deferredName.set(t, rand() < 0.4);
         put(t);
         trace.push(`+${t}${kind === "back-changed" ? "*" : ""}${deferredName.get(t) ? "d" : ""}`);
+      } else if (kind === "flip" && present.length > 0) {
+        // A PRESENT tool moves between eager and on demand (a setting changed mid-session).
+        const t = pick(present);
+        deferredName.set(t, deferredName.get(t) !== true);
+        put(t);
+        trace.push(`^${t}${deferredName.get(t) ? "d" : "e"}`);
+      } else if (kind === "surface") {
+        const hidden = [...live.values()].filter((t) => t.deferLoading === true);
+        if (hidden.length > 0) {
+          const t = pick(hidden);
+          referenced.add(t.name);
+          trace.push(`?${t.name}`);
+        }
       } else if (kind === "change" && present.length > 0) {
         const t = pick(present);
         version.set(t, (version.get(t) ?? 0) + 1);
@@ -72,6 +88,7 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
     trace.push(diff.kind === "same" ? "same" : diff.kind);
     if (diff.kind === "new-epoch") {
       history = [...history, epochMessage(epochToolsFor(liveList(), mechanism))];
+      referenced.clear();
     } else if (diff.kind === "change") {
       const declaredAfter = new Map(state.declared.map((t) => [t.name, t] as const));
       for (const d of diff.change.declare) {
@@ -96,6 +113,19 @@ function runSequence(seed: number, mechanism: "anthropic-reference" | "anthropic
       const have = after.available.get(spec.name);
       if (have === undefined) fail(`live tool "${spec.name}" is not callable after the step`);
       else if (toolDefinitionKey(have!) !== toolDefinitionKey(spec)) fail(`live tool "${spec.name}" has a stale definition after the step`);
+    }
+    // Every live deferred tool: its declaration is deferred (ToolSearch may surface it by reference), or it is
+    // available with the current definition (an eager tool that stays callable while set to on demand).
+    for (const spec of liveList()) {
+      if (spec.deferLoading !== true) continue;
+      const declaration = after.declared.find((t) => t.name === spec.name);
+      const have = after.available.get(spec.name);
+      if (declaration !== undefined && declaration.deferLoading === true) {
+        if (have !== undefined && toolDefinitionKey(have) !== toolDefinitionKey(spec)) fail(`live deferred tool "${spec.name}" is callable with a stale definition`);
+        continue;
+      }
+      if (declaration === undefined) fail(`live deferred tool "${spec.name}" is not declared`);
+      else if (have === undefined || toolDefinitionKey(have) !== toolDefinitionKey(spec)) fail(`live deferred tool "${spec.name}" has an eager declaration and is hidden or stale`);
     }
     const liveNames = new Set(liveList().map((t) => t.name));
     for (const name of after.available.keys()) if (!liveNames.has(name)) fail(`withdrawn tool "${name}" is still callable`);

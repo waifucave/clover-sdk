@@ -145,6 +145,26 @@ describe("the diff table, by value (`inline-tools-2026-09-15`)", () => {
     expect(diff).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "definition", name: "B", description: "B, reworded", inputSchema: { type: "object" } }] } });
   });
 
+  test("S1: a deferred tool redefined by value and then REVERTED to its frozen definition is redefined back, not left on the redefinition", () => {
+    const base = [{ role: "user" as const, content: "go" }, epoch([spec("A"), spec("D", "D v0", { deferLoading: true })], "anthropic-inline"), changes({ declare: [], remove: [], add: [{ type: "reference", name: "D" }] }, "anthropic-inline")];
+    const toB = diffToolState([spec("A"), spec("D", "D v1", { deferLoading: true })], stateOf(base, "anthropic-inline"), "anthropic-inline");
+    expect(toB).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "definition", name: "D", description: "D v1", inputSchema: { type: "object" } }] } });
+    if (toB.kind !== "change") throw new Error("unreachable");
+    const afterB = [...base, changes(toB.change, "anthropic-inline")];
+    expect(diffToolState([spec("A"), spec("D", "D v1", { deferLoading: true })], stateOf(afterB, "anthropic-inline"), "anthropic-inline")).toEqual({ kind: "same" });
+    expect(diffToolState([spec("A"), spec("D", "D v0", { deferLoading: true })], stateOf(afterB, "anthropic-inline"), "anthropic-inline")).toEqual({
+      kind: "change",
+      change: { declare: [], remove: [], add: [{ type: "definition", name: "D", description: "D v0", inputSchema: { type: "object" } }] },
+    });
+  });
+
+  test("S2: an eager tool withdrawn and back as ON DEMAND restarts the epoch (ToolSearch would reference an eager declaration); one that stays available is left alone", () => {
+    const eager = [{ role: "user" as const, content: "go" }, epoch([spec("A"), spec("B")], "anthropic-inline")];
+    const gone = [...eager, changes({ declare: [], remove: ["B"], add: [] }, "anthropic-inline")];
+    expect(diffToolState([spec("A"), spec("B", "B tool", { deferLoading: true })], stateOf(gone, "anthropic-inline"), "anthropic-inline").kind).toBe("new-epoch");
+    expect(diffToolState([spec("A"), spec("B", "B tool", { deferLoading: true })], stateOf(eager, "anthropic-inline"), "anthropic-inline")).toEqual({ kind: "same" });
+  });
+
   test("a tool added by value and later withdrawn is removed by reference", () => {
     const after = [...history, changes({ declare: [], remove: [], add: [{ type: "definition", name: "C", description: "C tool", inputSchema: { type: "object" } }] }, "anthropic-inline")];
     expect(diffToolState([spec("A"), spec("B")], stateOf(after, "anthropic-inline"), "anthropic-inline")).toEqual({ kind: "change", change: { declare: [], remove: ["C"], add: [] } });
