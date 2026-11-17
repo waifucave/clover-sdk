@@ -351,6 +351,63 @@ describe("the tool epoch, by value (a row with `inlineToolDefinitions`)", () => 
   });
 });
 
+/** The provider's rule, stricter reading: a `tool_reference` may name only a tool `tools` declares with `defer_loading`. */
+function undeferredReferences(req: ProviderRequest): string[] {
+  const eager = new Set((req.tools ?? []).filter((t) => t.deferLoading !== true).map((t) => t.name));
+  return changesOf(req).flatMap((c) => c.add.filter((a) => a.type === "reference" && eager.has(a.name)).map((a) => a.name));
+}
+
+describe("a tool that is removed and comes back (an eager tool must never be referenced)", () => {
+  test("by value: eager at the first request -> withdrawn -> back -> withdrawn -> back is re-added as a definition each time; no reference to an undeferred declaration", async () => {
+    addTool("zz_readd_a");
+    addTool("zz_readd_b");
+    const { requests } = await drive({
+      describe: INLINE_ROW,
+      steps: [{ user: "one" }, { act: () => dropTool("zz_readd_b") }, { user: "two" }, { act: () => addTool("zz_readd_b") }, { user: "three" }, { act: () => dropTool("zz_readd_b") }, { user: "four" }, { act: () => addTool("zz_readd_b") }, { user: "five" }],
+    });
+    expect(requests).toHaveLength(5);
+    for (const req of requests) expect(undeferredReferences(req)).toEqual([]);
+    const last = changesOf(requests[4]!).map(({ remove, add }) => ({ remove, add: add.map((a) => `${a.type}:${a.name}`) }));
+    expect(last).toEqual([
+      { remove: ["zz_readd_b"], add: [] },
+      { remove: [], add: ["definition:zz_readd_b"] },
+      { remove: ["zz_readd_b"], add: [] },
+      { remove: [], add: ["definition:zz_readd_b"] },
+    ]);
+    // `tools` is the frozen list, byte-identical, throughout.
+    for (const req of requests) expect(JSON.stringify(req.tools)).toBe(JSON.stringify(requests[0]!.tools));
+    for (let i = 1; i < requests.length; i++) expect(isPrefix(requests[i - 1]!, requests[i]!)).toBe(true);
+  });
+
+  test("by reference only: the same sequence restarts the epoch (a full `tools` rebuild) instead of referencing the eager declaration", async () => {
+    addTool("zz_readd_a");
+    addTool("zz_readd_b");
+    const { requests } = await drive({
+      describe: REFERENCE_ROW,
+      steps: [{ user: "one" }, { act: () => dropTool("zz_readd_b") }, { user: "two" }, { act: () => addTool("zz_readd_b") }, { user: "three" }],
+    });
+    expect(requests).toHaveLength(3);
+    for (const req of requests) expect(undeferredReferences(req)).toEqual([]);
+    expect(names(requests[2]!)).toContain("zz_readd_b");
+    expect(changesOf(requests[2]!).every((c) => c.add.length === 0)).toBe(true);
+  });
+
+  test("a tool the epoch declared DEFERRED late may still come back by reference (the reference is to a deferred declaration)", async () => {
+    addTool("zz_readd_a");
+    const { requests } = await drive({
+      describe: REFERENCE_ROW,
+      steps: [{ user: "one" }, { act: () => addTool("aa_readd_late") }, { user: "two" }, { act: () => dropTool("aa_readd_late") }, { user: "three" }, { act: () => addTool("aa_readd_late") }, { user: "four" }],
+    });
+    expect(requests).toHaveLength(4);
+    for (const req of requests) expect(undeferredReferences(req)).toEqual([]);
+    expect(changesOf(requests[3]!).map(({ remove, add }) => ({ remove, add }))).toEqual([
+      { remove: [], add: [{ type: "reference", name: "aa_readd_late" }] },
+      { remove: ["aa_readd_late"], add: [] },
+      { remove: [], add: [{ type: "reference", name: "aa_readd_late" }] },
+    ]);
+  });
+});
+
 describe("the documented tool-change errors (inline)", () => {
   test("a 400 `tool_name_conflict` (a definition reusing a server tool's name) falls back once to today's rebuild, like any refused change", async () => {
     const errors: string[] = [];

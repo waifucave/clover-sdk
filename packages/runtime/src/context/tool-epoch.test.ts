@@ -51,11 +51,37 @@ describe("the diff table, by reference (`mid-conversation-tool-changes-2026-07-0
     expect(buildRequestMessages(after, undefined, { toolChanges: { render: new Set([after.at(-1)!]) } }).some((m) => m.toolChanges !== undefined)).toBe(false);
   });
 
-  test("a withdrawn tool is removed by reference; re-offering it later is a reference addition, never a new declaration", () => {
+  test("a withdrawn DEFERRED-declared tool is removed by reference; re-offering it later is a reference addition, never a new declaration", () => {
+    const deferred = [{ role: "user" as const, content: "go" }, epoch([spec("A"), spec("D", "D tool", { deferLoading: true })])];
+    // D was loaded (a ToolSearch result), then withdrawn, then comes back: the declaration is deferred, so a reference is right.
+    const loaded = [...deferred, changes({ declare: [], remove: [], add: [{ type: "reference", name: "D" }] }), changes({ declare: [], remove: ["D"], add: [] })];
+    expect(diffToolState([spec("A"), spec("D", "D tool", { deferLoading: true })], stateOf(loaded), "anthropic-reference")).toEqual({ kind: "same" });
+    expect(diffToolState([spec("A"), spec("D", "D tool")], stateOf(loaded), "anthropic-reference")).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "reference", name: "D" }] } });
+  });
+
+  test("a withdrawn tool declared EAGER cannot return by reference (a tool_reference to an undeferred tool is refused): a new epoch on a reference-only row", () => {
     const removed = diffToolState([spec("A"), spec("D", "D tool", { deferLoading: true })], stateOf(history), "anthropic-reference");
     expect(removed).toEqual({ kind: "change", change: { declare: [], remove: ["B"], add: [] } });
     const after = [...history, changes({ declare: [], remove: ["B"], add: [] })];
-    expect(diffToolState([spec("A"), spec("B"), spec("D", "D tool", { deferLoading: true })], stateOf(after), "anthropic-reference")).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "reference", name: "B" }] } });
+    const back = diffToolState([spec("A"), spec("B"), spec("D", "D tool", { deferLoading: true })], stateOf(after), "anthropic-reference");
+    expect(back.kind).toBe("new-epoch");
+    if (back.kind === "new-epoch") expect(back.reason).toContain("non-deferred");
+  });
+
+  test("a tool declared deferred LATE (eager live, announced by reference) may leave and return by reference, any number of times", () => {
+    const late = [...history, changes({ declare: [spec("C", "C tool", { deferLoading: true })], remove: [], add: [{ type: "reference", name: "C" }] })];
+    const deferredD = spec("D", "D tool", { deferLoading: true });
+    let current = late;
+    for (let round = 0; round < 3; round++) {
+      const gone = diffToolState([spec("A"), spec("B"), deferredD], stateOf(current), "anthropic-reference");
+      expect(gone).toEqual({ kind: "change", change: { declare: [], remove: ["C"], add: [] } });
+      if (gone.kind !== "change") throw new Error("unreachable");
+      current = [...current, changes(gone.change)];
+      const back = diffToolState([spec("A"), spec("B"), spec("C"), deferredD], stateOf(current), "anthropic-reference");
+      expect(back).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "reference", name: "C" }] } });
+      if (back.kind !== "change") throw new Error("unreachable");
+      current = [...current, changes(back.change)];
+    }
   });
 
   test("a changed definition cannot be said by reference: a new epoch (today's rebuild, once)", () => {
@@ -95,6 +121,28 @@ describe("the diff table, by value (`inline-tools-2026-09-15`)", () => {
     expect(state.available.get("A")?.description).toBe("A, reworded");
     expect(state.declared.find((t) => t.name === "A")?.description).toBe("A tool");
     expect(diffToolState([redefined, spec("B")], state, "anthropic-inline")).toEqual({ kind: "same" });
+  });
+
+  test("a tool declared EAGER that is withdrawn and returns is re-added BY VALUE, never by reference -- twice over", () => {
+    let current: ProviderMessage[] = history;
+    const live = [spec("A"), spec("B")];
+    for (let round = 0; round < 2; round++) {
+      const gone = diffToolState([spec("A")], stateOf(current, "anthropic-inline"), "anthropic-inline");
+      expect(gone).toEqual({ kind: "change", change: { declare: [], remove: ["B"], add: [] } });
+      if (gone.kind !== "change") throw new Error("unreachable");
+      current = [...current, changes(gone.change, "anthropic-inline")];
+      const back = diffToolState(live, stateOf(current, "anthropic-inline"), "anthropic-inline");
+      expect(back).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "definition", name: "B", description: "B tool", inputSchema: { type: "object" } }] } });
+      if (back.kind !== "change") throw new Error("unreachable");
+      current = [...current, changes(back.change, "anthropic-inline")];
+      expect(diffToolState(live, stateOf(current, "anthropic-inline"), "anthropic-inline")).toEqual({ kind: "same" });
+    }
+  });
+
+  test("an eager tool that returns with a CHANGED definition is defined by value (unchanged behaviour)", () => {
+    const gone = [...history, changes({ declare: [], remove: ["B"], add: [] }, "anthropic-inline")];
+    const diff = diffToolState([spec("A"), spec("B", "B, reworded")], stateOf(gone, "anthropic-inline"), "anthropic-inline");
+    expect(diff).toEqual({ kind: "change", change: { declare: [], remove: [], add: [{ type: "definition", name: "B", description: "B, reworded", inputSchema: { type: "object" } }] } });
   });
 
   test("a tool added by value and later withdrawn is removed by reference", () => {

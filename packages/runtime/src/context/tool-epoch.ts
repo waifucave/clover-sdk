@@ -232,13 +232,20 @@ function diffAnthropic(live: readonly ProviderToolSpec[], state: ToolState, mech
       continue;
     }
     if (have === undefined) {
-      if (declaredAs !== undefined && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) add.push({ type: "reference", name: spec.name });
+      // A reference may only name a tool `tools` declares DEFERRED (`tool_reference` expands a deferred
+      // declaration; the docs say a referenced tool normally has `defer_loading: true`, and the stricter
+      // reading is the rule). A tool declared EAGER that was removed and comes back is already in context
+      // by its declaration, so a reference to it would name an undeferred tool: re-add it by value, or
+      // restart the epoch on a row that cannot.
+      const eagerDeclared = declaredAs !== undefined && declaredAs.deferLoading !== true;
+      if (declaredAs !== undefined && !eagerDeclared && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) add.push({ type: "reference", name: spec.name });
       else if (inline) add.push(definition(spec));
       else if (declaredAs === undefined) {
         if (!hasEagerDeclared) return { kind: "new-epoch", reason: "no non-deferred tool is declared, so a late deferred declaration would be refused" };
         declarations.push({ ...spec, deferLoading: true });
         add.push({ type: "reference", name: spec.name });
-      } else return { kind: "new-epoch", reason: `the tool "${spec.name}" changed its definition, which a reference-only row cannot express` };
+      } else if (eagerDeclared && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) return { kind: "new-epoch", reason: `the tool "${spec.name}" returned but is declared non-deferred, which a reference-only row cannot re-add` };
+      else return { kind: "new-epoch", reason: `the tool "${spec.name}" changed its definition, which a reference-only row cannot express` };
       continue;
     }
     if (toolDefinitionKey(have) === toolDefinitionKey(spec)) continue;
