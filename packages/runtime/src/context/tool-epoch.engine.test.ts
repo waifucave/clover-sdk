@@ -382,14 +382,17 @@ describe("a tool that is removed and comes back (an eager tool must never be ref
   test("by reference only: the same sequence restarts the epoch (a full `tools` rebuild) instead of referencing the eager declaration", async () => {
     addTool("zz_readd_a");
     addTool("zz_readd_b");
-    const { requests } = await drive({
+    const { requests, attachments } = await drive({
       describe: REFERENCE_ROW,
       steps: [{ user: "one" }, { act: () => dropTool("zz_readd_b") }, { user: "two" }, { act: () => addTool("zz_readd_b") }, { user: "three" }],
     });
     expect(requests).toHaveLength(3);
     for (const req of requests) expect(undeferredReferences(req)).toEqual([]);
+    // The fresh epoch declares the tool again, and replays no earlier removal of it (it would stay dead).
     expect(names(requests[2]!)).toContain("zz_readd_b");
-    expect(changesOf(requests[2]!).every((c) => c.add.length === 0)).toBe(true);
+    expect(requests[2]!.tools!.find((t) => t.name === "zz_readd_b")!.deferLoading).not.toBe(true);
+    expect(changesOf(requests[2]!)).toEqual([]);
+    expect(attachments.map((a) => a.type)).toEqual(["tool_epoch", "tool_changes", "tool_epoch"]);
   });
 
   test("a tool the epoch declared DEFERRED late may still come back by reference (the reference is to a deferred declaration)", async () => {

@@ -232,11 +232,11 @@ function diffAnthropic(live: readonly ProviderToolSpec[], state: ToolState, mech
       continue;
     }
     if (have === undefined) {
-      // A reference may only name a tool `tools` declares DEFERRED (`tool_reference` expands a deferred
-      // declaration; the docs say a referenced tool normally has `defer_loading: true`, and the stricter
-      // reading is the rule). A tool declared EAGER that was removed and comes back is already in context
-      // by its declaration, so a reference to it would name an undeferred tool: re-add it by value, or
-      // restart the epoch on a row that cannot.
+      // A tool `tools` declares EAGER is in context from the first request; the tool-search page says a
+      // referenced tool is "normally" declared `defer_loading: true`, and a host's request check can refuse
+      // a reference to anything else (`tool_reference_unresolved`). The mid-conversation page, read alone,
+      // lets `tool_addition` re-offer a withdrawn tool, so this takes the STRICTER reading on purpose: a
+      // returning eager tool is re-added by value, or the epoch restarts on a row that cannot.
       const eagerDeclared = declaredAs !== undefined && declaredAs.deferLoading !== true;
       if (declaredAs !== undefined && !eagerDeclared && toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) add.push({ type: "reference", name: spec.name });
       else if (inline) add.push(definition(spec));
