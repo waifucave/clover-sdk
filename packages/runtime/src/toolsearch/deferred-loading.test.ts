@@ -6,6 +6,8 @@
 import { describe, expect, test } from "bun:test";
 import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
+import { attachmentMessage } from "../context/attachments.ts";
+import type { ToolEpochAttachment } from "../context/tool-epoch.ts";
 import { runEngine, type ContentBlock, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { registerMcpServerTools, registerTool, replaceExecutor, unregisterMcpServerTools, unregisterToolForTest } from "../tools/registry.ts";
 import { createFakeMcpServerStateSource } from "../mcp/state.ts";
@@ -136,6 +138,95 @@ describe("deferred tool loading (WS-23 item 3)", () => {
       const userFrames = frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
       const call2 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-2");
       expect(call2?.content).toBe("real result");
+    } finally {
+      f.dispose();
+    }
+  });
+
+  test("a RESUMED session whose epoch declared a tool eager, while the live registry now marks it on demand: the declared tool is callable (the load-first gate agrees with the request)", async () => {
+    const f = fixture("reopen");
+    const server = f.canonical.split("__")[1]!;
+    const row: ModelDescription = { wire: { deferredToolLoading: true, toolChanges: "inline" } };
+    const register = (deferred: boolean): void => {
+      unregisterMcpServerTools(server);
+      registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: deferred });
+      replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+    };
+    try {
+      // The first run: the tool is EAGER, so the epoch freezes it as an eager declaration.
+      register(false);
+      const first = await drive({ f, describe: row, script: [{ kind: "text", text: "ok" }] });
+      const frozen = first.requests[0]!.tools!;
+      expect(frozen.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      // The person sets it to on demand; the runtime is reopened on the same history.
+      register(true);
+      const resumed: ProviderMessage[] = [
+        { role: "user", content: "go" },
+        attachmentMessage({ type: "tool_epoch", mechanism: "anthropic-inline", modelKey: "winter-test/echo", tools: frozen } satisfies ToolEpochAttachment)!,
+        { role: "assistant", content: "ok" },
+      ];
+      const second = await drive({ f, describe: row, initialMessages: resumed, script: [{ kind: "tool_use", calls: [{ id: "call-1", name: f.canonical, input: {} }] }, { kind: "text", text: "done" }] });
+      expect(second.requests[0]!.tools!.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      const userFrames = second.frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
+      const call1 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-1");
+      expect(String(call1?.content)).toBe("real result");
+    } finally {
+      f.dispose();
+    }
+  });
+
+  test("a tool the person turned OFF: eager in the frozen epoch, removed, the runtime reopened on the same history -- the request withdraws it and a call to it is refused by the registry lookup, not run", async () => {
+    const f = fixture("off");
+    const server = f.canonical.split("__")[1]!;
+    const row: ModelDescription = { wire: { deferredToolLoading: true, toolChanges: "inline" } };
+    try {
+      unregisterMcpServerTools(server);
+      registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: false });
+      replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+      const first = await drive({ f, describe: row, script: [{ kind: "text", text: "ok" }] });
+      const frozen = first.requests[0]!.tools!;
+      expect(frozen.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      unregisterMcpServerTools(server); // OFF: the live registry no longer has it
+      const resumed: ProviderMessage[] = [
+        { role: "user", content: "go" },
+        attachmentMessage({ type: "tool_epoch", mechanism: "anthropic-inline", modelKey: "winter-test/echo", tools: frozen } satisfies ToolEpochAttachment)!,
+        { role: "assistant", content: "ok" },
+      ];
+      const second = await drive({ f, describe: row, initialMessages: resumed, script: [{ kind: "tool_use", calls: [{ id: "call-1", name: f.canonical, input: {} }] }, { kind: "text", text: "done" }] });
+      const withdrawn = second.requests[0]!.messages.flatMap((m) => m.toolChanges?.remove ?? []);
+      expect(withdrawn).toContain(f.canonical);
+      const userFrames = second.frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
+      const call1 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown; is_error?: boolean }> } } }).message.message.content).find((b) => b.tool_use_id === "call-1");
+      expect(String(call1?.content)).not.toBe("real result");
+      expect(String(call1?.content)).toContain("No such tool available");
+    } finally {
+      f.dispose();
+    }
+  });
+
+  test("MID-TURN: the tool is turned off after the request was planned and before its call runs -- the call is refused (a tool off in the live registry never runs, whatever the request offered)", async () => {
+    const f = fixture("midturn");
+    const server = f.canonical.split("__")[1]!;
+    try {
+      unregisterMcpServerTools(server);
+      registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: false });
+      replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+      const { requests, frames } = await drive({
+        f,
+        describe: { wire: { deferredToolLoading: true, toolChanges: "inline" } },
+        onRequest: (index) => {
+          if (index === 0) unregisterMcpServerTools(server);
+        },
+        script: [{ kind: "tool_use", calls: [{ id: "call-1", name: f.canonical, input: {} }] }, { kind: "text", text: "done" }],
+      });
+      // Request 0 offered it (eager) ...
+      expect(requests[0]!.tools!.some((t) => t.name === f.canonical)).toBe(true);
+      const userFrames = frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
+      const call1 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-1");
+      // ... and the call still does not run.
+      expect(String(call1?.content)).not.toBe("real result");
+      // The next request withdraws it.
+      expect(requests[1]!.messages.flatMap((m) => m.toolChanges?.remove ?? [])).toContain(f.canonical);
     } finally {
       f.dispose();
     }
