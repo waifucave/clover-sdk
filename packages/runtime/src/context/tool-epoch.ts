@@ -227,8 +227,11 @@ function diffAnthropic(live: readonly ProviderToolSpec[], state: ToolState, mech
       if (toolDefinitionKey(declaredAs) === toolDefinitionKey(spec)) continue;
       // The declared (deferred) definition is stale. Visible already -> redefine it by value where the row
       // can; still hidden -> a later reference would surface the OLD definition, so the epoch restarts.
-      if (have !== undefined && inline) add.push(definition(spec));
-      else return { kind: "new-epoch", reason: `the deferred tool "${spec.name}" changed its definition` };
+      if (have !== undefined && inline) {
+        // Compared against what the model HAS, not the frozen declaration: once this definition was sent by
+        // value the frozen bytes stay stale forever, and comparing to them re-sent it on every request.
+        if (toolDefinitionKey(have) !== toolDefinitionKey(spec)) add.push(definition(spec));
+      } else return { kind: "new-epoch", reason: `the deferred tool "${spec.name}" changed its definition` };
       continue;
     }
     if (have === undefined) {
