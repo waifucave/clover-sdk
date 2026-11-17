@@ -6,6 +6,8 @@
 import { describe, expect, test } from "bun:test";
 import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
+import { attachmentMessage } from "../context/attachments.ts";
+import type { ToolEpochAttachment } from "../context/tool-epoch.ts";
 import { runEngine, type ContentBlock, type EngineOptions, type ModelDescription, type ProviderMessage, type ProviderRequest, type ProviderTurn } from "../engine.ts";
 import { registerMcpServerTools, registerTool, replaceExecutor, unregisterMcpServerTools, unregisterToolForTest } from "../tools/registry.ts";
 import { createFakeMcpServerStateSource } from "../mcp/state.ts";
@@ -136,6 +138,38 @@ describe("deferred tool loading (WS-23 item 3)", () => {
       const userFrames = frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
       const call2 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-2");
       expect(call2?.content).toBe("real result");
+    } finally {
+      f.dispose();
+    }
+  });
+
+  test("a RESUMED session whose epoch declared a tool eager, while the live registry now marks it on demand: the declared tool is callable (the load-first gate agrees with the request)", async () => {
+    const f = fixture("reopen");
+    const server = f.canonical.split("__")[1]!;
+    const row: ModelDescription = { wire: { deferredToolLoading: true, toolChanges: "inline" } };
+    const register = (deferred: boolean): void => {
+      unregisterMcpServerTools(server);
+      registerMcpServerTools(server, [{ name: "search_docs", inputSchema: { type: "object" } }], { deferredDefault: deferred });
+      replaceExecutor(f.canonical, { async execute() { return { output: "real result" }; } });
+    };
+    try {
+      // The first run: the tool is EAGER, so the epoch freezes it as an eager declaration.
+      register(false);
+      const first = await drive({ f, describe: row, script: [{ kind: "text", text: "ok" }] });
+      const frozen = first.requests[0]!.tools!;
+      expect(frozen.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      // The person sets it to on demand; the runtime is reopened on the same history.
+      register(true);
+      const resumed: ProviderMessage[] = [
+        { role: "user", content: "go" },
+        attachmentMessage({ type: "tool_epoch", mechanism: "anthropic-inline", modelKey: "winter-test/echo", tools: frozen } satisfies ToolEpochAttachment)!,
+        { role: "assistant", content: "ok" },
+      ];
+      const second = await drive({ f, describe: row, initialMessages: resumed, script: [{ kind: "tool_use", calls: [{ id: "call-1", name: f.canonical, input: {} }] }, { kind: "text", text: "done" }] });
+      expect(second.requests[0]!.tools!.find((t) => t.name === f.canonical)?.deferLoading).not.toBe(true);
+      const userFrames = second.frames.filter((fr) => fr.type === "data" && (fr as { message: { type: string } }).message.type === "user");
+      const call1 = userFrames.flatMap((fr) => (fr as unknown as { message: { message: { content: Array<{ tool_use_id: string; content: unknown }> } } }).message.message.content).find((b) => b.tool_use_id === "call-1");
+      expect(String(call1?.content)).toBe("real result");
     } finally {
       f.dispose();
     }

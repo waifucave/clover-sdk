@@ -3515,6 +3515,13 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   };
   let forceNewToolEpoch = false;
   let toolEpochRestartLogged = false;
+  // The tools the LAST request offered as callable by its epoch (`state.available`, by advertised and canonical
+  // name). The load-first gate lets these through: a tool set to "on demand" mid-session keeps its eager
+  // declaration, and stays callable, until the next epoch -- and a reopened runtime's loaded set is seeded from
+  // references alone, so the gate would otherwise refuse a tool the request offered. A tool the request did not
+  // offer is not in here. Rebuilt by `planToolsForRequest` every request; deliberately NOT the loaded set
+  // (loading it would send the tool eager at the next epoch and "on demand" would never take effect).
+  let epochCallableTools: ReadonlySet<string> = new Set();
   // This request's declared `tools` (an Anthropic epoch's frozen list), or undefined when no epoch rules. A ToolSearch result must never carry a `tool_reference` to one of them:
   // a tool set to "on demand" mid-session keeps its eager declaration and stays callable, so the search
   // answers for it with no reference (it is already loaded); "on demand" takes full effect at the next
@@ -5900,7 +5907,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     return exclusion?.cause === "native-excluded" ? exclusion.reason : undefined;
   }
   function isDeferredAndUnloaded(toolName: string): boolean {
-    return isLoadFirstBlocked(toolName, policyStateStore.getState().mode, deferralActivation, loadedToolSet);
+    return !epochCallableTools.has(toolName) && isLoadFirstBlocked(toolName, policyStateStore.getState().mode, deferralActivation, loadedToolSet);
   }
   // WS-09 §8.5 "Ground truth... the live request's tools array": `system/init.tools` = eager PLUS
   // whichever deferred names are ALREADY loaded this session (none, at startup -- a fresh
@@ -8975,6 +8982,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
    */
   const planToolsForRequest = async (): Promise<ToolPlan> => {
     epochDeclaredTools = undefined;
+    epochCallableTools = new Set();
     const live = providerToolSpecs();
     const chosen = toolChangeMechanism();
     if (chosen === undefined) return { tools: live };
@@ -9032,6 +9040,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
         loadedToolSet.load(announced.map((name) => byAdvertised.get(name) ?? name));
       }
       state = foldToolState(active.epoch, changes, referenced());
+    }
+    {
+      const byAdvertised = new Map([...advertisedPartition.eager, ...advertisedPartition.deferred].map((d) => [d.advertisedName, d.canonicalName] as const));
+      epochCallableTools = new Set([...state.available.keys()].flatMap((name) => [name, byAdvertised.get(name) ?? name]));
     }
     const tools = mechanism === "openai" ? [...state.declared, ...current.filter((t) => t.deferLoading === true)] : state.declared;
     let allowedTools = diff.kind !== "new-epoch" ? diff.allowedTools : undefined;
