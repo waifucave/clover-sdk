@@ -187,7 +187,7 @@ export interface ProviderMessageLike {
   uuid?: string;
   origin?: MessageOrigin;
   nativeState?: ProviderNativeState;
-  /** A Winter-authored annotation shown to the model (a handoff note, a foreign-reasoning summary) — carried plainly, never dressed as signed thinking (R6-8). */
+  /** RETIRED (2026-11): a host annotation adapters still render as plain text. The session's history renderer removes it from every message, so no runtime request carries one; reasoning crosses models only natively. */
   decoration?: { text: string; door: "tag" | "thinking-channel" };
   /**
    * 0.0.16 request layout: a PERSISTED attachment (claude's `type: "attachment"` transcript entry).

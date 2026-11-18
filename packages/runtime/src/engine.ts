@@ -540,10 +540,9 @@ export interface ProviderMessage {
    */
   nativeState?: ProviderNativeState;
   /**
-   * A Winter-authored annotation shown to the model -- a handoff note, or a foreign model's reasoning
-   * summary carried across a family boundary. Carried PLAINLY, never dressed as signed thinking
-   * (R6-8): `door` says which channel Lane C's renderer places it on, and neither door produces a
-   * `thinking` block with a fabricated signature.
+   * RETIRED (2026-11, native reasoning only): it once carried a handoff note or a foreign model's
+   * reasoning summary as text. The history renderer now removes it from every message before an adapter
+   * sees one, so nothing the engine sends carries it; the field stays only so older callers still type.
    */
   decoration?: { text: string; door: "tag" | "thinking-channel" };
   /**
