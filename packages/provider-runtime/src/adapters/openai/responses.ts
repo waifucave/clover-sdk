@@ -43,6 +43,7 @@ import {
   errorEvent,
   fetchOpenAiModels,
   identityFor,
+  identityForTurn,
   imageDataUrl,
   isEncryptedContentRejection,
   reasoningSummaryRejection,
@@ -1533,7 +1534,7 @@ export async function* responsesTurn(
       // (`codexHeaders`) from its own credential material and is unaffected; this plain Responses
       // adapter serves any row on `winter.openai-responses`, none of which is the codex backend.
       privileged: privilegedHeaders(options),
-      identity: identityFor(options, ctx),
+      identity: identityForTurn(options, ctx, req.cacheKey),
       userSupplied: ctx.connection.headers,
     });
     plan = { model: req.model, url: urlFor(endpoint.baseUrl), headers, endpoint, ctx, options, body: JSON.stringify(buildResponsesBody(req, reasoning, descriptor, { toolResultImages: toolResultImagesFor(ctx.connection.providerId) })), streamTools: responsesStreamTools(req, descriptor) };

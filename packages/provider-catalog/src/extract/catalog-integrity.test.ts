@@ -96,14 +96,14 @@ describe("the seed is fully replaced", () => {
     expect(catalog.models.find((m) => m.key === "anthropic/claude-sonnet-5-5")!.canonicalModelId).toBe(slot.canonicalModelId);
   });
 
-  test("GPT-6.1 Sol: the `sol` slot names it, and each surface keeps its own effort facts", () => {
-    // 2026-10-07: OpenAI's gpt-6-sol page points to GPT-6.1 Sol as "the newer Sol model", so the slot moves.
+  test("GPT-6.1 Sol: keeps its own effort facts (the `sol` slot moved on to GPT-6.2 Sol on 2026-11-18)", () => {
+    // 2026-10-07: OpenAI's gpt-6-sol page points to GPT-6.1 Sol as "the newer Sol model", so the slot moved there; 2026-11-18 it moved to 6.2.
     const slot = catalog.families.find((f) => f.id === "gpt")!.slots.find((s) => s.name === "sol")!;
-    expect(slot.canonicalModelId).toBe("gpt-6.1-sol");
+    expect(slot.canonicalModelId).toBe("gpt-6.2-sol");
     const api = catalog.models.find((m) => m.key === "openai/gpt-6.1-sol")!;
     const codex = catalog.models.find((m) => m.key === "codex-oauth/gpt-6.1-sol")!;
     for (const row of [api, codex]) {
-      expect(row.canonicalModelId).toBe(slot.canonicalModelId);
+      expect(row.canonicalModelId).toBe("gpt-6.1-sol");
       // "The none and minimal reasoning efforts are not supported" -- unlike gpt-6-sol, which lists `none`.
       expect(row.reasoning!.efforts).toEqual(["low", "medium", "high", "xhigh", "max"]);
       expect(row.reasoning!.continuationDomain!.value).toEqual([row.key]);
@@ -115,7 +115,11 @@ describe("the seed is fully replaced", () => {
     expect(api.reasoning!.perMessageEffort?.value).toEqual({ item: "configuration_update" });
     expect(codex.reasoning!.perMessageEffort).toBeUndefined();
     // Cached input is 5% of input on this model (0.1), not gpt-6-sol's 10% (0.2); Codex stays unpriced.
-    expect(api.pricing!.value).toEqual({ inputPerMTokUsd: 2, outputPerMTokUsd: 10, cacheReadPerMTokUsd: 0.1, cacheWritePerMTokUsd: 2.5 });
+    // 2026-11-18: the page's over-272K surcharge (2x input and cache rates, 1.5x output) rides as one tier.
+    expect(api.pricing!.value).toEqual({
+      inputPerMTokUsd: 2, outputPerMTokUsd: 10, cacheReadPerMTokUsd: 0.1, cacheWritePerMTokUsd: 2.5,
+      longContextTiers: [{ minPromptTokens: 272001, inputPerMTokUsd: 4, outputPerMTokUsd: 15, cacheReadPerMTokUsd: 0.2, cacheWritePerMTokUsd: 5 }],
+    });
     expect(codex.pricing).toBeUndefined();
     expect([api.contextWindow!.value, api.maxInputTokens!.value, codex.contextWindow!.value]).toEqual([1050000, 922000, 872000]);
   });
@@ -134,7 +138,8 @@ describe("the seed is fully replaced", () => {
     });
     const codexTerra = row("codex-oauth/gpt-6.1-terra");
     expect([codexTerra.reasoning!.efforts, codexTerra.reasoning!.defaultEffort, codexTerra.pricing]).toEqual([["low", "medium", "high", "xhigh", "max"], "low", undefined]);
-    expect(catalog.families.find((f) => f.id === "gpt")!.slots.some((s) => s.canonicalModelId === "gpt-6.1-terra")).toBe(false);
+    // 2026-11-18: the `terra` slot moved from gpt-5.6-terra to this row.
+    expect(catalog.families.find((f) => f.id === "gpt")!.slots.find((s) => s.name === "terra")!.canonicalModelId).toBe("gpt-6.1-terra");
     // Kimi K3.1 Pro: always thinks, low/high/max (default max) on the open platform; Kimi Code defaults to high.
     const kimi = row("moonshot/kimi-k3.1-pro");
     expect([kimi.reasoning!.efforts, kimi.reasoning!.defaultEffort]).toEqual([["low", "high", "max"], "max"]);
@@ -184,6 +189,69 @@ describe("the seed is fully replaced", () => {
   });
 });
 
+describe("2026-11-18 refresh", () => {
+  const row = (key: string) => catalog.models.find((m) => m.key === key)!;
+  const slot = (family: string, name: string) => catalog.families.find((f) => f.id === family)!.slots.find((s) => s.name === name)!.canonicalModelId;
+
+  test("Claude Fable 5.2: always-on adaptive thinking, forced tool_choice refused, $8/$40; the `fable` slot follows it; Sonnet 5.5 cache read is $0.10", () => {
+    for (const key of ["anthropic/claude-fable-5-2", "console/claude-fable-5-2"]) {
+      const r = row(key);
+      expect([r.reasoning!.efforts, r.reasoning!.defaultEffort, r.reasoning!.effortRequest?.value]).toEqual([["low", "medium", "high", "xhigh", "max"], "high", { field: "output_config.effort" }]);
+      expect(r.unsupportedParameters).toEqual(["thinking.type.enabled", "thinking.type.disabled", "tool_choice.any", "tool_choice.tool"]);
+      expect(r.pricing!.value).toEqual({ inputPerMTokUsd: 8, outputPerMTokUsd: 40, cacheReadPerMTokUsd: 0.2, cacheWritePerMTokUsd: 10 });
+      expect([r.contextWindow!.value, r.maxOutputTokens!.value, r.canonicalModelId]).toEqual([1000000, 128000, "claude-fable-5.2"]);
+    }
+    expect(slot("claude", "fable")).toBe("claude-fable-5.2");
+    expect(row("anthropic/claude-sonnet-5-5").pricing!.value.cacheReadPerMTokUsd).toBe(0.1);
+    expect(row("console/claude-sonnet-5-5").pricing!.value.cacheReadPerMTokUsd).toBe(0.1);
+  });
+
+  test("GPT-6.2 Sol and Astra: no `none`, over-272K tier, Codex rows unpriced at 872,000; slots; past shutdowns are deprecated, future ones are not", () => {
+    const sol = row("openai/gpt-6.2-sol");
+    const astra = row("openai/gpt-6.2-astra");
+    for (const r of [sol, astra, row("codex-oauth/gpt-6.2-sol"), row("codex-oauth/gpt-6.2-astra")]) expect(r.reasoning!.efforts).toEqual(["low", "medium", "high", "xhigh", "max"]);
+    expect(sol.pricing!.value).toEqual({
+      inputPerMTokUsd: 2, outputPerMTokUsd: 10, cacheReadPerMTokUsd: 0.1, cacheWritePerMTokUsd: 2.5,
+      longContextTiers: [{ minPromptTokens: 272001, inputPerMTokUsd: 4, outputPerMTokUsd: 15, cacheReadPerMTokUsd: 0.2, cacheWritePerMTokUsd: 5 }],
+    });
+    expect(astra.pricing!.value).toEqual({
+      inputPerMTokUsd: 8, outputPerMTokUsd: 40, cacheReadPerMTokUsd: 0.4, cacheWritePerMTokUsd: 10,
+      longContextTiers: [{ minPromptTokens: 272001, inputPerMTokUsd: 16, outputPerMTokUsd: 60, cacheReadPerMTokUsd: 0.8, cacheWritePerMTokUsd: 20 }],
+    });
+    for (const k of ["codex-oauth/gpt-6.2-sol", "codex-oauth/gpt-6.2-astra"]) {
+      const r = row(k);
+      expect([r.pricing, r.contextWindow!.value, r.endpoints, r.reasoning!.defaultEffort]).toEqual([undefined, 872000, ["responses"], "low"]);
+    }
+    expect([slot("gpt", "astra"), slot("gpt", "sol"), slot("gpt", "terra"), slot("gpt", "luna")]).toEqual(["gpt-6.2-astra", "gpt-6.2-sol", "gpt-6.1-terra", "gpt-6-luna"]);
+    for (const id of ["o3-mini", "o4-mini", "gpt-4.1-nano"]) expect(row(`openai/${id}`).status).toBe("deprecated");
+    for (const id of ["gpt-5", "o3", "gpt-4.1", "gpt-5.1"]) expect(row(`openai/${id}`).status).toBe("candidate");
+    for (const id of ["gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol", "gpt-6-astra"]) expect(row(`openai/${id}`).pricing!.value.longContextTiers![0]!.minPromptTokens).toBe(272001);
+  });
+
+  test("OpenCode Go: two subscription providers, no pricing anywhere, every row reachable through its provider's adapter", () => {
+    const providers = catalog.providers.filter((p) => p.id.startsWith("opencode-go"));
+    expect(providers.map((p) => [p.id, p.adapterId, p.pricingBasis, p.defaultEndpoints.api, p.conversationIdHeader])).toEqual([
+      ["opencode-go", "winter.openai-chat-completions", "subscription", "https://opencode.ai/inference/go/openai/v1", "x-opencode-session"],
+      ["opencode-go-anthropic", "winter.anthropic-messages", "subscription", "https://opencode.ai/inference/go/anthropic", "x-opencode-session"],
+    ]);
+    const rows = catalog.models.filter((m) => m.providerId.startsWith("opencode-go"));
+    expect(rows).toHaveLength(32);
+    for (const r of rows) {
+      expect([r.key, r.pricing]).toEqual([r.key, undefined]);
+      expect([r.key, r.endpoints]).toEqual([r.key, ["chat"]]);
+      expect([r.key, r.reasoning!.continuation]).toEqual([r.key, "none"]);
+    }
+    expect(rows.filter((r) => r.providerId === "opencode-go-anthropic").map((r) => r.upstreamId).sort()).toEqual(
+      ["claude-haiku-5-5", "minimax-m3", "qwen3.7-plus", "qwen3.8-flash", "qwen3.8-max", "qwen4-max"],
+    );
+  });
+
+  test("the `k3` slot follows Kimi K3.1 Pro and the Kimi Code subscription rows still answer to it", () => {
+    expect(slot("kimi", "k3")).toBe("kimi-k3.1-pro");
+    for (const p of ["kimi-coding", "kimi-coding-openai", "kimi-coding-intl", "kimi-coding-intl-openai"]) expect(row(`${p}/k3.1-pro`).canonicalModelId).toBe("kimi-k3.1-pro");
+  });
+});
+
 describe("pricing (R6-H, R6-9)", () => {
   const priced = catalog.models.filter((m) => m.pricing !== undefined);
 
@@ -192,6 +260,7 @@ describe("pricing (R6-H, R6-9)", () => {
       // 2026-09-25 refresh: regenerated from the shipped catalog after the first-party provider refresh (Codex-mapped,
       // Claude-reviewed evidence; every price is an `official-doc` page with its URL and instant, CNY rows converted with the rate stated in sourceRef).
       // cat34 (2026-09-27, SDK 0.0.34): regenerated again after the catalog refresh -- filled prices on existing rows, new rows (DeepInfra, gateway/host gaps, new providers); every new price is the SERVING provider's own page or public list, CNY/EUR converted at the rate its sourceRef states.
+      // 2026-11-18 refresh: regenerated after adding Claude Fable 5.2 (anthropic, console) and GPT-6.2 Sol and Astra (openai); every new price is the vendor's own page.
       // 2026-10-29 refresh: regenerated after adding GPT-6.1 Terra, Kimi K3.1 Pro, MiniMax M3.1 Flash, Gemini 4 Argon and the OpenRouter-discovered current models; every new price is the serving provider's own page or public list (CNY at 0.149).
       "agnes/agnes-2.5-flash",
       "aimlapi/gpt-4o",
@@ -270,6 +339,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "ant-ling/Ring-2.6-1T",
       "anthropic/claude-fable-5",
       "anthropic/claude-fable-5-1",
+      "anthropic/claude-fable-5-2",
       "anthropic/claude-haiku-4-5-20251001",
       "anthropic/claude-haiku-4.5",
       "anthropic/claude-haiku-5-5",
@@ -370,6 +440,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "cohere/command-r7b-12-2024",
       "console/claude-fable-5",
       "console/claude-fable-5-1",
+      "console/claude-fable-5-2",
       "console/claude-haiku-4-5-20251001",
       "console/claude-haiku-4.5",
       "console/claude-haiku-5-5",
@@ -703,6 +774,8 @@ describe("pricing (R6-H, R6-9)", () => {
       "openai/gpt-6-sol",
       "openai/gpt-6.1-sol",
       "openai/gpt-6.1-terra",
+      "openai/gpt-6.2-astra",
+      "openai/gpt-6.2-sol",
       "openai/o3",
       "openai/o3-mini",
       "openai/o4-mini",
@@ -1942,7 +2015,7 @@ describe("WS-13c: model families and slots", () => {
     // ...and the slot that names it reaches BOTH rows.
     expect(rowsForCanonicalId(catalog, "kimi-k3").map((m) => m.key)).toContain("kimi-coding/k3");
     expect(familyOf("openai/gpt-6-astra")).toBe("gpt");
-    expect(catalog.families.find((f) => f.id === "gpt")!.slots.find((s) => s.name === "astra")!.canonicalModelId).toBe("gpt-6-astra");
+    expect(catalog.families.find((f) => f.id === "gpt")!.slots.find((s) => s.name === "astra")!.canonicalModelId).toBe("gpt-6.2-astra");
   });
 
   test("ORDER INDEPENDENCE: no row matches two families, so the pipeline's sort-by-id cannot change a stamp", () => {
@@ -1997,11 +2070,12 @@ describe("SDK 0.0.4: codex-oauth serves the whole GPT-5.6 slot row", () => {
       .map((m) => m.key)
       .sort();
 
-  test("the provider lists the three GPT-5.6 models, the three GPT-6 models, GPT-6.1 Sol and GPT-6.1 Terra, and nothing else", () => {
+  test("the provider lists the three GPT-5.6 models, the three GPT-6 models, GPT-6.1 Sol, GPT-6.1 Terra, GPT-6.2 Sol and GPT-6.2 Astra, and nothing else", () => {
     // 2026-09-25 refresh: GPT-6 Sol and Luna joined Astra in Codex on 2026-09-22 (the server-delivered
     // ~/.codex/models_cache.json lists all six), and the `gpt` family's sol/luna slots moved to them (user ruling).
     // 2026-10-07: GPT-6.1 Sol (released 2026-09-29) heads that list, and the `sol` slot follows it.
     // 2026-10-29: GPT-6.1 Terra (released 2026-10-26; codex-rs models.json 126a0ee bundles it) joins; no slot moves.
+    // 2026-11-18: GPT-6.2 Sol and GPT-6.2 Astra (the Codex list shows both visible) join, and the `sol`, `astra` and `terra` slots move.
     expect(codexKeys()).toEqual([
       "codex-oauth/gpt-5.6-luna",
       "codex-oauth/gpt-5.6-sol",
@@ -2011,6 +2085,8 @@ describe("SDK 0.0.4: codex-oauth serves the whole GPT-5.6 slot row", () => {
       "codex-oauth/gpt-6-sol",
       "codex-oauth/gpt-6.1-sol",
       "codex-oauth/gpt-6.1-terra",
+      "codex-oauth/gpt-6.2-astra",
+      "codex-oauth/gpt-6.2-sol",
     ]);
   });
 

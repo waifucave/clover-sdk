@@ -1,6 +1,6 @@
 # `@waifucave/clover-provider-catalog`
 
-Winter's provider and model catalog as inert, validated DATA: 218 provider rows and 1404 model rows
+Winter's provider and model catalog as inert, validated DATA: 220 provider rows and 1442 model rows
 with their endpoints, auth kinds, pricing evidence, admission tier and provenance, plus the validator
 and the vocabularies the JSON Schema restates.
 

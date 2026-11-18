@@ -4917,6 +4917,78 @@
       "scope": "llm"
     },
     {
+      "id": "opencode-go",
+      "displayName": "OpenCode Go (OpenAI dialect)",
+      "protocols": [
+        "openai-chat-completions"
+      ],
+      "authKinds": [
+        "api-key"
+      ],
+      "defaultEndpoints": {
+        "api": "https://opencode.ai/inference/go/openai/v1"
+      },
+      "modelDiscovery": "none",
+      "liveCatalogAuthority": "unknown",
+      "adapterId": "winter.openai-chat-completions",
+      "family": "openai",
+      "upstream": {
+        "project": "winter",
+        "commit": "",
+        "sourcePaths": []
+      },
+      "risk": {
+        "class": "review-required",
+        "reasons": [
+          "Subscription API-key access with plan usage limits (Go $10, Go Plus $40, Go Teams $20 per member per month); throughput is a plan entitlement and no live gate case has run."
+        ]
+      },
+      "pricingBasis": "subscription",
+      "admission": {
+        "basis": "api-key",
+        "citation": "https://opencode.ai/docs/go/ — OpenCode's own docs, read 2026-11-18: API keys are created in the OpenCode Console after subscribing; the endpoint is `https://opencode.ai/inference/go`; each model is listed with its native API and every text model also works through the other APIs.",
+        "tier": "fetched-document"
+      },
+      "scope": "llm",
+      "conversationIdHeader": "x-opencode-session"
+    },
+    {
+      "id": "opencode-go-anthropic",
+      "displayName": "OpenCode Go (Anthropic dialect)",
+      "protocols": [
+        "anthropic-messages"
+      ],
+      "authKinds": [
+        "api-key"
+      ],
+      "defaultEndpoints": {
+        "api": "https://opencode.ai/inference/go/anthropic"
+      },
+      "modelDiscovery": "none",
+      "liveCatalogAuthority": "unknown",
+      "adapterId": "winter.anthropic-messages",
+      "family": "anthropic",
+      "upstream": {
+        "project": "winter",
+        "commit": "",
+        "sourcePaths": []
+      },
+      "risk": {
+        "class": "review-required",
+        "reasons": [
+          "Subscription API-key access with plan usage limits (Go $10, Go Plus $40, Go Teams $20 per member per month); throughput is a plan entitlement and no live gate case has run."
+        ]
+      },
+      "pricingBasis": "subscription",
+      "admission": {
+        "basis": "api-key",
+        "citation": "https://opencode.ai/docs/go/ — OpenCode's own docs, read 2026-11-18: API keys are created in the OpenCode Console after subscribing; the endpoint is `https://opencode.ai/inference/go`; each model is listed with its native API and every text model also works through the other APIs.",
+        "tier": "fetched-document"
+      },
+      "scope": "llm",
+      "conversationIdHeader": "x-opencode-session"
+    },
+    {
       "id": "openference",
       "displayName": "Openference",
       "protocols": [
@@ -17296,6 +17368,227 @@
       "strength": "strong"
     },
     {
+      "key": "anthropic/claude-fable-5-2",
+      "providerId": "anthropic",
+      "upstreamId": "claude-fable-5-2",
+      "displayName": "Claude Fable 5.2",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Claude Fable 5.2 Context window: 1M tokens (1000000).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Claude Fable 5.2 Max output: 128K tokens (128000) on the synchronous Messages API.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Input → output: Text and images → text.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Input → output: Text and images → text.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — tool_choice auto is the supported mode (forced any/tool returns 400); https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool Model compatibility lists claude-fable-5-2.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool — Model compatibility lists Claude Fable 5.2 (claude-fable-5-2) with both tool search variants; https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 documents strict tool use and the computer_toolset_20260801 toolset on it.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "Carried from anthropic/claude-fable-5-1 (https://platform.claude.com/docs/en/build-with-claude/tool-use — Messages tool_choice supports disable_parallel_tool_use=true; parallel use is otherwise available for tool-capable models); no page read on 2026-11-18 states otherwise for Fable 5.2.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs — supportedModels lists claude-fable-5-2 (read 2026-11-18); https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — keep tool_choice auto with strict: true, or JSON outputs, for schema-valid JSON (not available in an organisation with customer-managed encryption keys).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Fable 5.2 has 5m/1h cache-write and cache-hit columns (read 2026-11-18).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Thinking: Adaptive (always on); https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — thinking enabled (budget_tokens) and disabled both return a 400 error; omit thinking or send adaptive.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1, applied per anthropic/claude-opus-5's own evidence — the Messages API returns a readable thinking summary, never the raw chain, for every current Claude model",
+          "confidence": "declared",
+          "observedAt": "2026-09-07T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinking.display",
+            "values": [
+              "summarized",
+              "omitted",
+              "updates"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/migration-guide and https://platform.claude.com/docs/en/build-with-claude/thinking (read 2026-11-18): thinking.display accepts summarized, omitted (the default on Claude Fable 5.2) and updates (beta; progress updates between tool calls come back as thinking blocks). Winter requests \"summarized\" wherever this list carries it (user ruling 2026-10-05, 0.0.48), exactly as on claude-fable-5-1.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "completionEvent": {
+          "value": "content_block_stop",
+          "source": "official-doc",
+          "sourceRef": "R6-D's pinned stream vocabulary, applied per anthropic/claude-opus-5's own evidence — a thinking block's signature arrives across signature_delta events, so the complete replayable block exists only at content_block_stop",
+          "confidence": "declared",
+          "observedAt": "2026-09-07T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "anthropic/claude-fable-5-2"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance and why the domain is NARROW: https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — \"Only Claude Fable 5.2 and Claude Mythos 5.2 read Claude Fable 5.2 thinking blocks\": a switch from it to any other model drops the earlier turns' reasoning. The domain is this one row (Mythos 5.2, which also reads them, is not in the catalog). Thinking blocks also stay with the account that produced them.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "output_config.effort"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/effort — the effort page's supportedModels list names claude-fable-5-2; Fable 5.2 supports all five levels, API default high; effort is requested through output_config.effort (read 2026-11-18)."
+        },
+        "blockBinding": {
+          "value": {
+            "beta": "thinking-binding-controls-2026-08-01"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — on Fable 5.2 a request that fails the prefix check gets a 400 (\"The block is bound to a different conversation\"); the documented stopgap is the thinking-binding-controls-2026-08-01 beta header with thinking.block_binding.prefix_mismatch_behavior \"drop_block\"."
+        },
+        "perMessageEffort": {
+          "value": {
+            "beta": "mid-conversation-output-config-2026-07-01"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/effort-per-message — supportedModels lists claude-fable-5-2; beta header mid-conversation-output-config-2026-07-01; a role:\"system\" message with empty content and output_config.effort (read 2026-11-18)."
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8,
+          "outputPerMTokUsd": 40,
+          "cacheReadPerMTokUsd": 0.2,
+          "cacheWritePerMTokUsd": 10
+        },
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Model pricing table row \"Claude Fable 5.2\": base input $8 / MTok, 5m cache writes $10, 1h cache writes $16, cache hits and refreshes $0.20 (footnote 1: 0.025x the base input price), output $40 (read 2026-11-18); same figures on https://platform.claude.com/docs/en/models/fable-5-2/overview. cacheWritePerMTokUsd records the 5-MINUTE write; the 1-hour write ($16), Batch (-50%), fast mode ($16/$80) and inference_geo us (1.1x) have no field and are NOT folded in.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "unsupportedParameters": [
+        "thinking.type.enabled",
+        "thinking.type.disabled",
+        "tool_choice.any",
+        "tool_choice.tool"
+      ],
+      "status": "candidate",
+      "deferredToolLoading": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool — Model compatibility lists Claude Fable 5.2 (claude-fable-5-2); defer_loading and tool_reference blocks as on the other listed models (read 2026-11-18)."
+      },
+      "midConversationSystem": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages — \"Mid-conversation system messages are available on Claude Fable 5.2, Claude Mythos 5.2, Claude Fable 5.1, ...\"; no beta header required (read 2026-11-18)."
+      },
+      "midConversationToolChanges": {
+        "value": {
+          "beta": "mid-conversation-tool-changes-2026-07-01"
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages — tool changes by reference are in beta on the same models as mid-conversation system messages, which list Claude Fable 5.2; https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 names the mid-conversation-tool-changes-2026-07-01 header for them (read 2026-11-18)."
+      },
+      "inlineToolDefinitions": {
+        "value": {
+          "beta": "inline-tools-2026-09-15"
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — Mid-conversation tool changes (beta): on the Claude API send the inline-tools-2026-09-15 beta header; https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages says that header also covers defining a tool inside a tool_addition block (read 2026-11-18). Claude API only, so set on the anthropic and console providers, never on a cloud reseller."
+      },
+      "assistantPrefill": {
+        "value": false,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/migration-guide — \"Prefilling the assistant message returns a 400 error, unchanged from Claude Fable 5.1\" (read 2026-11-18)."
+      },
+      "canonicalModelId": "claude-fable-5.2",
+      "modelFamily": "claude",
+      "strength": "strong"
+    },
+    {
       "key": "anthropic/claude-haiku-4-5-20251001",
       "providerId": "anthropic",
       "upstreamId": "claude-haiku-4-5-20251001",
@@ -19377,12 +19670,12 @@
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 10,
           "cacheWritePerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.1
         },
         "source": "official-doc",
-        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Sonnet 5.5 USD/MTok base input $2, output $10, 5m cache write $2.50, 1h cache write $4, cache hit $0.20 (same as Claude Sonnet 5; confirmed on https://platform.claude.com/docs/en/models/sonnet-5-5/overview).",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Sonnet 5.5 USD/MTok base input $2, output $10, 5m cache write $2.50, 1h cache write $4, cache hits and refreshes $0.10 (footnote 2: Claude Opus 5.5 and Claude Sonnet 5.5 are priced at 0.05x the base input price; Sonnet 5's $0.20 is the standard 0.1x); same on https://platform.claude.com/docs/en/models/sonnet-5-5/overview (read 2026-11-18).",
         "confidence": "declared",
-        "observedAt": "2026-09-29T00:00:00Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [
         "temperature",
@@ -35204,6 +35497,268 @@
       "strength": "strong"
     },
     {
+      "key": "codex-oauth/gpt-6.2-astra",
+      "providerId": "codex-oauth",
+      "upstreamId": "gpt-6.2-astra",
+      "displayName": "GPT-6.2-Astra (Codex)",
+      "aliases": [],
+      "endpoints": [
+        "responses"
+      ],
+      "contextWindow": {
+        "value": 872000,
+        "source": "live-discovery",
+        "sourceRef": "Server-delivered Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): max_context_window 872,000 for this model (context_window 272,000 is Codex's default, the point its own client compacts at). Same derivation as codex-oauth/gpt-6.1-sol's contextWindow evidence: the backend serves up to the override ceiling when the client opts in; an account served less is caught by the runtime's reactive compaction on context_length_exceeded.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-astra input_modalities include text, image; audio is not carried (see the row note).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-astra tool_mode=code_mode_only; Codex tool calls are native but code-mode scoped.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-astra tool_mode=code_mode_only; native tool use inferred from the Codex execution surface.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "live-discovery",
+          "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-astra supported_reasoning_levels=low, medium, high, xhigh, max (+ ultra, a client-side mode, excluded); default_reasoning_level=low.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "defaultEffort": "low",
+        "continuation": "opaque-provider-state",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface returns a readable summary, never the raw chain",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "reasoning.summary",
+            "values": [
+              "auto",
+              "concise",
+              "detailed"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface's summary control and its current values `auto`/`concise`/`detailed`; the deprecated `generate_summary` alias is deliberately not listed.",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "completionEvent": {
+          "value": "response.completed",
+          "source": "upstream-static",
+          "sourceRef": "Norma packages/core/src/providers/responses-sse.ts — encrypted_content is preserved VERBATIM off the completion event",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "codex-oauth/gpt-6.2-astra"
+          ],
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1/§5.3 for own-state acceptance — the Responses surface replays its own completed `reasoning.encrypted_content` items to the same model. §2.5 for the narrowness: two endpoints can both use `/v1/responses` while issuing UNRELATED encrypted payloads, so this backend shares NO domain with `openai/*` despite the shared HTTP shape. WS-13 §8.2: \"OpenAI-compatible\" is never the capability test, so this key shares NO domain with any other row.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        }
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "promptCacheKey": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z",
+        "sourceRef": "https://github.com/openai/codex/blob/main/codex-rs/core/src/client.rs — Codex (the vendor's own client for this backend) sets prompt_cache_key on every Responses request, to the session id (or source:parent_thread_id for internal sessions); https://developers.openai.com/api/docs/guides/prompt-caching documents the field."
+      },
+      "clientToolSearch": {
+        "value": true,
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-astra supports_search_tool=true.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "MAKER page for the model this row serves (the serving provider's own pages state nothing for it): https://developers.openai.com/api/docs/models/gpt-6.2-astra (read 2026-11-18): maximum output tokens 128,000.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-astra",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
+      "key": "codex-oauth/gpt-6.2-sol",
+      "providerId": "codex-oauth",
+      "upstreamId": "gpt-6.2-sol",
+      "displayName": "GPT-6.2-Sol (Codex)",
+      "aliases": [],
+      "endpoints": [
+        "responses"
+      ],
+      "contextWindow": {
+        "value": 872000,
+        "source": "live-discovery",
+        "sourceRef": "Server-delivered Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): max_context_window 872,000 for this model (context_window 500,000 is Codex's default, the point its own client compacts at). Same derivation as codex-oauth/gpt-6.1-sol's contextWindow evidence: the backend serves up to the override ceiling when the client opts in; an account served less is caught by the runtime's reactive compaction on context_length_exceeded.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-sol input_modalities include text, image, audio; audio is not carried (see the row note).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-sol tool_mode=code_mode_only; Codex tool calls are native but code-mode scoped.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-sol tool_mode=code_mode_only; native tool use inferred from the Codex execution surface.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "live-discovery",
+          "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-sol supported_reasoning_levels=low, medium, high, xhigh, max (+ ultra, a client-side mode, excluded); default_reasoning_level=low.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "defaultEffort": "low",
+        "continuation": "opaque-provider-state",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface returns a readable summary, never the raw chain",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "reasoning.summary",
+            "values": [
+              "auto",
+              "concise",
+              "detailed"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface's summary control and its current values `auto`/`concise`/`detailed`; the deprecated `generate_summary` alias is deliberately not listed.",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "completionEvent": {
+          "value": "response.completed",
+          "source": "upstream-static",
+          "sourceRef": "Norma packages/core/src/providers/responses-sse.ts — encrypted_content is preserved VERBATIM off the completion event",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "codex-oauth/gpt-6.2-sol"
+          ],
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1/§5.3 for own-state acceptance — the Responses surface replays its own completed `reasoning.encrypted_content` items to the same model. §2.5 for the narrowness: two endpoints can both use `/v1/responses` while issuing UNRELATED encrypted payloads, so this backend shares NO domain with `openai/*` despite the shared HTTP shape. WS-13 §8.2: \"OpenAI-compatible\" is never the capability test, so this key shares NO domain with any other row.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        }
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "promptCacheKey": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z",
+        "sourceRef": "https://github.com/openai/codex/blob/main/codex-rs/core/src/client.rs — Codex (the vendor's own client for this backend) sets prompt_cache_key on every Responses request, to the session id (or source:parent_thread_id for internal sessions); https://developers.openai.com/api/docs/guides/prompt-caching documents the field."
+      },
+      "clientToolSearch": {
+        "value": true,
+        "source": "live-discovery",
+        "sourceRef": "Codex model list (~/.codex/models_cache.json, fetched_at 2026-11-18T13:41:51.548433Z, client 0.169.0): gpt-6.2-sol supports_search_tool=true.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "MAKER page for the model this row serves (the serving provider's own pages state nothing for it): https://developers.openai.com/api/docs/models/gpt-6.2-sol (read 2026-11-18): maximum output tokens 128,000.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-sol",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
       "key": "cohere/command-a-03-2025",
       "providerId": "cohere",
       "upstreamId": "command-a-03-2025",
@@ -36232,6 +36787,227 @@
         "sourceRef": "https://platform.claude.com/docs/en/models/opus-5-5/migration-guide — \"Don't end messages with a prefilled assistant turn: it is rejected\"; \"Prefilling assistant messages returns a 400 error on Claude Opus 4.6 and later Opus models, including Claude Opus 5.5\"; Sonnet 5 and Opus 5: \"Manual extended thinking, non-default sampling parameters, and assistant prefill return a 400 error on both models\"; the Fable 5.1 guide: prefill \"returns a 400 error, unchanged from Claude Fable 5\". Live gate 2026-09-26 on claude-opus-5-5: \"This model does not support assistant message prefill. The conversation must end with a user message.\""
       },
       "canonicalModelId": "claude-fable-5.1",
+      "modelFamily": "claude",
+      "strength": "strong"
+    },
+    {
+      "key": "console/claude-fable-5-2",
+      "providerId": "console",
+      "upstreamId": "claude-fable-5-2",
+      "displayName": "Claude Fable 5.2",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Claude Fable 5.2 Context window: 1M tokens (1000000).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Claude Fable 5.2 Max output: 128K tokens (128000) on the synchronous Messages API.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Input → output: Text and images → text.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Input → output: Text and images → text.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — tool_choice auto is the supported mode (forced any/tool returns 400); https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool Model compatibility lists claude-fable-5-2.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool — Model compatibility lists Claude Fable 5.2 (claude-fable-5-2) with both tool search variants; https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 documents strict tool use and the computer_toolset_20260801 toolset on it.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "Carried from anthropic/claude-fable-5-1 (https://platform.claude.com/docs/en/build-with-claude/tool-use — Messages tool_choice supports disable_parallel_tool_use=true; parallel use is otherwise available for tool-capable models); no page read on 2026-11-18 states otherwise for Fable 5.2.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs — supportedModels lists claude-fable-5-2 (read 2026-11-18); https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — keep tool_choice auto with strict: true, or JSON outputs, for schema-valid JSON (not available in an organisation with customer-managed encryption keys).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Fable 5.2 has 5m/1h cache-write and cache-hit columns (read 2026-11-18).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/overview — Thinking: Adaptive (always on); https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — thinking enabled (budget_tokens) and disabled both return a 400 error; omit thinking or send adaptive.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1, applied per anthropic/claude-opus-5's own evidence — the Messages API returns a readable thinking summary, never the raw chain, for every current Claude model",
+          "confidence": "declared",
+          "observedAt": "2026-09-07T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinking.display",
+            "values": [
+              "summarized",
+              "omitted",
+              "updates"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/migration-guide and https://platform.claude.com/docs/en/build-with-claude/thinking (read 2026-11-18): thinking.display accepts summarized, omitted (the default on Claude Fable 5.2) and updates (beta; progress updates between tool calls come back as thinking blocks). Winter requests \"summarized\" wherever this list carries it (user ruling 2026-10-05, 0.0.48), exactly as on claude-fable-5-1.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "completionEvent": {
+          "value": "content_block_stop",
+          "source": "official-doc",
+          "sourceRef": "R6-D's pinned stream vocabulary, applied per anthropic/claude-opus-5's own evidence — a thinking block's signature arrives across signature_delta events, so the complete replayable block exists only at content_block_stop",
+          "confidence": "declared",
+          "observedAt": "2026-09-07T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "console/claude-fable-5-2"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance and why the domain is NARROW: https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — \"Only Claude Fable 5.2 and Claude Mythos 5.2 read Claude Fable 5.2 thinking blocks\": a switch from it to any other model drops the earlier turns' reasoning. The domain is this one row (Mythos 5.2, which also reads them, is not in the catalog). Thinking blocks also stay with the account that produced them.",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "output_config.effort"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/effort — the effort page's supportedModels list names claude-fable-5-2; Fable 5.2 supports all five levels, API default high; effort is requested through output_config.effort (read 2026-11-18)."
+        },
+        "blockBinding": {
+          "value": {
+            "beta": "thinking-binding-controls-2026-08-01"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — on Fable 5.2 a request that fails the prefix check gets a 400 (\"The block is bound to a different conversation\"); the documented stopgap is the thinking-binding-controls-2026-08-01 beta header with thinking.block_binding.prefix_mismatch_behavior \"drop_block\"."
+        },
+        "perMessageEffort": {
+          "value": {
+            "beta": "mid-conversation-output-config-2026-07-01"
+          },
+          "source": "official-doc",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z",
+          "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/effort-per-message — supportedModels lists claude-fable-5-2; beta header mid-conversation-output-config-2026-07-01; a role:\"system\" message with empty content and output_config.effort (read 2026-11-18)."
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8,
+          "outputPerMTokUsd": 40,
+          "cacheReadPerMTokUsd": 0.2,
+          "cacheWritePerMTokUsd": 10
+        },
+        "source": "official-doc",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Model pricing table row \"Claude Fable 5.2\": base input $8 / MTok, 5m cache writes $10, 1h cache writes $16, cache hits and refreshes $0.20 (footnote 1: 0.025x the base input price), output $40 (read 2026-11-18); same figures on https://platform.claude.com/docs/en/models/fable-5-2/overview. cacheWritePerMTokUsd records the 5-MINUTE write; the 1-hour write ($16), Batch (-50%), fast mode ($16/$80) and inference_geo us (1.1x) have no field and are NOT folded in.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "unsupportedParameters": [
+        "thinking.type.enabled",
+        "thinking.type.disabled",
+        "tool_choice.any",
+        "tool_choice.tool"
+      ],
+      "status": "candidate",
+      "deferredToolLoading": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool — Model compatibility lists Claude Fable 5.2 (claude-fable-5-2); defer_loading and tool_reference blocks as on the other listed models (read 2026-11-18)."
+      },
+      "midConversationSystem": {
+        "value": true,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages — \"Mid-conversation system messages are available on Claude Fable 5.2, Claude Mythos 5.2, Claude Fable 5.1, ...\"; no beta header required (read 2026-11-18)."
+      },
+      "midConversationToolChanges": {
+        "value": {
+          "beta": "mid-conversation-tool-changes-2026-07-01"
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages — tool changes by reference are in beta on the same models as mid-conversation system messages, which list Claude Fable 5.2; https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 names the mid-conversation-tool-changes-2026-07-01 header for them (read 2026-11-18)."
+      },
+      "inlineToolDefinitions": {
+        "value": {
+          "beta": "inline-tools-2026-09-15"
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2 — Mid-conversation tool changes (beta): on the Claude API send the inline-tools-2026-09-15 beta header; https://platform.claude.com/docs/en/build-with-claude/mid-conversation-system-messages says that header also covers defining a tool inside a tool_addition block (read 2026-11-18). Claude API only, so set on the anthropic and console providers, never on a cloud reseller."
+      },
+      "assistantPrefill": {
+        "value": false,
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://platform.claude.com/docs/en/models/fable-5-2/migration-guide — \"Prefilling the assistant message returns a 400 error, unchanged from Claude Fable 5.1\" (read 2026-11-18)."
+      },
+      "canonicalModelId": "claude-fable-5.2",
       "modelFamily": "claude",
       "strength": "strong"
     },
@@ -38303,12 +39079,12 @@
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 10,
           "cacheWritePerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.1
         },
         "source": "official-doc",
-        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Sonnet 5.5 USD/MTok base input $2, output $10, 5m cache write $2.50, 1h cache write $4, cache hit $0.20 (same as Claude Sonnet 5; confirmed on https://platform.claude.com/docs/en/models/sonnet-5-5/overview).",
+        "sourceRef": "https://platform.claude.com/docs/en/about-claude/pricing — Claude Sonnet 5.5 USD/MTok base input $2, output $10, 5m cache write $2.50, 1h cache write $4, cache hits and refreshes $0.10 (footnote 2: Claude Opus 5.5 and Claude Sonnet 5.5 are priced at 0.05x the base input price; Sonnet 5's $0.20 is the standard 0.1x); same on https://platform.claude.com/docs/en/models/sonnet-5-5/overview (read 2026-11-18).",
         "confidence": "declared",
-        "observedAt": "2026-09-29T00:00:00Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [
         "temperature",
@@ -59414,7 +60190,7 @@
       },
       "unsupportedParameters": [],
       "status": "candidate",
-      "canonicalModelId": "k3.1-pro",
+      "canonicalModelId": "kimi-k3.1-pro",
       "modelFamily": "kimi",
       "strength": "strong"
     },
@@ -60028,7 +60804,7 @@
         "thinking.type.disabled"
       ],
       "status": "candidate",
-      "canonicalModelId": "k3.1-pro",
+      "canonicalModelId": "kimi-k3.1-pro",
       "modelFamily": "kimi",
       "strength": "strong"
     },
@@ -60633,7 +61409,7 @@
       },
       "unsupportedParameters": [],
       "status": "candidate",
-      "canonicalModelId": "k3.1-pro",
+      "canonicalModelId": "kimi-k3.1-pro",
       "modelFamily": "kimi",
       "strength": "strong"
     },
@@ -61247,7 +62023,7 @@
         "thinking.type.disabled"
       ],
       "status": "candidate",
-      "canonicalModelId": "k3.1-pro",
+      "canonicalModelId": "kimi-k3.1-pro",
       "modelFamily": "kimi",
       "strength": "strong"
     },
@@ -81458,7 +82234,7 @@
         "observedAt": "2026-09-19T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "promptCacheKey": {
         "value": true,
         "source": "official-doc",
@@ -84401,12 +85177,21 @@
           "inputPerMTokUsd": 10,
           "outputPerMTokUsd": 50,
           "cacheReadPerMTokUsd": 1,
-          "cacheWritePerMTokUsd": 12.5
+          "cacheWritePerMTokUsd": 12.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 20,
+              "outputPerMTokUsd": 75,
+              "cacheReadPerMTokUsd": 2,
+              "cacheWritePerMTokUsd": 25
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://developers.openai.com/api/docs/pricing — gpt-6-astra, standard tier, short context: input $10.00, cached input $1.00, cache writes $12.50, output $50.00 per 1M tokens (retrieved 2026-09-06). Long context: $20.00 / $2.00 / $25.00 / $75.00. Unlike GPT-4.1, this model DOES publish a cache-write rate, so the key is set.",
+        "sourceRef": "https://developers.openai.com/api/docs/pricing — gpt-6-astra, standard tier, short context: input $10.00, cached input $1.00, cache writes $12.50, output $50.00 per 1M tokens (retrieved 2026-09-06). Long context: $20.00 / $2.00 / $25.00 / $75.00. Unlike GPT-4.1, this model DOES publish a cache-write rate, so the key is set. 2026-11-18: https://developers.openai.com/api/docs/models/gpt-6-astra.md — \"Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request\" recorded as one longContextTiers entry (minPromptTokens 272001; cache-write doubled with the other cache rates).",
         "confidence": "declared",
-        "observedAt": "2026-09-06T00:00:00Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -84590,12 +85375,21 @@
           "inputPerMTokUsd": 0.1,
           "outputPerMTokUsd": 0.5,
           "cacheReadPerMTokUsd": 0.01,
-          "cacheWritePerMTokUsd": 0.125
+          "cacheWritePerMTokUsd": 0.125,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 0.2,
+              "outputPerMTokUsd": 0.75,
+              "cacheReadPerMTokUsd": 0.02,
+              "cacheWritePerMTokUsd": 0.25
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6-luna — gpt-6-luna standard short-context USD/MTok table: input $0.1, output $0.5, cached input $0.01, cache writes $0.125. - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request.",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6-luna — gpt-6-luna standard short-context USD/MTok table: input $0.1, output $0.5, cached input $0.01, cache writes $0.125. - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request. 2026-11-18: https://developers.openai.com/api/docs/models/gpt-6-luna.md — \"Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request\" recorded as one longContextTiers entry (minPromptTokens 272001; cache-write doubled with the other cache rates).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:21:48Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -84779,12 +85573,21 @@
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 10,
           "cacheReadPerMTokUsd": 0.2,
-          "cacheWritePerMTokUsd": 2.5
+          "cacheWritePerMTokUsd": 2.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 15,
+              "cacheReadPerMTokUsd": 0.4,
+              "cacheWritePerMTokUsd": 5
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6-sol — gpt-6-sol standard short-context USD/MTok table: input $2, output $10, cached input $0.2, cache writes $2.5. - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request.",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6-sol — gpt-6-sol standard short-context USD/MTok table: input $2, output $10, cached input $0.2, cache writes $2.5. - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request. 2026-11-18: https://developers.openai.com/api/docs/models/gpt-6-sol.md — \"Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request\" recorded as one longContextTiers entry (minPromptTokens 272001; cache-write doubled with the other cache rates).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:21:48Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -84967,12 +85770,21 @@
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 10,
           "cacheReadPerMTokUsd": 0.1,
-          "cacheWritePerMTokUsd": 2.5
+          "cacheWritePerMTokUsd": 2.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 15,
+              "cacheReadPerMTokUsd": 0.2,
+              "cacheWritePerMTokUsd": 5
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.1-sol — gpt-6.1-sol standard short-context USD/MTok table: input $2, cached input $0.1, cache writes $2.5, output $10; \"Cached input tokens are priced at 5% of the uncached input token rate\" (https://developers.openai.com/api/docs/guides/prompt-caching: reads cost \"0.05× on GPT-6.1 Sol\" — the 0.1 is not a typo for gpt-6-sol's 0.2). - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request.",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.1-sol — gpt-6.1-sol standard short-context USD/MTok table: input $2, cached input $0.1, cache writes $2.5, output $10; \"Cached input tokens are priced at 5% of the uncached input token rate\" (https://developers.openai.com/api/docs/guides/prompt-caching: reads cost \"0.05× on GPT-6.1 Sol\" — the 0.1 is not a typo for gpt-6-sol's 0.2). - Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request. 2026-11-18: https://developers.openai.com/api/docs/models/gpt-6.1-sol.md — \"Prompts with more than 272K input tokens are priced at 2x input and cache rates and 1.5x output for the full request\" recorded as one longContextTiers entry (minPromptTokens 272001; cache-write doubled with the other cache rates).",
         "confidence": "declared",
-        "observedAt": "2026-10-07T09:00:00Z"
+        "observedAt": "2026-11-18T12:00:00Z"
       },
       "unsupportedParameters": [
         "prediction"
@@ -85221,6 +86033,418 @@
         "observedAt": "2026-10-29T12:00:00Z"
       },
       "canonicalModelId": "gpt-6.1-terra",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
+      "key": "openai/gpt-6.2-astra",
+      "providerId": "openai",
+      "upstreamId": "gpt-6.2-astra",
+      "displayName": "GPT-6.2 Astra",
+      "aliases": [],
+      "endpoints": [
+        "chat",
+        "responses"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — 1,050,000 token context window.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 922000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — maximum input tokens 922,000.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — maximum output tokens 128,000.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — accepts text and image input; audio and video are unsupported.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — text output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — function calling supported; https://developers.openai.com/api/docs/guides/latest-model — \"tool calling requires Responses\".",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — function_calling listed under supported features; Responses tools: web search, file search, image generation, code interpreter, hosted shell, apply patch, skills, computer use, MCP, tool search.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — structured outputs listed under supported features.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — prompt caching listed under supported features.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — \"The API rejects requests that set reasoning effort to `none`.\"; reasoning tokens supported. The page lists no other efforts and no default; see the row note (levels inferred from the Codex list, https://developers.openai.com/api/docs/guides/reasoning says supported values are model-dependent).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "medium",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface returns a readable summary, never the raw chain",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "reasoning.summary",
+            "values": [
+              "auto",
+              "concise",
+              "detailed"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface's summary control and its current values `auto`/`concise`/`detailed`; the deprecated `generate_summary` alias is deliberately not listed.",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "completionEvent": {
+          "value": "response.completed",
+          "source": "upstream-static",
+          "sourceRef": "Norma packages/core/src/providers/responses-sse.ts — encrypted_content is preserved VERBATIM off the completion event",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "openai/gpt-6.2-astra"
+          ],
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1/§5.3 for own-state acceptance — the Responses surface replays its own completed `reasoning.encrypted_content` items to the same model.  WS-13 §8.2: \"OpenAI-compatible\" is never the capability test, so this key shares NO domain with any other row (not even openai/gpt-6-sol).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "perMessageEffort": {
+          "value": {
+            "item": "configuration_update"
+          },
+          "source": "official-doc",
+          "sourceRef": "https://developers.openai.com/api/docs/guides/reasoning — configuration_update is \"supported on GPT-6 and later models in standard, single-agent mode\"; it changes only reasoning effort (read 2026-11-18). NOT set on the codex-oauth row (probe-gated there, as on every codex row).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8,
+          "outputPerMTokUsd": 40,
+          "cacheReadPerMTokUsd": 0.4,
+          "cacheWritePerMTokUsd": 10,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 16,
+              "outputPerMTokUsd": 60,
+              "cacheReadPerMTokUsd": 0.8,
+              "cacheWritePerMTokUsd": 20
+            }
+          ]
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-astra — Standard short-context USD/MTok: input $8, cached input $0.4, cache writes $10 (30-minute retention; 12-hour retention is $20, which the single cache-write field cannot carry), output $40. \"Requests over 272K input tokens: input and cache rates double, and output is 1.5x the short-context rate for the full request\" -> tier input $16, cache read $0.8, cache write $20, output $60 (read 2026-11-18)."
+      },
+      "unsupportedParameters": [
+        "prediction"
+      ],
+      "status": "candidate",
+      "promptCacheKey": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/prompt-caching — the Responses API takes prompt_cache_key: \"A supplied prompt_cache_key, which separates cache reuse between groups of requests and helps optimize cache routing on models before GPT-5.6\" — on GPT-5.6+ (this model) routing is automatic and the key is kept for separate cache accounting (read 2026-10-07).",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "clientToolSearch": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/tools-tool-search — \"In the Responses API, only gpt-5.4 and later models support tool_search\" (read 2026-10-07); https://developers.openai.com/api/docs/models/gpt-6.2-astra lists tool search among its tools (read 2026-11-18).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "additionalToolsItem": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/tools-tool-search — \"you can use an additional_tools input item to make tools available at a specific point in the conversation\" (read 2026-10-07). The page names no model list, so it is set on the rows the same page documents tool_search for (GPT-5.4 and later), as on openai/gpt-6-sol.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "allowedToolsChoice": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/function-calling — tool_choice {\"type\":\"allowed_tools\",\"mode\":\"auto\"|\"required\",\"tools\":[…]}: \"make only a subset of tools available across model requests, but not modify the list of tools you pass in, so you can maximize savings from prompt caching\" (read 2026-10-07). No model list on the page; set on the same GPT-5.4+ rows.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/function-calling — \"On supported models beginning with GPT-5, functions can be called in parallel when built-in tools are also available … You can prevent this by setting parallel_tool_calls to false\" (read 2026-10-07); the Responses adapter already sends parallel_tool_calls: true unless this is false.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-astra",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
+      "key": "openai/gpt-6.2-sol",
+      "providerId": "openai",
+      "upstreamId": "gpt-6.2-sol",
+      "displayName": "GPT-6.2 Sol",
+      "aliases": [],
+      "endpoints": [
+        "chat",
+        "responses"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — 1,050,000 token context window.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 922000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — maximum input tokens 922,000.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — maximum output tokens 128,000.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — accepts text and image input; audio and video are unsupported.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — text output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — function calling supported; https://developers.openai.com/api/docs/guides/latest-model — \"tool calling requires Responses\".",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — function_calling listed under supported features; Responses tools: web search, file search, image generation, code interpreter, hosted shell, apply patch, skills, computer use, MCP, tool search.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — structured outputs listed under supported features.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — prompt caching listed under supported features.",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — \"The API rejects requests that set reasoning effort to `none`.\"; reasoning tokens supported. The page lists no other efforts and no default; see the row note (levels inferred from the Codex list, https://developers.openai.com/api/docs/guides/reasoning says supported values are model-dependent).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "medium",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface returns a readable summary, never the raw chain",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "reasoning.summary",
+            "values": [
+              "auto",
+              "concise",
+              "detailed"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1 — the Responses surface's summary control and its current values `auto`/`concise`/`detailed`; the deprecated `generate_summary` alias is deliberately not listed.",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "completionEvent": {
+          "value": "response.completed",
+          "source": "upstream-static",
+          "sourceRef": "Norma packages/core/src/providers/responses-sse.ts — encrypted_content is preserved VERBATIM off the completion event",
+          "confidence": "declared",
+          "observedAt": "2026-09-06T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "openai/gpt-6.2-sol"
+          ],
+          "source": "official-doc",
+          "sourceRef": "continuity report §5.1/§5.3 for own-state acceptance — the Responses surface replays its own completed `reasoning.encrypted_content` items to the same model.  WS-13 §8.2: \"OpenAI-compatible\" is never the capability test, so this key shares NO domain with any other row (not even openai/gpt-6-sol).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "perMessageEffort": {
+          "value": {
+            "item": "configuration_update"
+          },
+          "source": "official-doc",
+          "sourceRef": "https://developers.openai.com/api/docs/guides/reasoning — configuration_update is \"supported on GPT-6 and later models in standard, single-agent mode\"; it changes only reasoning effort (read 2026-11-18). NOT set on the codex-oauth row (probe-gated there, as on every codex row).",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2,
+          "outputPerMTokUsd": 10,
+          "cacheReadPerMTokUsd": 0.1,
+          "cacheWritePerMTokUsd": 2.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 272001,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 15,
+              "cacheReadPerMTokUsd": 0.2,
+              "cacheWritePerMTokUsd": 5
+            }
+          ]
+        },
+        "source": "official-doc",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z",
+        "sourceRef": "https://developers.openai.com/api/docs/models/gpt-6.2-sol — Standard short-context USD/MTok: input $2, cached input $0.1, cache writes $2.5 (30-minute retention; 12-hour retention is $5.0, which the single cache-write field cannot carry), output $10. \"Requests over 272K input tokens: input and cache rates double, and output is 1.5x the short-context rate for the full request\" -> tier input $4, cache read $0.2, cache write $5, output $15 (read 2026-11-18)."
+      },
+      "unsupportedParameters": [
+        "prediction"
+      ],
+      "status": "candidate",
+      "promptCacheKey": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/prompt-caching — the Responses API takes prompt_cache_key: \"A supplied prompt_cache_key, which separates cache reuse between groups of requests and helps optimize cache routing on models before GPT-5.6\" — on GPT-5.6+ (this model) routing is automatic and the key is kept for separate cache accounting (read 2026-10-07).",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "clientToolSearch": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/tools-tool-search — \"In the Responses API, only gpt-5.4 and later models support tool_search\" (read 2026-10-07); https://developers.openai.com/api/docs/models/gpt-6.2-sol lists tool search among its tools (read 2026-11-18).",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "additionalToolsItem": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/tools-tool-search — \"you can use an additional_tools input item to make tools available at a specific point in the conversation\" (read 2026-10-07). The page names no model list, so it is set on the rows the same page documents tool_search for (GPT-5.4 and later), as on openai/gpt-6-sol.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "allowedToolsChoice": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/function-calling — tool_choice {\"type\":\"allowed_tools\",\"mode\":\"auto\"|\"required\",\"tools\":[…]}: \"make only a subset of tools available across model requests, but not modify the list of tools you pass in, so you can maximize savings from prompt caching\" (read 2026-10-07). No model list on the page; set on the same GPT-5.4+ rows.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://developers.openai.com/api/docs/guides/function-calling — \"On supported models beginning with GPT-5, functions can be called in parallel when built-in tools are also available … You can prevent this by setting parallel_tool_calls to false\" (read 2026-10-07); the Responses adapter already sends parallel_tool_calls: true unless this is false.",
+        "confidence": "declared",
+        "observedAt": "2026-10-07T09:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-sol",
       "modelFamily": "gpt",
       "strength": "strong"
     },
@@ -85489,7 +86713,7 @@
         "observedAt": "2026-09-19T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "promptCacheKey": {
         "value": true,
         "source": "official-doc",
@@ -85644,7 +86868,7 @@
         "observedAt": "2026-09-05T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "promptCacheKey": {
         "value": true,
         "source": "official-doc",
@@ -85654,6 +86878,2603 @@
       },
       "canonicalModelId": "o4-mini",
       "modelFamily": "o-series",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go-anthropic/claude-haiku-5-5",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "claude-haiku-5-5",
+      "displayName": "Claude Haiku 5.5 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `claude-haiku-5-5` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "claude-haiku-5.5",
+      "modelFamily": "claude",
+      "strength": "weak"
+    },
+    {
+      "key": "opencode-go-anthropic/minimax-m3",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "minimax-m3",
+      "displayName": "MiniMax-M3 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "minimax-m3",
+      "modelFamily": "minimax",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go-anthropic/qwen3.7-plus",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "qwen3.7-plus",
+      "displayName": "Qwen3.7 Plus (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.7-plus` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "qwen3.7-plus",
+      "modelFamily": "qwen",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go-anthropic/qwen3.8-flash",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "qwen3.8-flash",
+      "displayName": "Qwen3.8 Flash (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-flash` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "qwen3.8-flash",
+      "modelFamily": "qwen",
+      "strength": "weak"
+    },
+    {
+      "key": "opencode-go-anthropic/qwen3.8-max",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "qwen3.8-max",
+      "displayName": "Qwen3.8 Max (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen3.8-max` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "qwen3.8-max",
+      "modelFamily": "qwen",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go-anthropic/qwen4-max",
+      "providerId": "opencode-go-anthropic",
+      "upstreamId": "qwen4-max",
+      "displayName": "Qwen4 Max (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 262144,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `qwen4-max` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "qwen4-max",
+      "modelFamily": "qwen",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/beam-free",
+      "providerId": "opencode-go",
+      "upstreamId": "beam-free",
+      "displayName": "Beam Free (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `beam-free` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "beam-free",
+      "modelFamily": "other",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/deepseek-v4-pro",
+      "providerId": "opencode-go",
+      "upstreamId": "deepseek-v4-pro",
+      "displayName": "DeepSeek V4 Pro (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 384000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "high",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4-pro` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "deepseek-v4-pro",
+      "modelFamily": "deepseek",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/deepseek-v4.1-flash",
+      "providerId": "opencode-go",
+      "upstreamId": "deepseek-v4.1-flash",
+      "displayName": "DeepSeek V4.1 Flash 1017 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 384000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `deepseek-v4.1-flash` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "deepseek-v4.1-flash",
+      "modelFamily": "deepseek",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/gemini-4-argon",
+      "providerId": "opencode-go",
+      "upstreamId": "gemini-4-argon",
+      "displayName": "Gemini 4 Argon (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "audio",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gemini-4-argon` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "gemini-4-argon",
+      "modelFamily": "gemini",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/glm-5.2",
+      "providerId": "opencode-go",
+      "upstreamId": "glm-5.2",
+      "displayName": "GLM-5.2 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "high",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.2` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "glm-5.2",
+      "modelFamily": "glm",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/glm-5.3",
+      "providerId": "opencode-go",
+      "upstreamId": "glm-5.3",
+      "displayName": "GLM-5.3 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "glm-5.3",
+      "modelFamily": "glm",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/glm-5.3-flash",
+      "providerId": "opencode-go",
+      "upstreamId": "glm-5.3-flash",
+      "displayName": "GLM-5.3-Flash (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `glm-5.3-flash` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "glm-5.3-flash",
+      "modelFamily": "glm",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/gpt-5.6-luna",
+      "providerId": "opencode-go",
+      "upstreamId": "gpt-5.6-luna",
+      "displayName": "GPT-5.6 Luna (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-5.6-luna` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "gpt-5.6-luna",
+      "modelFamily": "gpt",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/gpt-6-luna",
+      "providerId": "opencode-go",
+      "upstreamId": "gpt-6-luna",
+      "displayName": "GPT-6 Luna (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `gpt-6-luna` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "gpt-6-luna",
+      "modelFamily": "gpt",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/grok-4.7",
+      "providerId": "opencode-go",
+      "upstreamId": "grok-4.7",
+      "displayName": "Grok 4.7 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 500000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 500000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `grok-4.7` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "grok-4.7",
+      "modelFamily": "grok",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/hy3",
+      "providerId": "opencode-go",
+      "upstreamId": "hy3",
+      "displayName": "Hy3 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 256000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy3` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy3",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/hy4",
+      "providerId": "opencode-go",
+      "upstreamId": "hy4",
+      "displayName": "Hy4 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/hy4-flash-free",
+      "providerId": "opencode-go",
+      "upstreamId": "hy4-flash-free",
+      "displayName": "Hy4 flash Free (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-flash-free` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash-free",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/hy4-preview",
+      "providerId": "opencode-go",
+      "upstreamId": "hy4-preview",
+      "displayName": "Hy4 preview (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1024000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `hy4-preview` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-preview",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/iceman-contributor-free",
+      "providerId": "opencode-go",
+      "upstreamId": "iceman-contributor-free",
+      "displayName": "Iceman Contributor Free (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 262144,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `iceman-contributor-free` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "iceman-contributor-free",
+      "modelFamily": "other",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/kimi-k2.7-code",
+      "providerId": "opencode-go",
+      "upstreamId": "kimi-k2.7-code",
+      "displayName": "Kimi K2.7 Code (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 262144,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 262144,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k2.7-code` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "kimi-k2.7-code",
+      "modelFamily": "kimi",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/kimi-k3",
+      "providerId": "opencode-go",
+      "upstreamId": "kimi-k3",
+      "displayName": "Kimi K3 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "kimi-k3",
+      "modelFamily": "kimi",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/kimi-k3.1-pro",
+      "providerId": "opencode-go",
+      "upstreamId": "kimi-k3.1-pro",
+      "displayName": "Kimi K3.1 Pro (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "defaultEffort": "max",
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `kimi-k3.1-pro` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "kimi-k3.1-pro",
+      "modelFamily": "kimi",
+      "strength": "strong"
+    },
+    {
+      "key": "opencode-go/longcat-2.0",
+      "providerId": "opencode-go",
+      "upstreamId": "longcat-2.0",
+      "displayName": "LongCat-2.0 (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.0` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "longcat-2.0",
+      "modelFamily": "other",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/longcat-2.5-free",
+      "providerId": "opencode-go",
+      "upstreamId": "longcat-2.5-free",
+      "displayName": "LongCat 2.5 Free (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 262144,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `longcat-2.5-free` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "longcat-2.5-free",
+      "modelFamily": "other",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/mimo-v2.6-flash",
+      "providerId": "opencode-go",
+      "upstreamId": "mimo-v2.6-flash",
+      "displayName": "MiMo-V2.6-Flash (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-flash` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "mimo-v2.6-flash",
+      "modelFamily": "mimo",
+      "strength": "weak"
+    },
+    {
+      "key": "opencode-go/mimo-v2.6-pro",
+      "providerId": "opencode-go",
+      "upstreamId": "mimo-v2.6-pro",
+      "displayName": "MiMo-V2.6-Pro (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `mimo-v2.6-pro` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "mimo-v2.6-pro",
+      "modelFamily": "mimo",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/minimax-m3.1-flash",
+      "providerId": "opencode-go",
+      "upstreamId": "minimax-m3.1-flash",
+      "displayName": "MiniMax M3.1 Flash (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 512000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `minimax-m3.1-flash` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "minimax-m3.1-flash",
+      "modelFamily": "minimax",
+      "strength": "weak"
+    },
+    {
+      "key": "opencode-go/muse-spark-1.2-contributor",
+      "providerId": "opencode-go",
+      "upstreamId": "muse-spark-1.2-contributor",
+      "displayName": "Muse Spark 1.2 Contributor (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "pdf",
+          "audio"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.2-contributor` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "muse-spark-1.2-contributor",
+      "modelFamily": "muse",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/muse-spark-1.3-contributor",
+      "providerId": "opencode-go",
+      "upstreamId": "muse-spark-1.3-contributor",
+      "displayName": "Muse Spark 1.3 Contributor (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "pdf",
+          "audio"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `muse-spark-1.3-contributor` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "muse-spark-1.3-contributor",
+      "modelFamily": "muse",
+      "strength": "medium"
+    },
+    {
+      "key": "opencode-go/step-5-preview",
+      "providerId": "opencode-go",
+      "upstreamId": "step-5-preview",
+      "displayName": "Step 5 Preview (OpenCode Go)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` limit.context",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` limit.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` modalities.input",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` modalities.output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` capabilities.tools.supported: true",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` capabilities.reasoning.supported",
+          "confidence": "declared",
+          "observedAt": "2026-11-18T12:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://opencode.ai/inference/go/v1/models — `step-5-preview` capabilities.structured_output",
+        "confidence": "declared",
+        "observedAt": "2026-11-18T12:00:00Z"
+      },
+      "canonicalModelId": "step-5-preview",
+      "modelFamily": "other",
       "strength": "medium"
     },
     {
@@ -133567,11 +137388,11 @@
       "slots": [
         {
           "name": "fable",
-          "canonicalModelId": "claude-fable-5.1",
+          "canonicalModelId": "claude-fable-5.2",
           "description": "the most capable Claude model, for the hardest reasoning and the most open-ended agentic work; the highest price.",
           "reason": "First because it is the strongest.",
           "basis": "winter-curated",
-          "citation": "spec:WS-13c §9 (user-ruling ORDER, winter-curated text); VERIFIED on https://docs.anthropic.com/en/docs/about-claude/models (redirects to https://platform.claude.com/docs/en/docs/about-claude/models, retrieved 2026-09-07) — repointed from `claude-fable-5` to the owed `anthropic/claude-fable-5-1` row (P6.6 Task 1b), whose own canonicalModelId post-normaliser is `claude-fable-5.1`, not the un-normalised `claude-fable-5-1`",
+          "citation": "spec:WS-13c §9 (user-ruling ORDER, winter-curated text); VERIFIED on https://docs.anthropic.com/en/docs/about-claude/models (redirects to https://platform.claude.com/docs/en/docs/about-claude/models, retrieved 2026-09-07) — repointed from `claude-fable-5` to the owed `anthropic/claude-fable-5-1` row (P6.6 Task 1b), whose own canonicalModelId post-normaliser is `claude-fable-5.1`, not the un-normalised `claude-fable-5-1`; 2026-11-18: repointed from `claude-fable-5.1` to Claude Fable 5.2, the current Fable (https://platform.claude.com/docs/en/models/fable-5-2/overview — \"Latest\", released November 9, 2026, $8/$40 against 5.1's $10/$50)",
           "status": "candidate"
         },
         {
@@ -133865,29 +137686,29 @@
       "slots": [
         {
           "name": "astra",
-          "canonicalModelId": "gpt-6-astra",
+          "canonicalModelId": "gpt-6.2-astra",
           "description": "for seemingly impossible, novelty-like tasks that involve lots of abstract reasoning; substantially above Sol.",
           "reason": "First: nothing else reaches it.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-11-18: repointed from `gpt-6-astra` to GPT-6.2 Astra, first on OpenAI's flagship list (https://developers.openai.com/api/docs/models) and \"our most capable model\" in the Codex list; $8/$40 against 6-astra's $10/$50",
           "status": "candidate"
         },
         {
           "name": "sol",
-          "canonicalModelId": "gpt-6.1-sol",
+          "canonicalModelId": "gpt-6.2-sol",
           "description": "a highly capable model for VERY complex novelty tasks; already overkill for most work.",
           "reason": "Second: the ceiling before Astra.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-10-07: repointed from `gpt-6-sol` to GPT-6.1 Sol, the current Sol (https://developers.openai.com/api/docs/models/gpt-6-sol: \"See GPT-6.1 Sol for the newer Sol model\"; the Codex catalogue now calls gpt-6-sol \"Previous generation workhorse model\" and recommends gpt-6.1-sol)",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-10-07: repointed from `gpt-6-sol` to GPT-6.1 Sol, the current Sol (https://developers.openai.com/api/docs/models/gpt-6-sol: \"See GPT-6.1 Sol for the newer Sol model\"; the Codex catalogue now calls gpt-6-sol \"Previous generation workhorse model\" and recommends gpt-6.1-sol); 2026-11-18: repointed from `gpt-6.1-sol` to GPT-6.2 Sol (https://developers.openai.com/api/docs/models flagship list; Codex list: \"Fast, go-to model for coding and everyday work.\"); same $2/$10",
           "status": "candidate"
         },
         {
           "name": "terra",
-          "canonicalModelId": "gpt-5.6-terra",
+          "canonicalModelId": "gpt-6.1-terra",
           "description": "a highly reliable and capable model for demanding work — framed as Sol was.",
           "reason": "Third: the demanding-work default.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-11-18: repointed from `gpt-5.6-terra` to GPT-6.1 Terra, the Terra on OpenAI's flagship list (released 2026-10-26); $1/$5 against 5.6 Terra's $2/$12",
           "status": "candidate"
         },
         {
@@ -134040,11 +137861,11 @@
       "slots": [
         {
           "name": "k3",
-          "canonicalModelId": "kimi-k3",
+          "canonicalModelId": "kimi-k3.1-pro",
           "description": "the strongest Kimi.",
           "reason": "First: strength.",
           "basis": "winter-curated",
-          "citation": "spec:WS-13c §9",
+          "citation": "spec:WS-13c §9; 2026-11-18: repointed from `kimi-k3` to Kimi K3.1 Pro, which https://platform.kimi.ai/docs/models calls \"Kimi's most capable flagship to date\" (kimi-k3 is \"Kimi's previous-generation flagship\"); same low/high/max efforts, default max on the platform and high on Kimi Code; $2/$10 against K3's $3/$15",
           "status": "candidate"
         },
         {

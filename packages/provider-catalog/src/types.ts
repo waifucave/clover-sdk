@@ -472,6 +472,15 @@ export interface WinterProviderDescriptor {
    */
   identityHeaders?: Record<string, string>;
   /**
+   * 2026-11-18: the NAME of a request header that carries the conversation's stable id, for a vendor
+   * whose docs ask a client for one (a routing/prompt-cache affinity header). The adapter sends
+   * `<name>: <TurnRequest.cacheKey>` on a turn that has a cache key -- the session id, and for a
+   * subagent the session id plus its agent id -- and nothing when it has none. The value is an
+   * opaque id: nothing about the user or the content. A lowercase `x-` token; the validator refuses
+   * a name that could carry a credential. Absent (the normal case) sends no such header.
+   */
+  conversationIdHeader?: string;
+  /**
    * P7a carry (Lane D): a PER-TENANT provider whose API endpoint is the customer's own resource, so
    * the row ships with NO usable `defaultEndpoints.api` at all (`azure-ai`, `oci`).
    *

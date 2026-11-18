@@ -716,6 +716,17 @@ describe("WS-13b §1: rows are evidence", () => {
     expectRejected(broken, "admission.tier");
   });
 
+  test("2026-11-18: a conversation-id header is a lowercase x- name, never one that could carry a credential", () => {
+    for (const name of ["x-opencode-session", "x-conversation-id"]) {
+      expect(validateCatalog(baseCatalog({ providers: [baseProvider({ conversationIdHeader: name })] })).ok).toBe(true);
+    }
+    for (const bad of ["Authorization", "X-Opencode-Session", "x-api-key", "x-auth-token", "session", "x-", 7]) {
+      const result = validateCatalog(baseCatalog({ providers: [baseProvider({ conversationIdHeader: bad as never })] }));
+      expect([bad, result.ok]).toEqual([bad, false]);
+      if (!result.ok) expect(result.errors.map((e) => e.code)).toContain("conversation-id-header-invalid");
+    }
+  });
+
   // --- fix-wave R-FW-2: `identityHeaders` is Winter-authored, both halves --------------------------
 
   test("an identity header the Winter allowlist does not name is refused — a row may not invent one", () => {

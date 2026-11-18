@@ -66,6 +66,7 @@ import {
   errorEvent,
   fetchOpenAiModels,
   identityFor,
+  identityForTurn,
   imageDataUrl,
   isStreamTerminator,
   makeRetryPolicy,
@@ -1164,7 +1165,7 @@ export async function* chatTurn(
       // an account-scoped value, to xAI's subscription proxy. `ResolvedAuth` no longer carries an
       // `accountId` at all, so there is nothing here to author it from.
       privileged: privilegedHeaders(options),
-      identity: identityFor(options, ctx),
+      identity: identityForTurn(options, ctx, req.cacheKey),
       userSupplied: ctx.connection.headers,
     });
     url = urlFor(endpoint);

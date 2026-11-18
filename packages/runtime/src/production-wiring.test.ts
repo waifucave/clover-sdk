@@ -1966,7 +1966,7 @@ describe("WS-13c: the wiring's model-family surface", () => {
     const wiring = await buildProductionWiring({ config: gptSession("s-slots-tri"), env: {}, winterHome: home, provider: hermetic });
     try {
       expect(wiring.engineOptions.activeSlotSet!(undefined)).toMatchObject({ family: "gpt", source: "family-default" });
-      expect(wiring.engineOptions.resolveSlot!("astra", undefined)).toMatchObject({ ok: true, providerId: "openai", modelKey: "openai/gpt-6-astra" });
+      expect(wiring.engineOptions.resolveSlot!("astra", undefined)).toMatchObject({ ok: true, providerId: "openai", modelKey: "openai/gpt-6.2-astra" });
     } finally {
       wiring.dispose();
     }

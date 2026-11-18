@@ -90,6 +90,11 @@ const FAMILY_STATUSES: readonly ModelFamilyDescriptor["status"][] = ["candidate"
  */
 export const WINTER_IDENTITY_HEADER_NAMES: readonly string[] = ["Client-Agent"];
 
+/** The shape of a provider row's `conversationIdHeader` (2026-11-18). */
+const CONVERSATION_ID_HEADER_RE = /^x-[a-z0-9][a-z0-9-]{0,45}$/;
+/** A name that could carry a credential is refused even when it fits the shape. */
+const CONVERSATION_ID_HEADER_DENY = /(auth|key|token|secret|password|cookie|credential)/;
+
 /**
  * The THREE tokens an `identityHeaders` VALUE may carry, substituted by the adapter at request time
  * (provider-runtime's `renderIdentityHeaders`).
@@ -626,6 +631,15 @@ function checkProvider(errs: Errors, v: unknown, path: string): void {
           );
         }
       }
+    }
+  }
+
+  // 2026-11-18: a header NAME that carries the conversation's opaque id. Shape-checked, not allowlisted:
+  // a lowercase `x-` token, and never one that could carry a credential.
+  const conversationIdHeader = v["conversationIdHeader"];
+  if (conversationIdHeader !== undefined) {
+    if (typeof conversationIdHeader !== "string" || !CONVERSATION_ID_HEADER_RE.test(conversationIdHeader) || CONVERSATION_ID_HEADER_DENY.test(conversationIdHeader)) {
+      errs.add(`${path}.conversationIdHeader`, `expected a lowercase \`x-\` header name (letters, digits, hyphens; at most 48 characters) that is not an auth/key/token/secret header, got ${describe(conversationIdHeader)}`, "conversation-id-header-invalid");
     }
   }
 

@@ -41,7 +41,8 @@ describe("long-context tiers (Claude Haiku 5.5: over 100,000 prompt tokens)", ()
 
   test("a flat-priced row is priced exactly as before 0.0.56", () => {
     const est = estimateCostUsd({ inputTokens: 900_000, outputTokens: 10_000, cacheReadTokens: 50_000 }, sonnet);
-    close(est.costUsd, 0.9 * 2 + 0.01 * 10 + 0.05 * 0.2);
+    // Sonnet 5.5's cached-input rate is $0.10 per million (corrected 2026-11-18 from the model page; it was 0.20).
+    close(est.costUsd, 0.9 * 2 + 0.01 * 10 + 0.05 * 0.1);
     expect(est).toEqual({ costUsd: est.costUsd, costBasis: "list" });
   });
 });
