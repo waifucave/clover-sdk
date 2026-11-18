@@ -284,7 +284,7 @@ describe("zai/* GLM reasoning evidence through the REAL catalog registry (SDK 0.
     expect(incompleteReview.classification?.warnings).toEqual([]);
   });
 
-  test("addendum 1a: a GLM turn with an exposed sidecar record renders for a GPT destination as <recovered_reasoning kind=\"exposed\" .../>", () => {
+  test("addendum 1a: a GLM turn's exposed reasoning never reaches a GPT destination -- not natively, not as text", () => {
     const registry = realCatalogRegistry();
     const glm = realEndpoint(registry, "zai/glm-5");
     const gpt = realEndpoint(registry, "openai/gpt-5.6-luna");
@@ -301,17 +301,12 @@ describe("zai/* GLM reasoning evidence through the REAL catalog registry (SDK 0.
     };
     const chain = new Map([["a1", { summary: "the whole raw GLM chain-of-thought" }]]);
     const { messages, report } = createHistoryRenderer(registry).renderWithReport([message], chain, target);
-    expect(report.decorations).toHaveLength(1);
-    expect(report.decorations[0]!.kind).toBe("exposed");
-    const decorated = messages[0]!.decoration;
-    expect(decorated).toBeDefined();
-    expect(decorated!.text).toContain(`<${RECOVERED_REASONING_TAG} kind="exposed" provider="zai" model="zai/glm-5">`);
-    expect(decorated!.text).toContain("the whole raw GLM chain-of-thought");
-    // BEFORE the catalog fix (readableState: "none"), this same input classified `kind: "summary"`
-    // -- carried, but mislabelled as a private family's own returned summary rather than an open
-    // model's raw reasoning, which would also have defeated an `allowExposedForwarding: false`
-    // policy (that gate only fires for `kind: "exposed"`).
-    expect(decorated!.text).not.toContain('kind="summary"');
+    expect(report.droppedNativeState).toBe(0);
+    expect(messages[0]!.decoration).toBeUndefined();
+    const serialized = JSON.stringify(messages);
+    expect(serialized).not.toContain("the whole raw GLM chain-of-thought");
+    expect(serialized).not.toContain("recovered_");
+    expect(serialized).toContain("the visible GLM answer");
   });
 
   test("addendum 1b: the same GLM turn renders for a Claude destination through toClaudeReady's step (e) as kind=\"exposed\"", () => {

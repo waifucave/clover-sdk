@@ -9,7 +9,6 @@ import {
   contentWithReasoningBlocks,
   isReasoningBlockItem,
   reasoningBlockItems,
-  reasoningBlocksVisibleText,
   separateReasoningBlocks,
   spliceReasoningBlocks,
 } from "./reasoning-blocks.ts";
@@ -74,14 +73,6 @@ describe("the tagged item", () => {
     expect(isReasoningBlockItem({ type: REASONING_BLOCK_ITEM_TYPE, at: 0, block: { type: "thinking", thinking: "x" } })).toBe(false);
     // A Responses reasoning item is someone else's.
     expect(isReasoningBlockItem({ type: "reasoning", encrypted_content: "e", summary: [] })).toBe(false);
-  });
-
-  test("the readable text is the thinking text only -- never a signature, never redacted data", () => {
-    const state: ProviderNativeState = { family: "anthropic", continuationDomain: "d", items: reasoningBlockItems([{ at: 0, block: T1 as never }, { at: 1, block: R1 as never }, { at: 2, block: T2 as never }]) };
-    const text = reasoningBlocksVisibleText(state)!;
-    expect(text).toBe("look first\n\nthen act");
-    expect(text).not.toContain("sig-a");
-    expect(text).not.toContain("OPAQUE");
   });
 });
 

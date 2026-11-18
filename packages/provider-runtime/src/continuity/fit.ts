@@ -21,19 +21,6 @@ export const ESTIMATE_CHARS_PER_TOKEN = 3.5;
 /** The margin the estimate adds on top. */
 export const ESTIMATE_MARGIN = 1.1;
 
-/**
- * The cross-family reasoning decoration caps (user decision 2), declared here because the fit estimate
- * must account for them: the renderer may add up to `DECORATION_CHAR_BUDGET` characters of
- * `<recovered_reasoning>` to a request whose history holds another model's turns. 4,000 characters is
- * about 1,100 tokens at the ratio above -- room for a Claude turn's summarized thinking or a Responses
- * summary in full (typically a few hundred to two thousand characters), and a hard stop for an open
- * model's raw trace, which can run to tens of thousands. 24,000 in total is about 6,900 tokens: under 4%
- * of a 200k window and under 6% of a 128k one, so even a history made mostly of another family's turns
- * leaves the target its window.
- */
-export const MAX_DECORATION_CHARS = 4_000;
-export const DECORATION_CHAR_BUDGET = 24_000;
-
 /** Tokens for `chars` characters of ASCII text, by the estimate above. */
 export function estimateTokensFromChars(chars: number): number {
   return Math.ceil((chars / ESTIMATE_CHARS_PER_TOKEN) * ESTIMATE_MARGIN);

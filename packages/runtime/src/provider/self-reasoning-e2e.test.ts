@@ -16,7 +16,7 @@ import { describe, expect, test } from "bun:test";
 import { serve } from "bun";
 import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
-import { RECOVERED_REASONING_TAG, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { runEngine } from "../engine.ts";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { stubExecutor } from "./mock.ts";
@@ -149,7 +149,7 @@ describe("E1: a deepseek-anthropic session's own reasoning replays natively on i
       // Native, in-dialect, leading, with the endpoint's own signature -- what claude sends back.
       expect(ownTurn!.content[0]).toEqual({ type: "thinking", thinking: OWN_THINKING, signature: OWN_SIGNATURE });
       // And nowhere in the request is the model's reasoning quoted back to it as text.
-      expect(fake.bodies[1]).not.toContain(RECOVERED_REASONING_TAG);
+      expect(fake.bodies[1]).not.toContain("recovered_");
       const texts = step2.messages.flatMap((m) => m.content.filter((b) => b["type"] === "text").map((b) => String(b["text"])));
       for (const text of texts) expect(text).not.toContain(OWN_THINKING);
     } finally {

@@ -740,18 +740,19 @@ describe("WS-23: a large sidecar is read in bounded memory", () => {
     }));
 });
 
-// Review r1, M-1: the sticky decoration decisions fold per TARGET model.
-describe("WS-23: the `decoration` kind", () => {
-  test("folds per target model key: a decoration verbatim, or null for 'none was sent'", () => {
-    const base = { sessionId: "sess", anchorUuid: "a1", itemIndex: 0, kind: "decoration" as const };
+// 2026-11 (native reasoning only): the retired `decoration` kind is still READ (old session files hold
+// it) and folds into nothing -- no request is ever built from it again.
+describe("the retired `decoration` kind", () => {
+  test("an old session's decoration records are accepted and ignored; the entry's other records still fold", () => {
+    const base = { sessionId: "sess", anchorUuid: "a1", family: "openai" };
     const records = [
-      toProviderStateRecord({ ...base, provider: "openai", model: "openai/gpt-6-sol", family: "openai", payload: { text: "<recovered_reasoning …>x</recovered_reasoning>", door: "tag" } }),
-      toProviderStateRecord({ ...base, provider: "deepseek", model: "deepseek/deepseek-v4-pro", family: "openai", payload: { dropped: true } }),
+      toProviderStateRecord({ ...base, itemIndex: 0, kind: "origin", provider: "openai", model: "openai/gpt-6-sol", payload: {} }),
+      toProviderStateRecord({ ...base, itemIndex: 1, kind: "decoration", provider: "openai", model: "openai/gpt-6-sol", payload: { text: "<recovered_reasoning …>x</recovered_reasoning>", door: "tag" } }),
+      toProviderStateRecord({ ...base, itemIndex: 2, kind: "decoration", provider: "deepseek", model: "deepseek/deepseek-v4-pro", payload: { dropped: true } }),
     ];
-    expect(buildContinuationChain(records, new Set(["a1"])).get("a1")!.decorations).toEqual({
-      "openai/gpt-6-sol": { text: "<recovered_reasoning …>x</recovered_reasoning>", door: "tag" },
-      "deepseek/deepseek-v4-pro": null,
-    });
+    const link = buildContinuationChain(records, new Set(["a1"])).get("a1")!;
+    expect(link.origin?.modelKey).toBe("openai/gpt-6-sol");
+    expect(JSON.stringify(link)).not.toContain("recovered_reasoning");
   });
 });
 

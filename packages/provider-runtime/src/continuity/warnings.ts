@@ -8,8 +8,9 @@
 //
 // WHAT IS NO LONGER A LOSS, and why. A switch replays the ACTUAL conversation to the target -- nothing is
 // summarized or forked -- and each model's reasoning state stays in the provider-state sidecar, keyed by
-// its own continuation domain: the target gets the readable part as labelled data, and the source gets
-// its own state back, natively, on a switch back. So "the reasoning context starts over" (the old
+// its own continuation domain: the target does not receive it (reasoning crosses only in its native form,
+// where the target accepts it as it is), and the source gets its own state back, natively, on a switch
+// back. So "the reasoning context starts over" (the old
 // triggers 1-3, 5 and 6) is not something the user loses by switching, and the prose that implied a
 // summary hand-off ("the objective, the decisions already made...") described a mechanism that never
 // ran. What IS lost is exactly four things:
@@ -129,7 +130,7 @@ function portableList(from: ContinuityEndpoint, to: ContinuityEndpoint, facts: S
   if (completed > 0) portable.push(`${completed} completed tool result${completed === 1 ? "" : "s"}`);
   if (from.continuation === "none") return portable;
   if (nativeCarries) portable.push(`${from.modelKey}'s own reasoning state, replayed exactly`);
-  else portable.push(`${from.modelKey}'s reasoning, kept for ${from.modelKey} and replayed if you switch back (${identify(to)} sees what it can read of it)`);
+  else portable.push(`${from.modelKey}'s reasoning, kept for ${from.modelKey} and replayed if you switch back (${identify(to)} does not see it)`);
   return portable;
 }
 

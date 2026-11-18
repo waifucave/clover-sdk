@@ -669,74 +669,83 @@ describe("T10 wiring: the pinned `apiKeySource` mapping (disclosed gap-fill)", (
   });
 });
 
-describe("T10 wiring: Lane C's decoration text reaches the WIRE, in every shipped family", () => {
-  // THE CONTROLLER'S RULING, verbatim: "`ProviderMessageLike.decoration.text` is rendered VERBATIM as
-  // plain text in the target's message; no adapter adds a second wrapper", and T10 "asserts the exact
-  // text on the fake's recorded request".
-  //
-  // A grep for `decoration` in each adapter is NOT that assertion — it cannot distinguish rendering
-  // code from a type import or a comment, and Lane C's whole cross-family surface is inert if any one
-  // family drops it. The subject here is therefore the RECORDED REQUEST, per family, driven through
-  // the same `adapterAsProvider` chain a session uses.
-  const DECORATION = "WINTER-T10-DECORATION-MARKER: recovered reasoning from a prior model";
+// 2026-11 (native reasoning only): THE GUARD. An earlier turn's reasoning reaches the model running now
+// only in its native form, and only where that model takes it as it is; everything else is LEFT OUT and
+// nothing is pasted in its place. Driven through the session's REAL wiring (`buildSessionProvider` ->
+// the history renderer -> `adapterAsProvider` -> each shipped family's adapter) against a loopback fake,
+// so the subject is the RECORDED request body. A unique sentinel sits in every place another model's
+// reasoning can live -- its thinking text, its signature, its encrypted item, its exposed reasoning,
+// OpenRouter's `reasoning_details`, the sidecar's captured summary -- so pasted text is caught under ANY
+// wrapper, not only the retired tags.
+describe("native reasoning only: no other model's reasoning, and no pasted reasoning text, ever reaches a request", () => {
+  const SENTINEL = "SENTINEL_REASONING_7f3a";
+  const FORBIDDEN = [SENTINEL, "recovered_", "prior_model_handoff", "prior-model reasoning"];
 
   for (const [family, providerId, adapterId, path] of [
     ["anthropic", "t10anthropic", "winter.anthropic-messages", "/v1/messages"],
     ["openai-responses", "t10openai", "winter.openai-responses", "/responses"],
     ["openai-chat", "t10chat", "winter.openai-chat-completions", "/chat/completions"],
+    ["openai-chat (OpenRouter)", "openrouter", "winter.openai-chat-completions", "/chat/completions"],
+    ["openai-chat (DeepSeek)", "deepseek", "winter.openai-chat-completions", "/chat/completions"],
     ["google", "t10google", "winter.google-generate-content", ":streamGenerateContent"],
   ] as const) {
-    test(`${family}: the decoration text rides the request VERBATIM, once, with no second wrapper`, async () => {
+    test(`${family}: another model's turn arrives with its visible text and tool call only; this model's own native state still rides`, async () => {
       const fake = await startScenarioFake();
       try {
-        const model = `${providerId}/t10-decorated`;
-        const catalog = catalogWith(
-          [testProvider({ id: providerId, adapterId, family: family.startsWith("google") ? "google" : family.startsWith("anthropic") ? "anthropic" : "openai", api: fake.url })],
-          [testModel({ key: model, providerId, upstreamId: "t10-decorated" })],
-        );
+        const model = `${providerId}/t10-native`;
+        const wireFamily = family.startsWith("google") ? "google" : family.startsWith("anthropic") ? "anthropic" : "openai";
+        const catalog = catalogWith([testProvider({ id: providerId, adapterId, family: wireFamily, api: fake.url })], [testModel({ key: model, providerId, upstreamId: "t10-native" })]);
+        const foreignOrigin = { providerId: "elsewhere", modelKey: "elsewhere/another-model", family: "openai" };
         const wiring = buildSessionProvider({
           config: baseConfig({ model, provider: { providerId, authRef: { kind: "inline", value: "test" }, connection: { baseUrl: fake.url, local: true } } }),
           env: {},
           catalog,
           credentials: createMemoryCredentialStore(),
+          // The resumed sidecar: the foreign turn's captured readable summary.
+          chain: () => new Map([["f1", { origin: foreignOrigin, summary: `${SENTINEL} captured summary` }]]) as never,
         });
-        await wiring.provider.generate({
-          messages: [{ role: "user", content: "carry it", decoration: { text: DECORATION, door: "tag" } }],
-        });
+        // This model's OWN earlier turn, in its own family's native carrier.
+        const ownState =
+          wireFamily === "anthropic"
+            ? [{ type: "winter.reasoning_block", at: 0, block: { type: "thinking", thinking: "own thinking", signature: "NATIVE-OWN-STATE" } }]
+            : adapterId === "winter.openai-responses"
+              ? [{ type: "reasoning", id: "rs_own", encrypted_content: "NATIVE-OWN-STATE", summary: [] }]
+              : [];
+        const messages: ProviderMessage[] = [
+          { role: "user", content: "start" },
+          {
+            role: "assistant",
+            uuid: "f1",
+            origin: foreignOrigin,
+            content: [
+              { type: "thinking", thinking: `${SENTINEL} thinking`, signature: `${SENTINEL}-signature` },
+              { type: "text", text: "foreign visible answer" },
+              { type: "tool_use", id: "call_1", name: "Read", input: { file_path: "/w/a.ts" } },
+            ],
+            nativeState: {
+              family: "openai",
+              continuationDomain: "elsewhere/another-model",
+              items: [
+                { type: "reasoning", id: "rs_foreign", encrypted_content: `${SENTINEL}-encrypted`, summary: [{ type: "summary_text", text: `${SENTINEL} summary` }] },
+                { type: "winter.exposed_reasoning", text: `${SENTINEL} exposed` },
+                { type: "winter.reasoning_details", details: [{ type: "reasoning.text", text: `${SENTINEL} details`, format: "unknown" }] },
+              ],
+            },
+          },
+          { role: "tool", content: [{ type: "tool_result", tool_use_id: "call_1", content: "file contents" }] },
+          { role: "assistant", uuid: "o1", origin: { providerId, modelKey: model, family: wireFamily }, content: [{ type: "text", text: "own answer" }], ...(ownState.length > 0 ? { nativeState: { family: wireFamily, continuationDomain: model, items: ownState } } : {}) },
+          { role: "user", content: "go on", decoration: { text: `<recovered_reasoning>${SENTINEL}</recovered_reasoning>`, door: "tag" } },
+        ];
+        await wiring.provider.generate({ messages });
 
         const request = fake.requests.find((r) => r.path.endsWith(path));
         expect(request, `${family}: the fake received no request on ${path}`).toBeDefined();
-        // EQUALITY, not "contains once" (P6 fix wave, the controller's merge note): the whole-branch
-        // review's probe P3 showed the OpenAI family prefixing `[winter:context] ` onto the text, which
-        // a count-of-occurrences assertion cannot see. The RECORDED block (or, for the chat family's
-        // plain-string content, the recorded leading SEGMENT) must EQUAL Lane C's delimited text.
-        const body = JSON.parse(request!.body) as unknown;
-        const textBlocks: string[] = [];
-        const walk = (value: unknown): void => {
-          if (Array.isArray(value)) {
-            for (const item of value) walk(item);
-          } else if (typeof value === "object" && value !== null) {
-            for (const [key, inner] of Object.entries(value)) {
-              if (key === "text" && typeof inner === "string") textBlocks.push(inner);
-              else walk(inner);
-            }
-          }
-        };
-        walk(body);
-        if (family === "openai-chat") {
-          // A text-only chat message is a plain string: the decoration is its leading segment, then a
-          // newline, then the user's own text -- and NOTHING before the decoration.
-          const content = (body as { messages: Array<{ role: string; content: unknown }> }).messages.find((m) => m.role === "user")!.content;
-          expect(typeof content).toBe("string");
-          const segments = (content as string).split("\n");
-          expect(segments[0], `${family}: the leading segment must EQUAL the decoration`).toBe(DECORATION);
-          expect(segments.slice(1).join("\n")).toBe("carry it");
-        } else {
-          // One block EQUAL to the decoration, and no other block carrying it inside a wrapper.
-          expect(textBlocks.filter((t) => t === DECORATION), `${family}: expected exactly one text block EQUAL to the decoration`).toHaveLength(1);
-          expect(textBlocks.filter((t) => t !== DECORATION && t.includes(DECORATION)), `${family}: no block may carry the decoration inside a wrapper`).toHaveLength(0);
-          expect(textBlocks).toContain("carry it");
-        }
+        const body = request!.body;
+        for (const needle of FORBIDDEN) expect(body, `${family}: the request must never carry ${needle}`).not.toContain(needle);
+        // The visible conversation crosses intact.
+        for (const visible of ["foreign visible answer", "/w/a.ts", "file contents", "own answer", "go on"]) expect(body, `${family}: ${visible} must cross`).toContain(visible);
+        // The baseline that must keep working: the model's own native state replays.
+        if (ownState.length > 0) expect(body, `${family}: its own native state must replay`).toContain("NATIVE-OWN-STATE");
       } finally {
         await fake.close();
       }

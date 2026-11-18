@@ -1,40 +1,35 @@
-// Phase 6 Lane C: the HISTORY RENDERER -- WS-13 §8.2's per-message decoration matrix.
+// The HISTORY RENDERER: what each earlier assistant message carries into the request built for the
+// model that runs NOW.
 //
-// THE WHOLE DESIGN IN ONE RULE: when building a request, compare each historical assistant message's
-// PRODUCING model with the TARGET, per message, and decide that message's fate on its own facts.
+// THE WHOLE RULE: reasoning from an earlier turn reaches the target only in its NATIVE form, and only
+// where the target accepts that form as it is. Per message:
 //
-//   same continuation domain  -> EXACT native replay: its opaque state and its in-dialect thinking
-//                                blocks ride unchanged, and it gets NO decoration (the target can
-//                                read the real thing);
-//   different domain          -> the native state is dropped, in-dialect thinking blocks are stripped
-//                                from the content, and the message carries AT MOST ONE decoration --
-//                                its OWN summary, or its own complete exposed reasoning -- as labeled
-//                                prior-model DATA in the target's door.
+//   same continuation domain, or the same model  -> EXACT native replay: its opaque state and its
+//                                                   in-dialect thinking blocks ride unchanged;
+//   anything else (another model, another provider,
+//   or an origin nobody recorded)                -> every reasoning carrier is REMOVED (`nativeState`,
+//                                                   and the Anthropic-family `thinking` /
+//                                                   `redacted_thinking` blocks in the content), and
+//                                                   NOTHING is put in its place.
 //
-// WHY PER MESSAGE AND NOT PER SESSION: arbitrary multi-hop chains (Claude -> OpenAI -> DeepSeek ->
-// Claude -> ...) compose from this single rule with nothing else added. Each message answers only for
-// itself, so the returning provider's own native state LIGHTS UP AGAIN on the hop back while the
-// intervening families' messages keep their own decorations and nothing else. A session-level
-// "we switched, so degrade everything" rule would have thrown that away permanently.
+// NOTHING IS GLUED IN. There is no text tag, no pasted summary, no "prior model's reasoning" note and
+// no replay of another provider's sidecar state. The visible conversation -- text, tool calls, tool
+// results -- crosses untouched; only the reasoning is left out. Until 2026-11 a cross-model message
+// carried its source's summary or exposed reasoning as a `<recovered_reasoning>` text block; that is
+// gone, and so is the `decoration` field it rode on: the renderer drops any `decoration` it is handed,
+// on every role, so no annotation of any kind reaches an adapter.
 //
-// WHAT IS NEVER DONE HERE, stated because each is a live temptation:
-//   - a foreign summary is never written into a signed thinking channel (R6-8) -- `decoration` is an
-//     annotation carried plainly, and neither door is a validated channel;
-//   - opaque state never crosses a domain boundary in ANY carrier: not `nativeState.items`, and not
-//     the Anthropic-family `thinking.signature` / `redacted_thinking.data` blocks that ride in the
-//     CONTENT rather than in `nativeState`;
-//   - raw hidden reasoning is never synthesized into a decoration from an in-dialect thinking block.
-//     The material is the provider's OWN readable summary (or its exposed reasoning), captured from
-//     its own summary channel into the sidecar. A Claude message whose summary was never captured
-//     therefore carries nothing across the boundary -- and the switch point's classification warns
-//     that it is summary-less, which is the honest outcome rather than forwarding a private chain of
-//     thought.
+// THE STORED TRANSCRIPT IS NOT TOUCHED. This builds a request; the session's own record of every turn's
+// reasoning (the transcript and its provider-state sidecar) keeps it, and a switch BACK to the model
+// that produced it replays it natively again -- each message answers only for itself, so arbitrary
+// multi-hop chains compose from this one rule.
+//
+// WHY PER MESSAGE AND NOT PER SESSION: the returning model's own native state lights up again on the
+// hop back while the intervening models' messages carry only what everyone can read.
 
 import type { ProviderRegistry } from "../registry.ts";
 import type { ContentBlockLike, MessageOrigin, ProviderMessageLike, ProviderNativeState } from "../types.ts";
-import { MIN_DECORATION_BODY_CHARS, buildDecoration, decorationOverhead, doorFor, type Decoration, type DecorationDoor } from "./decoration.ts";
-import { createEndpointResolver, sameDomain, sameModel, type ContinuityEndpoint, type ReadableState } from "./domains.ts";
-import { hasInlineReasoning, reasoningBlocksVisibleText } from "./reasoning-blocks.ts";
+import { createEndpointResolver, sameDomain, sameModel, type ReadableState } from "./domains.ts";
 
 /** The target of THIS request. Structurally the `target` argument of the runtime's frozen `HistoryRenderer` seam. */
 export interface HistoryTarget {
@@ -50,18 +45,18 @@ export interface HistoryTarget {
   /**
    * The target model's OWN identity -- the resolved provider id and catalog key (runtime `bridge.ts`
    * passes `resolved.providerId`/`resolved.modelKey`). Read only by `sameModel`: a message produced by
-   * this exact provider and model is the model's own prior turn, replayed exactly and never decorated,
-   * even when the catalog gives the row no continuation domain. Optional so a caller built before the
-   * fields existed keeps its exact behaviour; absent means "unknown", which never matches.
+   * this exact provider and model is the model's own prior turn, replayed exactly, even when the
+   * catalog gives the row no continuation domain. Absent means "unknown", which never matches.
    */
   providerId?: string;
   modelKey?: string;
 }
 
-/** One assistant entry's folded sidecar records. Structurally `ContinuationLink` from the runtime's `store/provider-state.ts`. */
+/** One assistant entry's folded sidecar records, as far as the renderer reads them. Structurally a subset of `ContinuationLink` from the runtime's `store/provider-state.ts`. */
 export interface ContinuationLinkLike {
   origin?: MessageOrigin;
   nativeState?: ProviderNativeState;
+  /** The turn's captured readable summary. Part of a real chain's shape; the renderer NEVER reads it (it is not sent to any model). */
   summary?: string;
 }
 
@@ -70,81 +65,21 @@ export interface ContinuationChainLike {
   get(anchorUuid: string): ContinuationLinkLike | undefined;
 }
 
-/** Whether a message's readable material is a provider SUMMARY or its own complete exposed reasoning. §9.5: the two are never merged, and never merged with opaque state. */
-export type MaterialKind = "summary" | "exposed";
-
-export interface RenderedDecoration {
-  /** The decorated message's anchor uuid, when it had one. Identity only -- this record never carries the decoration's text, let alone any payload. */
-  anchorUuid?: string;
-  source: { providerId: string; modelKey: string };
-  kind: MaterialKind;
-  door: DecorationDoor;
-  truncated: boolean;
-}
-
-/**
- * What one render did. The seam returns only messages, so this is how a caller learns that a transfer
- * became lossy -- §9.6's "never silently truncate reasoning while still classifying the handoff as
- * lossless" needs somewhere for the truncation to be reported, and this is it.
- */
+/** What one render did. Counts only: nothing here can carry reasoning text or a payload. */
 export interface RenderReport {
-  /** Messages replayed with their native state intact (same domain). */
+  /** Messages replayed with their native state intact (same domain, or the same model). */
   replayedNatively: number;
-  /** Messages whose native state was dropped because the target is a different domain. */
+  /** Messages whose native state was left out because the target is another model. */
   droppedNativeState: number;
-  /** In-dialect thinking / redacted_thinking blocks stripped from content on a cross-domain leg. */
+  /** In-dialect `thinking` / `redacted_thinking` blocks left out of a message's content. */
   strippedInDialectBlocks: number;
-  decorations: RenderedDecoration[];
-  /** Cross-domain messages that had NO readable material to carry (no summary captured, or forwarding was policy-blocked). */
-  withoutMaterial: number;
-  /** Material dropped ENTIRELY because the render's total decoration budget was exhausted. */
-  budgetDropped: number;
-  /**
-   * ANY truncation or budget drop. The engine's switch point reads this to flip a would-be-lossless
-   * transfer to warned-lossy. Set from THREE sources: a decoration trimmed or dropped entirely for
-   * budget (pass 2); and, since the micro-round fail-closed fix, the unresolved-origin branch (pass
-   * 1) whenever it actually destroys real reasoning content -- a `thinking` block's own text, a
-   * `redacted_thinking` block, or `nativeState` -- because that branch has no `classifySwitch` seam
-   * of its own to escalate through otherwise. Left `false` when that branch drops nothing (the
-   * identity case) or only removes a stale, unattributed decoration.
-   */
-  truncated: boolean;
-  /**
-   * Decorations placed on the THINKING-CHANNEL door, which only the target family's own adapter can
-   * address. Surfaced so a caller can see that this render depends on adapter-side placement --
-   * `applyDecorationToContent` deliberately cannot do it, and a count of zero means every decoration
-   * this render produced is placeable as ordinary text.
-   */
-  thinkingChannelDecorations: number;
+  /** Messages left out of the request entirely: another model's assistant turn whose only content was reasoning. */
+  droppedEmptyMessages: number;
 }
 
 export interface HistoryRendererOptions {
-  /** §9.6: the per-decoration character budget. Absent = unbounded. */
-  maxDecorationChars?: number;
-  /** §9.6: the budget for ALL decorations in one render, spent NEWEST FIRST so the material closest to the current work survives. Absent = unbounded. */
-  decorationCharBudget?: number;
-  /**
-   * §12.4 / §8.4: whether raw exposed reasoning may be forwarded at all. `false` suppresses
-   * `exposed` material (a provider or user policy that forbids forwarding) while leaving
-   * provider-produced summaries alone; `classifySwitch` turns it into the policy-blocked warning.
-   */
-  allowExposedForwarding?: boolean;
-  /** Called with every render's report. The frozen seam returns only messages; this is the side channel that keeps truncation observable through it. */
+  /** Called with every render's report. The frozen seam returns only messages; this is the side channel. */
   onReport?: (report: RenderReport) => void;
-  /** Review r1, M-1: the decoration decisions already made per (message, target model) -- see pass 2. Absent: decided afresh every render. */
-  stickyDecorations?: StickyDecorations;
-}
-
-/** Review r1, M-1: what a target model was sent for one message's reasoning -- the decoration verbatim, or `null` for none. */
-export interface StickyDecoration {
-  text: string;
-  door: DecorationDoor;
-}
-
-/** The memory of those decisions, keyed by the decorated message's anchor and the TARGET model. */
-export interface StickyDecorations {
-  get(anchorUuid: string, target: { providerId: string; modelKey: string }): StickyDecoration | null | undefined;
-  set(anchorUuid: string, target: { providerId: string; modelKey: string; family: string }, decision: StickyDecoration | null): void;
 }
 
 /**
@@ -153,8 +88,7 @@ export interface StickyDecorations {
  * `render` is deliberately GENERIC over the message type rather than typed against the engine's
  * `ProviderMessage`: this package must never import the runtime (R6-4's cycle rule), and a generic
  * whose constraint is `ProviderMessageLike` is instantiated at `M = ProviderMessage` when this object
- * is assigned to the runtime's frozen `HistoryRenderer` seam. `corpus/continuity.test.ts` proves that
- * assignment against the REAL `adapterAsProvider` rather than against a hand-copied shape.
+ * is assigned to the runtime's frozen `HistoryRenderer` seam.
  */
 export interface WinterHistoryRenderer {
   render<M extends ProviderMessageLike>(messages: M[], chain: ContinuationChainLike, target: HistoryTarget): M[];
@@ -163,229 +97,59 @@ export interface WinterHistoryRenderer {
 
 export function createHistoryRenderer(registry: ProviderRegistry, options: HistoryRendererOptions = {}): WinterHistoryRenderer {
   const resolveEndpoint = createEndpointResolver(registry);
-  const allowExposed = options.allowExposedForwarding !== false;
 
   function renderWithReport<M extends ProviderMessageLike>(messages: M[], chain: ContinuationChainLike, target: HistoryTarget): { messages: M[]; report: RenderReport } {
-    const report: RenderReport = {
-      replayedNatively: 0,
-      droppedNativeState: 0,
-      strippedInDialectBlocks: 0,
-      decorations: [],
-      withoutMaterial: 0,
-      budgetDropped: 0,
-      truncated: false,
-      thinkingChannelDecorations: 0,
-    };
+    const report: RenderReport = { replayedNatively: 0, droppedNativeState: 0, strippedInDialectBlocks: 0, droppedEmptyMessages: 0 };
 
-    // PASS 1: decide each message's fate on its own facts, and note which ones want a decoration.
-    // The decoration TEXT is not built yet -- the budget is spent newest-first in pass 2, and a
-    // decoration that will be dropped for budget should never have been built.
-    const plans: Array<{ index: number; material: { kind: MaterialKind; text: string }; source: ContinuityEndpoint; anchorUuid?: string }> = [];
-    const out: M[] = messages.map((message, index) => {
-      // Phase 10b Lane S, S5 (W18-17, G1): an OFFICIAL-written assistant entry has no sidecar record
-      // at all (the official leg's own child process never goes through Winter's `recordAssistant`),
-      // so `message.origin`/the chain lookup are BOTH always absent for one. The one thing such an
-      // entry DOES carry is claude's own `message.model` (real claude assistant entries always have
-      // one; W18-11 is why Winter's own never do) -- read structurally, since `ProviderMessageLike`
-      // itself has no `model` field and must not grow one just for this fallback (fix round 3,
-      // P10b-6: the real dialect reader that attaches it from disk is `winter-agent-runtime`'s
-      // `resume.ts`). `resolveEndpoint` below does the REAL domain/readableState lookup from just
-      // `providerId`+`modelKey`, exactly as it already does for a real origin, so "same-domain ->
-      // native replay" falls out unchanged for a Claude target.
+    const out: M[] = [];
+    for (const message of messages) {
+      // An OFFICIAL-written (claude binary) assistant entry has no sidecar record at all, so
+      // `message.origin` and the chain lookup are both absent for one; what it does carry is claude's
+      // own `message.model`, read structurally (`ProviderMessageLike` has no `model` field).
       const structuralModel = message.role === "assistant" ? (message as { model?: unknown }).model : undefined;
       const origin =
         message.origin ??
         (message.uuid !== undefined ? chain.get(message.uuid)?.origin : undefined) ??
         (typeof structuralModel === "string" && structuralModel.length > 0 ? { providerId: "anthropic", modelKey: structuralModel, family: "anthropic" } : undefined);
-      if (origin === undefined) {
-        // FAIL CLOSED (fix round 3, controller ruling, LOAD-BEARING). Unresolved origin used to be
-        // an untouched pass-through -- "absence is not a domain mismatch" was true of the histories
-        // this branch was built for (pre-P6 history, host-supplied messages, a compaction
-        // summariser's own rebuilt entries, none of which carry opaque provider state at all) but
-        // false as a GENERAL claim: an official-leg entry whose `message.model` the structural
-        // fallback above still fails to read (a malformed/legacy transcript, a future binary field
-        // rename) is ALSO unresolved-origin, and it very much CAN carry a real signed `thinking`
-        // block. Unknown provenance is the renderer's WORST-informed case, not its safest one to
-        // wave through -- so it is now stripped exactly like a genuine cross-domain message: opaque
-        // provider state (`nativeState`, in-dialect `thinking`/`redacted_thinking` blocks) comes off
-        // in BOTH carriers, unconditionally, before anything reaches an adapter.
-        //
-        // What is deliberately NOT touched: a decoration on a NON-ASSISTANT message. That is a
-        // HANDOFF note (`buildPortableHandoff`/`handoffDecoration`) -- a structurally different
-        // mechanism from reasoning carriage, attached to the user message that opens a target's
-        // first turn -- and stripping it would silently discard the handoff, exactly the harm this
-        // branch's ORIGINAL comment already warned against. A stale decoration on an ASSISTANT
-        // message with no origin is unattributed reasoning material with nothing to justify it, and
-        // still comes off (unchanged from before this fix).
-        //
-        // What is DROPPED, deliberately, rather than carried: an assistant message's own VISIBLE
-        // thinking TEXT. There is no honest `<recovered_reasoning provider=... model=...>` to wrap
-        // it in -- origin is unknown, and `decoration.ts`'s `wrap()` always embeds real provider/
-        // model attributes; inventing one would misattribute the material to a source it never came
-        // from. Folding the raw text into the message's OWN ordinary visible content, unlabeled,
-        // would be WORSE: foreign reasoning presented as this turn's own speech, with no wrapper
-        // marking it as quoted prior-model data, is exactly the impersonation the injection floor
-        // (WS-13 §9.3) forbids. This mirrors this file's own existing policy for "captured nothing"
-        // elsewhere (`materialFor`'s header, and this file's own opening comment): the honest
-        // outcome is carrying nothing, never forwarding a private chain of thought under a false --
-        // or absent -- label.
-        //
-        // Ordinary visible content -- text, `tool_use`, `tool_result` -- is UNTOUCHED: `stripOpaque`
-        // only ever removes `nativeState` and the two opaque content-block types, nothing else.
-        //
-        // IDENTITY PRESERVED when there is truly nothing to strip (no `nativeState`, no opaque
-        // blocks, and no decoration that needs removing): the object comes back BY REFERENCE,
-        // exactly as before this fix, so every history that never carried opaque state in the first
-        // place -- which is every case this branch was originally built for -- sees zero behavior
-        // change, provably (renderer.test.ts's own `toBe` assertions on this path are unmodified by
-        // this fix). The new stripping path only ever fires for the ONE combination that was never
-        // safe to begin with: unresolved origin AND real opaque content.
-        const { nativeState, content, strippedBlocks } = stripOpaque(message);
-        if (nativeState !== undefined) report.droppedNativeState++;
-        report.strippedInDialectBlocks += strippedBlocks;
-        const hadVisibleThinking = message.role === "assistant" && ownThinkingText(message) !== undefined;
-        if (hadVisibleThinking) report.withoutMaterial++;
-        // Micro-round Minor 1: REAL reasoning content was just destroyed with no chance to carry it
-        // as labelled material (there is no origin to attribute it to) -- `strippedBlocks` already
-        // counts BOTH opaque-block shapes this branch can drop (a `thinking` block's own text, a
-        // `redacted_thinking` block), and `nativeState` is the third carrier §9.6 names. A caller
-        // reading this report (the engine's switch point) must be told the transfer became lossy
-        // here, exactly as it already is for a budget-exhausted decoration -- `truncated` is the ONE
-        // flag that escalation reads, and this branch has no `classifySwitch` entry point of its own
-        // to escalate through otherwise. The identity case (nothing dropped) leaves it `false`.
-        if (nativeState !== undefined || strippedBlocks > 0) report.truncated = true;
 
-        const dropDecoration = message.role === "assistant" && message.decoration !== undefined;
-        const nothingChanged = nativeState === undefined && strippedBlocks === 0 && !dropDecoration;
-        if (nothingChanged) return message;
+      const native = origin !== undefined && replaysNatively(resolveEndpoint(origin), target);
 
-        const { nativeState: _dropped, decoration, ...rest } = message;
-        return { ...rest, content, ...(dropDecoration ? {} : decoration !== undefined ? { decoration } : {}) } as unknown as M;
-      }
-
-      const source = resolveEndpoint(origin);
-      if (sameDomain(source, target) || sameModel(source, target)) {
-        // EXACT REPLAY. Native state and in-dialect blocks ride unchanged, and no decoration is
-        // added: the target can read the real thing, and a summary beside it would be the merge §9.5
-        // forbids. A decoration the input happened to carry is REMOVED rather than passed on -- it
-        // would be another family's material sitting on a message this target authored itself.
-        //
-        // `sameModel` is the SELF case, and it is what makes a model's own previous step its own even
-        // when the catalog row declares `continuation: "none"` and so carries no domain id at all
-        // (every Anthropic-dialect sibling row, and every OpenAI-chat reasoning row, without one).
-        // Before it, such a step went down the cross-domain path below: its thinking blocks were
-        // stripped and its own reasoning came back to it as a `<recovered_reasoning>` TEXT block in
-        // its own assistant turn -- which the model then imitated in its visible reply. claude
-        // replays its own thinking to the model that produced it, natively, and never quotes a
-        // model's reasoning back to it; so does this. What rides back is only what the adapter chose
-        // to capture for its own model -- Responses keeps only reasoning items carrying
-        // `encrypted_content`, the chat adapter keeps `reasoning_content` only for a `full-exposed` `plaintext` row
-        // (no shipped row is both full-exposed and domain-less, so no chat row gains a replay here) --
-        // and in-dialect blocks ride with the signature the endpoint sent (`""` when it sent none),
-        // exactly as claude sends them back to the same endpoint.
+      if (native) {
+        // EXACT REPLAY. Native state and in-dialect blocks ride unchanged. `sameModel` is the SELF case:
+        // a model's own previous step is its own even on a row the catalog gives no continuation domain.
+        // What rides back is only what the adapter chose to capture for its own model (Responses keeps
+        // reasoning items carrying `encrypted_content`; the chat adapter keeps `reasoning_content` for a
+        // `plaintext` row and OpenRouter's `reasoning_details` for an `opaque-provider-state` one).
         if (message.nativeState !== undefined) report.replayedNatively++;
-        if (message.decoration === undefined) return message;
-        const { decoration: _stale, ...kept } = message;
-        return kept as unknown as M;
+        out.push(withoutDecoration(message));
+        continue;
       }
 
-      // CROSS-DOMAIN. Everything provider-authenticated comes off, in BOTH carriers.
+      // ANOTHER MODEL, or provenance nobody recorded (the worst-informed case, never waved through):
+      // every reasoning carrier comes off, in BOTH carriers, and nothing replaces it.
       const { nativeState, content, strippedBlocks } = stripOpaque(message);
       if (nativeState !== undefined) report.droppedNativeState++;
       report.strippedInDialectBlocks += strippedBlocks;
-
-      const link = message.uuid !== undefined ? chain.get(message.uuid) : undefined;
-      // W18-17 (R-10b-9): a message with NO sidecar summary (the official leg wrote none) falls back
-      // to its OWN visible `thinking` text -- blocks joined in order, NEVER `signature` -- as ITS
-      // summary. `source.readableState` (Claude's own catalog row: "summary") is what makes
-      // `materialFor` classify this `kind: "summary"`, exactly like a captured sidecar summary would.
-      // WS-23 (reasoning-state): read from the message as it was BEFORE `stripOpaque` above, because
-      // since the move a Claude turn's thinking rides `nativeState` rather than its content -- and
-      // dropping the carrier must not also drop the readable decoration the user chose to keep.
-      const material = materialFor(link, source, allowExposed, ownThinkingText(message));
-      if (material === undefined) {
-        report.withoutMaterial++;
-      } else {
-        plans.push({ index, material, source, ...(message.uuid !== undefined ? { anchorUuid: message.uuid } : {}) });
-      }
-
-      const { nativeState: _dropped, decoration: _replaced, ...rest } = message;
-      // THE ONE CAST. A spread of `M` plus a narrowed `content` is structurally `M` -- every other
-      // key is copied verbatim -- but TypeScript cannot prove that for an unresolved generic. Kept to
-      // this single site so nothing else in the file can quietly widen a message.
-      return { ...rest, content } as unknown as M;
-    });
-
-    // PASS 2: spend the decoration budget NEWEST FIRST. When it runs out the OLDEST material is
-    // dropped rather than every decoration being shrunk to uselessness -- §9.6's ordering applied at
-    // the message level, and, like every other loss here, reported rather than silent.
-    //
-    // Review r1, M-1: STICKY PER TARGET MODEL. What this target was already sent for a message -- a
-    // decoration's exact text, or that it got none -- is what it is sent again, so a history that grows
-    // (another model's stint appended, a back-and-forth switch) never moves bytes INSIDE a prefix the
-    // target has cached. Earlier decisions are charged against the budget first; only new messages are
-    // decided newest-first from what remains, and each new decision is remembered (the engine keeps them
-    // as layer-2 `decoration` records, keyed by the TARGET model).
-    const sticky = options.stickyDecorations !== undefined && target.providerId !== undefined && target.modelKey !== undefined ? { memory: options.stickyDecorations, target: { providerId: target.providerId, modelKey: target.modelKey, family: target.family } } : undefined;
-    const decided = (plan: (typeof plans)[number]): StickyDecoration | null | undefined => (sticky !== undefined && plan.anchorUuid !== undefined ? sticky.memory.get(plan.anchorUuid, sticky.target) : undefined);
-    let remaining = options.decorationCharBudget;
-    if (remaining !== undefined) for (const plan of plans) remaining = Math.max(0, remaining - (decided(plan)?.text.length ?? 0));
-    const door = doorFor(target);
-    for (const plan of [...plans].reverse()) {
-      const source = { providerId: plan.source.providerId, modelKey: plan.source.modelKey };
-      const earlier = decided(plan);
-      if (earlier === null) {
-        report.budgetDropped++;
-        report.truncated = true;
+      // A turn whose ONLY content was its reasoning has nothing left any model can read. Sending it as
+      // an empty assistant message is refused by some surfaces, so it is left out of this request (the
+      // transcript keeps it). A message that still carries anything -- text, a tool call -- always stays.
+      if (message.role === "assistant" && (nativeState !== undefined || strippedBlocks > 0) && isEmptyContent(content)) {
+        report.droppedEmptyMessages++;
         continue;
       }
-      if (earlier !== undefined) {
-        if (earlier.door === "thinking-channel") report.thinkingChannelDecorations++;
-        report.decorations.push({ ...(plan.anchorUuid !== undefined ? { anchorUuid: plan.anchorUuid } : {}), source, kind: plan.material.kind, door: earlier.door, truncated: false });
-        out[plan.index] = { ...out[plan.index]!, decoration: { text: earlier.text, door: earlier.door } } as unknown as M;
+      if (nativeState === undefined && strippedBlocks === 0 && message.decoration === undefined) {
+        out.push(message); // nothing to remove: by identity
         continue;
       }
-      const remember = (decision: StickyDecoration | null): void => {
-        if (sticky !== undefined && plan.anchorUuid !== undefined) sticky.memory.set(plan.anchorUuid, sticky.target, decision);
-      };
-      const perDecoration = budgetFor(options.maxDecorationChars, remaining);
-      // A budget that cannot hold the wrapper plus a usable body buys nothing: sending a delimiter
-      // around three characters spends context and carries no meaning. Dropped, counted, and the
-      // whole transfer flips to lossy.
-      if (perDecoration !== undefined && perDecoration < decorationOverhead(source, door, plan.material.kind) + MIN_DECORATION_BODY_CHARS) {
-        report.budgetDropped++;
-        report.truncated = true;
-        remember(null);
-        continue;
-      }
-      const decoration: Decoration = buildDecoration({
-        text: plan.material.text,
-        source,
-        door,
-        kind: plan.material.kind,
-        ...(perDecoration !== undefined ? { maxChars: perDecoration } : {}),
-      });
-      if (remaining !== undefined) remaining = Math.max(0, remaining - decoration.text.length);
-      if (decoration.truncated) report.truncated = true;
-      if (decoration.door === "thinking-channel") report.thinkingChannelDecorations++;
-      report.decorations.push({
-        ...(plan.anchorUuid !== undefined ? { anchorUuid: plan.anchorUuid } : {}),
-        source,
-        kind: plan.material.kind,
-        door: decoration.door,
-        truncated: decoration.truncated,
-      });
-      const current = out[plan.index]!;
-      // AT MOST ONE DECORATION PER MESSAGE, structurally: this is the only assignment to the field in
-      // the whole render, it happens at most once per index (one plan per message), and pass 1 has
-      // already dropped any decoration the input carried.
-      out[plan.index] = { ...current, decoration: { text: decoration.text, door: decoration.door } } as unknown as M;
-      remember({ text: decoration.text, door: decoration.door });
+      const { nativeState: _dropped, decoration: _gone, ...rest } = message;
+      // THE ONE CAST. A spread of `M` plus a narrowed `content` is structurally `M`, but TypeScript cannot
+      // prove that for an unresolved generic.
+      out.push({ ...rest, content } as unknown as M);
     }
 
     // WS-23 (reasoning-state, decisions 8 and 9): what the target cannot represent becomes TEXT, never a
     // silent drop and never a request the adapter must refuse -- another vendor's server-tool blocks, and
-    // images/documents for a model that cannot read them. Last, so it covers every message whatever its fate.
+    // images/documents for a model that cannot read them. This is visible conversation, not reasoning.
     const representable = out.map((message) => representableFor(message, target));
     options.onReport?.(report);
     return { messages: representable, report };
@@ -400,38 +164,24 @@ export function createHistoryRenderer(registry: ProviderRegistry, options: Histo
 }
 
 /**
- * The readable material a cross-domain message may carry: its OWN summary, or its OWN complete
- * exposed reasoning.
- *
- * WHICH ONE IT IS is decided by the SOURCE model's own readable-state evidence, not by the text: a
- * `full-exposed` model's recorded reasoning text IS its exposed reasoning (DeepSeek `reasoning_content`),
- * and every other model's is a provider-produced summary. The distinction is not cosmetic -- §8.4's
- * second no-warning condition applies ONLY to complete exposed reasoning forwarded unmodified, so
- * mislabelling a summary as exposed reasoning would suppress a warning the transfer has earned.
+ * THE ONE TEST for "this earlier message's reasoning is sent to the target natively": the same
+ * continuation domain, or the same model. Exported so every estimate of what a request carries (the
+ * engine's fit check, the switch review's) charges exactly the native state this renderer will send --
+ * one rule, never two copies of it. Anything this answers `false` for has its reasoning left out.
  */
-function materialFor(link: ContinuationLinkLike | undefined, source: ContinuityEndpoint, allowExposed: boolean, fallbackText?: string): { kind: MaterialKind; text: string } | undefined {
-  // W18-17: the sidecar's own captured summary wins when it exists; `fallbackText` (the message's
-  // own visible thinking, G1) is what an entry with NO sidecar record at all -- every official-leg
-  // write -- has instead. Never both: a sidecar summary is always at least as complete as what a
-  // renderer could re-derive from the transcript alone.
-  const text = link?.summary ?? fallbackText;
-  if (text === undefined || text.length === 0) return undefined;
-  const kind: MaterialKind = source.readableState === "full-exposed" ? "exposed" : "summary";
-  if (kind === "exposed" && !allowExposed) return undefined;
-  return { kind, text };
+export function replaysNatively(source: { providerId?: string; modelKey?: string; continuationDomain?: string } | undefined, target: { providerId?: string; modelKey?: string; continuationDomain?: string } | undefined): boolean {
+  return sameDomain(source, target) || sameModel(source, target);
 }
 
-/**
- * W18-17 (R-10b-9): the VISIBLE portion of a message's own `thinking` blocks, joined in order --
- * NEVER `signature` (Anthropic's own attestation, opaque state) and never `redacted_thinking.data`
- * (fully opaque by construction). `undefined` when there is nothing to join, which is the ordinary
- * case for every non-Claude message and for a Claude message compaction already flattened to a
- * string.
- */
-function visibleThinkingText(content: string | ContentBlockLike[]): string | undefined {
-  if (typeof content === "string") return undefined;
-  const texts = content.filter((b): b is Extract<ContentBlockLike, { type: "thinking" }> => b.type === "thinking").map((b) => b.thinking);
-  return texts.length > 0 ? texts.join("\n\n") : undefined;
+/** The message with any `decoration` removed (by identity when it has none). */
+function withoutDecoration<M extends ProviderMessageLike>(message: M): M {
+  if (message.decoration === undefined) return message;
+  const { decoration: _gone, ...kept } = message;
+  return kept as unknown as M;
+}
+
+function isEmptyContent(content: string | readonly ContentBlockLike[]): boolean {
+  return typeof content === "string" ? content.length === 0 : content.length === 0;
 }
 
 /**
@@ -494,16 +244,7 @@ function representableFor<M extends ProviderMessageLike>(message: M, target: His
 }
 
 /**
- * WS-23 (reasoning-state): a message's OWN readable thinking wherever it rides -- inline in the content
- * (a transcript written before the move), else the sidecar-carried blocks on `nativeState`. Inline wins
- * outright and the two are never concatenated, the same precedence the adapter's splice applies.
- */
-function ownThinkingText(message: ProviderMessageLike): string | undefined {
-  return hasInlineReasoning(message.content) ? visibleThinkingText(message.content) : reasoningBlocksVisibleText(message.nativeState);
-}
-
-/**
- * Removes every carrier of provider-authenticated state from a message crossing a domain boundary.
+ * Removes every reasoning carrier from a message going to a model that cannot take it natively.
  *
  * TWO CARRIERS, and missing the second is the subtle half: `nativeState.items` is the obvious one,
  * but Anthropic-family `thinking.signature` and `redacted_thinking.data` ride IN THE CONTENT, as
@@ -529,36 +270,3 @@ export function stripOpaque(message: ProviderMessageLike): { nativeState?: Provi
   };
 }
 
-function budgetFor(perDecoration: number | undefined, remaining: number | undefined): number | undefined {
-  if (perDecoration === undefined) return remaining;
-  if (remaining === undefined) return perDecoration;
-  return Math.min(perDecoration, remaining);
-}
-
-/** What `applyDecorationToContent` did. `applied: false` always says WHY, and always returns the untouched content. */
-export type DecorationPlacement =
-  | { applied: true; content: string | ContentBlockLike[] }
-  | { applied: false; reason: "no-decoration" | "thinking-channel-door"; content: string | ContentBlockLike[] };
-
-/**
- * Places a TAG-door decoration into a message's own content, as ordinary text.
- *
- * OFFERED TO ADAPTERS, and it is what makes the door real: the renderer annotates, and the adapter
- * that owns a family's wire mapping decides where the annotation goes. For the tag door that is a
- * plain text block appended to the message the reasoning belongs to (text is the ONLY door into a
- * validating family); for the thinking-channel door it is the family's own plain reasoning field,
- * which only that adapter can address, so this helper deliberately refuses that case rather than
- * quietly turning it into text.
- */
-export function applyDecorationToContent(message: ProviderMessageLike): DecorationPlacement {
-  const decoration = message.decoration;
-  if (decoration === undefined) return { applied: false, reason: "no-decoration", content: message.content };
-  if (decoration.door !== "tag") {
-    // DISCRIMINATED, not a silent pass-through. An adapter that called this on a thinking-channel
-    // decoration and got its own content back would have dropped the decoration and had no way to
-    // know -- the exact silence this whole lane exists to avoid.
-    return { applied: false, reason: "thinking-channel-door", content: message.content };
-  }
-  if (typeof message.content === "string") return { applied: true, content: `${message.content}\n\n${decoration.text}` };
-  return { applied: true, content: [...message.content, { type: "text", text: decoration.text }] };
-}

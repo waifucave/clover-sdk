@@ -22,8 +22,8 @@ import { loadCatalog, modelFamilyOf, OTHER_FAMILY_ID, type WinterCatalog } from 
 import type { ProviderStateRecord } from "./claude-ready.ts";
 import type { ContinuityEndpoint } from "./domains.ts";
 import { classifySwitch, type SwitchClassification, type SwitchFacts } from "./warnings.ts";
-import { DECORATION_CHAR_BUDGET, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitVerdict, type FitVerdict } from "./fit.ts";
-import { isServerToolBlockType } from "./renderer.ts";
+import { estimateTextTokens, estimateValueTokens, fitVerdict, type FitVerdict } from "./fit.ts";
+import { isServerToolBlockType, replaysNatively } from "./renderer.ts";
 import { WINTER_DEFAULT_COMPACTION_THRESHOLD as DEFAULT_COMPACTION_THRESHOLD } from "../winter-defaults.ts";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -420,8 +420,8 @@ function lineageBlocks(lineage: Node[], entries: SessionStoreEntry[]): Array<{ t
 /**
  * The conversation's fit on the target, or `undefined` when the target's row declares no window. The
  * conversation's own content (every message since the last compaction -- images and documents at their
- * per-item cost, review r1 I-2 -- plus the target's own native state that would replay), the decoration
- * budget when another model's turns are in it, and the allowance for the system prompt and tools --
+ * per-item cost, review r1 I-2 -- plus the target's own native state that would replay), and the
+ * allowance for the system prompt and tools --
  * against `window x threshold`, the auto-compaction trigger's own rule (I-1).
  */
 function fitOnTarget(entries: SessionStoreEntry[], lineage: Node[], sidecarRecords: ProviderStateRecord[], to: ContinuityEndpoint, row: WinterCatalog["models"][number] | undefined): FitVerdict | undefined {
@@ -430,20 +430,18 @@ function fitOnTarget(entries: SessionStoreEntry[], lineage: Node[], sidecarRecor
   const byUuid = new Map(entries.filter((e) => typeof e.uuid === "string").map((e) => [e.uuid as string, e]));
   const byAnchor = groupByAnchor(sidecarRecords);
   let tokens = 0;
-  let foreign = false;
   for (const node of lineage) {
     const message = (byUuid.get(node.uuid) as { message?: unknown } | undefined)?.message;
     if (!isRecord(message)) continue;
     tokens += typeof message.content === "string" ? estimateTextTokens(message.content) : estimateValueTokens(message.content ?? "");
     if (node.type !== "assistant") continue;
     const records = byAnchor.get(node.uuid) ?? [];
-    const origin = originOf(records);
-    if (origin !== undefined && (origin.providerId !== to.providerId || origin.modelKey !== to.modelKey)) {
-      foreign = true;
-      continue;
-    }
+    const originRecord = records.find((r) => r.kind === "origin");
+    // A turn's native state is charged exactly when the renderer will send it (`replaysNatively`: the same
+    // continuation domain, or the same model); any other turn's reasoning is left out, so nothing is charged.
+    // A turn with no origin record reads as the session's own (charged: the estimate errs high, never low).
+    if (originRecord !== undefined && !replaysNatively({ providerId: originRecord.provider, modelKey: originRecord.model, ...(originRecord.continuationDomain !== undefined ? { continuationDomain: originRecord.continuationDomain } : {}) }, to)) continue;
     for (const record of records) if (record.kind === "native-state" || record.kind === "reasoning-blocks") tokens += estimateValueTokens(record.payload);
   }
-  if (foreign) tokens += estimateTokensFromChars(DECORATION_CHAR_BUDGET);
   return fitVerdict(tokens + SYSTEM_AND_TOOLS_ALLOWANCE_TOKENS, window, DEFAULT_COMPACTION_THRESHOLD);
 }

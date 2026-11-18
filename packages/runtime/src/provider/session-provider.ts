@@ -37,7 +37,7 @@
 import type { WinterCatalog, WinterModelDescriptor, WinterProviderDescriptor } from "@waifucave/clover-provider-catalog";
 import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { CredentialRef, ProviderConnectionConfig, ProviderSelection, RuntimeConfig } from "@waifucave/clover-agent-sdk";
-import type { CredentialStore, ModelInfo, ProviderAdapter, ProviderContext, ProviderRegistry, ResolvedModel, StickyDecoration, StickyDecorations } from "@waifucave/clover-provider-runtime";
+import type { CredentialStore, ModelInfo, ProviderAdapter, ProviderContext, ProviderRegistry, ResolvedModel } from "@waifucave/clover-provider-runtime";
 import {
   ANTHROPIC_CONSOLE_ACCOUNT_ID,
   CredentialResolutionError,
@@ -49,8 +49,6 @@ import {
   estimateCostUsd,
   createFileCredentialStore,
   createHistoryRenderer,
-  DECORATION_CHAR_BUDGET,
-  MAX_DECORATION_CHARS,
   createMemoryCredentialStore,
   createRegistry,
   createShippedAdapters,
@@ -65,7 +63,7 @@ import { testProviderForNamespace } from "./mock.ts";
 import { createProviderContext, redactCredentialRef, resolveSessionProvider, type SelectionDeps, type SessionProviderSelection, type WinterProviderIdentity } from "./selection.ts";
 import { createModelClassifier, selectClassifierRoute, type ClassifierRoute } from "./classifier/model-classifier.ts";
 import type { ClassifierInterface } from "../permissions/auto/engine.ts";
-import { buildContinuationChain, type ContinuationChain, type ProviderStateRecord, type ProviderStateRecordInput } from "../store/provider-state.ts";
+import { buildContinuationChain, type ContinuationChain, type ProviderStateRecord } from "../store/provider-state.ts";
 import type { ModelSwitchResolution, PricedUsage, Provider, ProviderRequest, ProviderTurn, ProviderUsage, ResolveModelSwitch, UsageRowFacts } from "../engine.ts";
 import { computeActiveSlotSet, resolveSlotToProvider, type SlotProviderResolution } from "./slots.ts";
 import { resolveAdvisorRoute, selectAdvisorCandidate } from "./advisor-route.ts";
@@ -166,11 +164,6 @@ export interface SessionProviderOptions {
    * be the empty one.
    */
   chain?: () => ContinuationChain;
-  /**
-   * Review r1, M-1: where the renderer's sticky decoration decisions persist (the session's own
-   * provider-state sidecar, `SessionPersistence.recordProviderState`). Absent: they hold for this run only.
-   */
-  recordProviderState?: (record: ProviderStateRecordInput) => void | Promise<void>;
   /** `ProviderContext.log` — provider/model identifiers and BYTE COUNTS only, never content. Defaults to a no-op. */
   log?: ProviderContext["log"];
   /**
@@ -580,9 +573,6 @@ export function resolveSessionKeychainService(config: RuntimeConfig): string | u
   return config.brand?.keychainService ?? config.keychainService;
 }
 
-/** WS-23 (reasoning-state): the cross-family decoration caps -- declared beside the fit estimate that accounts for them (provider-runtime `continuity/fit.ts`, where the rationale is). */
-export { DECORATION_CHAR_BUDGET, MAX_DECORATION_CHARS };
-
 export function buildSessionProvider(opts: SessionProviderOptions): SessionProviderWiring {
   const { config, env } = opts;
   if (opts.guestProvider !== undefined) {
@@ -604,37 +594,14 @@ export function buildSessionProvider(opts: SessionProviderOptions): SessionProvi
   const readKeychainSecret = opts.guestProvider !== undefined ? undefined : opts.readKeychainSecret ?? (opts.credentials === undefined ? createKeychainSecretReader(sessionKeychainService) : undefined);
   const resolveToolSecret = createToolSecretResolver({ credentials, ...(readKeychainSecret !== undefined ? { readKeychainSecret } : {}) });
 
-  // Lane C's renderer, NOT `createIdentityHistoryRenderer` — the T3 identity renderer is the
-  // conservative placeholder its own header says it is (no decoration at all), so selecting it here
-  // would leave every cross-family decoration Lane C built inert in production while its unit tests
-  // stayed green.
+  // Lane C's renderer, NOT `createIdentityHistoryRenderer`: it recognises a model's own earlier turns by
+  // identity as well as by continuation domain, and fails closed on an unrecorded origin.
   //
-  // WS-23 (reasoning-state, user decision): a message another model produced keeps its readable reasoning
-  // as a `<recovered_reasoning>` decoration -- BOUNDED, so a long cross-family history cannot spend the
-  // target's window on quoted reasoning. The renderer spends the budget NEWEST FIRST and drops the
-  // oldest material once it runs out (the reasoning closest to the current work is the useful part).
+  // 2026-11 (native reasoning only): an earlier turn's reasoning reaches the model running now only in
+  // its native form, where that model takes it as it is; for any other model it is left out, and nothing
+  // is pasted in its place. `chain` is the resumed sidecar the renderer reads origins and native state from.
   const chain = opts.chain ?? ((): ContinuationChain => new Map());
-  // Review r1, M-1: the decoration decisions, sticky per (message, TARGET model) -- seeded from the resumed
-  // chain's `decoration` records, and every new one kept as such a record when the session persists.
-  const stickyDecisions = new Map<string, StickyDecoration | null>();
-  const stickyDecorations: StickyDecorations = {
-    get(anchorUuid, target) {
-      const key = `${anchorUuid}\u0000${target.modelKey}`;
-      if (stickyDecisions.has(key)) return stickyDecisions.get(key);
-      const resumed = chain().get(anchorUuid)?.decorations?.[target.modelKey];
-      return resumed;
-    },
-    set(anchorUuid, target, decision) {
-      stickyDecisions.set(`${anchorUuid}\u0000${target.modelKey}`, decision);
-      if (opts.recordProviderState === undefined) return;
-      void Promise.resolve(
-        opts.recordProviderState({ sessionId: config.sessionId, anchorUuid, provider: target.providerId, model: target.modelKey, family: target.family, itemIndex: 0, kind: "decoration", payload: decision === null ? { dropped: true } : { text: decision.text, door: decision.door } }),
-      ).catch(() => {
-        /* auxiliary: the in-memory decision holds for this run; a resume decides afresh */
-      });
-    },
-  };
-  const renderer: HistoryRenderer = createHistoryRenderer(registry, { maxDecorationChars: MAX_DECORATION_CHARS, decorationCharBudget: DECORATION_CHAR_BUDGET, stickyDecorations });
+  const renderer: HistoryRenderer = createHistoryRenderer(registry);
 
   // THE SESSION'S PROVIDER, AS A STATE (fix wave round 2, R-E1). Three states, and the difference
   // between the last two is a credential boundary:

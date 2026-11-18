@@ -97,7 +97,7 @@ import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDelivery
 import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@waifucave/clover-provider-runtime";
 // P6 fix wave (Ruling E-2): the two PURE continuity functions the switch point calls. Value imports
 // from the provider-runtime barrel, one direction (runtime -> provider-runtime), same as every adapter.
-import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
+import { ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, replaysNatively, isServerToolBlockType, estimateTextTokens, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
 export type { MessageOrigin, ProviderNativeState };
 // R6-7: the sidecar record types the persistence seam carries. `store/provider-state.ts` imports
 // NOTHING from this file (its own types come from provider-runtime), so this is not the circular
@@ -540,10 +540,9 @@ export interface ProviderMessage {
    */
   nativeState?: ProviderNativeState;
   /**
-   * A Winter-authored annotation shown to the model -- a handoff note, or a foreign model's reasoning
-   * summary carried across a family boundary. Carried PLAINLY, never dressed as signed thinking
-   * (R6-8): `door` says which channel Lane C's renderer places it on, and neither door produces a
-   * `thinking` block with a fabricated signature.
+   * RETIRED (2026-11, native reasoning only): it once carried a handoff note or a foreign model's
+   * reasoning summary as text. The history renderer now removes it from every message before an adapter
+   * sees one, so nothing the engine sends carries it; the field stays only so older callers still type.
    */
   decoration?: { text: string; door: "tag" | "thinking-channel" };
   /**
@@ -8414,8 +8413,8 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
 
   /**
    * The fit of one outbound request on the live model. Counted: the system prompt, the tool specs, every
-   * message's content, and the native state of the model's OWN replies (it replays); a history that holds
-   * another model's replies is charged the whole decoration budget the renderer may add for them. Images
+   * message's content, and the native state of the model's OWN replies (it replays); another model's
+   * replies carry no reasoning to it, so nothing more is charged for them. Images
    * and documents are charged per item, never by their bytes (review r1, I-2); non-ASCII text at about a
    * token per character (M-6).
    */
@@ -8430,14 +8429,15 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   const estimateRequestTokens = (system: string, tools: readonly ProviderToolSpec[], outbound: readonly ProviderMessage[]): number => {
     const owns = ownedBy(currentProviderIdentity?.modelKey ?? currentModel);
     let tokens = estimateTextTokens(system) + (tools.length > 0 ? estimateValueTokens(tools) : 0);
-    let foreign = false;
     for (const message of outbound) {
       tokens += typeof message.content === "string" ? estimateTextTokens(message.content) : estimateValueTokens(message.content);
-      if (message.role !== "assistant") continue;
-      if (!owns(message)) foreign = true;
-      else if (message.nativeState !== undefined) tokens += estimateValueTokens(message.nativeState.items);
+      // Charged exactly when the renderer sends it natively (`replaysNatively`, the renderer's own test: the
+      // same continuation domain, or the same model); another model's reasoning is left out. A message with
+      // no origin, or a session with no identity, reads as the model's own (errs high, never low).
+      if (message.role !== "assistant" || message.nativeState === undefined) continue;
+      const sent = message.origin === undefined || currentProviderIdentity === undefined ? owns(message) : replaysNatively(message.origin, currentProviderIdentity);
+      if (sent) tokens += estimateValueTokens(message.nativeState.items);
     }
-    if (foreign) tokens += estimateTokensFromChars(DECORATION_CHAR_BUDGET);
     return tokens;
   };
 

@@ -12,7 +12,7 @@
 import { describe, expect, test } from "bun:test";
 import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter, ProviderMessageLike } from "@waifucave/clover-provider-runtime";
-import { createRegistry, createHistoryRenderer, RECOVERED_REASONING_TAG, type ProviderRegistry, type HistoryTarget } from "@waifucave/clover-provider-runtime";
+import { createRegistry, createHistoryRenderer, type ProviderRegistry, type HistoryTarget } from "@waifucave/clover-provider-runtime";
 import type { SessionStoreEntry } from "@waifucave/clover-agent-sdk";
 import { toDialectEntries, rebuildProviderMessages } from "./resume.ts";
 
@@ -76,43 +76,32 @@ describe("reader -> renderer, end to end: an official-leg-shaped canonical file 
     },
   ];
 
-  test("yields exactly one <recovered_reasoning kind=\"summary\" provider=\"anthropic\" model=\"...\"> carrying the thinking text, with no signature and no redacted_thinking anywhere in the rendered output", () => {
+  test("for a GPT target the thinking is left out entirely -- no signature, no redacted data, no thinking text, no tag -- and the answer crosses byte-identical", () => {
     const registry = realCatalogRegistry();
     const rebuilt = rebuildProviderMessages(toDialectEntries(canonicalFile));
-    const renderer = createHistoryRenderer(registry);
-    const { messages, report } = renderer.renderWithReport(rebuilt as ProviderMessageLike[], new Map(), gptTarget(registry));
-
-    expect(report.decorations).toHaveLength(1);
-    expect(report.decorations[0]).toMatchObject({ kind: "summary", source: { providerId: "anthropic", modelKey: "claude-sonnet-5-20260101" } });
-
-    const decoration = messages[1]!.decoration;
-    expect(decoration).toBeDefined();
-    expect(decoration!.text).toBe(
-      `<${RECOVERED_REASONING_TAG} kind="summary" provider="anthropic" model="claude-sonnet-5-20260101">first I should weigh option A against option B</${RECOVERED_REASONING_TAG}>`,
-    );
-
+    const { messages, report } = createHistoryRenderer(registry).renderWithReport(rebuilt as ProviderMessageLike[], new Map(), gptTarget(registry));
+    expect(report.strippedInDialectBlocks).toBe(1);
+    expect(messages[1]!.decoration).toBeUndefined();
     const wireShape = JSON.stringify(messages);
-    expect(wireShape).not.toContain("signature");
-    expect(wireShape).not.toContain("redacted_thinking");
-    expect(wireShape).not.toContain("SIG-DUMMY-NOT-REAL-OPAQUE-BASE64==");
-    // The visible final answer still crosses, byte-identical.
+    for (const needle of ["signature", "redacted_thinking", "SIG-DUMMY-NOT-REAL-OPAQUE-BASE64==", "first I should weigh option A", "recovered_"]) expect(wireShape).not.toContain(needle);
     expect(wireShape).toContain("You should pick option B.");
   });
 
-  test("REGRESSION GUARD: without the reader fix (message.model stripped by hand, simulating the old projection), no tag is produced at all", () => {
+  test("without the reader fix (message.model stripped by hand), the entry's origin is unknown and it fails closed the same way", () => {
     const registry = realCatalogRegistry();
     const rebuilt = rebuildProviderMessages(toDialectEntries(canonicalFile));
     const stripped = rebuilt.map((m) => {
       const { model: _model, ...rest } = m as unknown as { model?: string } & typeof m;
       return rest;
     });
-    const { report } = createHistoryRenderer(registry).renderWithReport(stripped as ProviderMessageLike[], new Map(), gptTarget(registry));
-    expect(report.decorations).toHaveLength(0);
+    const { messages, report } = createHistoryRenderer(registry).renderWithReport(stripped as ProviderMessageLike[], new Map(), gptTarget(registry));
+    expect(report.strippedInDialectBlocks).toBe(1);
+    expect(JSON.stringify(messages)).not.toContain("first I should weigh option A");
   });
 });
 
 describe("reverse control: a Winter-native turn with NO message.model resolves through the SIDECAR, unaffected by this fix", () => {
-  test("origin comes from the chain (sidecar), not from message.model, and the tag still renders", () => {
+  test("origin comes from the chain (sidecar), not from message.model, and its captured summary is never sent to another model", () => {
     const registry = realCatalogRegistry();
     const claudeSonnet = registry.resolve({ model: "anthropic/claude-sonnet-5" });
     if (claudeSonnet instanceof Error) throw claudeSonnet;
@@ -130,9 +119,10 @@ describe("reverse control: a Winter-native turn with NO message.model resolves t
     // a REAL Winter-run Claude turn (any provider, e.g. Claude on OpenRouter).
     const chain = new Map([["a1", { origin: { providerId: claudeSonnet.providerId, modelKey: claudeSonnet.modelKey, family: claudeSonnet.provider.family }, summary: "the captured reasoning summary" }]]);
 
-    const { messages, report } = createHistoryRenderer(registry).renderWithReport(rebuilt as ProviderMessageLike[], chain, gptTarget(registry));
-    expect(report.decorations).toHaveLength(1);
-    expect(messages[1]!.decoration!.text).toContain("the captured reasoning summary");
-    expect(messages[1]!.decoration!.text).toContain(`provider="${claudeSonnet.providerId}"`);
+    const { messages } = createHistoryRenderer(registry).renderWithReport(rebuilt as ProviderMessageLike[], chain, gptTarget(registry));
+    // The sidecar's captured summary is never sent to another model.
+    expect(messages[1]!.decoration).toBeUndefined();
+    expect(JSON.stringify(messages)).not.toContain("the captured reasoning summary");
+    expect(JSON.stringify(messages)).toContain("the visible answer");
   });
 });
