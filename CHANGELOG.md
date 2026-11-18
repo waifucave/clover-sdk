@@ -4,7 +4,22 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
-## Unreleased
+## 0.0.83
+
+### Reasoning is carried natively or not at all
+
+- On a switch to another model or provider, earlier turns' reasoning is sent only in its native form and only where the
+  destination accepts it as it is (the same model on the same provider, or the same continuation domain). Everywhere
+  else it is left out of the request. The pasted-in recovered-reasoning text, its tag, the summary pass and the
+  per-target decoration records are gone; old records are read and ignored. Visible text, tool calls and results are
+  kept as before, and the stored transcript does not change. The fit estimates count exactly what is sent.
+
+### A coding agent's turn that failed or was refused no longer ends silently (ACP adapter)
+
+- A `result` marked `is_error: true` is judged by its `terminal_reason`, whatever its `subtype`: a provider or API
+  failure (and any unknown reason) rejects the prompt with the result's text; a refusal ends with the `refusal` stop
+  reason and its text shown once; the pause-turn limit and the turn cap end as before.
+
 
 ### Catalog refresh 2026-11-18
 
