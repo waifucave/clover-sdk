@@ -32,11 +32,10 @@
 import { describe, expect, test } from "bun:test";
 import { loadCatalog, type WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { createRegistry, type ProviderRegistry } from "../registry.ts";
-import type { ContentBlockLike, MessageOrigin, ProviderMessageLike } from "../types.ts";
+import type { MessageOrigin, ProviderMessageLike } from "../types.ts";
 import { toWireMessages } from "../adapters/anthropic/messages.ts";
 import { mapChatMessages } from "../adapters/openai/chat-completions.ts";
 import { createShippedAdapters } from "../adapters/index.ts";
-import { RECOVERED_REASONING_TAG } from "./decoration.ts";
 import { createHistoryRenderer, type ContinuationChainLike, type ContinuationLinkLike, type HistoryTarget } from "./renderer.ts";
 
 /** The real catalog with the REAL shipped adapters -- `capabilities()` is what the bridge reads the target's readable state from. */
@@ -135,9 +134,7 @@ describe("the model's OWN reasoning is replayed natively, never decorated -- Ant
     // The engine's in-memory chain entry for step 1: origin only -- this adapter captures no summary.
     const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(origin), chainOf({ a1: { origin } }), target);
 
-    expect(report.decorations).toHaveLength(0);
     expect(report.strippedInDialectBlocks).toBe(0);
-    expect(report.withoutMaterial).toBe(0);
     expect(messages[1]!.decoration).toBeUndefined();
 
     // The wire: the thinking block rides IN-DIALECT with its own signature (what claude sends back to
@@ -146,7 +143,7 @@ describe("the model's OWN reasoning is replayed natively, never decorated -- Ant
     const assistant = wire.find((m) => m.role === "assistant")!;
     expect(assistant.content[0]).toEqual({ type: "thinking", thinking: OWN_THINKING, signature: OWN_SIGNATURE });
     for (const text of wireTexts(wire)) {
-      expect(text).not.toContain(RECOVERED_REASONING_TAG);
+      expect(text).not.toContain("recovered_");
       expect(text).not.toContain(OWN_THINKING);
     }
   });
@@ -183,11 +180,10 @@ describe("every domain-less Anthropic-dialect row replays its own turn natively 
     const { target, origin } = bridgeTarget(registry, modelKey);
     expect(target.continuationDomain).toBeUndefined();
     const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(origin), chainOf({ a1: { origin } }), target);
-    expect(report.decorations).toHaveLength(0);
     expect(report.strippedInDialectBlocks).toBe(0);
     const assistant = toWireMessages(messages).find((m) => m.role === "assistant")!;
     expect(assistant.content[0]).toEqual({ type: "thinking", thinking: OWN_THINKING, signature: OWN_SIGNATURE });
-    expect(JSON.stringify(toWireMessages(messages))).not.toContain(RECOVERED_REASONING_TAG);
+    expect(JSON.stringify(toWireMessages(messages))).not.toContain("recovered_");
   });
 });
 
@@ -208,42 +204,41 @@ describe("the model's OWN exposed reasoning is never decorated -- OpenAI-chat ro
     ];
     // What `turnProvenance` records for a turn whose only reasoning is the model's own `reasoning_content`.
     const { messages, report } = createHistoryRenderer(registry).renderWithReport(history, chainOf({ a1: { origin, summary: "own raw chain of thought" } }), target);
-    expect(report.decorations).toHaveLength(0);
+    expect(report.droppedNativeState).toBe(0);
     expect(messages[1]!.decoration).toBeUndefined();
     const wire = JSON.stringify(mapChatMessages(messages, false));
-    expect(wire).not.toContain(RECOVERED_REASONING_TAG);
+    expect(wire).not.toContain("recovered_");
     expect(wire).not.toContain("own raw chain of thought");
   });
 });
 
-describe("genuinely FOREIGN material is still decorated (the fix did not become a blanket suppression)", () => {
-  test("a DIFFERENT model on the SAME provider is foreign: deepseek-v4-pro's turn reaching deepseek-v4-flash is carried as labelled data", () => {
+describe("genuinely FOREIGN reasoning is removed, and nothing is pasted in its place", () => {
+  test("a DIFFERENT model on the SAME provider is foreign: deepseek-v4-pro's thinking never reaches deepseek-v4-flash, as a block or as text", () => {
     const registry = realRegistry();
     const { target } = bridgeTarget(registry, "deepseek-anthropic/deepseek-v4-flash");
     const { origin: proOrigin } = bridgeTarget(registry, "deepseek-anthropic/deepseek-v4-pro");
-    const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(proOrigin), chainOf({ a1: { origin: proOrigin } }), target);
-    expect(report.decorations).toHaveLength(1);
-    expect(report.decorations[0]!.source).toEqual({ providerId: "deepseek-anthropic", modelKey: "deepseek-anthropic/deepseek-v4-pro" });
-    // Its thinking block is another model's opaque state and comes off.
-    expect((messages[1]!.content as ContentBlockLike[]).some((b) => b.type === "thinking")).toBe(false);
-    expect(messages[1]!.decoration?.text).toContain(`<${RECOVERED_REASONING_TAG} kind="summary" provider="deepseek-anthropic" model="deepseek-anthropic/deepseek-v4-pro">`);
+    const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(proOrigin), chainOf({ a1: { origin: proOrigin, summary: "pro's own summary" } }), target);
+    expect(report.strippedInDialectBlocks).toBe(1);
+    const wire = JSON.stringify(toWireMessages(messages));
+    for (const needle of [OWN_THINKING, OWN_SIGNATURE, "pro's own summary", "recovered_"]) expect(wire).not.toContain(needle);
+    expect(wire).toContain("Let me look.");
   });
 
-  test("another PROVIDER's model in the same dialect is foreign: kimi-coding's turn reaching deepseek-anthropic is carried as labelled data", () => {
+  test("another PROVIDER's model in the same dialect is foreign too: kimi-coding's turn reaching deepseek-anthropic", () => {
     const registry = realRegistry();
     const { target } = bridgeTarget(registry, "deepseek-anthropic/deepseek-v4-flash");
     const { origin: kimiOrigin } = bridgeTarget(registry, "kimi-coding/k3");
-    const { report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(kimiOrigin), chainOf({ a1: { origin: kimiOrigin } }), target);
-    expect(report.decorations.map((d) => d.source.modelKey)).toEqual(["kimi-coding/k3"]);
+    const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(kimiOrigin), chainOf({ a1: { origin: kimiOrigin } }), target);
+    expect(report.strippedInDialectBlocks).toBe(1);
+    expect(JSON.stringify(toWireMessages(messages))).not.toContain(OWN_THINKING);
   });
 
-  test("a target that does not name its own identity (a caller built before the field existed) behaves exactly as before", () => {
+  test("a target that does not name its own identity cannot recognise a domain-less row's own turn, so it fails closed (stripped, nothing pasted)", () => {
     const registry = realRegistry();
-    // A row with NO continuation domain (zai-anthropic, still `none`): without the identity fields the
-    // model's own turn cannot be recognised, so it is decorated exactly as before the self-replay fix.
     const { target, origin } = bridgeTarget(registry, "zai-anthropic/glm-5.3");
     const { providerId: _p, modelKey: _m, ...anonymous } = target;
-    const { report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(origin), chainOf({ a1: { origin } }), anonymous);
-    expect(report.decorations).toHaveLength(1);
+    const { messages, report } = createHistoryRenderer(registry).renderWithReport(anthropicTurn(origin), chainOf({ a1: { origin } }), anonymous);
+    expect(report.strippedInDialectBlocks).toBe(1);
+    expect(JSON.stringify(toWireMessages(messages))).not.toContain(OWN_THINKING);
   });
 });

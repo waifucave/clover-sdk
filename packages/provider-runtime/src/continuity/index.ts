@@ -8,14 +8,15 @@
 // `fixtures.ts` is NOT exported here: it is test support for this directory's own fixtures, and a
 // package surface that hands out catalog builders invites production code to build a catalog.
 
-export { RECOVERED_REASONING_TAG, LEGACY_RECOVERED_REASONING_TAG, MIN_DECORATION_BODY_CHARS, buildDecoration, decorationOverhead, doorFor, escapeAttribute, escapeInline, neutralizeDelimiters, trimToBudget } from "./decoration.ts";
-export type { Decoration, DecorationDoor, DecorationInput, DecorationKind, DecorationSource } from "./decoration.ts";
+// 2026-11 (native reasoning only): the `<recovered_reasoning>` decoration and the prior-model handoff
+// note are gone from the public surface -- reasoning crosses to another model only in its native form,
+// and is otherwise left out. `decoration.ts` stays as a private helper of `claude-ready.ts` alone.
 
 export { createEndpointResolver, endpointFromOrigin, readableStateOf, sameDomain, sameFamily, sameModel, shouldRequestSummary, summaryRequestOf } from "./domains.ts";
 export type { ContinuityEndpoint, DomainFacts, ReadableState } from "./domains.ts";
 
-export { applyDecorationToContent, createHistoryRenderer, isServerToolBlockType, stripOpaque } from "./renderer.ts";
-export type { ContinuationChainLike, ContinuationLinkLike, HistoryRendererOptions, HistoryTarget, MaterialKind, RenderReport, RenderedDecoration, StickyDecoration, StickyDecorations, WinterHistoryRenderer } from "./renderer.ts";
+export { createHistoryRenderer, isServerToolBlockType, stripOpaque } from "./renderer.ts";
+export type { ContinuationChainLike, ContinuationLinkLike, HistoryRendererOptions, HistoryTarget, RenderReport, WinterHistoryRenderer } from "./renderer.ts";
 
 // WS-23 (reasoning-state): Anthropic thinking carried in the sidecar, and put back in place on the wire.
 export {
@@ -27,14 +28,13 @@ export {
   isWinterBookkeepingItem,
   reasoningBlockItems,
   reasoningBlocksOf,
-  reasoningBlocksVisibleText,
   separateReasoningBlocks,
   spliceReasoningBlocks,
 } from "./reasoning-blocks.ts";
 export type { InDialectReasoningBlock, ReasoningBlockAt, ReasoningBlockItem } from "./reasoning-blocks.ts";
 
 // WS-23 (reasoning-state, decision 5): the switch fit estimate.
-export { DECORATION_CHAR_BUDGET, DOCUMENT_PAGE_TOKENS, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, IMAGE_TOKENS, MAX_DECORATION_CHARS, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict } from "./fit.ts";
+export { DOCUMENT_PAGE_TOKENS, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, IMAGE_TOKENS, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict } from "./fit.ts";
 export type { FitVerdict } from "./fit.ts";
 export { IMAGE_BUDGET_NOTE, imageBudgetFor, withinImageBudget } from "./image-budget.ts";
 export type { ImageBudget } from "./image-budget.ts";
@@ -45,15 +45,10 @@ export type { LossClass, SwitchClassification, SwitchFacts } from "./warnings.ts
 // P6 fix wave (Ruling E-2): `createSwitchCoordinator` is GONE. Its bookkeeping -- the pending slot,
 // the trigger-to-reason mapping, the "owner cancels" contract -- was a second copy of state the engine
 // already owns (`pendingModelSwitch`, `interruptCurrentTurn`), and a second copy is how the two
-// disagree. What the switch point actually needs are the two PURE functions above and below:
-// `classifySwitch` (the loss matrix) and `buildPortableHandoff` (the boundary handoff), wired by the
-// runtime's `applyPendingModelSwitch` through the `resolveModelSwitch` seam
-// (`provider/session-provider.ts`). The conformance corpus's §12.3 switch cases drive the same two
-// functions directly; the engine half of each (the wait, the delivery, the cancel) is pinned by the
+// disagree. What the switch point actually needs is the PURE `classifySwitch` above (the loss
+// matrix), wired by the runtime's `applyPendingModelSwitch` through the `resolveModelSwitch` seam
+// (`provider/session-provider.ts`). The conformance corpus's §12.3 switch cases drive it directly; the engine half of each (the wait, the delivery, the cancel) is pinned by the
 // runtime's own fixtures (`provider/switch-seam.test.ts`, `provider/engine-seam-p6.test.ts`).
-
-export { INSTRUCTION_FILE_BASENAMES, PRIOR_MODEL_HANDOFF_TAG, buildPortableHandoff, handoffDecoration } from "./handoff.ts";
-export type { HandoffToolFact, PortableHandoff, PortableHandoffOptions, PortableHandoffSections } from "./handoff.ts";
 
 // Phase 10b Lane S, S6 (W18-14): the Claude-ready copy -- the router wraps the sessionStore it hands
 // the official leg with this pure transform (P10b-5: exported here, and re-exported from the SDK's

@@ -3,7 +3,7 @@
 // real engine, session-provider wiring and adapters run against two loopback endpoints, persisting through
 // the real on-disk store. What must hold:
 //   - the transcript is provider-neutral: no thinking, no signature, no effort field, no tool epoch;
-//   - GPT never receives Claude's signed thinking (only the capped `<recovered_reasoning>` decoration), nor
+//   - GPT never receives Claude's reasoning in any form (no signed thinking, no pasted text), nor
 //     a marker derived from Claude's effort levels, nor Claude's tool changes -- layer 2 is per model;
 //   - back on Claude WITHIN the cache lifetime, its reasoning re-attaches, its tool epoch resumes (a tool
 //     that appeared meanwhile rides a tool-change message, `tools` untouched) and its earlier request is a
@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { loadCatalog, type WinterCatalog } from "@waifucave/clover-provider-catalog";
-import { RECOVERED_REASONING_TAG, createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
+import { createMemoryCredentialStore } from "@waifucave/clover-provider-runtime";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type EngineOptions } from "../engine.ts";
 import { resolveEngineSession } from "../store/dialect.ts";
@@ -172,12 +172,12 @@ describe("Claude -> GPT -> Claude (WS-23 reasoning-state)", () => {
     expect(new Set(kinds.filter((r) => r.kind === "tool-epoch").map((r) => r.model))).toEqual(new Set([CLAUDE, GPT]));
     expect(kinds.some((r) => r.kind === "reasoning-blocks" && r.model === CLAUDE)).toBe(true);
 
-    // GPT: none of Claude's layer-1 or layer-2 state, only the readable decoration.
+    // GPT: none of Claude's layer-1 or layer-2 state -- and none of its reasoning as text either.
     expect(fx.gpt.requests).toHaveLength(1);
     const gpt = fx.gpt.requests[0]!;
     expect(gpt.raw).not.toContain("SIG-CLAUDE-1");
-    expect(gpt.raw).toContain(RECOVERED_REASONING_TAG);
-    expect(gpt.raw).toContain("claude thinking one");
+    expect(gpt.raw).not.toContain("recovered_");
+    expect(gpt.raw).not.toContain("claude thinking one");
     const updates = (gpt.body["input"] as Array<{ type?: string; reasoning?: { effort?: string } }>).filter((i) => i.type === "configuration_update");
     // Only GPT's own leading level -- nothing derived from Claude's high -> low change.
     expect(updates).toEqual([{ type: "configuration_update", reasoning: { effort: "medium" } }]);
@@ -190,8 +190,11 @@ describe("Claude -> GPT -> Claude (WS-23 reasoning-state)", () => {
     const afterText = JSON.stringify(after!.body["messages"]);
     // Reasoning re-attached, in place.
     expect(afterText).toContain('"signature":"SIG-CLAUDE-1"');
-    // GPT's own reasoning never reaches Claude natively.
+    // GPT's own reasoning never reaches Claude, natively or as text.
     expect(afterText).not.toContain("ENC-GPT");
+    expect(afterText).not.toContain("gpt summary");
+    expect(afterText).not.toContain("recovered_");
+    expect(afterText).toContain("gpt three");
     // The epoch resumed: `tools` exactly as before, the new tool by value in a tool-change message.
     expect(JSON.stringify(after!.body["tools"])).toBe(JSON.stringify(before!.body["tools"]));
     expect(afterText).toContain('"tool_addition"');

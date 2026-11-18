@@ -7,8 +7,8 @@
 // block VERBATIM plus `at`, its index in the turn's stream-order content. On the way back they are
 // folded into the message's `nativeState` as items of the tagged type below, so the continuity
 // renderer's one rule covers them with no new branch: same continuation domain (or the same model) ->
-// they ride; any other target -> they are dropped with the rest of the native state, and the message's
-// readable thinking becomes at most one `<recovered_reasoning>` decoration.
+// they ride; any other target -> they are left out with the rest of the native state, and nothing
+// takes their place.
 //
 // THE ANTHROPIC ADAPTER PUTS THEM BACK (`spliceReasoningBlocks`), and the splice must reproduce the
 // pre-move content array byte for byte -- that array is the cached prefix, and on the block-binding
@@ -111,17 +111,6 @@ export function contentWithReasoningBlocks(message: { content: string | ContentB
   const items = reasoningBlocksOf(message.nativeState);
   if (items.length === 0 || hasInlineReasoning(message.content)) return message.content;
   return spliceReasoningBlocks(message.content, items);
-}
-
-/**
- * The READABLE half of a message's sidecar-carried thinking -- each `thinking` block's own text, joined
- * in order -- for the cross-family decoration. Never `signature`, never `redacted_thinking.data`.
- */
-export function reasoningBlocksVisibleText(state: ProviderNativeState | undefined): string | undefined {
-  // The same join the renderer applied to inline blocks before the move (`visibleThinkingText`), empty
-  // blocks included, so a cross-family decoration's text is unchanged by where the blocks live.
-  const texts = reasoningBlocksOf(state).flatMap(({ block }) => (block.type === "thinking" ? [block.thinking] : []));
-  return texts.length > 0 ? texts.join("\n\n") : undefined;
 }
 
 /**

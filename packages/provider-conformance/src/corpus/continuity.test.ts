@@ -86,7 +86,9 @@ describe("the renderer through its REAL consumer", () => {
     expect(rendered).toHaveLength(2);
     expect(rendered[1]!.nativeState?.items).toEqual([{ encrypted_content: "OPENAI-ENCRYPTED-OPAQUE" }]);
     expect(JSON.stringify(rendered)).not.toContain("CLAUDE-SIGNATURE-OPAQUE");
-    expect(rendered[0]!.decoration?.text).toContain("claude's summary");
+    // 2026-11: another model's reasoning is left out, never pasted in as text.
+    expect(rendered[0]!.decoration).toBeUndefined();
+    expect(JSON.stringify(rendered)).not.toContain("claude's summary");
   });
 
   test("through `adapterAsProvider`, the ADAPTER's live request carries the decoration and not one byte of foreign opaque state", async () => {

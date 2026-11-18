@@ -97,7 +97,7 @@ import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDelivery
 import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@waifucave/clover-provider-runtime";
 // P6 fix wave (Ruling E-2): the two PURE continuity functions the switch point calls. Value imports
 // from the provider-runtime barrel, one direction (runtime -> provider-runtime), same as every adapter.
-import { DECORATION_CHAR_BUDGET, ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateTokensFromChars, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
+import { ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
 export type { MessageOrigin, ProviderNativeState };
 // R6-7: the sidecar record types the persistence seam carries. `store/provider-state.ts` imports
 // NOTHING from this file (its own types come from provider-runtime), so this is not the circular
@@ -8414,8 +8414,8 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
 
   /**
    * The fit of one outbound request on the live model. Counted: the system prompt, the tool specs, every
-   * message's content, and the native state of the model's OWN replies (it replays); a history that holds
-   * another model's replies is charged the whole decoration budget the renderer may add for them. Images
+   * message's content, and the native state of the model's OWN replies (it replays); another model's
+   * replies carry no reasoning to it, so nothing more is charged for them. Images
    * and documents are charged per item, never by their bytes (review r1, I-2); non-ASCII text at about a
    * token per character (M-6).
    */
@@ -8430,14 +8430,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   const estimateRequestTokens = (system: string, tools: readonly ProviderToolSpec[], outbound: readonly ProviderMessage[]): number => {
     const owns = ownedBy(currentProviderIdentity?.modelKey ?? currentModel);
     let tokens = estimateTextTokens(system) + (tools.length > 0 ? estimateValueTokens(tools) : 0);
-    let foreign = false;
     for (const message of outbound) {
       tokens += typeof message.content === "string" ? estimateTextTokens(message.content) : estimateValueTokens(message.content);
-      if (message.role !== "assistant") continue;
-      if (!owns(message)) foreign = true;
-      else if (message.nativeState !== undefined) tokens += estimateValueTokens(message.nativeState.items);
+      // Only the model's OWN replies carry reasoning to it (natively); another model's carry none.
+      if (message.role === "assistant" && owns(message) && message.nativeState !== undefined) tokens += estimateValueTokens(message.nativeState.items);
     }
-    if (foreign) tokens += estimateTokensFromChars(DECORATION_CHAR_BUDGET);
     return tokens;
   };
 

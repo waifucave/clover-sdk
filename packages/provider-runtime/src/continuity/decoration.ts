@@ -1,3 +1,10 @@
+// RETIRED FROM REQUESTS (2026-11, native reasoning only). Nothing in a request built for a model uses
+// this file any more: the history renderer sends earlier reasoning only in its native form and otherwise
+// leaves it out, and it is no longer exported from the package. It survives as a PRIVATE helper of
+// `claude-ready.ts` alone, whose step (e) must stay byte-stable: a host's crash recovery recomputes a
+// claude-ready copy record for record to prove a run home staged by an OLDER version (the retired official
+// `claude` leg) safe to dispose. No model is served that copy.
+//
 // Phase 6 Lane C: the two DOORS a foreign model's readable reasoning may enter a target through.
 //
 // R6-8, stated once because everything here is downstream of it: a foreign summary or exposed

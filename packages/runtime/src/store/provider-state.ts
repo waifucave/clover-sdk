@@ -68,10 +68,9 @@ export { PROVIDER_STATE_FILE_SUFFIX };
 //     that introduced it), and put back right before that entry on a resume.
 // All three used to ride the transcript (entry fields and attachment entries); none of it is portable to
 // another model, so none of it belongs in a provider-neutral transcript.
-//   - `decoration` (review r1, M-1): what a TARGET model was sent for this entry's reasoning -- the
-//     `<recovered_reasoning>` decoration verbatim (`{text, door}`) or `{dropped: true}` -- keyed by the
-//     record's provider+model, which here name the TARGET, so a growing history never moves bytes inside
-//     a prefix that target has cached.
+//   - `decoration`: RETIRED (2026-11). It recorded what a target model was sent as a `<recovered_reasoning>`
+//     text block for this entry; nothing is sent that way any more, and an older session's records are
+//     accepted and ignored.
 //   - `feature-rejected` (WS-24): the API REFUSED one of the request features a model's row documents
 //     (payload `{feature}`, one of `REJECTABLE_FEATURES`), keyed by the record's provider+model -- the
 //     model that refused, which need not be the anchor entry's own (a fallback can answer the retried
@@ -426,8 +425,6 @@ export interface ContinuationLink {
   recordedAt?: string;
   /** WS-23 (layer 2): the entry's effort annotations, from an `effort` record. */
   effort?: { effort?: string; perTurnEffort?: string };
-  /** Review r1, M-1: per TARGET model key, the decoration that target was sent for this entry (`null`: none). */
-  decorations?: Record<string, { text: string; door: "tag" | "thinking-channel" } | null>;
   /** WS-23 (layer 2): the tool-epoch bookkeeping that PRECEDED this entry, in write order (attachment payloads). */
   bookkeeping?: Array<{ type: string; [key: string]: unknown }>;
 }
@@ -510,14 +507,10 @@ export function buildContinuationChain(records: readonly ProviderStateRecord[], 
         if (effort !== undefined) link.effort = effort;
         break;
       }
-      case "decoration": {
-        const p = record.payload as { dropped?: unknown; text?: unknown; door?: unknown } | null;
-        if (typeof p === "object" && p !== null) {
-          if (p.dropped === true) (link.decorations ??= {})[record.model] = null;
-          else if (typeof p.text === "string" && (p.door === "tag" || p.door === "thinking-channel")) (link.decorations ??= {})[record.model] = { text: p.text, door: p.door };
-        }
+      case "decoration":
+        // RETIRED 2026-11 (native reasoning only): what a target was once sent as a `<recovered_reasoning>`
+        // text block. Nothing is sent that way any more; an older session's records are read and ignored.
         break;
-      }
       case "tool-epoch":
       case "tool-changes": {
         const payload = record.payload;

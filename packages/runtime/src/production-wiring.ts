@@ -85,7 +85,6 @@ import { buildSessionProvider, createProductionCredentialStore, resolveSessionKe
 import { createHostBrokeredCredentialStore, createHostBrokeredSecretReader, createHostCredentialChannel, type HostCredentialChannel } from "./provider/host-credentials.ts";
 import { hostModelProviders } from "./provider/model-plugins.ts";
 import { createHostBrokeredMcpOAuthStore, mcpOAuthTestStoreEnvName, resolveSessionMcpOAuthStore, type McpOAuthStore } from "./mcp-auth/store.ts";
-import type { ProviderStateRecordInput } from "./store/provider-state.ts";
 import type { Provider } from "./engine.ts";
 import type { ClassifierInterface } from "./permissions/auto/engine.ts";
 import { WinterProviderResolutionError } from "@waifucave/clover-provider-runtime";
@@ -484,8 +483,6 @@ export interface ProductionWiringOptions {
    * never written -- exactly as a session with no store has no durable anything.
    */
   persistence?: {
-    /** Review r1, M-1: the renderer's sticky decoration decisions, kept as layer-2 sidecar records. */
-    recordProviderState?(record: ProviderStateRecordInput): void | Promise<void>;
     recordInvokedSkills?(attachment: { type: string; skills: unknown[] }): void | Promise<void>;
     recordFileHistory?(record: { kind: "snapshot" | "delta"; userMessageUuid: string; path: string; pathHash: string; tool: string; at: string; version: number; absent?: boolean; parentRealPath?: string; anchorPath?: string; anchorRealPath?: string }): void | Promise<void>;
   };
@@ -1382,7 +1379,6 @@ async function buildProductionWiringImpl(opts: ProductionWiringOptions, restrict
     // `buildSessionProvider`'s construction reads it -- `resolveReviewer` is defined there, never
     // called there.
     credentialEpoch: () => credentialEpochCounter,
-    ...(opts.persistence?.recordProviderState !== undefined ? { recordProviderState: (record: ProviderStateRecordInput) => opts.persistence!.recordProviderState!(record) } : {}),
     ...(opts.provider ?? {}),
   });
   if (providerWiring.resolutionError !== undefined) {

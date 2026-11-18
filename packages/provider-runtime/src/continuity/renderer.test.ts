@@ -2,9 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { createRegistry, type ProviderRegistry } from "../registry.ts";
 import type { ContentBlockLike, ProviderMessageLike } from "../types.ts";
 import { toWireMessages } from "../adapters/anthropic/messages.ts";
-import { RECOVERED_REASONING_TAG } from "./decoration.ts";
 import { fixtureCatalog, fixtureModel, fixtureProvider, fixtureReasoning, scriptedAdapter } from "./fixtures.ts";
-import { applyDecorationToContent, createHistoryRenderer, type ContinuationChainLike, type ContinuationLinkLike, type HistoryTarget } from "./renderer.ts";
+import { createHistoryRenderer, type ContinuationChainLike, type ContinuationLinkLike, type HistoryTarget } from "./renderer.ts";
 import { reasoningBlockItems, separateReasoningBlocks } from "./reasoning-blocks.ts";
 
 // Four models across three families. The two Claude rows declare NO domain evidence, so each is its
@@ -40,7 +39,9 @@ const CLAUDE_A: HistoryTarget = { family: "anthropic", continuationDomain: "anth
 const OPENAI: HistoryTarget = { family: "openai", continuationDomain: "openai/o-reason", readableState: "summary" };
 const DEEPSEEK: HistoryTarget = { family: "openai", continuationDomain: "deepseek/r-reason", readableState: "full-exposed" };
 
-const chainOf = (entries: Record<string, ContinuationLinkLike>): ContinuationChainLike => new Map(Object.entries(entries));
+// A real chain also carries each turn's captured SUMMARY (the runtime's `ContinuationLink.summary`); the
+// renderer must never read it, so the fixtures put one on every link and the tests prove it never shows.
+const chainOf = (entries: Record<string, ContinuationLinkLike & { summary?: string }>): ContinuationChainLike => new Map(Object.entries(entries));
 
 const claudeMessage = (uuid: string, extra: Partial<ProviderMessageLike> = {}): ProviderMessageLike => ({
   role: "assistant",
@@ -69,77 +70,64 @@ const deepseekMessage = (uuid: string): ProviderMessageLike => ({
   origin: { providerId: "deepseek", modelKey: "deepseek/r-reason", family: "openai", continuationDomain: "deepseek/r-reason" },
 });
 
-// --- Nit (micro-round): the origin-resolution PRECEDENCE, pinned with all three sources present ---
-// and CONTRADICTING each other -- `message.origin` > the sidecar chain's own origin > the
-// structural `message.model` fallback (renderer.ts's own `const origin = message.origin ?? ... ??
-// ...`). Each source names a DIFFERENT real catalog row so the winner is unambiguous from
-// `report.decorations[0].source` alone.
+// Everything that would mean reasoning was pasted into a request: the retired tags and labels, and every
+// piece of reasoning TEXT the fixtures carry (summaries, thinking text, exposed reasoning).
+const GLUE = ["recovered_", "prior_model_handoff", "prior-model reasoning", "private claude reasoning", "SUMMARY-TEXT", "EXPOSED-TEXT"];
+function expectNoGlue(value: unknown): void {
+  const serialized = JSON.stringify(value);
+  for (const needle of GLUE) expect(serialized).not.toContain(needle);
+  expect(serialized).not.toContain('"decoration"');
+}
+
+// The origin-resolution PRECEDENCE, pinned with all three sources present and CONTRADICTING each other --
+// `message.origin` > the sidecar chain's own origin > the structural `message.model` fallback. The target
+// is the model each source names in turn: only the winning source makes the message the target's own.
 describe("origin resolution precedence: message.origin > sidecar chain origin > structural message.model", () => {
+  const withState = (extra: Partial<ProviderMessageLike> & { model?: string }): ProviderMessageLike =>
+    ({ role: "assistant", content: [{ type: "text", text: "answer" }], uuid: "m1", nativeState: { family: "x", continuationDomain: "x", items: ["OWN-STATE"] }, ...extra }) as ProviderMessageLike;
+  const claudeA = { ...CLAUDE_A, providerId: "anthropic", modelKey: "anthropic/claude-a" };
+  const claudeB: HistoryTarget = { family: "anthropic", continuationDomain: "anthropic/claude-b", readableState: "summary", providerId: "anthropic", modelKey: "anthropic/claude-b" };
+  const openai = { ...OPENAI, providerId: "openai", modelKey: "openai/o-reason" };
+
   test("all three present and contradicting: message.origin wins", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message: ProviderMessageLike & { model: string } = {
-      role: "assistant",
-      content: [{ type: "text", text: "answer" }],
-      uuid: "m1",
-      origin: { providerId: "anthropic", modelKey: "anthropic/claude-a", family: "anthropic", continuationDomain: "anthropic/claude-a" }, // #1 -- wins
-      model: "anthropic/claude-b", // #3 -- structural fallback, only ever read when #1 AND #2 are both absent
-    };
-    // #2 -- a chain link naming a THIRD, different origin (openai), which #1 must beat.
-    const chain = chainOf({ m1: { origin: { providerId: "openai", modelKey: "openai/o-reason", family: "openai" }, summary: "openai's own summary" } });
-    const { report } = renderer.renderWithReport([message], chain, DEEPSEEK);
-    expect(report.decorations[0]!.source).toEqual({ providerId: "anthropic", modelKey: "anthropic/claude-a" });
+    const message = withState({ origin: { providerId: "anthropic", modelKey: "anthropic/claude-a", family: "anthropic", continuationDomain: "anthropic/claude-a" }, model: "anthropic/claude-b" });
+    const chain = chainOf({ m1: { origin: { providerId: "openai", modelKey: "openai/o-reason", family: "openai" } } });
+    expect(renderer.renderWithReport([message], chain, claudeA).report.replayedNatively).toBe(1);
+    expect(renderer.renderWithReport([message], chain, openai).report.droppedNativeState).toBe(1);
   });
 
   test("message.origin absent: the sidecar chain origin wins over the structural fallback", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message: ProviderMessageLike & { model: string } = {
-      role: "assistant",
-      content: [{ type: "text", text: "answer" }],
-      uuid: "m1",
-      model: "anthropic/claude-b", // #3 -- would win only if #2 were also absent
-    };
-    const chain = chainOf({ m1: { origin: { providerId: "openai", modelKey: "openai/o-reason", family: "openai" }, summary: "openai's own summary" } }); // #2 -- wins
-    const { report } = renderer.renderWithReport([message], chain, DEEPSEEK);
-    expect(report.decorations[0]!.source).toEqual({ providerId: "openai", modelKey: "openai/o-reason" });
+    const message = withState({ model: "anthropic/claude-b" });
+    const chain = chainOf({ m1: { origin: { providerId: "openai", modelKey: "openai/o-reason", family: "openai" } } });
+    expect(renderer.renderWithReport([message], chain, openai).report.replayedNatively).toBe(1);
+    expect(renderer.renderWithReport([message], chain, claudeB).report.droppedNativeState).toBe(1);
   });
 
   test("message.origin AND the sidecar chain origin both absent: the structural message.model fallback is the last resort", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message: ProviderMessageLike & { model: string } = {
-      role: "assistant",
-      content: [{ type: "text", text: "answer" }],
-      uuid: "m1",
-      model: "anthropic/claude-b", // #3 -- wins, nothing else is present
-    };
-    // The chain entry carries a summary but deliberately NO `origin` field -- summary and origin are
-    // independent facts on a ContinuationLinkLike, so this still exercises "chain origin absent"
-    // while giving materialFor something to build a decoration from (otherwise there is nothing to
-    // decorate at all, and report.decorations would be empty regardless of which source resolved).
-    const chain = chainOf({ m1: { summary: "captured summary, no origin recorded for it" } });
-    const { report } = renderer.renderWithReport([message], chain, DEEPSEEK);
-    expect(report.decorations[0]!.source).toEqual({ providerId: "anthropic", modelKey: "anthropic/claude-b" });
+    const message = withState({ model: "anthropic/claude-b" });
+    expect(renderer.renderWithReport([message], chainOf({ m1: { summary: "SUMMARY-TEXT" } }), claudeB).report.replayedNatively).toBe(1);
+    expect(renderer.renderWithReport([message], chainOf({}), openai).report.droppedNativeState).toBe(1);
   });
 });
 
-describe("the matrix: same domain", () => {
-  test("EXACT REPLAY -- native state, in-dialect blocks and content all ride unchanged, and NOTHING is decorated", () => {
+describe("the same model, or the same continuation domain: exact native replay", () => {
+  test("native state, in-dialect blocks and content all ride unchanged, by identity", () => {
     const renderer = createHistoryRenderer(buildRegistry());
     const message = claudeMessage("m1", { nativeState: { family: "anthropic", continuationDomain: "anthropic/claude-a", items: ["A-OPAQUE"] } });
-    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "claude summary" } }), CLAUDE_A);
-    expect(messages[0]).toBe(message); // the same object: untouched, not rebuilt
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(report.replayedNatively).toBe(1);
-    expect(report.decorations).toHaveLength(0);
-    expect(report.truncated).toBe(false);
+    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "SUMMARY-TEXT" } }), CLAUDE_A);
+    expect(messages[0]).toBe(message);
+    expect(report).toEqual({ replayedNatively: 1, droppedNativeState: 0, strippedInDialectBlocks: 0, droppedEmptyMessages: 0 });
+    expect(JSON.stringify(messages)).not.toContain("SUMMARY-TEXT");
   });
 
-  test("a message with NO origin is passed through untouched even when the chain has a link for it", () => {
+  test("the same model on a row with NO continuation domain is still its own (sameModel)", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message: ProviderMessageLike = { role: "assistant", content: "pre-P6 history", uuid: "m1" };
-    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "s" } }), OPENAI);
-    expect(messages[0]).toBe(message);
-    expect(report.decorations).toHaveLength(0);
-    expect(report.withoutMaterial).toBe(0);
+    const own: ProviderMessageLike = { ...claudeMessage("m1"), origin: { providerId: "anthropic", modelKey: "anthropic/claude-b", family: "anthropic" } };
+    const target: HistoryTarget = { family: "anthropic", readableState: "summary", providerId: "anthropic", modelKey: "anthropic/claude-b" };
+    expect(renderer.render([own], chainOf({}), target)[0]).toBe(own);
   });
 
   test("user and tool messages are never touched", () => {
@@ -152,293 +140,114 @@ describe("the matrix: same domain", () => {
   });
 });
 
-describe("the matrix: cross domain", () => {
-  test("Claude -> OpenAI: BOTH carriers of opaque state come off, and the message's OWN summary rides the tag door", () => {
+describe("another model: the reasoning is REMOVED and nothing takes its place", () => {
+  test("Claude -> OpenAI: both carriers come off; text survives; no summary, no thinking text, no tag", () => {
     const renderer = createHistoryRenderer(buildRegistry());
     const message = claudeMessage("m1", { nativeState: { family: "anthropic", continuationDomain: "anthropic/claude-a", items: ["A-OPAQUE"] } });
-    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "claude's own summary" } }), OPENAI);
-
-    const rendered = messages[0]!;
-    expect(rendered.nativeState).toBeUndefined();
-    const blocks = rendered.content as ContentBlockLike[];
-    expect(blocks.map((b) => b.type)).toEqual(["text"]);
-    // The signature and the redacted payload are gone from EVERY carrier, and from the whole frame.
-    const serialized = JSON.stringify(rendered);
-    expect(serialized).not.toContain("SIG-OPAQUE");
-    expect(serialized).not.toContain("REDACTED-OPAQUE");
-    expect(serialized).not.toContain("A-OPAQUE");
-    // ... and the private thinking TEXT is not forwarded either: only the provider's own summary is.
-    expect(serialized).not.toContain("private claude reasoning");
-    expect(rendered.decoration).toEqual({
-      text: `<${RECOVERED_REASONING_TAG} kind="summary" provider="anthropic" model="anthropic/claude-a">claude's own summary</${RECOVERED_REASONING_TAG}>`,
-      door: "tag",
-    });
-    expect(report).toMatchObject({ droppedNativeState: 1, strippedInDialectBlocks: 2, withoutMaterial: 0, truncated: false });
-    expect(report.decorations[0]).toEqual({ anchorUuid: "m1", source: { providerId: "anthropic", modelKey: "anthropic/claude-a" }, kind: "summary", door: "tag", truncated: false });
+    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "SUMMARY-TEXT" } }), OPENAI);
+    expect(messages[0]).toEqual({ role: "assistant", content: [{ type: "text", text: "the visible answer" }], uuid: "m1", origin: message.origin! });
+    expect(report).toEqual({ replayedNatively: 0, droppedNativeState: 1, strippedInDialectBlocks: 2, droppedEmptyMessages: 0 });
+    for (const opaque of ["SIG-OPAQUE", "REDACTED-OPAQUE", "A-OPAQUE"]) expect(JSON.stringify(messages)).not.toContain(opaque);
+    expectNoGlue(messages);
   });
 
-  test("Claude model A -> Claude model B is a real boundary: same family, same provider, different domain", () => {
+  test("Claude model A -> Claude model B on the same provider is another model too (per-model domains)", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message = claudeMessage("m1");
-    const target: HistoryTarget = { family: "anthropic", continuationDomain: "anthropic/claude-b", readableState: "summary" };
-    const { messages, report } = renderer.renderWithReport([message], chainOf({ m1: { summary: "s" } }), target);
+    const target: HistoryTarget = { family: "anthropic", continuationDomain: "anthropic/claude-b", readableState: "summary", providerId: "anthropic", modelKey: "anthropic/claude-b" };
+    const { messages, report } = renderer.renderWithReport([claudeMessage("m1")], chainOf({ m1: { summary: "SUMMARY-TEXT" } }), target);
     expect(report.strippedInDialectBlocks).toBe(2);
-    expect(messages[0]!.decoration?.door).toBe("tag");
+    expect((messages[0]!.content as ContentBlockLike[]).map((b) => b.type)).toEqual(["text"]);
+    expectNoGlue(messages);
   });
 
-  test("DeepSeek -> an exposed-reasoning target: the thinking-channel door, and the material is `exposed`", () => {
+  test("DeepSeek's exposed reasoning never reaches another model, whichever kind of target", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([deepseekMessage("m1")], chainOf({ m1: { summary: "full readable chain: step 1, step 2" } }), OPENAI);
-    // The TARGET here is OpenAI (hidden reasoning) -> tag door even though the SOURCE is exposed.
-    expect(messages[0]!.decoration?.door).toBe("tag");
-    expect(report.decorations[0]!.kind).toBe("exposed");
-
-    const toExposed = createHistoryRenderer(buildRegistry()).renderWithReport([openaiMessage("m1")], chainOf({ m1: { summary: "openai summary" } }), DEEPSEEK);
-    expect(toExposed.messages[0]!.decoration?.door).toBe("thinking-channel");
-    expect(toExposed.messages[0]!.decoration?.text).toContain("openai/o-reason");
-    expect(toExposed.report.decorations[0]!.kind).toBe("summary");
+    const deepseek: ProviderMessageLike = { ...deepseekMessage("m1"), nativeState: { family: "openai", continuationDomain: "deepseek/r-reason", items: [{ type: "winter.exposed_reasoning", text: "EXPOSED-TEXT" }] } };
+    for (const target of [OPENAI, CLAUDE_A]) {
+      const { messages, report } = renderer.renderWithReport([deepseek], chainOf({ m1: { summary: "EXPOSED-TEXT" } }), target);
+      expect(messages[0]!.nativeState).toBeUndefined();
+      expect(messages[0]!.content).toEqual([{ type: "text", text: "deepseek visible answer" }]);
+      expect(report.droppedNativeState).toBe(1);
+      expectNoGlue(messages);
+    }
+    // ... and OpenAI's summary-backed state never reaches DeepSeek.
+    expectNoGlue(renderer.render([openaiMessage("m2")], chainOf({ m2: { summary: "SUMMARY-TEXT" } }), DEEPSEEK));
   });
 
-  // Phase 10b Lane S, S5 (W18-17, G1): a Claude message with no sidecar summary is no longer a gap --
-  // its own VISIBLE thinking text (never `signature`) becomes its summary. `claudeMessage()`'s own
-  // fixture always carries real visible thinking, so this is real, first-party material, not a
-  // fabrication; the true "nothing to carry" case (no summary AND no visible thinking) is the next test.
-  test("no captured summary -> falls back to the message's OWN visible thinking text (G1)", () => {
+  test("a turn whose only content was its reasoning is left out of the request, never sent empty", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([claudeMessage("m1")], chainOf({ m1: {} }), OPENAI);
-    expect(messages[0]!.decoration).toEqual({
-      text: `<${RECOVERED_REASONING_TAG} kind="summary" provider="anthropic" model="anthropic/claude-a">private claude reasoning</${RECOVERED_REASONING_TAG}>`,
-      door: "tag",
-    });
-    // The signature and the redacted payload never enter the decoration, even though the visible
-    // thinking text this decoration IS built from rode right beside them in the same content array.
-    expect(messages[0]!.decoration!.text).not.toContain("SIG-OPAQUE");
-    expect(messages[0]!.decoration!.text).not.toContain("REDACTED-OPAQUE");
-    expect(report.withoutMaterial).toBe(0);
-    expect(report.decorations).toHaveLength(1);
-  });
-
-  test("truly no material -- no sidecar summary AND no visible thinking blocks -- is still a counted gap, never a fabricated decoration", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const bareClaudeMessage: ProviderMessageLike = {
+    const thinkingOnly: ProviderMessageLike = {
       role: "assistant",
-      content: [{ type: "text", text: "the visible answer" }],
+      content: [],
       uuid: "m1",
       origin: { providerId: "anthropic", modelKey: "anthropic/claude-a", family: "anthropic", continuationDomain: "anthropic/claude-a" },
+      nativeState: { family: "anthropic", continuationDomain: "anthropic/claude-a", items: reasoningBlockItems([{ at: 0, block: { type: "thinking", thinking: "private claude reasoning", signature: "S" } }]) },
     };
-    const { messages, report } = renderer.renderWithReport([bareClaudeMessage], chainOf({ m1: {} }), OPENAI);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(report.withoutMaterial).toBe(1);
-    expect(report.decorations).toHaveLength(0);
+    const user: ProviderMessageLike = { role: "user", content: "next" };
+    const { messages, report } = renderer.renderWithReport([user, thinkingOnly, user], chainOf({}), OPENAI);
+    expect(messages).toEqual([user, user]);
+    expect(report.droppedEmptyMessages).toBe(1);
+    // A turn with a tool call and nothing else stays: the call is visible conversation.
+    const callOnly: ProviderMessageLike = { ...thinkingOnly, content: [{ type: "tool_use", id: "t1", name: "Read", input: {} }] };
+    expect(renderer.render([callOnly], chainOf({}), OPENAI)[0]!.content).toEqual([{ type: "tool_use", id: "t1", name: "Read", input: {} }]);
+    // The model's own empty turn is ITS state, not stripped, so it is never dropped here.
+    expect(renderer.render([thinkingOnly], chainOf({}), { ...CLAUDE_A, providerId: "anthropic", modelKey: "anthropic/claude-a" })).toEqual([thinkingOnly]);
   });
 
-  test("policy may forbid forwarding exposed reasoning -- summaries are unaffected", () => {
-    const blocked = createHistoryRenderer(buildRegistry(), { allowExposedForwarding: false });
-    const exposed = blocked.renderWithReport([deepseekMessage("m1")], chainOf({ m1: { summary: "raw chain" } }), OPENAI);
-    expect(exposed.messages[0]!.decoration).toBeUndefined();
-    expect(exposed.report.withoutMaterial).toBe(1);
-    const summarized = blocked.renderWithReport([claudeMessage("m2")], chainOf({ m2: { summary: "a summary" } }), OPENAI);
-    expect(summarized.messages[0]!.decoration).toBeDefined();
-  });
-
-  test("AT MOST ONE decoration per message: an incoming decoration is replaced, never appended to", () => {
+  test("a decoration a caller left on any message, of any role, is removed -- nothing annotates a request", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const message = claudeMessage("m1", { decoration: { text: "STALE", door: "tag" } });
-    const { messages } = renderer.renderWithReport([message], chainOf({ m1: { summary: "fresh" } }), OPENAI);
-    expect(messages[0]!.decoration?.text).toContain("fresh");
-    expect(JSON.stringify(messages[0])).not.toContain("STALE");
-  });
-
-  test("a stale decoration on a message that now REPLAYS NATIVELY is removed, not carried", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const message = claudeMessage("m1", { decoration: { text: "STALE foreign material", door: "tag" } });
-    const { messages } = renderer.renderWithReport([message], chainOf({ m1: { summary: "s" } }), CLAUDE_A);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(JSON.stringify(messages[0])).not.toContain("STALE");
-    // Everything else is intact -- including the in-dialect blocks the target itself authored.
-    expect((messages[0]!.content as ContentBlockLike[]).map((b) => b.type)).toEqual(["thinking", "redacted_thinking", "text"]);
-  });
-});
-
-describe("compaction stops the carriage", () => {
-  test("a rebuilt post-compaction message (annotations dropped, anchor gone) is never decorated", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    // What the compaction summariser's positive rebuild produces: content only.
-    const compacted: ProviderMessageLike = { role: "assistant", content: "summary of the earlier conversation" };
-    const { messages, report } = renderer.renderWithReport([compacted], chainOf({ m1: { summary: "pre-compaction summary" } }), OPENAI);
-    expect(messages[0]).toBe(compacted);
-    expect(report.decorations).toHaveLength(0);
-  });
-
-  // W18-17 (G1): an anchor whose sidecar record is GONE ENTIRELY (`chainOf({})`, not merely empty)
-  // no longer carries nothing either -- the message's own visible thinking is still right there in
-  // its content, independent of whatever the sidecar did or didn't keep.
-  test("an anchor that survives but whose sidecar record is gone still carries the message's OWN visible thinking", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([claudeMessage("m1")], chainOf({}), OPENAI);
-    expect(messages[0]!.decoration).toEqual({
-      text: `<${RECOVERED_REASONING_TAG} kind="summary" provider="anthropic" model="anthropic/claude-a">private claude reasoning</${RECOVERED_REASONING_TAG}>`,
-      door: "tag",
-    });
-    expect(report.withoutMaterial).toBe(0);
+    const user: ProviderMessageLike = { role: "user", content: "carry on", decoration: { text: "<prior_model_handoff>x</prior_model_handoff>", door: "tag" } };
+    const own = claudeMessage("m1", { decoration: { text: "<recovered_reasoning>x</recovered_reasoning>", door: "tag" } });
+    const foreign: ProviderMessageLike = { ...openaiMessage("m2"), decoration: { text: "[prior-model reasoning, carried as data]", door: "thinking-channel" } };
+    const orphan: ProviderMessageLike = { role: "assistant", content: "rebuilt by compaction", decoration: { text: "<recovered_reasoning>x</recovered_reasoning>", door: "tag" } };
+    const rendered = JSON.stringify(renderer.render([user, own, foreign, orphan], chainOf({}), CLAUDE_A));
+    for (const needle of ['"decoration"', "recovered_", "prior_model_handoff", "prior-model reasoning"]) expect(rendered).not.toContain(needle);
   });
 });
 
 describe("the multi-hop chain (Claude -> OpenAI -> DeepSeek -> Claude)", () => {
-  test("the returning provider's native state lights up again, and each message carries ONLY its own decoration", () => {
+  test("each hop back lights the returning model's own state up again; nobody ever sees anybody else's", () => {
     const renderer = createHistoryRenderer(buildRegistry());
     const history = [
       claudeMessage("m1", { nativeState: { family: "anthropic", continuationDomain: "anthropic/claude-a", items: ["CLAUDE-OPAQUE"] } }),
       openaiMessage("m2"),
-      deepseekMessage("m3"),
+      { ...deepseekMessage("m3"), nativeState: { family: "openai", continuationDomain: "deepseek/r-reason", items: [{ type: "winter.exposed_reasoning", text: "EXPOSED-TEXT" }] } },
       claudeMessage("m4", { nativeState: { family: "anthropic", continuationDomain: "anthropic/claude-a", items: ["CLAUDE-OPAQUE-2"] } }),
     ];
-    const chain = chainOf({
-      m1: { summary: "claude summary one" },
-      m2: { summary: "openai summary" },
-      m3: { summary: "deepseek exposed chain" },
-      m4: { summary: "claude summary two" },
-    });
+    const chain = chainOf({ m1: { summary: "SUMMARY-TEXT" }, m2: { summary: "SUMMARY-TEXT" }, m3: { summary: "EXPOSED-TEXT" }, m4: { summary: "SUMMARY-TEXT" } });
 
-    // The hop BACK to Claude: its own two messages replay natively; the two intervening families
-    // carry one decoration each, their own.
-    const { messages, report } = renderer.renderWithReport(history, chain, CLAUDE_A);
-    expect(messages[0]!.nativeState?.items).toEqual(["CLAUDE-OPAQUE"]);
-    expect(messages[3]!.nativeState?.items).toEqual(["CLAUDE-OPAQUE-2"]);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(messages[3]!.decoration).toBeUndefined();
-    expect(messages[1]!.nativeState).toBeUndefined();
-    expect(messages[1]!.decoration?.text).toContain("openai summary");
-    expect(messages[1]!.decoration?.text).toContain(`model="openai/o-reason"`);
-    expect(messages[2]!.decoration?.text).toContain("deepseek exposed chain");
-    expect(messages[2]!.decoration?.text).toContain(`model="deepseek/r-reason"`);
-    // Nobody carries anybody else's material.
-    expect(messages[1]!.decoration!.text).not.toContain("deepseek");
-    expect(messages[2]!.decoration!.text).not.toContain("openai");
-    expect(report.replayedNatively).toBe(2);
-    expect(report.decorations).toHaveLength(2);
-    expect(JSON.stringify(messages)).not.toContain("OPENAI-OPAQUE");
+    const forClaude = renderer.renderWithReport(history, chain, CLAUDE_A);
+    expect(forClaude.messages[0]).toBe(history[0]!);
+    expect(forClaude.messages[3]).toBe(history[3]!);
+    expect(forClaude.report).toEqual({ replayedNatively: 2, droppedNativeState: 2, strippedInDialectBlocks: 0, droppedEmptyMessages: 0 });
+    expect(JSON.stringify(forClaude.messages)).not.toContain("OPENAI-OPAQUE");
+    expectNoGlue(forClaude.messages.slice(1, 3));
 
-    // The same history rendered for OPENAI: its own message replays, and BOTH Claude messages plus
-    // the DeepSeek one decorate -- the identical per-message rule, no session-level state.
     const forOpenai = renderer.renderWithReport(history, chain, OPENAI);
-    expect(forOpenai.messages[1]!.nativeState?.items).toEqual([{ encrypted_content: "OPENAI-OPAQUE" }]);
-    expect(forOpenai.report.decorations.map((d) => d.source.modelKey).sort()).toEqual(["anthropic/claude-a", "anthropic/claude-a", "deepseek/r-reason"]);
-    expect(JSON.stringify(forOpenai.messages)).not.toContain("CLAUDE-OPAQUE");
-    expect(JSON.stringify(forOpenai.messages)).not.toContain("SIG-OPAQUE");
-  });
-});
-
-describe("§9.6 budgets", () => {
-  test("a per-decoration budget truncates and FLIPS the report to lossy", () => {
-    const renderer = createHistoryRenderer(buildRegistry(), { maxDecorationChars: 200 });
-    const { messages, report } = renderer.renderWithReport([openaiMessage("m1")], chainOf({ m1: { summary: "z".repeat(400) } }), CLAUDE_A);
-    expect(report.truncated).toBe(true);
-    expect(report.decorations[0]!.truncated).toBe(true);
-    expect(messages[0]!.decoration!.text).toContain("trimmed to fit");
+    expect(forOpenai.messages[1]).toBe(history[1]!);
+    for (const opaque of ["CLAUDE-OPAQUE", "SIG-OPAQUE", "REDACTED-OPAQUE"]) expect(JSON.stringify(forOpenai.messages)).not.toContain(opaque);
+    expectNoGlue(forOpenai.messages);
+    expect(forOpenai.messages.map((m) => (m.content as ContentBlockLike[]).flatMap((b) => (b.type === "text" ? [b.text] : [])))).toEqual([["the visible answer"], ["openai visible answer"], ["deepseek visible answer"], ["the visible answer"]]);
   });
 
-  test("a total budget is spent NEWEST FIRST, and exhaustion drops the OLDEST material -- reported, never silent", () => {
-    const renderer = createHistoryRenderer(buildRegistry(), { decorationCharBudget: 300 });
-    const history = [openaiMessage("m1"), openaiMessage("m2"), openaiMessage("m3")];
-    const chain = chainOf({ m1: { summary: "OLDEST material" }, m2: { summary: "MIDDLE material" }, m3: { summary: "NEWEST material" } });
-    const { messages, report } = renderer.renderWithReport(history, chain, CLAUDE_A);
-    expect(messages[2]!.decoration?.text).toContain("NEWEST material");
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(report.budgetDropped).toBeGreaterThan(0);
-    expect(report.truncated).toBe(true);
-  });
-
-  test("no budget configured -> nothing is truncated and the report says so", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { report } = renderer.renderWithReport([openaiMessage("m1")], chainOf({ m1: { summary: "y".repeat(10_000) } }), CLAUDE_A);
-    expect(report.truncated).toBe(false);
-  });
-
-  test("`onReport` sees every render (the side channel through the frozen seam's message-only return)", () => {
+  test("`onReport` sees every render", () => {
     const seen: number[] = [];
-    const renderer = createHistoryRenderer(buildRegistry(), { onReport: (report) => seen.push(report.decorations.length) });
-    renderer.render([openaiMessage("m1")], chainOf({ m1: { summary: "s" } }), CLAUDE_A);
+    const renderer = createHistoryRenderer(buildRegistry(), { onReport: (report) => seen.push(report.droppedNativeState) });
     renderer.render([openaiMessage("m1")], chainOf({}), CLAUDE_A);
+    renderer.render([openaiMessage("m1")], chainOf({}), OPENAI);
     expect(seen).toEqual([1, 0]);
   });
 });
 
-describe("applyDecorationToContent: the adapter's half of the tag door", () => {
-  test("a tag decoration becomes an ordinary text block on the message it belongs to", () => {
-    const message: ProviderMessageLike = { role: "assistant", content: [{ type: "text", text: "answer" }], decoration: { text: "<tagged/>", door: "tag" } };
-    expect(applyDecorationToContent(message)).toEqual({ applied: true, content: [{ type: "text", text: "answer" }, { type: "text", text: "<tagged/>" }] });
-    expect(applyDecorationToContent({ role: "assistant", content: "answer", decoration: { text: "<tagged/>", door: "tag" } })).toEqual({ applied: true, content: "answer\n\n<tagged/>" });
-  });
-
-  test("MINOR 3: a thinking-channel decoration is refused with a REASON, never dropped silently", () => {
-    // An adapter that got its own content back with no signal would have dropped the decoration and
-    // had no way to know.
-    const message: ProviderMessageLike = { role: "assistant", content: "answer", decoration: { text: "prior-model reasoning", door: "thinking-channel" } };
-    const placement = applyDecorationToContent(message);
-    expect(placement).toEqual({ applied: false, reason: "thinking-channel-door", content: "answer" });
-  });
-
-  test("no decoration -> `applied: false` with its own reason, and the content unchanged", () => {
-    const content: ContentBlockLike[] = [{ type: "text", text: "answer" }];
-    const placement = applyDecorationToContent({ role: "assistant", content });
-    expect(placement.applied).toBe(false);
-    expect(placement).toMatchObject({ reason: "no-decoration" });
-    expect(placement.content).toBe(content);
-  });
-
-  test("MINOR 3: the render report COUNTS the decorations that need adapter-side placement", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const toTag = renderer.renderWithReport([openaiMessage("m1")], chainOf({ m1: { summary: "s" } }), CLAUDE_A);
-    expect(toTag.report.thinkingChannelDecorations).toBe(0);
-    const toChannel = renderer.renderWithReport([openaiMessage("m1")], chainOf({ m1: { summary: "s" } }), DEEPSEEK);
-    expect(toChannel.report.thinkingChannelDecorations).toBe(1);
-  });
-});
-
-describe("MINOR 6: stale-decoration symmetry on the no-origin path", () => {
-  test("an ASSISTANT message with a decoration but no origin has the stale annotation stripped", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const orphan: ProviderMessageLike = { role: "assistant", content: "rebuilt by compaction", decoration: { text: "STALE foreign material", door: "tag" } };
-    const { messages } = renderer.renderWithReport([orphan], chainOf({}), OPENAI);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(JSON.stringify(messages[0])).not.toContain("STALE");
-  });
-
-  test("a USER message's decoration is LEFT ALONE -- it is the switch point's handoff note", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const carrier: ProviderMessageLike = { role: "user", content: "carry on", decoration: { text: "<prior_model_handoff …>", door: "tag" } };
-    const { messages } = renderer.renderWithReport([carrier], chainOf({}), OPENAI);
-    expect(messages[0]).toBe(carrier);
-    expect(messages[0]!.decoration?.text).toContain("prior_model_handoff");
-  });
-
-  test("an assistant message with no origin AND no decoration is still passed through by identity", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const plain: ProviderMessageLike = { role: "assistant", content: "pre-P6" };
-    expect(renderer.render([plain], chainOf({}), OPENAI)[0]).toBe(plain);
-  });
-});
-
-// --- Phase 10b Lane S, S5 (W18-17 renderer half, R-10b-9, G1): Claude's reasoning crosses ----------
-//
-// An OFFICIAL-written assistant entry has NO sidecar record at all (the official leg's own child
-// never goes through Winter's `recordAssistant`), so `message.origin` and the chain lookup are BOTH
-// always absent -- the only provenance it carries is claude's own `message.model`, read here
-// structurally (never added to `ProviderMessageLike` itself). Fix round 3 (P10b-6): the real dialect
-// reader that actually attaches it is `winter-agent-runtime`'s `resume.ts` -- `toDialectEntries`
-// carries a binary-shaped entry's `message.model` through its projection, and
-// `rebuildProviderMessages` spreads it, structurally, onto the rebuilt assistant message (see that
-// package's `resume.test.ts` for the round trip and `resume-renderer.test.ts` for this exact
-// reader-to-renderer path proven end to end against the real catalog).
-describe("W18-17 (G1): an official-written entry with no sidecar origin", () => {
-  // Two thinking blocks (never merged into one on the wire) to prove ORDER, not just presence.
+// An OFFICIAL-written assistant entry (the retired `claude` leg) has NO sidecar record: its only
+// provenance is claude's own `message.model`, read structurally.
+describe("an official-written entry with no sidecar origin", () => {
   function officialClaudeMessage(): ProviderMessageLike & { model: string } {
     return {
       role: "assistant",
       content: [
-        { type: "thinking", thinking: "first, weigh option A", signature: "SIG-FIRST-OPAQUE" },
-        { type: "thinking", thinking: "then, decide on option B", signature: "SIG-SECOND-OPAQUE" },
+        { type: "thinking", thinking: "private claude reasoning, first", signature: "SIG-FIRST-OPAQUE" },
+        { type: "thinking", thinking: "private claude reasoning, then", signature: "SIG-SECOND-OPAQUE" },
         { type: "redacted_thinking", data: "REDACTED-PAYLOAD-OPAQUE" },
         { type: "text", text: "the visible final answer" },
       ],
@@ -446,206 +255,66 @@ describe("W18-17 (G1): an official-written entry with no sidecar origin", () => 
     };
   }
 
-  test("takes its origin from message.model (provider anthropic) and decorates a foreign target from it", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([officialClaudeMessage()], chainOf({}), OPENAI);
-    expect(messages[0]!.decoration).toBeDefined();
-    expect(messages[0]!.decoration!.door).toBe("tag");
-    expect(report.decorations[0]).toMatchObject({ source: { providerId: "anthropic", modelKey: "anthropic/claude-a" }, kind: "summary" });
-  });
-
-  test("its visible thinking text, JOINED IN ORDER, is rendered for an OpenAI target as kind=\"summary\"", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([officialClaudeMessage()], chainOf({}), OPENAI);
-    expect(messages[0]!.decoration!.text).toBe(
-      `<${RECOVERED_REASONING_TAG} kind="summary" provider="anthropic" model="anthropic/claude-a">first, weigh option A\n\nthen, decide on option B</${RECOVERED_REASONING_TAG}>`,
-    );
-    expect(report.decorations[0]!.kind).toBe("summary");
-  });
-
-  test("its visible thinking text is rendered for a DeepSeek (exposed-reasoning) target ALSO as kind=\"summary\" -- Claude's own material is never relabelled exposed", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([officialClaudeMessage()], chainOf({}), DEEPSEEK);
-    expect(messages[0]!.decoration!.door).toBe("thinking-channel");
-    expect(messages[0]!.decoration!.text).toContain("first, weigh option A");
-    expect(messages[0]!.decoration!.text).toContain("then, decide on option B");
-    expect(report.decorations[0]!.kind).toBe("summary");
-  });
-
-  test("signature and redacted_thinking.data NEVER appear in any rendered string, for either target (byte-grep assertion)", () => {
+  test("for a foreign target its thinking (text, signatures, redacted data) is all left out, and the answer stays", () => {
     const renderer = createHistoryRenderer(buildRegistry());
     for (const target of [OPENAI, DEEPSEEK]) {
       const { messages } = renderer.renderWithReport([officialClaudeMessage()], chainOf({}), target);
       const serialized = JSON.stringify(messages);
-      expect(serialized).not.toContain("SIG-FIRST-OPAQUE");
-      expect(serialized).not.toContain("SIG-SECOND-OPAQUE");
-      expect(serialized).not.toContain("REDACTED-PAYLOAD-OPAQUE");
-      expect(serialized).not.toContain("signature");
+      for (const opaque of ["SIG-FIRST-OPAQUE", "SIG-SECOND-OPAQUE", "REDACTED-PAYLOAD-OPAQUE", "signature"]) expect(serialized).not.toContain(opaque);
+      expect(serialized).toContain("the visible final answer");
+      expectNoGlue(messages);
     }
   });
 
-  test("a Claude target replays it NATIVELY -- same domain, no decoration, the real thinking blocks (with their real signatures) ride unchanged", () => {
+  test("a Claude target replays it NATIVELY -- the real thinking blocks, with their real signatures", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([officialClaudeMessage()], chainOf({}), CLAUDE_A);
-    expect(messages[0]!.decoration).toBeUndefined();
-    const content = messages[0]!.content as ContentBlockLike[];
+    const content = renderer.render([officialClaudeMessage()], chainOf({}), CLAUDE_A)[0]!.content as ContentBlockLike[];
     expect(content.map((b) => b.type)).toEqual(["thinking", "thinking", "redacted_thinking", "text"]);
-    // Native replay keeps the REAL signature -- this is the one leg where it is legitimate for it to
-    // still be present, because the target is claude itself.
     expect(JSON.stringify(content)).toContain("SIG-FIRST-OPAQUE");
-    expect(report.replayedNatively).toBe(0); // no nativeState on this message -- the counter is for THAT carrier, not for the thinking blocks
   });
-});
 
-// WS-24 (follow-up 7, assess-then-fix-or-close): follow_up.md reads "the Mac/CLI renderer assumes
-// `anthropic` for `console/*` entries", naming this file's `providerId: "anthropic"` structural
-// fallback above. CLOSED AS MOOT for a Winter-native `console/*` session -- it is not affected at
-// all, and this describes the evidence:
-//
-//   1. The fallback above fires ONLY when BOTH `message.origin` and the sidecar chain's origin are
-//      absent (the `??` chain a few tests up this file already proves message.origin wins outright
-//      when present). That absence is the OFFICIAL leg's own signature (its child process never
-//      calls Winter's `recordAssistant` at all) -- never a Winter-native session's.
-//   2. `engine.ts`'s `recordAssistant` (~3728) stamps `origin: { providerId: identity.providerId,
-//      ... }` on EVERY assistant entry a live session writes, unconditionally, from the session's
-//      OWN resolved `providerIdentity` -- which for a console session is the literal id `"console"`,
-//      never `"anthropic"` (`session-provider.ts`'s wiring resolves the real catalog row). So a
-//      Winter-native console entry's `message.origin.providerId` is ALREADY "console" before the
-//      renderer ever runs; the fallback's hard-coded "anthropic" is never consulted for it.
-//   3. The real catalog (verified against `loadCatalog()`, not just this fixture) carries `console`
-//      as its OWN provider id -- 13 models, `adapterId: "winter.anthropic-messages"` (the same wire
-//      adapter `anthropic` uses), `family: "anthropic"` -- so `resolveEndpoint` resolves a
-//      console-origin message through the ordinary registry path and gets the CONSOLE row's own
-//      reasoning evidence, never the `anthropic` row's, and never needs the structural fallback to
-//      get there.
-//
-// The bug is real for what remains of it: a transcript the RETIRED official leg wrote under the
-// pre-WS-23 catalog shape (Console was a second `anthropic` row then, so "anthropic" was in fact
-// correct for those specific entries) is unaffected too, by coincidence of history rather than by
-// design -- but per the user's own ruling, legacy claude-era sessions may be disposed of, so this is
-// not pursued further here.
-describe("WS-24 (follow-up 7): a Winter-native console/* entry is NOT affected by the official-leg structural fallback", () => {
-  function consoleMessage(): ProviderMessageLike {
-    return {
+  test("a Winter-native console/* entry keeps its own `console` origin (the structural fallback never applies to it)", () => {
+    const consoleMessage: ProviderMessageLike = {
       role: "assistant",
-      content: [
-        { type: "thinking", thinking: "console-session reasoning", signature: "SIG-CONSOLE-OPAQUE" },
-        { type: "text", text: "the visible answer" },
-      ],
+      content: [{ type: "thinking", thinking: "console reasoning", signature: "SIG-CONSOLE-OPAQUE" }, { type: "text", text: "the visible answer" }],
       uuid: "c1",
-      // Exactly what `recordAssistant` stamps for a live console session -- NEVER absent, which is
-      // precisely why the structural fallback (`message.model`) is never reached for one.
       origin: { providerId: "console", modelKey: "console/claude-fable", family: "anthropic", continuationDomain: "console/claude-fable" },
     };
-  }
-
-  test("its origin is read as `console`, never defaulted to `anthropic` -- decorating a foreign target uses the CONSOLE row's own facts", () => {
     const renderer = createHistoryRenderer(buildRegistry());
-    const { report } = renderer.renderWithReport([consoleMessage()], chainOf({}), OPENAI);
-    expect(report.decorations[0]).toMatchObject({ source: { providerId: "console", modelKey: "console/claude-fable" } });
-  });
-
-  test("a console target replays it NATIVELY -- console/claude-fable is its own domain, so no decoration and the real signature rides unchanged", () => {
-    const CONSOLE_TARGET: HistoryTarget = { family: "anthropic", continuationDomain: "console/claude-fable", readableState: "summary" };
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([consoleMessage()], chainOf({}), CONSOLE_TARGET);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(JSON.stringify(messages[0]!.content)).toContain("SIG-CONSOLE-OPAQUE");
-    expect(report.decorations).toEqual([]);
-  });
-
-  test("were `message.origin` ever absent for such an entry, ONLY THEN would the structural fallback (and its `anthropic` assumption) apply -- proving the two paths are mutually exclusive, not that the fallback is safe in general", () => {
-    // The SAME content, but shaped like an official-leg entry: no origin, a bare structural `model`.
-    // This is the ONLY circumstance that reaches the assumption follow_up.md is concerned about.
-    const officialShaped = { role: "assistant" as const, content: consoleMessage().content, model: "anthropic/claude-a" };
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { report } = renderer.renderWithReport([officialShaped], chainOf({}), OPENAI);
-    expect(report.decorations[0]).toMatchObject({ source: { providerId: "anthropic", modelKey: "anthropic/claude-a" } });
+    expect(JSON.stringify(renderer.render([consoleMessage], chainOf({}), { family: "anthropic", continuationDomain: "console/claude-fable", readableState: "summary" }))).toContain("SIG-CONSOLE-OPAQUE");
+    expect(JSON.stringify(renderer.render([consoleMessage], chainOf({}), CLAUDE_A))).not.toContain("SIG-CONSOLE-OPAQUE");
   });
 });
 
-// --- fix round 3 (P10b-6, controller ruling, LOAD-BEARING): FAIL CLOSED on unresolved origin ------
-describe("fail-closed: a message whose origin cannot be resolved at all never rides its opaque state onto an ANTHROPIC-dialect wire body", () => {
-  test("no message.origin, no sidecar chain record, no usable structural model -- and REAL wire serialization (toWireMessages) proves no signature, no redacted_thinking reach it", () => {
-    // This is the ONE destination family where failing to strip is not silently swallowed by an
-    // adapter's own unrecognized-block-type default: Anthropic's `toWireMessages` passes `thinking`/
-    // `redacted_thinking` through VERBATIM, signature and opaque data intact (messages.ts's own
-    // comment). So this is the test that actually proves the wire body, not just the intermediate
-    // ProviderMessage shape.
+describe("fail-closed: a message whose origin cannot be resolved never rides its reasoning onto the wire", () => {
+  test("no origin, no chain record, no structural model -- the REAL Anthropic wire body carries no signature, no redacted data, no thinking text", () => {
     const unresolved: ProviderMessageLike = {
       role: "assistant",
       content: [
-        { type: "thinking", thinking: "secret unattributed reasoning", signature: "SIG-SHOULD-NEVER-REACH-THE-WIRE" },
+        { type: "thinking", thinking: "private claude reasoning, unattributed", signature: "SIG-SHOULD-NEVER-REACH-THE-WIRE" },
         { type: "redacted_thinking", data: "REDACTED-SHOULD-NEVER-REACH-THE-WIRE" },
         { type: "text", text: "the visible final answer" },
       ],
-      // Deliberately NO origin, NO uuid (so the chain lookup finds nothing), and no `.model` --
-      // every one of the three provenance sources the renderer tries is absent.
     };
-    const renderer = createHistoryRenderer(buildRegistry());
-    const { messages, report } = renderer.renderWithReport([unresolved], chainOf({}), CLAUDE_A);
-
-    // The intermediate shape: opaque carriers gone, decoration never invented (no honest provider/
-    // model to attribute it to), visible text untouched.
-    expect(messages[0]!.decoration).toBeUndefined();
-    const content = messages[0]!.content as ContentBlockLike[];
-    expect(content.map((b) => b.type)).toEqual(["text"]);
-    expect(content[0]).toEqual({ type: "text", text: "the visible final answer" });
+    const { messages, report } = createHistoryRenderer(buildRegistry()).renderWithReport([unresolved], chainOf({}), CLAUDE_A);
+    expect(messages[0]!.content).toEqual([{ type: "text", text: "the visible final answer" }]);
     expect(report.strippedInDialectBlocks).toBe(2);
-    expect(report.decorations).toHaveLength(0);
-    expect(report.withoutMaterial).toBe(1); // the visible thinking text existed and was deliberately dropped, not carried
-    // Micro-round Minor 1: real reasoning content was destroyed here (a thinking block's own text
-    // AND a redacted_thinking block) -- the caller must learn this transfer became lossy.
-    expect(report.truncated).toBe(true);
-
-    // The REAL wire body an Anthropic-dialect adapter would actually send.
-    const wire = toWireMessages(messages);
-    const wireJson = JSON.stringify(wire);
-    expect(wireJson).not.toContain("signature");
-    expect(wireJson).not.toContain("redacted_thinking");
-    expect(wireJson).not.toContain("SIG-SHOULD-NEVER-REACH-THE-WIRE");
-    expect(wireJson).not.toContain("REDACTED-SHOULD-NEVER-REACH-THE-WIRE");
-    expect(wireJson).not.toContain("secret unattributed reasoning"); // dropped, never carried unlabeled either
+    const wireJson = JSON.stringify(toWireMessages(messages));
+    for (const opaque of ["signature", "redacted_thinking", "SIG-SHOULD-NEVER-REACH-THE-WIRE", "REDACTED-SHOULD-NEVER-REACH-THE-WIRE"]) expect(wireJson).not.toContain(opaque);
+    expectNoGlue(wireJson);
     expect(wireJson).toContain("the visible final answer");
   });
 
-  test("identity is preserved when there is truly nothing opaque to strip -- zero behavior change for every pre-existing no-origin case, and truncated stays false", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
+  test("identity is preserved when there is nothing to strip", () => {
     const plain: ProviderMessageLike = { role: "assistant", content: "ordinary text, no opaque state at all" };
-    const { messages, report } = renderer.renderWithReport([plain], chainOf({}), CLAUDE_A);
-    expect(messages[0]).toBe(plain);
-    expect(report.truncated).toBe(false);
+    expect(createHistoryRenderer(buildRegistry()).render([plain], chainOf({}), CLAUDE_A)[0]).toBe(plain);
   });
 
-  test("Minor 1: nativeState alone (no thinking/redacted_thinking blocks at all) is enough to set truncated -- it is one of the THREE named carriers, not just the content blocks", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const unresolved: ProviderMessageLike = {
-      role: "assistant",
-      content: [{ type: "text", text: "visible answer" }],
-      nativeState: { family: "openai", continuationDomain: "openai/o-reason", items: [{ encrypted_content: "OPAQUE-REASONING-STATE" }] },
-      // No origin, no uuid, no .model.
-    };
-    const { messages, report } = renderer.renderWithReport([unresolved], chainOf({}), CLAUDE_A);
+  test("nativeState alone is stripped too", () => {
+    const unresolved: ProviderMessageLike = { role: "assistant", content: [{ type: "text", text: "visible answer" }], nativeState: { family: "openai", continuationDomain: "openai/o-reason", items: [{ encrypted_content: "OPAQUE-REASONING-STATE" }] } };
+    const { messages, report } = createHistoryRenderer(buildRegistry()).renderWithReport([unresolved], chainOf({}), CLAUDE_A);
     expect(messages[0]!.nativeState).toBeUndefined();
     expect(report.droppedNativeState).toBe(1);
-    expect(report.strippedInDialectBlocks).toBe(0);
-    expect(report.truncated).toBe(true);
-  });
-
-  test("a stale decoration removed on an assistant message with no origin does NOT by itself set truncated -- only real reasoning CONTENT does", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const orphan: ProviderMessageLike = { role: "assistant", content: "rebuilt by compaction", decoration: { text: "STALE foreign material", door: "tag" } };
-    const { messages, report } = renderer.renderWithReport([orphan], chainOf({}), CLAUDE_A);
-    expect(messages[0]!.decoration).toBeUndefined();
-    expect(report.truncated).toBe(false);
-  });
-
-  test("a decoration on a NON-ASSISTANT message is still a protected handoff note, even under fail-closed stripping", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const carrier: ProviderMessageLike = { role: "user", content: "carry on", decoration: { text: "<prior_model_handoff …>", door: "tag" } };
-    const { messages } = renderer.renderWithReport([carrier], chainOf({}), CLAUDE_A);
-    expect(messages[0]).toBe(carrier);
-    expect(messages[0]!.decoration?.text).toContain("prior_model_handoff");
   });
 });
 
@@ -662,30 +331,25 @@ describe("WS-23: a Claude turn whose thinking rides `nativeState` (the sidecar) 
     };
   };
 
-  test("cross-family: the SAME decoration as the inline form -- built from the sidecar blocks' thinking text, never a signature or redacted data", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const inline = renderer.renderWithReport([claudeMessage("m1")], chainOf({ m1: {} }), OPENAI);
-    const moved = renderer.renderWithReport([sidecarClaude("m1")], chainOf({ m1: {} }), OPENAI);
-    expect(moved.messages[0]!.decoration).toEqual(inline.messages[0]!.decoration);
-    expect(moved.messages[0]!.nativeState).toBeUndefined();
-    const rendered = JSON.stringify(moved.messages);
-    for (const opaque of ["SIG-OPAQUE", "REDACTED-OPAQUE", "winter.reasoning_block"]) expect(rendered).not.toContain(opaque);
-    expect(moved.report.droppedNativeState).toBe(1);
+  test("another model: the sidecar blocks are dropped with the native state, and nothing is built from their text", () => {
+    const { messages, report } = createHistoryRenderer(buildRegistry()).renderWithReport([sidecarClaude("m1")], chainOf({ m1: {} }), OPENAI);
+    expect(messages[0]!.nativeState).toBeUndefined();
+    for (const opaque of ["SIG-OPAQUE", "REDACTED-OPAQUE", "winter.reasoning_block"]) expect(JSON.stringify(messages)).not.toContain(opaque);
+    expectNoGlue(messages);
+    expect(report.droppedNativeState).toBe(1);
   });
 
-  test("same model: the blocks ride, no decoration, and the Anthropic wire is the inline form byte for byte", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
-    const moved = renderer.render([sidecarClaude("m1")], chainOf({ m1: {} }), { ...CLAUDE_A, providerId: "anthropic", modelKey: "anthropic/claude-a" });
-    expect(moved[0]!.decoration).toBeUndefined();
+  test("same model: the blocks ride, and the Anthropic wire is the inline form byte for byte", () => {
+    const moved = createHistoryRenderer(buildRegistry()).render([sidecarClaude("m1")], chainOf({ m1: {} }), { ...CLAUDE_A, providerId: "anthropic", modelKey: "anthropic/claude-a" });
     expect(JSON.stringify(toWireMessages(moved))).toBe(JSON.stringify(toWireMessages([claudeMessage("m1")])));
   });
 
-  test("another Claude model (a different continuation domain) gets the decoration, not the signed blocks", () => {
-    const renderer = createHistoryRenderer(buildRegistry());
+  test("another Claude model gets neither the signed blocks nor their text", () => {
     const claudeB: HistoryTarget = { family: "anthropic", continuationDomain: "anthropic/claude-b", readableState: "summary", providerId: "anthropic", modelKey: "anthropic/claude-b" };
-    const wire = JSON.stringify(toWireMessages(renderer.render([sidecarClaude("m1")], chainOf({ m1: {} }), claudeB)));
+    const wire = JSON.stringify(toWireMessages(createHistoryRenderer(buildRegistry()).render([sidecarClaude("m1")], chainOf({ m1: {} }), claudeB)));
     expect(wire).not.toContain("SIG-OPAQUE");
-    expect(wire).toContain(RECOVERED_REASONING_TAG);
+    expectNoGlue(wire);
+    expect(wire).toContain("the visible answer");
   });
 });
 

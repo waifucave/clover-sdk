@@ -109,7 +109,9 @@ describe("the switch fit check (WS-23 decision 5)", () => {
     const source = scripted("source", "source reply");
     const target = scripted("target", "target reply");
     const accountant = createContextAccountant({ limit: 200_000 });
-    await drive({ source, target, accountant, steps: [...longTurns(4), { setModel: DST.modelKey }, { user: "after the switch" }] });
+    // Six long turns: big enough on their own. (Four used to tip over only because the estimate also charged
+    // a budget for pasted cross-model reasoning, which is no longer sent -- 2026-11, native reasoning only.)
+    await drive({ source, target, accountant, steps: [...longTurns(6), { setModel: DST.modelKey }, { user: "after the switch" }] });
     // The source ran the summary; the target never had to.
     expect(source.summaries).toBe(1);
     expect(target.summaries).toBe(0);
