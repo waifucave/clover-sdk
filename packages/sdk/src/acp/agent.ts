@@ -68,6 +68,8 @@ interface Turn {
   resolve(end: { stopReason: string; usage?: { inputTokens: number; outputTokens: number } }): void;
   reject(err: unknown): void;
   cancelled: boolean;
+  /** Whether any assistant text reached the client during this turn (a refusal's own text is sent only when none did). */
+  said?: boolean;
 }
 
 interface Session {
@@ -302,6 +304,7 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
           if (ev?.["type"] === "content_block_delta" && delta) {
             if (delta["type"] === "text_delta" && typeof delta["text"] === "string") {
               s.streamed = true;
+              if (s.turn) s.turn.said = true;
               update(s.id, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: delta["text"] } });
             } else if (delta["type"] === "thinking_delta" && typeof delta["thinking"] === "string") {
               s.streamed = true;
@@ -313,6 +316,7 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
             const block = obj(b);
             if (!block) continue;
             if (block["type"] === "text" && !s.streamed && typeof block["text"] === "string") {
+              if (s.turn) s.turn.said = true;
               update(s.id, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: block["text"] } });
             } else if (block["type"] === "thinking" && !s.streamed && typeof block["thinking"] === "string") {
               update(s.id, { sessionUpdate: "agent_thought_chunk", content: { type: "text", text: block["thinking"] } });
@@ -358,11 +362,24 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
           const inTok = Number(usage?.["input_tokens"]);
           const outTok = Number(usage?.["output_tokens"]);
           const sub = str(m["subtype"]);
-          const stopReason = turn.cancelled ? "cancelled" : sub === "error_max_turns" ? "max_turn_requests" : sub === "success" ? "end_turn" : "end_turn";
-          if (!turn.cancelled && sub !== "success" && sub !== "error_max_turns" && m["is_error"] === true) {
-            turn.reject(new RpcError(-32603, str(m["result"]) ?? `the turn failed (${sub ?? "error"})`));
+          const terminal = str(m["terminal_reason"]);
+          const text = str(m["result"]);
+          const stopReason = turn.cancelled ? "cancelled" : sub === "error_max_turns" ? "max_turn_requests" : terminal === "refusal" ? "refusal" : "end_turn";
+          const usageOut = Number.isFinite(inTok) && Number.isFinite(outTok) ? { usage: { inputTokens: inTok, outputTokens: outTok } } : {};
+          // The runtime lands a provider failure (no credential, an API error) on `subtype: "success"` with
+          // `is_error: true` (the pinned runtime's wire shape), so the failure is read off `is_error` and the
+          // `terminal_reason`, not the subtype. Three error results are NOT a failed turn: the turn cap
+          // (`error_max_turns`), the pause-turn limit (`pause_turn_limit`: its text was already streamed) and a
+          // model's REFUSAL, which ends with ACP's own `refusal` stop reason and its text shown as the answer.
+          // Any other error result (`api_error`, `prompt_too_long`, an unknown reason, none) rejects.
+          const answered = sub === "error_max_turns" || terminal === "refusal" || terminal === "pause_turn_limit";
+          if (!turn.cancelled && m["is_error"] === true && !answered) {
+            turn.reject(new RpcError(-32603, text ?? `the turn failed (${terminal ?? sub ?? "error"})`));
           } else {
-            turn.resolve({ stopReason, ...(Number.isFinite(inTok) && Number.isFinite(outTok) ? { usage: { inputTokens: inTok, outputTokens: outTok } } : {}) });
+            if (!turn.cancelled && terminal === "refusal" && !turn.said && text !== undefined && text.length > 0) {
+              update(s.id, { sessionUpdate: "agent_message_chunk", content: { type: "text", text } });
+            }
+            turn.resolve({ stopReason, ...usageOut });
           }
         }
       }

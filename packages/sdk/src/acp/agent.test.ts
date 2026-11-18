@@ -96,6 +96,52 @@ describe("the coding agent over ACP", () => {
     expect((asks[0]!["options"] as { kind: string }[]).map((o) => o.kind)).toEqual(["allow_once", "allow_always", "reject_once"]);
   });
 
+  test("an is_error result: a provider failure or any unknown terminal reason rejects; a refusal, the pause-turn limit and the turn cap are answers", async () => {
+    const result = (fields: Record<string, unknown>) =>
+      async function* () {
+        yield { type: "result", is_error: true, usage: { input_tokens: 0, output_tokens: 0 }, ...fields };
+      };
+    const q = fakeQuery([
+      result({ subtype: "success", terminal_reason: "api_error", api_error_status: null, result: "provider request failed (auth): no credential for the request" }),
+      result({ subtype: "error_during_execution", result: "the tool crashed" }),
+      result({ subtype: "success", terminal_reason: "something_new", result: "an unknown stop" }),
+      result({ subtype: "success" }),
+      result({ subtype: "success", terminal_reason: "refusal", result: "I can't help with that." }),
+      async function* () {
+        yield { type: "stream_event", event: { type: "content_block_delta", delta: { type: "text_delta", text: "Partial answer." } } };
+        yield { type: "result", subtype: "success", is_error: true, terminal_reason: "refusal", result: "Partial answer.", usage: { input_tokens: 3, output_tokens: 2 } };
+      },
+      result({ subtype: "success", terminal_reason: "pause_turn_limit", result: "paused text" }),
+      result({ subtype: "error_max_turns" }),
+      async function* () {},
+    ]);
+    const { client, updates } = connect(q.fn);
+    await client.request("initialize", { protocolVersion: 1, clientCapabilities: {} });
+    await client.request("session/new", { cwd: "/work/project", mcpServers: [] });
+    const prompt = () => client.request("session/prompt", { sessionId: "sess-1", prompt: [{ type: "text", text: "go" }] });
+    const texts = () => updates.filter((u) => u["sessionUpdate"] === "agent_message_chunk").map((u) => (u["content"] as { text: string }).text);
+    // provider failure (subtype success, is_error true): rejected with the result's own text.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "provider request failed (auth): no credential for the request" });
+    // an error subtype: rejected as before.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "the tool crashed" });
+    // an unknown terminal reason with is_error: rejected.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "an unknown stop" });
+    // no text: the fallback names what is known.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "the turn failed (success)" });
+    expect(texts()).toEqual([]);
+    // a refusal with nothing streamed: ACP's refusal stop reason, and its text is shown as the answer.
+    expect(await prompt()).toMatchObject({ stopReason: "refusal" });
+    expect(texts()).toEqual(["I can't help with that."]);
+    // a refusal whose partial text was streamed: refusal, and the text is not sent twice.
+    expect(await prompt()).toEqual({ stopReason: "refusal", usage: { inputTokens: 3, outputTokens: 2 } });
+    expect(texts()).toEqual(["I can't help with that.", "Partial answer."]);
+    // the pause-turn limit and the turn cap keep theirs.
+    expect(await prompt()).toMatchObject({ stopReason: "end_turn" });
+    expect(await prompt()).toMatchObject({ stopReason: "max_turn_requests" });
+    // a normal success resolves.
+    expect(await prompt()).toEqual({ stopReason: "end_turn", usage: { inputTokens: 10, outputTokens: 5 } });
+  });
+
   test("a refused permission becomes the tool's denial; a cancel interrupts the turn and ends it cancelled", async () => {
     let release!: () => void;
     const q = fakeQuery([
