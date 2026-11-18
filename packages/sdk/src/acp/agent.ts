@@ -359,7 +359,10 @@ export function serveAcpAgent(o: AcpAgentOptions): AcpAgentServer {
           const outTok = Number(usage?.["output_tokens"]);
           const sub = str(m["subtype"]);
           const stopReason = turn.cancelled ? "cancelled" : sub === "error_max_turns" ? "max_turn_requests" : sub === "success" ? "end_turn" : "end_turn";
-          if (!turn.cancelled && sub !== "success" && sub !== "error_max_turns" && m["is_error"] === true) {
+          // An error result is a failed turn whatever its subtype: the runtime lands a provider failure (no
+          // credential, an API error), a refusal and a pause-turn limit on `subtype: "success"` with
+          // `is_error: true` (the pinned runtime's wire shape). Only the turn cap keeps its own stop reason.
+          if (!turn.cancelled && sub !== "error_max_turns" && m["is_error"] === true) {
             turn.reject(new RpcError(-32603, str(m["result"]) ?? `the turn failed (${sub ?? "error"})`));
           } else {
             turn.resolve({ stopReason, ...(Number.isFinite(inTok) && Number.isFinite(outTok) ? { usage: { inputTokens: inTok, outputTokens: outTok } } : {}) });

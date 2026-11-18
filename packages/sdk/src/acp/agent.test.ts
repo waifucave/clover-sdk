@@ -96,6 +96,34 @@ describe("the coding agent over ACP", () => {
     expect((asks[0]!["options"] as { kind: string }[]).map((o) => o.kind)).toEqual(["allow_once", "allow_always", "reject_once"]);
   });
 
+  test("a result with is_error: true fails the prompt whatever its subtype; a normal success resolves; the turn cap keeps its stop reason", async () => {
+    const errorResult = (subtype: string, result?: string) =>
+      async function* () {
+        yield { type: "result", subtype, is_error: true, ...(result !== undefined ? { result } : {}), usage: { input_tokens: 0, output_tokens: 0 } };
+      };
+    const q = fakeQuery([
+      errorResult("success", "provider request failed (auth): no credential for the request"),
+      errorResult("error_during_execution", "the tool crashed"),
+      errorResult("success"),
+      async function* () {},
+      errorResult("error_max_turns"),
+    ]);
+    const { client } = connect(q.fn);
+    await client.request("initialize", { protocolVersion: 1, clientCapabilities: {} });
+    await client.request("session/new", { cwd: "/work/project", mcpServers: [] });
+    const prompt = () => client.request("session/prompt", { sessionId: "sess-1", prompt: [{ type: "text", text: "go" }] });
+    // is_error + subtype "success": rejected with the result's own text, not resolved as an empty end_turn.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "provider request failed (auth): no credential for the request" });
+    // an error subtype: rejected as before.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "the tool crashed" });
+    // no text: the fallback names the subtype.
+    await expect(prompt()).rejects.toMatchObject({ code: -32603, message: "the turn failed (success)" });
+    // a normal success resolves.
+    expect(await prompt()).toEqual({ stopReason: "end_turn", usage: { inputTokens: 10, outputTokens: 5 } });
+    // the turn cap is still a stop reason, not an error.
+    expect(await prompt()).toMatchObject({ stopReason: "max_turn_requests" });
+  });
+
   test("a refused permission becomes the tool's denial; a cancel interrupts the turn and ends it cancelled", async () => {
     let release!: () => void;
     const q = fakeQuery([
