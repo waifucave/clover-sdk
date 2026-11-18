@@ -4,6 +4,27 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## Unreleased
+
+### Catalog refresh 2026-11-18
+
+- **Claude Fable 5.2** is on `anthropic` and `console` ($8 in, $40 out per million tokens; 1M context; adaptive
+  thinking is always on, so forced `tool_choice` is refused). The `fable` slot now points at it. Claude Sonnet 5.5's
+  cached-input rate is $0.10, not $0.20.
+- **GPT-6.2 Sol and GPT-6.2 Astra** are on `openai` (with the page's over-272K-token price tier) and on
+  `codex-oauth` (unpriced). Efforts are low through max, with no `none`. The `sol`, `astra` and `terra` slots move to
+  GPT-6.2 Sol, GPT-6.2 Astra and GPT-6.1 Terra. GPT-6 Luna, Sol, GPT-6.1 Sol and GPT-6 Astra gain the same kind of
+  over-272K tier.
+- `o3-mini`, `o4-mini` and `gpt-4.1-nano` are marked deprecated (their shutdown dates have passed). Other upcoming
+  OpenAI and Anthropic retirements are noted on their rows. The `k3` slot follows Kimi K3.1 Pro.
+- **OpenCode Go** is added as two subscription providers, `opencode-go` (OpenAI dialect) and `opencode-go-anthropic`
+  (Anthropic dialect), with 32 models and no pricing. Each row's note records its retention, training and region
+  facts from the docs.
+- A provider can name a `conversationIdHeader`. The OpenAI Chat Completions, OpenAI Responses and Anthropic Messages
+  adapters send the turn's cache key (the session id, plus the agent id for a subagent) in that header. The OpenCode
+  Go providers use it for `x-opencode-session`. A name that could carry a credential (auth, key, token, secret,
+  password, cookie, credential) is refused.
+
 ## 0.0.77
 
 ### The file tools write the file they checked

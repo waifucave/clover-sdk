@@ -228,6 +228,24 @@ describe("2026-11-18 refresh", () => {
     for (const id of ["gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol", "gpt-6-astra"]) expect(row(`openai/${id}`).pricing!.value.longContextTiers![0]!.minPromptTokens).toBe(272001);
   });
 
+  test("OpenCode Go: two subscription providers, no pricing anywhere, every row reachable through its provider's adapter", () => {
+    const providers = catalog.providers.filter((p) => p.id.startsWith("opencode-go"));
+    expect(providers.map((p) => [p.id, p.adapterId, p.pricingBasis, p.defaultEndpoints.api, p.conversationIdHeader])).toEqual([
+      ["opencode-go", "winter.openai-chat-completions", "subscription", "https://opencode.ai/inference/go/openai/v1", "x-opencode-session"],
+      ["opencode-go-anthropic", "winter.anthropic-messages", "subscription", "https://opencode.ai/inference/go/anthropic", "x-opencode-session"],
+    ]);
+    const rows = catalog.models.filter((m) => m.providerId.startsWith("opencode-go"));
+    expect(rows).toHaveLength(32);
+    for (const r of rows) {
+      expect([r.key, r.pricing]).toEqual([r.key, undefined]);
+      expect([r.key, r.endpoints]).toEqual([r.key, ["chat"]]);
+      expect([r.key, r.reasoning!.continuation]).toEqual([r.key, "none"]);
+    }
+    expect(rows.filter((r) => r.providerId === "opencode-go-anthropic").map((r) => r.upstreamId).sort()).toEqual(
+      ["claude-haiku-5-5", "minimax-m3", "qwen3.7-plus", "qwen3.8-flash", "qwen3.8-max", "qwen4-max"],
+    );
+  });
+
   test("the `k3` slot follows Kimi K3.1 Pro and the Kimi Code subscription rows still answer to it", () => {
     expect(slot("kimi", "k3")).toBe("kimi-k3.1-pro");
     for (const p of ["kimi-coding", "kimi-coding-openai", "kimi-coding-intl", "kimi-coding-intl-openai"]) expect(row(`${p}/k3.1-pro`).canonicalModelId).toBe("kimi-k3.1-pro");

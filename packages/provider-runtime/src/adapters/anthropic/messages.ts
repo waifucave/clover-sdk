@@ -58,7 +58,7 @@ import { isBillingErrorBody, normalizeHttpError, normalizeThrown } from "../../e
 import { createRetryPolicy, withRetry, type RetryPolicyOptions } from "../../retry.ts";
 import { applyPrivilegedHeaders, connectionEndpointOptions, createEndpointPolicy, type EndpointPolicy } from "../../endpoint-policy.ts";
 import { hostHeaders } from "../privileged-headers.ts";
-import { identityHeaderLookup, winterIdentityHeaders, winterUserAgent, type IdentityHeaderLookup } from "../../identity.ts";
+import { conversationHeaderLookup, conversationIdHeaders, identityHeaderLookup, winterIdentityHeaders, winterUserAgent, type IdentityHeaderLookup } from "../../identity.ts";
 import { THINKING_ENABLED_NEEDS_BUDGET } from "../refusals.ts";
 import { containsImage } from "../content-blocks.ts";
 import { contentWithReasoningBlocks } from "../../continuity/reasoning-blocks.ts";
@@ -1820,6 +1820,12 @@ export function createAnthropicMessagesAdapter(opts: AnthropicAdapterOptions = {
   // lookup is unrepresentable here.
   let identityLookup: IdentityHeaderLookup | undefined;
   const identityFor = (ctx: ProviderContext): Record<string, string> => winterIdentityHeaders((identityLookup ??= identityHeaderLookup(catalogOf())), ctx.connection.providerId);
+  let conversationLookup: ReturnType<typeof conversationHeaderLookup> | undefined;
+  // 2026-11-18: identity plus the row's conversation-id header (`conversationIdHeader`) on a turn that has a cache key.
+  const identityForTurn = (ctx: ProviderContext, cacheKey: string | undefined): Record<string, string> => ({
+    ...identityFor(ctx),
+    ...conversationIdHeaders((conversationLookup ??= conversationHeaderLookup(catalogOf())), ctx.connection.providerId, cacheKey),
+  });
   const timeoutMs = opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
   const maxBodyBytes = opts.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   let loggedThinkingRewrite = false;
@@ -1846,7 +1852,7 @@ export function createAnthropicMessagesAdapter(opts: AnthropicAdapterOptions = {
       loggedThinkingRewrite = true;
       ctx.log({ kind: "provider.thinking_rewrite.disabled_to_adaptive", providerId: ctx.connection.providerId, model: req.model });
     });
-    const headers = await buildHeaders(ctx, [blockBindingBetaFor(body, descriptor), interleavedThinkingBetaFor(body, descriptor), ...bodyBetas(body, descriptor, req)], endpoint.policy, opts, true, identityFor(ctx));
+    const headers = await buildHeaders(ctx, [blockBindingBetaFor(body, descriptor), interleavedThinkingBetaFor(body, descriptor), ...bodyBetas(body, descriptor, req)], endpoint.policy, opts, true, identityForTurn(ctx, req.cacheKey));
     return { endpoint, body, headers, captureEvent: anthropicCaptureEvent(descriptor) };
   }
 
@@ -2159,7 +2165,7 @@ export function createAnthropicMessagesAdapter(opts: AnthropicAdapterOptions = {
       const descriptor = findDescriptor(catalogOf(), ctx.connection.providerId, req.model);
       const endpoint = resolveEndpoint(ctx, ANTHROPIC_DEFAULT_BASE_URL);
       const body = buildRequestBody(req, descriptor, opts, "count");
-      const headers = await buildHeaders(ctx, [blockBindingBetaFor(body, descriptor), interleavedThinkingBetaFor(body, descriptor), ...bodyBetas(body, descriptor, req)], endpoint.policy, opts, true, identityFor(ctx));
+      const headers = await buildHeaders(ctx, [blockBindingBetaFor(body, descriptor), interleavedThinkingBetaFor(body, descriptor), ...bodyBetas(body, descriptor, req)], endpoint.policy, opts, true, identityForTurn(ctx, req.cacheKey));
       const res = await boundedFetch(`${endpoint.base}/v1/messages/count_tokens`, {
         method: "POST",
         headers,

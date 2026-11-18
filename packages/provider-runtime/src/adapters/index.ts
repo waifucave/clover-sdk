@@ -26,7 +26,7 @@
 // already followed.
 import { GENERIC_ADAPTER_IDS, type WinterCatalog, type WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import type { ProviderAdapter } from "../types.ts";
-import { identityHeaderLookup } from "../identity.ts";
+import { conversationHeaderLookup, identityHeaderLookup } from "../identity.ts";
 import { createAnthropicMessagesAdapter } from "./anthropic/index.ts";
 import { createGoogleGenerateContentAdapter, createVertexGeminiAdapter } from "./google/index.ts";
 import { createBedrockConverseAdapter } from "./bedrock/index.ts";
@@ -155,6 +155,7 @@ export function createShippedAdapters(catalog: WinterCatalog): ProviderAdapter[]
   // families take a `catalog` instead and derive the identical index themselves — a shape a wiring
   // cannot forget — so they are absent from the calls below on purpose, not by omission.
   const identityHeaders = identityHeaderLookup(catalog);
+  const conversationHeaders = conversationHeaderLookup(catalog);
   const generated = (c: WinterCatalog, adapterId: string): { generatedBaseUrl?: string } => {
     const url = generatedBaseUrlForAdapter(c, adapterId);
     return url !== undefined ? { generatedBaseUrl: url } : {};
@@ -168,6 +169,7 @@ export function createShippedAdapters(catalog: WinterCatalog): ProviderAdapter[]
     createResponsesAdapter({
       descriptors: lookup("winter.openai-responses"),
       identityHeaders,
+      conversationHeaders,
       generatedBaseUrls: generatedBaseUrlsForAdapter(catalog, "winter.openai-responses"),
     }),
     // WS-24 (follow-up 2): this adapter serves every OpenAI-compatible dialect (DeepSeek, OpenRouter,
@@ -179,7 +181,7 @@ export function createShippedAdapters(catalog: WinterCatalog): ProviderAdapter[]
     // every provider but `openai` typed rather than resolving DeepSeek/OpenRouter/etc. from the
     // catalog. A caller that skips the runtime's own `connectionForProvider` wiring (any other
     // consumer of `createShippedAdapters`) now reaches the reviewed row instead of a refusal.
-    createChatCompletionsAdapter({ descriptors: lookup("winter.openai-chat-completions"), identityHeaders, generatedBaseUrls: generatedBaseUrlsForAdapter(catalog, "winter.openai-chat-completions") }),
+    createChatCompletionsAdapter({ descriptors: lookup("winter.openai-chat-completions"), identityHeaders, conversationHeaders, generatedBaseUrls: generatedBaseUrlsForAdapter(catalog, "winter.openai-chat-completions") }),
     createCodexOauthAdapter({ descriptors: lookup("winter.codex-oauth"), identityHeaders, ...generated(catalog, "winter.codex-oauth") }),
     // `winter.xai-oauth` — the chat adapter at xAI's SUBSCRIPTION proxy. `generated(...)` reads the
     // endpoint off the catalog row rather than the adapter's own constant, which is what keeps the

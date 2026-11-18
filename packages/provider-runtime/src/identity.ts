@@ -285,3 +285,29 @@ export function winterIdentityHeaders(lookup: IdentityHeaderLookup | undefined, 
   if (declared === undefined) return {};
   return renderIdentityHeaders(declared, { version: activeIdentity.version ?? pkg.version, product: activeIdentity.product, contact: activeIdentity.contactUrl });
 }
+
+/** A provider id -> the NAME of the header that carries its conversation's stable id (`conversationIdHeader`), when its row names one. */
+export type ConversationHeaderLookup = (providerId: string) => string | undefined;
+
+/** Indexes a catalog's `conversationIdHeader` by provider id. Rows without one are simply absent. */
+export function conversationHeaderLookup(catalog: WinterCatalog): ConversationHeaderLookup {
+  const index = new Map<string, string>();
+  for (const provider of catalog.providers) {
+    if (provider.conversationIdHeader !== undefined && provider.conversationIdHeader.length > 0) index.set(provider.id, provider.conversationIdHeader);
+  }
+  return (providerId) => index.get(providerId);
+}
+
+/**
+ * The header that carries this turn's conversation id, or `{}`.
+ *
+ * `{}` for a row that names no such header, for an adapter built without a lookup (every unit fixture)
+ * and for a turn with no cache key. The value is `TurnRequest.cacheKey`: an opaque session id (plus the
+ * agent id for a subagent), never anything about the user or the content. It is added to the headers an
+ * adapter already builds, so it passes the same host-header and privileged-header rules as the rest.
+ */
+export function conversationIdHeaders(lookup: ConversationHeaderLookup | undefined, providerId: string, cacheKey: string | undefined): Record<string, string> {
+  if (cacheKey === undefined || cacheKey.length === 0) return {};
+  const name = lookup?.(providerId);
+  return name === undefined ? {} : { [name]: cacheKey };
+}

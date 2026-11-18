@@ -202,6 +202,7 @@ export function providerDescriptorForEntry(input: Pick<ModelPluginInput, "plugin
     admission: (input.trusted === true ? meta?.admission : undefined) ?? { basis: local ? "local" : "api-key", citation: `plugin:${input.pluginId}`, tier: local ? "local" : "audit" },
   };
   if (meta?.identityHeaders !== undefined) descriptor.identityHeaders = meta.identityHeaders;
+  if (meta?.conversationIdHeader !== undefined) descriptor.conversationIdHeader = meta.conversationIdHeader;
   if (meta?.requiresUserEndpoint === true || (entry.endpoint !== undefined && isInterpolatedUrl(entry.endpoint.baseUrl))) descriptor.requiresUserEndpoint = true;
   if (meta?.endpointTemplate !== undefined) descriptor.endpointTemplate = meta.endpointTemplate;
   return descriptor;

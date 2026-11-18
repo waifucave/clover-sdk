@@ -1699,6 +1699,80 @@
       "scope": "llm"
     },
     {
+      "id": "opencode-go",
+      "displayName": "OpenCode Go (OpenAI dialect)",
+      "protocols": [
+        "openai-chat-completions"
+      ],
+      "$comment": "Winter-authored 2026-11-18. OpenCode Go is a subscription (Go, Go Plus, Go Teams) whose key is minted in the OpenCode Console (https://opencode.ai/docs/go/: \"subscribe to Go, Go Plus, or Go Teams, add your billing details, and copy your API key\"). SUBSCRIPTION-priced: NO token pricing on any row. A DIALECT SIBLING pair, like the Kimi Code and Qwen coding-plan rows: this one carries the OpenAI Chat Completions dialect at `https://opencode.ai/inference/go/openai/v1`; the list at https://opencode.ai/inference/go/v1/models gives each model its native API, and https://opencode.ai/docs/go/ states \"every text model also works through the other APIs, which Console translates\", so rows whose native API is Responses or Gemini generate-content are served here through Chat Completions (the Responses endpoint on the same host and key is not a second provider). The page asks a client to \"identify itself with its own user agent\" (the runtime's own `<product>/<version>` already goes on every request) and to \"send a stable session ID in `x-opencode-session` for each conversation\": `conversationIdHeader` names that header and the adapter sends the turn's cache key, the session id (plus the agent id for a subagent), in it. Per-model data handling (retention, training, region) is in each row's note, copied from the list's `go` block and the docs table.",
+      "authKinds": [
+        "api-key"
+      ],
+      "defaultEndpoints": {
+        "api": "https://opencode.ai/inference/go/openai/v1"
+      },
+      "modelDiscovery": "none",
+      "liveCatalogAuthority": "unknown",
+      "adapterId": "winter.openai-chat-completions",
+      "family": "openai",
+      "upstream": {
+        "project": "winter",
+        "commit": "",
+        "sourcePaths": []
+      },
+      "risk": {
+        "class": "review-required",
+        "reasons": [
+          "Subscription API-key access with plan usage limits (Go $10, Go Plus $40, Go Teams $20 per member per month); throughput is a plan entitlement and no live gate case has run."
+        ]
+      },
+      "pricingBasis": "subscription",
+      "admission": {
+        "basis": "api-key",
+        "citation": "https://opencode.ai/docs/go/ — OpenCode's own docs, read 2026-11-18: API keys are created in the OpenCode Console after subscribing; the endpoint is `https://opencode.ai/inference/go`; each model is listed with its native API and every text model also works through the other APIs.",
+        "tier": "fetched-document"
+      },
+      "scope": "llm",
+      "conversationIdHeader": "x-opencode-session"
+    },
+    {
+      "id": "opencode-go-anthropic",
+      "displayName": "OpenCode Go (Anthropic dialect)",
+      "protocols": [
+        "anthropic-messages"
+      ],
+      "$comment": "Winter-authored 2026-11-18. OpenCode Go is a subscription (Go, Go Plus, Go Teams) whose key is minted in the OpenCode Console (https://opencode.ai/docs/go/: \"subscribe to Go, Go Plus, or Go Teams, add your billing details, and copy your API key\"). SUBSCRIPTION-priced: NO token pricing on any row. A DIALECT SIBLING pair, like the Kimi Code and Qwen coding-plan rows: this one carries the Anthropic Messages dialect at `https://opencode.ai/inference/go/anthropic`; the list at https://opencode.ai/inference/go/v1/models gives each model its native API, and https://opencode.ai/docs/go/ states \"every text model also works through the other APIs, which Console translates\", so rows whose native API is Responses or Gemini generate-content are served here through Chat Completions (the Responses endpoint on the same host and key is not a second provider). The page asks a client to \"identify itself with its own user agent\" (the runtime's own `<product>/<version>` already goes on every request) and to \"send a stable session ID in `x-opencode-session` for each conversation\": `conversationIdHeader` names that header and the adapter sends the turn's cache key, the session id (plus the agent id for a subagent), in it. Per-model data handling (retention, training, region) is in each row's note, copied from the list's `go` block and the docs table.",
+      "authKinds": [
+        "api-key"
+      ],
+      "defaultEndpoints": {
+        "api": "https://opencode.ai/inference/go/anthropic"
+      },
+      "modelDiscovery": "none",
+      "liveCatalogAuthority": "unknown",
+      "adapterId": "winter.anthropic-messages",
+      "family": "anthropic",
+      "upstream": {
+        "project": "winter",
+        "commit": "",
+        "sourcePaths": []
+      },
+      "risk": {
+        "class": "review-required",
+        "reasons": [
+          "Subscription API-key access with plan usage limits (Go $10, Go Plus $40, Go Teams $20 per member per month); throughput is a plan entitlement and no live gate case has run."
+        ]
+      },
+      "pricingBasis": "subscription",
+      "admission": {
+        "basis": "api-key",
+        "citation": "https://opencode.ai/docs/go/ — OpenCode's own docs, read 2026-11-18: API keys are created in the OpenCode Console after subscribing; the endpoint is `https://opencode.ai/inference/go`; each model is listed with its native API and every text model also works through the other APIs.",
+        "tier": "fetched-document"
+      },
+      "scope": "llm",
+      "conversationIdHeader": "x-opencode-session"
+    },
+    {
       "id": "openference",
       "displayName": "Openference",
       "protocols": [

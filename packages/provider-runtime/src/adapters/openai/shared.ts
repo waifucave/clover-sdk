@@ -39,7 +39,7 @@
 import type { WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { hostHeaders } from "../privileged-headers.ts";
 import { containsImage } from "../content-blocks.ts";
-import { winterIdentityHeaders, winterUserAgent, type IdentityHeaderLookup } from "../../identity.ts";
+import { conversationIdHeaders, winterIdentityHeaders, winterUserAgent, type ConversationHeaderLookup, type IdentityHeaderLookup } from "../../identity.ts";
 import { applyPrivilegedHeaders, connectionEndpointOptions, createEndpointPolicy, type EndpointPolicy } from "../../endpoint-policy.ts";
 import { ProviderRequestError, boundedFetch } from "../../http.ts";
 import { normalizeHttpError, normalizeThrown } from "../../errors.ts";
@@ -136,6 +136,12 @@ export interface OpenAiAdapterOptions {
    * `{}` — only a vendor that NAMES a second identity field gets one.
    */
   identityHeaders?: IdentityHeaderLookup;
+  /**
+   * 2026-11-18: the per-ROW header that carries the conversation's stable id (`conversationIdHeader`),
+   * looked up by `ctx.connection.providerId` for the same reason `identityHeaders` is. Absent means no
+   * such header is ever sent.
+   */
+  conversationHeaders?: ConversationHeaderLookup;
 }
 
 export const DEFAULT_STREAM_BODY_BYTES = 32 * 1024 * 1024;
@@ -327,6 +333,11 @@ export function buildHeaders(plan: HeaderPlan): Record<string, string> {
 /** This row's Winter-authored identity headers, for a `HeaderPlan`. One call shape for every site in the family. */
 export function identityFor(options: Pick<OpenAiAdapterOptions, "identityHeaders">, ctx: ProviderContext): Record<string, string> {
   return winterIdentityHeaders(options.identityHeaders, ctx.connection.providerId);
+}
+
+/** The identity headers PLUS the row's conversation-id header for one turn (`TurnRequest.cacheKey`), for a `HeaderPlan`'s `identity`. */
+export function identityForTurn(options: Pick<OpenAiAdapterOptions, "identityHeaders" | "conversationHeaders">, ctx: ProviderContext, cacheKey: string | undefined): Record<string, string> {
+  return { ...identityFor(options, ctx), ...conversationIdHeaders(options.conversationHeaders, ctx.connection.providerId, cacheKey) };
 }
 
 // --- effort, thinking and limits -------------------------------------------------------------------------

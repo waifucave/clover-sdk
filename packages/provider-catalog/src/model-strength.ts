@@ -19,6 +19,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   // ---- claude
   "claude-3.5-sonnet-20241022": "medium",
   "claude-3.7-sonnet": "medium",
+  "beam-free": "medium", // unsure
   "claude-3.7-sonnet-20250514": "medium",
   "claude-4-sonnet": "medium",
   "claude-fable-5": "strong",
@@ -221,8 +222,11 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "hunyuan-turbos-latest": "medium", // unsure
   "hunyuan-vision": "weak",
   "hy3": "medium", // unsure
+  "hy4": "medium", // unsure
+  "hy4-flash-free": "medium", // unsure
   "hy4-preview": "medium", // unsure
   // ---- kimi
+  "iceman-contributor-free": "medium", // unsure
   "k3": "strong",
   "k3.1-pro-highspeed": "strong",
   "kimi-for-coding": "medium", // unsure
@@ -262,6 +266,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "llama-4-scout-17b-16e-instruct": "weak",
   "llama-guard-4-12b": "weak",
   // ---- mimo
+  "longcat-2.5-free": "medium", // unsure
   "mimo-v2.5": "medium", // unsure
   "mimo-v2.5-pro": "medium", // unsure
   "mimo-v2.6-flash": "weak", // unsure
@@ -560,6 +565,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "prism-ml/ternary-bonsai-2-9b": "weak", // unsure
   "pro-128k": "weak", // unsure
   "qianfan-code-latest": "weak", // unsure
+  "qwen4-max": "strong", // unsure
   "qwq-32b": "weak",
   "reflection/beam-1.0-501b-a23b": "weak", // unsure
   "reka-edge-2603": "weak", // unsure
