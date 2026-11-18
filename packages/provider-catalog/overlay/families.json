@@ -19,11 +19,11 @@
       "slots": [
         {
           "name": "fable",
-          "canonicalModelId": "claude-fable-5.1",
+          "canonicalModelId": "claude-fable-5.2",
           "description": "the most capable Claude model, for the hardest reasoning and the most open-ended agentic work; the highest price.",
           "reason": "First because it is the strongest.",
           "basis": "winter-curated",
-          "citation": "spec:WS-13c §9 (user-ruling ORDER, winter-curated text); VERIFIED on https://docs.anthropic.com/en/docs/about-claude/models (redirects to https://platform.claude.com/docs/en/docs/about-claude/models, retrieved 2026-09-07) — repointed from `claude-fable-5` to the owed `anthropic/claude-fable-5-1` row (P6.6 Task 1b), whose own canonicalModelId post-normaliser is `claude-fable-5.1`, not the un-normalised `claude-fable-5-1`",
+          "citation": "spec:WS-13c §9 (user-ruling ORDER, winter-curated text); VERIFIED on https://docs.anthropic.com/en/docs/about-claude/models (redirects to https://platform.claude.com/docs/en/docs/about-claude/models, retrieved 2026-09-07) — repointed from `claude-fable-5` to the owed `anthropic/claude-fable-5-1` row (P6.6 Task 1b), whose own canonicalModelId post-normaliser is `claude-fable-5.1`, not the un-normalised `claude-fable-5-1`; 2026-11-18: repointed from `claude-fable-5.1` to Claude Fable 5.2, the current Fable (https://platform.claude.com/docs/en/models/fable-5-2/overview — \"Latest\", released November 9, 2026, $8/$40 against 5.1's $10/$50)",
           "status": "candidate"
         },
         {
@@ -274,29 +274,29 @@
       "slots": [
         {
           "name": "astra",
-          "canonicalModelId": "gpt-6-astra",
+          "canonicalModelId": "gpt-6.2-astra",
           "description": "for seemingly impossible, novelty-like tasks that involve lots of abstract reasoning; substantially above Sol.",
           "reason": "First: nothing else reaches it.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-11-18: repointed from `gpt-6-astra` to GPT-6.2 Astra, first on OpenAI's flagship list (https://developers.openai.com/api/docs/models) and \"our most capable model\" in the Codex list; $8/$40 against 6-astra's $10/$50",
           "status": "candidate"
         },
         {
           "name": "sol",
-          "canonicalModelId": "gpt-6.1-sol",
+          "canonicalModelId": "gpt-6.2-sol",
           "description": "a highly capable model for VERY complex novelty tasks; already overkill for most work.",
           "reason": "Second: the ceiling before Astra.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-10-07: repointed from `gpt-6-sol` to GPT-6.1 Sol, the current Sol (https://developers.openai.com/api/docs/models/gpt-6-sol: \"See GPT-6.1 Sol for the newer Sol model\"; the Codex catalogue now calls gpt-6-sol \"Previous generation workhorse model\" and recommends gpt-6.1-sol)",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-10-07: repointed from `gpt-6-sol` to GPT-6.1 Sol, the current Sol (https://developers.openai.com/api/docs/models/gpt-6-sol: \"See GPT-6.1 Sol for the newer Sol model\"; the Codex catalogue now calls gpt-6-sol \"Previous generation workhorse model\" and recommends gpt-6.1-sol); 2026-11-18: repointed from `gpt-6.1-sol` to GPT-6.2 Sol (https://developers.openai.com/api/docs/models flagship list; Codex list: \"Fast, go-to model for coding and everyday work.\"); same $2/$10",
           "status": "candidate"
         },
         {
           "name": "terra",
-          "canonicalModelId": "gpt-5.6-terra",
+          "canonicalModelId": "gpt-6.1-terra",
           "description": "a highly reliable and capable model for demanding work — framed as Sol was.",
           "reason": "Third: the demanding-work default.",
           "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9",
+          "citation": "spec:WS-13c §0 (user rulings D25–D28, 2026-09-06) via §9; 2026-11-18: repointed from `gpt-5.6-terra` to GPT-6.1 Terra, the Terra on OpenAI's flagship list (released 2026-10-26); $1/$5 against 5.6 Terra's $2/$12",
           "status": "candidate"
         },
         {
@@ -410,11 +410,11 @@
       "slots": [
         {
           "name": "k3",
-          "canonicalModelId": "kimi-k3",
+          "canonicalModelId": "kimi-k3.1-pro",
           "description": "the strongest Kimi.",
           "reason": "First: strength.",
           "basis": "winter-curated",
-          "citation": "spec:WS-13c §9",
+          "citation": "spec:WS-13c §9; 2026-11-18: repointed from `kimi-k3` to Kimi K3.1 Pro, which https://platform.kimi.ai/docs/models calls \"Kimi's most capable flagship to date\" (kimi-k3 is \"Kimi's previous-generation flagship\"); same low/high/max efforts, default max on the platform and high on Kimi Code; $2/$10 against K3's $3/$15",
           "status": "candidate"
         },
         {

@@ -23,6 +23,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "claude-4-sonnet": "medium",
   "claude-fable-5": "strong",
   "claude-fable-5.1": "strong",
+  "claude-fable-5.2": "strong",
   "claude-haiku-4.5": "weak",
   "claude-haiku-4.5-20251001": "weak",
   "claude-haiku-5.5": "weak",
@@ -189,6 +190,8 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "gpt-6-sol": "strong",
   "gpt-6.1-sol": "strong",
   "gpt-6.1-terra": "strong",
+  "gpt-6.2-astra": "strong",
+  "gpt-6.2-sol": "strong",
   "gpt-chat-latest": "medium", // unsure
   // ---- gpt-oss
   "gpt-oss-120b": "medium",
@@ -221,7 +224,6 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "hy4-preview": "medium", // unsure
   // ---- kimi
   "k3": "strong",
-  "k3.1-pro": "strong",
   "k3.1-pro-highspeed": "strong",
   "kimi-for-coding": "medium", // unsure
   "kimi-for-coding-highspeed": "medium", // unsure
