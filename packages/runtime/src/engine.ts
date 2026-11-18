@@ -97,7 +97,7 @@ import { getDefaultMessagingRuntime, UnattributableSenderError, classifyDelivery
 import type { ContinuityEndpoint, MessageOrigin, ProviderNativeState, SystemPromptBlock, ToolChangeSet, TurnRequest } from "@waifucave/clover-provider-runtime";
 // P6 fix wave (Ruling E-2): the two PURE continuity functions the switch point calls. Value imports
 // from the provider-runtime barrel, one direction (runtime -> provider-runtime), same as every adapter.
-import { ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, isServerToolBlockType, estimateTextTokens, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
+import { ESTIMATE_CHARS_PER_TOKEN, ESTIMATE_MARGIN, WinterProviderResolutionError, classifySwitch, replaysNatively, isServerToolBlockType, estimateTextTokens, estimateValueTokens, fitBudgetTokens, fitVerdict, isWinterBookkeepingItem, reasoningBlockItems, separateReasoningBlocks, withinImageBudget, type FitVerdict } from "@waifucave/clover-provider-runtime";
 export type { MessageOrigin, ProviderNativeState };
 // R6-7: the sidecar record types the persistence seam carries. `store/provider-state.ts` imports
 // NOTHING from this file (its own types come from provider-runtime), so this is not the circular
@@ -8431,8 +8431,12 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     let tokens = estimateTextTokens(system) + (tools.length > 0 ? estimateValueTokens(tools) : 0);
     for (const message of outbound) {
       tokens += typeof message.content === "string" ? estimateTextTokens(message.content) : estimateValueTokens(message.content);
-      // Only the model's OWN replies carry reasoning to it (natively); another model's carry none.
-      if (message.role === "assistant" && owns(message) && message.nativeState !== undefined) tokens += estimateValueTokens(message.nativeState.items);
+      // Charged exactly when the renderer sends it natively (`replaysNatively`, the renderer's own test: the
+      // same continuation domain, or the same model); another model's reasoning is left out. A message with
+      // no origin, or a session with no identity, reads as the model's own (errs high, never low).
+      if (message.role !== "assistant" || message.nativeState === undefined) continue;
+      const sent = message.origin === undefined || currentProviderIdentity === undefined ? owns(message) : replaysNatively(message.origin, currentProviderIdentity);
+      if (sent) tokens += estimateValueTokens(message.nativeState.items);
     }
     return tokens;
   };

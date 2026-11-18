@@ -41,12 +41,13 @@ function scripted(name: string, reply: string): Provider & { requests: ProviderR
 
 type Step = { user: string } | { setModel: string };
 
-async function drive(opts: { source: Provider; target: Provider; steps: Step[]; accountant?: ContextAccountant; initialMessages?: ProviderMessage[]; persisted?: { providerId: string; modelKey: string }; startOn?: EngineProviderIdentity; sourceReachable?: boolean }): Promise<WinterFrame[]> {
+async function drive(opts: { source: Provider; target: Provider; steps: Step[]; accountant?: ContextAccountant; initialMessages?: ProviderMessage[]; persisted?: { providerId: string; modelKey: string }; startOn?: EngineProviderIdentity; sourceReachable?: boolean; dst?: EngineProviderIdentity }): Promise<WinterFrame[]> {
   const start = opts.startOn ?? SRC;
+  const dst = opts.dst ?? DST;
   const endpoint = (id: EngineProviderIdentity) => ({ providerId: id.providerId, modelKey: id.modelKey, family: id.family, continuation: "none" as const, readableState: "none" as const });
   const resolveModelSwitch: ResolveModelSwitch = (model) => {
-    if (model === DST.modelKey) return { provider: opts.target, identity: DST, to: endpoint(DST), from: endpoint(SRC) };
-    if (model === SRC.modelKey && opts.sourceReachable !== false) return { provider: opts.source, identity: SRC, to: endpoint(SRC), from: endpoint(DST) };
+    if (model === dst.modelKey) return { provider: opts.target, identity: dst, to: endpoint(dst), from: endpoint(SRC) };
+    if (model === SRC.modelKey && opts.sourceReachable !== false) return { provider: opts.source, identity: SRC, to: endpoint(SRC), from: endpoint(dst) };
     return { refused: true, code: "provider-mismatch", message: "not reachable from this process" };
   };
   const { host, runtime } = createInMemoryChannel();
@@ -122,6 +123,24 @@ describe("the switch fit check (WS-23 decision 5)", () => {
     expect(JSON.stringify(first)).not.toContain("turn 0 ");
     // The accountant's window is the target's now.
     expect(accountant.limit()).toBe(40_000);
+  });
+
+  test("another model's native state is charged exactly when the renderer will replay it (a shared continuation domain), never otherwise", async () => {
+    // A sibling model's turn whose ~130k characters of native state share the target's continuation
+    // domain: it will be replayed (`replaysNatively`), so it alone overflows the 40k target and the source
+    // compacts. The same turn in ANOTHER domain is left out of the request, so it is not charged at all.
+    const history = (): ProviderMessage[] => [
+      { role: "user", content: "earlier" },
+      { role: "assistant", content: "sibling answer", origin: { providerId: "small", modelKey: "small/sibling", family: "custom", continuationDomain: "shared" }, nativeState: { family: "custom", continuationDomain: "shared", items: [{ encrypted_content: "e".repeat(130_000) }] } },
+    ];
+    const run = async (domain: string) => {
+      const source = scripted("source", "source reply");
+      const target = scripted("target", "target reply");
+      await drive({ source, target, initialMessages: history(), dst: { ...DST, continuationDomain: domain }, steps: [{ user: "hi" }, { setModel: DST.modelKey }, { user: "after the switch" }] });
+      return source.summaries + target.summaries;
+    };
+    expect(await run("shared")).toBe(1);
+    expect(await run("elsewhere")).toBe(0);
   });
 
   test("a history that fits is replayed as it stands -- no compaction on either model", async () => {

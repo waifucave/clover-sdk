@@ -112,10 +112,7 @@ export function createHistoryRenderer(registry: ProviderRegistry, options: Histo
         (message.uuid !== undefined ? chain.get(message.uuid)?.origin : undefined) ??
         (typeof structuralModel === "string" && structuralModel.length > 0 ? { providerId: "anthropic", modelKey: structuralModel, family: "anthropic" } : undefined);
 
-      const native = origin !== undefined && (() => {
-        const source = resolveEndpoint(origin);
-        return sameDomain(source, target) || sameModel(source, target);
-      })();
+      const native = origin !== undefined && replaysNatively(resolveEndpoint(origin), target);
 
       if (native) {
         // EXACT REPLAY. Native state and in-dialect blocks ride unchanged. `sameModel` is the SELF case:
@@ -164,6 +161,16 @@ export function createHistoryRenderer(registry: ProviderRegistry, options: Histo
     },
     renderWithReport,
   };
+}
+
+/**
+ * THE ONE TEST for "this earlier message's reasoning is sent to the target natively": the same
+ * continuation domain, or the same model. Exported so every estimate of what a request carries (the
+ * engine's fit check, the switch review's) charges exactly the native state this renderer will send --
+ * one rule, never two copies of it. Anything this answers `false` for has its reasoning left out.
+ */
+export function replaysNatively(source: { providerId?: string; modelKey?: string; continuationDomain?: string } | undefined, target: { providerId?: string; modelKey?: string; continuationDomain?: string } | undefined): boolean {
+  return sameDomain(source, target) || sameModel(source, target);
 }
 
 /** The message with any `decoration` removed (by identity when it has none). */

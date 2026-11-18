@@ -322,6 +322,20 @@ describe("reviewModelSwitch reports what the target cannot represent, and whethe
     expect(review.classification?.warnings[0]).toContain("will summarize its older part before the switch");
   });
 
+  test("the fit charges another model's native state exactly when the renderer will send it (same continuation domain), and never when it will not", () => {
+    // A different model whose turns share the target's continuation domain: its native state replays
+    // (`replaysNatively`), so its size must count. One in another domain is left out, so it must not.
+    const SHARED: ContinuityEndpoint = { providerId: "tiny", modelKey: "tiny/text-only", family: "openai", continuationDomain: "shared-domain", readableState: "none" };
+    const big = { type: "winter_provider_state", uuid: "a1-n", timestamp: "t", sessionId: "s", anchorUuid: "a1", provider: "tiny", model: "tiny/sibling", family: "openai", itemIndex: 1, kind: "native-state" as const, payload: { items: [{ encrypted_content: "e".repeat(70_000) }] } };
+    const originIn = (domain: string): ProviderStateRecord => ({ ...origin("a1", "tiny", "tiny/sibling", "openai"), continuationDomain: domain });
+    const catalog = catalogWith(withWindow("tiny/text-only", "tiny", 200_000, true));
+    const review = (domain: string) => reviewModelSwitch({ entries: oneTurnEntries("a1"), sidecarRecords: [originIn(domain), big], from: { ...SHARED, modelKey: "tiny/sibling", continuationDomain: domain }, to: SHARED, catalog }).estimatedTokens!;
+    const shared = review("shared-domain");
+    const foreign = review("another-domain");
+    expect(shared - foreign).toBeGreaterThan(20_000); // ~70k characters of replayed state
+    expect(foreign).toBeLessThan(16_000 + 1_000); // the allowance and the two short messages only
+  });
+
   test("images for a text-only target, and another vendor's server-tool blocks, each prompt", () => {
     const entries: SessionStoreEntry[] = [
       { type: "user", uuid: "u1", parentUuid: null, message: { role: "user", content: [{ type: "text", text: "look" }, { type: "image", source: { type: "base64", media_type: "image/png", data: "QUJD" } }] } },

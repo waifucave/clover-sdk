@@ -159,6 +159,7 @@ export {
   shouldRequestSummary,
   summaryRequestOf,
   createHistoryRenderer,
+  replaysNatively,
   isServerToolBlockType,
   stripOpaque,
   classifySwitch,

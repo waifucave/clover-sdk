@@ -23,7 +23,7 @@ import type { ProviderStateRecord } from "./claude-ready.ts";
 import type { ContinuityEndpoint } from "./domains.ts";
 import { classifySwitch, type SwitchClassification, type SwitchFacts } from "./warnings.ts";
 import { estimateTextTokens, estimateValueTokens, fitVerdict, type FitVerdict } from "./fit.ts";
-import { isServerToolBlockType } from "./renderer.ts";
+import { isServerToolBlockType, replaysNatively } from "./renderer.ts";
 import { WINTER_DEFAULT_COMPACTION_THRESHOLD as DEFAULT_COMPACTION_THRESHOLD } from "../winter-defaults.ts";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -436,10 +436,11 @@ function fitOnTarget(entries: SessionStoreEntry[], lineage: Node[], sidecarRecor
     tokens += typeof message.content === "string" ? estimateTextTokens(message.content) : estimateValueTokens(message.content ?? "");
     if (node.type !== "assistant") continue;
     const records = byAnchor.get(node.uuid) ?? [];
-    const origin = originOf(records);
-    // Another model's turn carries no reasoning to the target (it is sent natively or not at all), so
-    // only the target's OWN native state is charged.
-    if (origin !== undefined && (origin.providerId !== to.providerId || origin.modelKey !== to.modelKey)) continue;
+    const originRecord = records.find((r) => r.kind === "origin");
+    // A turn's native state is charged exactly when the renderer will send it (`replaysNatively`: the same
+    // continuation domain, or the same model); any other turn's reasoning is left out, so nothing is charged.
+    // A turn with no origin record reads as the session's own (charged: the estimate errs high, never low).
+    if (originRecord !== undefined && !replaysNatively({ providerId: originRecord.provider, modelKey: originRecord.model, ...(originRecord.continuationDomain !== undefined ? { continuationDomain: originRecord.continuationDomain } : {}) }, to)) continue;
     for (const record of records) if (record.kind === "native-state" || record.kind === "reasoning-blocks") tokens += estimateValueTokens(record.payload);
   }
   return fitVerdict(tokens + SYSTEM_AND_TOOLS_ALLOWANCE_TOKENS, window, DEFAULT_COMPACTION_THRESHOLD);
