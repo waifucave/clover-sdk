@@ -199,8 +199,15 @@ function locateResource(winterHome: string, key: SessionKey): ResourceLocation {
 // its private directory-validation helper).
 // ---------------------------------------------------------------------------------------------
 
-function realUid(): number {
-  return process.getuid!(); // POSIX-only, Bun-only + macOS-first runtime (Ruling P1-C) — see temp.ts
+// Whose is this level? Same function, same reasons, as the runtime's `paths/owner.ts` (that file says what the check protects and what
+// holds on Windows, and why the owner comparison is skipped there: Node and Bun report uid 0 for every file on Windows, and
+// `process.getuid` does not exist). A private copy, as the rest of this level walk is: the sdk exports no subpath to share it from.
+// Here the levels are the home, its `projects/` folder and the project and session folders under it; on Windows the home is
+// under `%USERPROFILE%` by default, and the symlink check below still holds (lstat sees a planted junction or link).
+// `platform` is a parameter so the Windows branch is tested on any system.
+export function levelOwnedByThisUser(stat: { uid: number }, platform: NodeJS.Platform = process.platform): boolean {
+  if (platform === "win32") return true;
+  return stat.uid === process.getuid!(); // POSIX: as it was. No `getuid` here is a bug to surface, never a pass.
 }
 
 function ensureSecureDir(path: string): void {
@@ -212,7 +219,7 @@ function ensureSecureDir(path: string): void {
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught
   if (stat.isSymbolicLink()) throw new WinterStoreError(`refusing a symlink at a level the store must own: ${path}`);
   if (!stat.isDirectory()) throw new WinterStoreError(`expected a directory, found something else at: ${path}`);
-  if (stat.uid !== realUid()) throw new WinterStoreError(`refusing a directory owned by a different uid: ${path}`);
+  if (!levelOwnedByThisUser(stat)) throw new WinterStoreError(`refusing a directory owned by a different uid: ${path}`);
   chmodSync(path, 0o700); // idempotent self-heal, umask-proof
 }
 

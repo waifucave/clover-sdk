@@ -1,6 +1,8 @@
 import { chmodSync, closeSync, constants, fchmodSync, fstatSync, lstatSync, mkdirSync, openSync, realpathSync } from "node:fs";
 import type { Stats } from "node:fs";
+import { tmpdir, userInfo } from "node:os";
 import { join } from "node:path";
+import { ownedByThisUser } from "./owner.ts";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
 // runtime-private module still needs; reused from there rather than re-implemented, preserving
 // the "one shared blank-env-value rule" this file's own resolveTempBase comment documents.
@@ -30,10 +32,24 @@ function assertSafeSegment(value: string, label: string): void {
   }
 }
 
-// process.getuid is POSIX-only; this package is Bun-only and macOS-first (Ruling P1-C), so a
-// non-null assertion is appropriate here — there is no supported target where it is absent.
-function realUid(): number {
-  return process.getuid!();
+// The `<root>-<user>` folder name's second half. POSIX: the real uid, as it always was; `process.getuid` is absent only
+// on Windows, which takes the other branch, so a non-null assertion is right there.
+//
+// Windows has no uid (`process.getuid` does not exist, and `os.userInfo().uid` is -1), and the temp base there is already
+// a per-user folder, but a host may point the base at one folder for several users, so the name still carries the user:
+// the account name with everything outside [A-Za-z0-9-] turned into "-" (a name is not a path segment: `DOMAIN\user`,
+// spaces), and "user" when the system will not say. The same account always gets the same name, so a later run finds
+// its own folder. `platform` and `username` are parameters so the Windows form is tested on any system.
+export function tempUserSegment(platform: NodeJS.Platform = process.platform, username?: () => string): string {
+  if (platform !== "win32") return String(process.getuid!());
+  let name = "";
+  try {
+    name = (username ?? (() => userInfo().username))();
+  } catch {
+    /* the account name is unavailable: the fallback below */
+  }
+  const segment = name.replace(/[^A-Za-z0-9-]/g, "-").replace(/^-+|-+$/g, "");
+  return segment === "" ? "user" : segment.slice(0, 64);
 }
 
 // Exported so the foreign-owner refusal branch is reachable without root (task-6-brief: "assert
@@ -43,10 +59,12 @@ function realUid(): number {
 export function assertOwnedDir(
   stat: Pick<Stats, "uid"> & { isDirectory(): boolean; isSymbolicLink(): boolean },
   pathForError: string,
+  platform: NodeJS.Platform = process.platform,
 ): void {
   if (stat.isSymbolicLink()) throw new WinterPathsError(`refusing a symlink at a level Winter must own: ${pathForError}`);
   if (!stat.isDirectory()) throw new WinterPathsError(`expected a directory, found something else at: ${pathForError}`);
-  if (stat.uid !== realUid()) throw new WinterPathsError(`refusing a directory owned by a different uid: ${pathForError}`);
+  // Against another local user pre-creating a level under a shared base: Unix compares the owner; Windows cannot, and paths/owner.ts says what holds there.
+  if (!ownedByThisUser(stat, platform)) throw new WinterPathsError(`refusing a directory owned by a different uid: ${pathForError}`);
 }
 
 // Create-if-missing, then always lstat-validate (own uid, real directory, never a symlink — even a
@@ -67,7 +85,7 @@ function ensureValidatedDir(path: string): void {
     if ((err as { code?: unknown }).code !== "EEXIST") throw err;
   }
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught, not followed
-  assertOwnedDir(stat, path);
+  assertOwnedDir(stat, path, platformOf());
   ensureDirSeam?.(path);
   // Windows: no O_DIRECTORY / O_NOFOLLOW, and opening a folder with a plain open fails there, so the mode change
   // stays the plain chmod it was (a POSIX mode means little there anyway); the lstat validation above still holds.
@@ -103,16 +121,28 @@ export function _setEnsureDirSeamForTests(fn: ((path: string) => void) | undefin
   ensureDirSeam = fn;
 }
 
-// `<PREFIX>TMPDIR` || "/tmp" (blank = unset, same rule as `<PREFIX>HOME` — see home.ts's isUnset).
+// `<PREFIX>TMPDIR` || the default base (blank = unset, same rule as `<PREFIX>HOME` — see home.ts's isUnset).
+// The default base is "/tmp" on every system that has one, exactly as before (the macOS and Linux scratch folder and
+// the paths the sandbox profiles and the Claude Code layout agree on do not move); on Windows, which has no `/tmp`
+// (a bare "/tmp" there is the current drive's `\tmp`, which does not exist, and 0.0.83 died on it), it is the
+// operating system's temp folder: `TEMP`, then `TMP`, from the env the session was given (a host's `env` replaces the
+// Worker's own), then `os.tmpdir()`. `platform` is a parameter so the Windows branch is tested on any system.
 // Exported so the DEFAULT can be asserted as a pure string decision in tests, never by actually
 // creating directories under the real, shared /tmp/<tempRootName>-<uid> chain.
 //
 // P7a (D19): THE ENV NAME IS DERIVED, NEVER SPELLED, and it is read INSIDE this function — the
 // brand arrives with `--config-json`, so a module-load read would bake in Winter's own prefix for a
 // reuser and could never be corrected (brand-gate rules 9 and 10 pin both halves of that).
-export function resolveTempBase(env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">): string {
-  const override = (env ?? process.env)[envName(requireBrand(brand), "TMPDIR")];
-  return isUnset(override) ? "/tmp" : (override as string);
+export function resolveTempBase(env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">, platform: NodeJS.Platform = platformOf()): string {
+  const source = env ?? process.env;
+  const override = source[envName(requireBrand(brand), "TMPDIR")];
+  if (!isUnset(override)) return override as string;
+  if (platform !== "win32") return "/tmp";
+  for (const name of ["TEMP", "TMP"]) {
+    const value = source[name];
+    if (!isUnset(value)) return value as string;
+  }
+  return tmpdir();
 }
 
 export interface SessionTempDirOptions {
@@ -139,14 +169,15 @@ export interface SessionTempDirPaths {
 // beneath it is created/validated by ensureValidatedDir above, never realpath'd again. scratchpad/
 // is created eagerly here; tasks/ stays lazy (see ensureTasksDir). `uid` is always the real
 // process uid (process.getuid()) — never injectable, never a fixed literal: a fixed suffix would
-// let one user's 0700 root lock out every other user on a shared machine.
+// let one user's 0700 root lock out every other user on a shared machine. On Windows, which has no uid, the suffix is
+// the account name (`tempUserSegment`), for the same reason.
 export function sessionTempDir(opts: SessionTempDirOptions): SessionTempDirPaths {
   assertSafeSegment(opts.tempProjectKey, "tempProjectKey");
   assertSafeSegment(opts.backendUuid, "backendUuid");
 
   const brand = requireBrand(opts.brand);
   const base = realpathSync(resolveTempBase(opts.env, brand));
-  const uid = realUid();
+  const uid = tempUserSegment(platformOf());
   const sharedRoot = join(base, `${brand.tempRootName}-${uid}`);
   const engineDir = join(sharedRoot, `${brand.tempRootName}-${uid}`);
   const projectDir = join(engineDir, opts.tempProjectKey);

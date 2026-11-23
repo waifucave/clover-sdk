@@ -38,6 +38,7 @@ import { exceedsDoubleStarCap, exceedsStarsPerSegmentCap } from "./paths.ts";
 // permissions/evaluator.ts (type-only); neither of those, nor any transitive import of this file,
 // imports permissions/ruleset.ts, so ruleset.ts -> tools/registry.ts introduces no cycle.
 import { getRegisteredTool } from "../tools/registry.ts";
+import { ownedByThisUser } from "../paths/owner.ts";
 import { readFileSync,
   openSync,
   writeSync,
@@ -630,10 +631,6 @@ export class PermissionJournalDirError extends Error {
 // imported: session-store.ts's ensureSecureDir/realUid are private (unexported) even within the
 // sdk package's own barrel, and the sdk's package.json "exports" has no subpath for a deep import
 // either — see writeAllSync's own comment for the identical reachability note.
-function realUid(): number {
-  return process.getuid!(); // POSIX-only, Bun-only + macOS-first runtime (session-store.ts's own precedent)
-}
-
 function ensureSecureJournalDir(path: string): void {
   try {
     mkdirSync(path, { mode: 0o700 });
@@ -643,7 +640,7 @@ function ensureSecureJournalDir(path: string): void {
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught
   if (stat.isSymbolicLink()) throw new PermissionJournalDirError(`refusing a symlink at a level the permission journal must own: ${path}`);
   if (!stat.isDirectory()) throw new PermissionJournalDirError(`expected a directory, found something else at: ${path}`);
-  if (stat.uid !== realUid()) throw new PermissionJournalDirError(`refusing a directory owned by a different uid: ${path}`);
+  if (!ownedByThisUser(stat)) throw new PermissionJournalDirError(`refusing a directory owned by a different uid: ${path}`); // owner check: Unix as before, skipped on Windows (paths/owner.ts says why)
   chmodSync(path, 0o700); // idempotent self-heal, umask-proof
 }
 
