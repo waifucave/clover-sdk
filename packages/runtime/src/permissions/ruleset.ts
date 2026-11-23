@@ -38,6 +38,8 @@ import { exceedsDoubleStarCap, exceedsStarsPerSegmentCap } from "./paths.ts";
 // permissions/evaluator.ts (type-only); neither of those, nor any transitive import of this file,
 // imports permissions/ruleset.ts, so ruleset.ts -> tools/registry.ts introduces no cycle.
 import { getRegisteredTool } from "../tools/registry.ts";
+import { ownedByThisUser } from "../paths/owner.ts";
+import { windowsNameProblem } from "../paths/segment.ts";
 import { readFileSync,
   openSync,
   writeSync,
@@ -594,10 +596,13 @@ const FILE_DESTINATIONS = new Set(["userSettings", "projectSettings", "localSett
 // function lives in the sdk package's store module, not reachable here without a deep import the
 // sdk's own package.json "exports" is closed against — see the module header on writeAllSync for
 // the same reachability note). Small and duplicated deliberately, not because the logic is complex.
-function assertSafePathSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafePathSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new Error(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new Error(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 // Fully writes `buf` to `fd`, looping on the rare partial-write return from a single writeSync call
@@ -630,10 +635,6 @@ export class PermissionJournalDirError extends Error {
 // imported: session-store.ts's ensureSecureDir/realUid are private (unexported) even within the
 // sdk package's own barrel, and the sdk's package.json "exports" has no subpath for a deep import
 // either — see writeAllSync's own comment for the identical reachability note.
-function realUid(): number {
-  return process.getuid!(); // POSIX-only, Bun-only + macOS-first runtime (session-store.ts's own precedent)
-}
-
 function ensureSecureJournalDir(path: string): void {
   try {
     mkdirSync(path, { mode: 0o700 });
@@ -643,7 +644,7 @@ function ensureSecureJournalDir(path: string): void {
   const stat = lstatSync(path); // lstat, never stat — a symlink (dangling or not) must be caught
   if (stat.isSymbolicLink()) throw new PermissionJournalDirError(`refusing a symlink at a level the permission journal must own: ${path}`);
   if (!stat.isDirectory()) throw new PermissionJournalDirError(`expected a directory, found something else at: ${path}`);
-  if (stat.uid !== realUid()) throw new PermissionJournalDirError(`refusing a directory owned by a different uid: ${path}`);
+  if (!ownedByThisUser(stat)) throw new PermissionJournalDirError(`refusing a directory owned by a different uid: ${path}`); // owner check: Unix as before, skipped on Windows (paths/owner.ts says why)
   chmodSync(path, 0o700); // idempotent self-heal, umask-proof
 }
 

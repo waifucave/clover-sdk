@@ -6,6 +6,8 @@ import { createHash } from "node:crypto";
 import { guardedDurableMethods, type DurableOperationGuard } from "../../store/durable-authority.ts";
 import { mkdirSync, lstatSync, chmodSync, readFileSync, renameSync, fsyncSync, openSync, closeSync, writeSync, constants as fsConstants } from "node:fs";
 import { join, dirname } from "node:path";
+import { ownedByThisUser } from "../../paths/owner.ts";
+import { windowsNameProblem } from "../../paths/segment.ts";
 import type { PolicyState } from "../policy-state.ts";
 import type { PermissionCall, AutoEngineVerdict } from "../evaluator.ts";
 
@@ -197,14 +199,13 @@ export class AutoCounterStoreError extends Error {
   }
 }
 
-function assertSafeSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafeSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new AutoCounterStoreError(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
-}
-
-function realUid(): number {
-  return process.getuid!(); // POSIX-only, Bun-only + macOS-first runtime -- same precedent as approvals.ts/ruleset.ts's own realUid
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new AutoCounterStoreError(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 function ensureSecureDir(path: string): void {
@@ -216,7 +217,7 @@ function ensureSecureDir(path: string): void {
   const stat = lstatSync(path);
   if (stat.isSymbolicLink()) throw new AutoCounterStoreError(`refusing a symlink at a level the auto-counter store must own: ${path}`);
   if (!stat.isDirectory()) throw new AutoCounterStoreError(`expected a directory, found something else at: ${path}`);
-  if (stat.uid !== realUid()) throw new AutoCounterStoreError(`refusing a directory owned by a different uid: ${path}`);
+  if (!ownedByThisUser(stat)) throw new AutoCounterStoreError(`refusing a directory owned by a different uid: ${path}`); // owner check: Unix as before, skipped on Windows (paths/owner.ts says why)
   chmodSync(path, 0o700);
 }
 

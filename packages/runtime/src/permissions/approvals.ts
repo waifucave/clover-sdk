@@ -30,6 +30,8 @@
 import { mkdirSync, lstatSync, chmodSync, openSync, writeSync, fsyncSync, closeSync, readFileSync, constants as fsConstants } from "node:fs";
 import { guardedDurableMethods, type DurableOperationGuard } from "../store/durable-authority.ts";
 import { join, resolve } from "node:path";
+import { ownedByThisUser } from "../paths/owner.ts";
+import { windowsNameProblem } from "../paths/segment.ts";
 import type { PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@waifucave/clover-agent-sdk";
 // Fix round 1, Ruling P2-K: the SAME symlink-chasing primitive the rest of the permission engine
 // already uses (checkSymlinkBothEnds/matchFileRuleAtBothEnds) — reused, not duplicated, so this
@@ -558,10 +560,13 @@ export function createInMemoryApprovalStore(): DurableApprovalStore {
 // fsync + self-healing chmod 0600 append) — see this file's own header for why it is a deliberate
 // local duplication rather than an import.
 
-function assertSafePathSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafePathSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new DurableApprovalStoreError(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new DurableApprovalStoreError(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 function writeAllSync(fd: number, buf: Buffer): void {
@@ -573,10 +578,6 @@ function writeAllSync(fd: number, buf: Buffer): void {
 
 const APPEND_FLAGS = fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | fsConstants.O_NOFOLLOW;
 
-function realUid(): number {
-  return process.getuid!(); // POSIX-only, Bun-only + macOS-first runtime -- same precedent as ruleset.ts's own realUid
-}
-
 function ensureSecureDir(path: string): void {
   try {
     mkdirSync(path, { mode: 0o700 });
@@ -586,7 +587,7 @@ function ensureSecureDir(path: string): void {
   const stat = lstatSync(path);
   if (stat.isSymbolicLink()) throw new DurableApprovalStoreError(`refusing a symlink at a level the durable approval store must own: ${path}`);
   if (!stat.isDirectory()) throw new DurableApprovalStoreError(`expected a directory, found something else at: ${path}`);
-  if (stat.uid !== realUid()) throw new DurableApprovalStoreError(`refusing a directory owned by a different uid: ${path}`);
+  if (!ownedByThisUser(stat)) throw new DurableApprovalStoreError(`refusing a directory owned by a different uid: ${path}`); // owner check: Unix as before, skipped on Windows (paths/owner.ts says why)
   chmodSync(path, 0o700);
 }
 
