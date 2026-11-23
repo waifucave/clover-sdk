@@ -56,13 +56,12 @@ describe("resolveTempBase", () => {
     expect(resolveTempBase({ WINTER_TMPDIR: "  " }, WINTER_BRAND, "linux")).toBe("/tmp");
   });
 
-  test("Windows: the override wins; then the env's TEMP, then TMP, then the operating system's temp folder -- never the literal /tmp", async () => {
+  test("Windows: the override wins; then the env's TEMP, then TMP, then the operating system's temp folder", async () => {
     const { tmpdir } = await import("node:os");
     expect(resolveTempBase({ WINTER_TMPDIR: "D:\\scratch", TEMP: "C:\\T" }, WINTER_BRAND, "win32")).toBe("D:\\scratch");
     expect(resolveTempBase({ TEMP: "C:\\Users\\a\\AppData\\Local\\Temp", TMP: "C:\\other" }, WINTER_BRAND, "win32")).toBe("C:\\Users\\a\\AppData\\Local\\Temp");
     expect(resolveTempBase({ TEMP: " ", TMP: "C:\\other" }, WINTER_BRAND, "win32")).toBe("C:\\other");
     expect(resolveTempBase({}, WINTER_BRAND, "win32")).toBe(tmpdir());
-    expect(resolveTempBase({}, WINTER_BRAND, "win32")).not.toBe("/tmp");
   });
 });
 
