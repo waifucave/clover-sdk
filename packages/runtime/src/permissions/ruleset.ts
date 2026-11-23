@@ -39,6 +39,7 @@ import { exceedsDoubleStarCap, exceedsStarsPerSegmentCap } from "./paths.ts";
 // imports permissions/ruleset.ts, so ruleset.ts -> tools/registry.ts introduces no cycle.
 import { getRegisteredTool } from "../tools/registry.ts";
 import { ownedByThisUser } from "../paths/owner.ts";
+import { windowsNameProblem } from "../paths/segment.ts";
 import { readFileSync,
   openSync,
   writeSync,
@@ -595,10 +596,13 @@ const FILE_DESTINATIONS = new Set(["userSettings", "projectSettings", "localSett
 // function lives in the sdk package's store module, not reachable here without a deep import the
 // sdk's own package.json "exports" is closed against — see the module header on writeAllSync for
 // the same reachability note). Small and duplicated deliberately, not because the logic is complex.
-function assertSafePathSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafePathSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new Error(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new Error(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 // Fully writes `buf` to `fd`, looping on the rare partial-write return from a single writeSync call

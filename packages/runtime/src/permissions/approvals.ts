@@ -31,6 +31,7 @@ import { mkdirSync, lstatSync, chmodSync, openSync, writeSync, fsyncSync, closeS
 import { guardedDurableMethods, type DurableOperationGuard } from "../store/durable-authority.ts";
 import { join, resolve } from "node:path";
 import { ownedByThisUser } from "../paths/owner.ts";
+import { windowsNameProblem } from "../paths/segment.ts";
 import type { PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@waifucave/clover-agent-sdk";
 // Fix round 1, Ruling P2-K: the SAME symlink-chasing primitive the rest of the permission engine
 // already uses (checkSymlinkBothEnds/matchFileRuleAtBothEnds) — reused, not duplicated, so this
@@ -559,10 +560,13 @@ export function createInMemoryApprovalStore(): DurableApprovalStore {
 // fsync + self-healing chmod 0600 append) — see this file's own header for why it is a deliberate
 // local duplication rather than an import.
 
-function assertSafePathSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafePathSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new DurableApprovalStoreError(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new DurableApprovalStoreError(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 function writeAllSync(fd: number, buf: Buffer): void {

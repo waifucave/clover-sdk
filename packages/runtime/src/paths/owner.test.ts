@@ -56,12 +56,30 @@ describe("resolveTempBase", () => {
     expect(resolveTempBase({ WINTER_TMPDIR: "  " }, WINTER_BRAND, "linux")).toBe("/tmp");
   });
 
-  test("Windows: the override wins; then the env's TEMP, then TMP, then the operating system's temp folder", async () => {
-    const { tmpdir } = await import("node:os");
-    expect(resolveTempBase({ WINTER_TMPDIR: "D:\\scratch", TEMP: "C:\\T" }, WINTER_BRAND, "win32")).toBe("D:\\scratch");
-    expect(resolveTempBase({ TEMP: "C:\\Users\\a\\AppData\\Local\\Temp", TMP: "C:\\other" }, WINTER_BRAND, "win32")).toBe("C:\\Users\\a\\AppData\\Local\\Temp");
-    expect(resolveTempBase({ TEMP: " ", TMP: "C:\\other" }, WINTER_BRAND, "win32")).toBe("C:\\other");
-    expect(resolveTempBase({}, WINTER_BRAND, "win32")).toBe(tmpdir());
+  const PROFILE = "C:\\Users\\Jo";
+  test("Windows: the host's override is used as given; TEMP, then TMP, are used only inside the profile", () => {
+    expect(resolveTempBase({ WINTER_TMPDIR: "D:\\scratch", TEMP: "C:\\Windows\\Temp" }, WINTER_BRAND, "win32", PROFILE)).toBe("D:\\scratch");
+    expect(resolveTempBase({ TEMP: "C:\\Users\\Jo\\AppData\\Local\\Temp", TMP: "C:\\Users\\Jo\\other" }, WINTER_BRAND, "win32", PROFILE)).toBe("C:\\Users\\Jo\\AppData\\Local\\Temp");
+    expect(resolveTempBase({ TEMP: " ", TMP: "C:\\Users\\Jo\\t" }, WINTER_BRAND, "win32", PROFILE)).toBe("C:\\Users\\Jo\\t");
+    // case-insensitive, and resolved (a `..` that leaves the profile is outside)
+    expect(resolveTempBase({ TEMP: "c:\\users\\JO\\appdata\\local\\temp" }, WINTER_BRAND, "win32", PROFILE)).toBe("c:\\users\\JO\\appdata\\local\\temp");
+    expect(resolveTempBase({ TEMP: "C:\\Users\\Jo\\..\\Other\\T" }, WINTER_BRAND, "win32", PROFILE)).toBe("C:\\Users\\Jo\\AppData\\Local\\Temp");
+  });
+
+  test("Windows: a shared or foreign TEMP is not used; the fallback is the per-user temp folder under the profile", () => {
+    const fallback = "C:\\Users\\Jo\\AppData\\Local\\Temp";
+    for (const temp of ["C:\\Windows\\Temp", "C:\\Temp", "D:\\Users\\Jo\\T", "C:\\Users\\Other\\AppData\\Local\\Temp", "C:\\Users\\Jo", "C:\\Users\\JoBob\\T", "\\\\server\\share\\t", "relative\\t"]) {
+      expect(resolveTempBase({ TEMP: temp }, WINTER_BRAND, "win32", PROFILE), temp).toBe(fallback);
+      expect(resolveTempBase({ TMP: temp }, WINTER_BRAND, "win32", PROFILE), temp).toBe(fallback);
+    }
+    expect(resolveTempBase({}, WINTER_BRAND, "win32", PROFILE)).toBe(fallback);
+    expect(resolveTempBase({ TEMP: "C:\\Windows\\Temp", TMP: "C:\\Users\\Jo\\t" }, WINTER_BRAND, "win32", PROFILE)).toBe("C:\\Users\\Jo\\t");
+  });
+
+  test("Windows: with no profile given it is the process's own home", async () => {
+    const { homedir } = await import("node:os");
+    const { win32 } = await import("node:path");
+    expect(resolveTempBase({}, WINTER_BRAND, "win32")).toBe(win32.join(homedir(), "AppData", "Local", "Temp"));
   });
 });
 

@@ -7,6 +7,7 @@ import { guardedDurableMethods, type DurableOperationGuard } from "../../store/d
 import { mkdirSync, lstatSync, chmodSync, readFileSync, renameSync, fsyncSync, openSync, closeSync, writeSync, constants as fsConstants } from "node:fs";
 import { join, dirname } from "node:path";
 import { ownedByThisUser } from "../../paths/owner.ts";
+import { windowsNameProblem } from "../../paths/segment.ts";
 import type { PolicyState } from "../policy-state.ts";
 import type { PermissionCall, AutoEngineVerdict } from "../evaluator.ts";
 
@@ -198,10 +199,13 @@ export class AutoCounterStoreError extends Error {
   }
 }
 
-function assertSafeSegment(value: string, label: string): void {
+// On win32 also what Windows reads as more than one plain name (paths/segment.ts); Unix refuses exactly what it always did.
+export function assertSafeSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "" || value === "." || value === ".." || value.includes("/")) {
     throw new AutoCounterStoreError(`${label} must be a single, non-empty, non-traversal path segment: ${JSON.stringify(value)}`);
   }
+  const windowsProblem = windowsNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new AutoCounterStoreError(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
 function ensureSecureDir(path: string): void {

@@ -1,7 +1,7 @@
 import { chmodSync, closeSync, constants, fchmodSync, fstatSync, lstatSync, mkdirSync, openSync, realpathSync } from "node:fs";
 import type { Stats } from "node:fs";
-import { tmpdir, userInfo } from "node:os";
-import { join } from "node:path";
+import { homedir, userInfo } from "node:os";
+import { join, win32 } from "node:path";
 import { ownedByThisUser } from "./owner.ts";
 // home.ts moved to the sdk package (Task 10, WS-05 §6) — isUnset is the one piece of it this
 // runtime-private module still needs; reused from there rather than re-implemented, preserving
@@ -125,24 +125,38 @@ export function _setEnsureDirSeamForTests(fn: ((path: string) => void) | undefin
 // The default base is "/tmp" on every system that has one, exactly as before (the macOS and Linux scratch folder and
 // the paths the sandbox profiles and the Claude Code layout agree on do not move); on Windows, which has no `/tmp`
 // (a bare "/tmp" there is the current drive's `\tmp`, which does not exist, and 0.0.83 died on it), it is the
-// operating system's temp folder: `TEMP`, then `TMP`, from the env the session was given (a host's `env` replaces the
-// Worker's own), then `os.tmpdir()`. `platform` is a parameter so the Windows branch is tested on any system.
+// user's own temp folder: `TEMP`, then `TMP`, from the env the session was given (a host's `env` replaces the
+// Worker's own) BUT ONLY WHEN THAT FOLDER LIES UNDER THE USER'S PROFILE; otherwise `<profile>\AppData\Local\Temp`.
+// Why: with the owner comparison skipped on Windows (paths/owner.ts), the base is what keeps another user out of the chain,
+// and `TEMP` is not always per-user (`C:\Windows\Temp` is the default for service accounts and some scheduled tasks, a
+// folder every standard user can write, where anyone could pre-create the guessable `<root>-<account>` folder first).
+// WHICH INPUT IS TRUSTED: the `<PREFIX>TMPDIR` override below is the host's own deliberate choice and is used as given
+// (as on every system); `TEMP`/`TMP` are ambient and are trusted only inside the profile (compared as resolved, case-insensitive
+// Windows paths, so another drive or a sibling profile never matches). `platform` and `profile` are parameters so the
+// Windows branch is tested on any system.
 // Exported so the DEFAULT can be asserted as a pure string decision in tests, never by actually
 // creating directories under the real, shared /tmp/<tempRootName>-<uid> chain.
 //
 // P7a (D19): THE ENV NAME IS DERIVED, NEVER SPELLED, and it is read INSIDE this function — the
 // brand arrives with `--config-json`, so a module-load read would bake in Winter's own prefix for a
 // reuser and could never be corrected (brand-gate rules 9 and 10 pin both halves of that).
-export function resolveTempBase(env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">, platform: NodeJS.Platform = platformOf()): string {
+export function resolveTempBase(env?: Record<string, string | undefined>, brand?: Pick<BrandProfile, "envPrefix">, platform: NodeJS.Platform = platformOf(), profile?: string): string {
   const source = env ?? process.env;
   const override = source[envName(requireBrand(brand), "TMPDIR")];
   if (!isUnset(override)) return override as string;
   if (platform !== "win32") return "/tmp";
+  const home = profile ?? homedir();
   for (const name of ["TEMP", "TMP"]) {
     const value = source[name];
-    if (!isUnset(value)) return value as string;
+    if (!isUnset(value) && pathIsUnder(value as string, home)) return value as string;
   }
-  return tmpdir();
+  return win32.join(home, "AppData", "Local", "Temp");
+}
+
+/** True when `child` is strictly inside `parent`, both read as Windows paths (resolved; case-insensitive; another drive is outside). */
+export function pathIsUnder(child: string, parent: string): boolean {
+  const relative = win32.relative(win32.resolve(parent), win32.resolve(child));
+  return relative !== "" && relative !== ".." && !relative.startsWith("..\\") && !win32.isAbsolute(relative);
 }
 
 export interface SessionTempDirOptions {
@@ -176,7 +190,10 @@ export function sessionTempDir(opts: SessionTempDirOptions): SessionTempDirPaths
   assertSafeSegment(opts.backendUuid, "backendUuid");
 
   const brand = requireBrand(opts.brand);
-  const base = realpathSync(resolveTempBase(opts.env, brand));
+  const rawBase = resolveTempBase(opts.env, brand);
+  // Windows' per-user fallback may not exist yet (a fresh profile); the host's own override is never created for it.
+  if (platformOf() === "win32" && isUnset((opts.env ?? process.env)[envName(brand, "TMPDIR")])) mkdirSync(rawBase, { recursive: true });
+  const base = realpathSync(rawBase);
   const uid = tempUserSegment(platformOf());
   const sharedRoot = join(base, `${brand.tempRootName}-${uid}`);
   const engineDir = join(sharedRoot, `${brand.tempRootName}-${uid}`);

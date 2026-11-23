@@ -11,7 +11,7 @@
 // permission journal and the approval and auto-counter stores (each `ensureSecureDir`).
 import { afterAll, describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND, query, type SdkMessage } from "@waifucave/clover-agent-sdk";
 import { spawnEmbeddedWorker } from "./embedded-host.ts";
@@ -67,8 +67,8 @@ describe("the runtime starts and answers one plain turn", () => {
     const home = tempDir("home");
     const tmpBase = tempDir("tmp");
     const cwd = tempDir("cwd");
-    // Where the session's temp chain must appear: the throwaway base, or on Windows the operating system's temp folder.
-    const chainBase = process.platform === "win32" ? tmpdir() : tmpBase;
+    // Where the session's temp chain must appear: the throwaway base, or on Windows the per-user temp folder under the profile (the runner's own TEMP may sit elsewhere).
+    const chainBase = process.platform === "win32" ? join(homedir(), "AppData", "Local", "Temp") : tmpBase;
     const chainBefore = new Set(readdirSync(chainBase));
     let exit: Promise<{ code: number | null; signal: string | null }> | undefined;
     let stderrText = "";

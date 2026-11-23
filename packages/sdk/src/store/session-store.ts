@@ -132,13 +132,36 @@ export type SessionStore = {
 // separator-escaping (double/trailing slashes) — never a specific character set.
 // ---------------------------------------------------------------------------------------------
 
-function assertSafeSingleSegment(value: string, label: string): void {
+// What makes a name NOT one plain name on Windows though it is one on Unix; the same function, with the same reasons, as the
+// runtime's `paths/segment.ts` (a private copy: the sdk exports no subpath to share it from; keep the two in step).
+// WIN32 ONLY: a backslash is an ordinary character in a Unix file name, and these ids are consumer-supplied (see the
+// charset note above), so refusing it on Unix would change what is valid today. On win32 a name is refused when it holds
+// a path separator (`\`, which also covers UNC-looking and rooted names), a colon (drive-relative `C:x`, alternate data
+// streams), a character Windows forbids in a file name, ends in a dot or a space (Windows drops them), or is a reserved
+// device name (`CON`, `NUL`, `COM1`..., with or without an extension, any case). `platform` is a parameter for tests.
+const RESERVED_DEVICE = /^(?:CON|PRN|AUX|NUL|COM[0-9\u00b9\u00b2\u00b3]|LPT[0-9\u00b9\u00b2\u00b3]|CONIN\$|CONOUT\$)$/i;
+
+export function levelNameProblem(value: string, platform: NodeJS.Platform = process.platform): string | undefined {
+  if (platform !== "win32") return undefined;
+  if (value.includes("\\") || value.includes("/")) return "must not contain a path separator on Windows";
+  if (value.includes(":")) return "must not contain a colon on Windows (a drive-relative name or an alternate data stream)";
+  // eslint-disable-next-line no-control-regex
+  if (/[<>"|?*\u0000-\u001f]/.test(value)) return "must not contain a character Windows forbids in a file name";
+  if (value.endsWith(".") || value.endsWith(" ")) return "must not end in a dot or a space (Windows drops them, so the name would mean another)";
+  if (RESERVED_DEVICE.test(value.split(".")[0]!.replace(/ +$/, ""))) return "must not be a reserved Windows device name";
+  return undefined;
+}
+
+export function assertSafeSingleSegment(value: string, label: string, platform: NodeJS.Platform = process.platform): void {
   if (value === "") throw new WinterStoreError(`${label} must not be empty`);
   if (value.includes("/")) throw new WinterStoreError(`${label} must not contain a path separator: ${JSON.stringify(value)}`);
   if (value === "." || value === "..") throw new WinterStoreError(`${label} must not be a traversal segment: ${JSON.stringify(value)}`);
+  const windowsProblem = levelNameProblem(value, platform);
+  if (windowsProblem !== undefined) throw new WinterStoreError(`${label} ${windowsProblem}: ${JSON.stringify(value)}`);
 }
 
-function assertSafeSubpath(value: string): string[] {
+// The subpath stays `/`-separated on every system (it is the store's logical key); each segment is checked as a name.
+export function assertSafeSubpath(value: string, platform: NodeJS.Platform = process.platform): string[] {
   if (value === "") throw new WinterStoreError("subpath must not be empty");
   if (value.startsWith("/")) throw new WinterStoreError(`subpath must not be absolute: ${JSON.stringify(value)}`);
   const segments = value.split("/");
@@ -149,6 +172,8 @@ function assertSafeSubpath(value: string): string[] {
     if (segment === "." || segment === "..") {
       throw new WinterStoreError(`subpath must not contain a traversal segment: ${JSON.stringify(value)}`);
     }
+    const windowsProblem = levelNameProblem(segment, platform);
+    if (windowsProblem !== undefined) throw new WinterStoreError(`subpath segment ${windowsProblem}: ${JSON.stringify(value)}`);
   }
   return segments;
 }
