@@ -4,6 +4,24 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.84
+
+### The runtime starts on Windows
+
+- The agent runtime starts and runs a turn on Windows. Its temp folder there is no longer a hard-coded `/tmp`: it is the
+  user's own temp folder (`TEMP`, then `TMP`, when they lie under the user's profile; otherwise
+  `<profile>\AppData\Local\Temp`). A host's explicit `<PREFIX>TMPDIR` is used as given, as on every system. macOS and Linux
+  keep `/tmp`.
+- The owner checks on the temp chain, the rule and approval stores, the auto-mode caches and the session store compare a
+  folder's owner with the process's user on macOS and Linux exactly as before. On Windows, where every file reports owner
+  0, that comparison is skipped; the per-user base and the link check keep another user out.
+- On Windows the single-name checks of those stores also refuse what Windows reads as a path or as another name: a
+  backslash, a colon, a character Windows forbids in a file name, a trailing dot or space, a reserved device name. What
+  is valid on macOS and Linux does not change.
+- CI starts the runtime and runs one scripted turn on `windows-latest`, on the sources and on the built worker.
+- Not yet on Windows: the runtime's own shell tools and command hooks (they run through `/bin/bash` and `/bin/sh`) and
+  process groups. A host that brings its own shell tools is not affected.
+
 ## 0.0.83
 
 ### Reasoning is carried natively or not at all
