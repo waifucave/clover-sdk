@@ -72,25 +72,32 @@ describe("the runtime starts and answers one plain turn", () => {
     const chainBefore = new Set(readdirSync(chainBase));
     let exit: Promise<{ code: number | null; signal: string | null }> | undefined;
     let stderrText = "";
-    const messages = await drain(
-      query({
-        prompt: "hello from the start proof",
-        options: {
-          model: "winter-test/echo",
-          cwd,
-          env: sessionEnv(home, tmpBase),
-          sandbox: { enabled: false },
-          spawnClaudeCodeProcess: (o) => {
-            const proc = spawnEmbeddedWorker({ workerEntry: WORKER_ENTRY, spawn: o });
-            exit = proc.exited;
-            void (async () => {
-              for await (const chunk of proc.stderr!) stderrText += chunk;
-            })();
-            return proc;
+    let messages: SdkMessage[];
+    try {
+      messages = await drain(
+        query({
+          prompt: "hello from the start proof",
+          options: {
+            model: "winter-test/echo",
+            cwd,
+            env: sessionEnv(home, tmpBase),
+            sandbox: { enabled: false },
+            spawnClaudeCodeProcess: (o) => {
+              const proc = spawnEmbeddedWorker({ workerEntry: WORKER_ENTRY, spawn: o });
+              exit = proc.exited;
+              void (async () => {
+                for await (const chunk of proc.stderr!) stderrText += chunk;
+              })();
+              return proc;
+            },
           },
-        },
-      }),
-    );
+        }),
+      );
+    } catch (error) {
+      // A session that dies before init says why on its stderr; the bare "runtime exited before init" does not.
+      await Promise.race([exit, Bun.sleep(2000)]);
+      throw new Error(`${error instanceof Error ? error.message : String(error)}\n--- the session's stderr ---\n${stderrText}`);
+    }
     const init = messages.find((m) => (m as { subtype?: string }).subtype === "init");
     expect(init, `no init message; the session's stderr: ${stderrText}`).toBeDefined();
     const result = messages.find((m) => (m as { type?: string }).type === "result") as { subtype?: string; result?: string } | undefined;
