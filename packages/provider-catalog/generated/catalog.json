@@ -122085,6 +122085,194 @@
       "strength": "medium"
     },
     {
+      "key": "tencent-tokenhub-anthropic/hy4",
+      "providerId": "tencent-tokenhub-anthropic",
+      "upstreamId": "hy4",
+      "displayName": "Hy4 (Anthropic format)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub-anthropic/hy4-flash",
+      "providerId": "tencent-tokenhub-anthropic",
+      "upstreamId": "hy4-flash",
+      "displayName": "Hy4 Flash (Anthropic format)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash",
+      "modelFamily": "hunyuan",
+      "strength": "weak"
+    },
+    {
       "key": "tencent-tokenhub-anthropic/hy4-preview",
       "providerId": "tencent-tokenhub-anthropic",
       "upstreamId": "hy4-preview",
@@ -122291,6 +122479,194 @@
       "canonicalModelId": "hy3",
       "modelFamily": "hunyuan",
       "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub-intl-anthropic/hy4",
+      "providerId": "tencent-tokenhub-intl-anthropic",
+      "upstreamId": "hy4",
+      "displayName": "Hy4 (Anthropic format)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub-intl-anthropic/hy4-flash",
+      "providerId": "tencent-tokenhub-intl-anthropic",
+      "upstreamId": "hy4-flash",
+      "displayName": "Hy4 Flash (Anthropic format)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash",
+      "modelFamily": "hunyuan",
+      "strength": "weak"
     },
     {
       "key": "tencent-tokenhub-intl-anthropic/hy4-preview",
@@ -122533,6 +122909,202 @@
       "canonicalModelId": "hy3",
       "modelFamily": "hunyuan",
       "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub-intl/hy4",
+      "providerId": "tencent-tokenhub-intl",
+      "upstreamId": "hy4",
+      "displayName": "Hy4",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub-intl/hy4-flash",
+      "providerId": "tencent-tokenhub-intl",
+      "upstreamId": "hy4-flash",
+      "displayName": "Hy4 Flash",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash",
+      "modelFamily": "hunyuan",
+      "strength": "weak"
     },
     {
       "key": "tencent-tokenhub-intl/hy4-preview",
@@ -122957,6 +123529,202 @@
       "canonicalModelId": "hy3",
       "modelFamily": "hunyuan",
       "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub/hy4",
+      "providerId": "tencent-tokenhub",
+      "upstreamId": "hy4",
+      "displayName": "Hy4",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4 capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4",
+      "modelFamily": "hunyuan",
+      "strength": "medium"
+    },
+    {
+      "key": "tencent-tokenhub/hy4-flash",
+      "providerId": "tencent-tokenhub",
+      "upstreamId": "hy4-flash",
+      "displayName": "Hy4 Flash",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: context window 1M tokens; k/M expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 960000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum input 960k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 64000,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash: maximum output 64k tokens; k expanded as decimal.",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists 图片理解 (image understanding)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-25T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Function Calling.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists structured output.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 (read 2026-11-24) — hy4-flash capability table lists Cache.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://cloud.tencent.com/document/product/1823/130051 — hy4-preview capability table lists deep thinking (retained thinking).",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:06:30Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "none"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash",
+      "modelFamily": "hunyuan",
+      "strength": "weak"
     },
     {
       "key": "tencent-tokenhub/hy4-preview",
