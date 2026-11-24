@@ -8764,7 +8764,15 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
     return { networkAllowed, unsandboxedAllowed: sandboxSettingsForSession.allowUnsandboxedCommands !== false };
   };
 
-  const toolSpecFor = (descriptor: { advertisedName: string; canonicalName: string; description: string; inputSchema: unknown }): ProviderToolSpec => {
+  const toolSpecFor = (descriptor: { advertisedName: string; canonicalName: string; source: ToolDescriptor["source"]; description: string; inputSchema: unknown }): ProviderToolSpec => {
+    // ONLY THE RUNTIME'S OWN BUILT-INS ARE DECORATED. Every branch below is keyed on a NAME, and a host's in-process
+    // tool may take a built-in's name (`toolNames` + `shadowBuiltins`) precisely to REPLACE that built-in: its
+    // definition is the host's, and the model is offered it exactly as the host wrote it -- never the Agent slot enum,
+    // the web tools' schema or the Bash sandbox section on top of it (a host `Agent` whose `model` is a free string was
+    // offered the runtime's four slot names as an enum, and the model took them as the only choices).
+    if (descriptor.source !== "builtin") {
+      return { name: descriptor.advertisedName, description: descriptor.description, inputSchema: descriptor.inputSchema as Record<string, unknown> };
+    }
     // THE WEB TOOLS' LEAN / FULL DESCRIPTION, chosen PER SESSION. Each ships two variants (a short one
     // for the lean tier, the long one for everything else), and a descriptor -- a process-wide
     // singleton -- cannot see this session's model, so both register the FULL text statically and the
@@ -8902,7 +8910,8 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
       specs.push(!loaded || referenced.has(spec.name) ? namespaced({ ...spec, deferLoading: true }, descriptor.canonicalName) : spec);
     }
     if (clientSearch) {
-      const searchNames = new Set(advertisedPartition.eager.filter((d) => d.canonicalName === "ToolSearch").map((d) => d.advertisedName));
+      // The built-in ToolSearch only: a host tool that took the name keeps its own definition (see `toolSpecFor`).
+      const searchNames = new Set(advertisedPartition.eager.filter((d) => d.canonicalName === "ToolSearch" && d.source === "builtin").map((d) => d.advertisedName));
       for (let i = 0; i < specs.length; i++) if (searchNames.has(specs[i]!.name) && specs[i]!.deferLoading !== true) specs[i] = { ...specs[i]!, toolSearch: true };
     }
     // WS-23: a DETERMINISTIC order, by name (UTF-16 code units, locale-independent). Registration
