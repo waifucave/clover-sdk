@@ -6326,9 +6326,9 @@
         ]
       },
       "risk": {
-        "class": "review-required",
+        "class": "blocked",
         "reasons": [
-          "Platform shutting down 2026-09-30 per https://cloud.tencent.com/document/product/1729/131925; use `tencent-tokenhub`.",
+          "The legacy Hunyuan platform was shut down on 2026-09-30 (https://cloud.tencent.com/document/product/1729/131925 (read 2026-11-24): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\" (the original Tencent Hunyuan platform is fully shut down on 30 September 2026); \"建议迁移至 TokenHub\" (migrate to TokenHub)); its successor is `tencent-tokenhub` / `tencent-tokenhub-intl`.",
           "Admitted on the vendor's own fetched documentation; this application has not run a live key gate against this endpoint."
         ]
       },
@@ -123092,7 +123092,7 @@
         "confidence": "unknown"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "canonicalModelId": "hunyuan-functioncall",
       "modelFamily": "hunyuan",
       "strength": "weak"
@@ -123341,7 +123341,7 @@
         "confidence": "unknown"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "canonicalModelId": "hunyuan-vision",
       "modelFamily": "hunyuan",
       "strength": "weak"

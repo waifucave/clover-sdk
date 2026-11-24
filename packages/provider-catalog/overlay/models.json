@@ -85250,7 +85250,7 @@
       "upstreamId": "hunyuan-functioncall",
       "displayName": "Hunyuan FunctionCall",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for a lifecycle note (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ. the provider's retirement record dates this model's shutdown 2026-06-22, but the notice names `hunyuan-funcall`, not this row's id, and the platform-wide shutdown (2026-09-30) has not passed; kept `candidate` pending a ruling (https://cloud.tencent.com/document/product/1729/131925 (read 2026-09-27): \"混元旧版本模型（详见下方模型列表）将于北京时间 2026 年 6 月 22 日 00:00 起正式下线 ... 原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\") scheduled retirement 2026-09-30 (still `candidate` until that date passes) (https://www.tencentcloud.com/announce/detail/101147 (read 2026-09-27): \"Sales Suspension at 00:00 on June 30, 2026, Beijing Time ... Full Service Discontinuation at 00:00 on September 30, 2026, Beijing Time\")",
+      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for a lifecycle note (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ. the provider's retirement record dates this model's shutdown 2026-06-22, but the notice names `hunyuan-funcall`, not this row's id, and the platform-wide shutdown (2026-09-30) has not passed; kept `candidate` pending a ruling (https://cloud.tencent.com/document/product/1729/131925 (read 2026-09-27): \"混元旧版本模型（详见下方模型列表）将于北京时间 2026 年 6 月 22 日 00:00 起正式下线 ... 原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\") scheduled retirement 2026-09-30 (still `candidate` until that date passes) (https://www.tencentcloud.com/announce/detail/101147 (read 2026-09-27): \"Sales Suspension at 00:00 on June 30, 2026, Beijing Time ... Full Service Discontinuation at 00:00 on September 30, 2026, Beijing Time\") — 2026-11-24 refresh: https://cloud.tencent.com/document/product/1729/131925 (read 2026-11-24): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\" (the original Tencent Hunyuan platform is fully shut down on 30 September 2026); \"建议迁移至 TokenHub\" (migrate to TokenHub). The shutdown date has passed, so the row is `deprecated`.",
       "endpoints": [
         "chat"
       ],
@@ -85287,7 +85287,7 @@
         "confidence": "unknown"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "tencent/hunyuan-vision",
@@ -85295,7 +85295,7 @@
       "upstreamId": "hunyuan-vision",
       "displayName": "Hunyuan Vision",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for a lifecycle note (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ. scheduled retirement 2026-09-30 (still `candidate` until that date passes) (https://cloud.tencent.com/document/product/1729/131925 (read 2026-09-27): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\")",
+      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for a lifecycle note (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ. scheduled retirement 2026-09-30 (still `candidate` until that date passes) (https://cloud.tencent.com/document/product/1729/131925 (read 2026-09-27): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\") — 2026-11-24 refresh: https://cloud.tencent.com/document/product/1729/131925 (read 2026-11-24): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\" (the original Tencent Hunyuan platform is fully shut down on 30 September 2026); \"建议迁移至 TokenHub\" (migrate to TokenHub). The shutdown date has passed, so the row is `deprecated`.",
       "endpoints": [
         "chat"
       ],
@@ -85332,7 +85332,7 @@
         "confidence": "unknown"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "yi/yi-large",
