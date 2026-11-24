@@ -65580,12 +65580,20 @@
         "value": {
           "inputPerMTokUsd": 0.3,
           "outputPerMTokUsd": 1.2,
-          "cacheReadPerMTokUsd": 0.06
+          "cacheReadPerMTokUsd": 0.06,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 524289,
+              "inputPerMTokUsd": 0.6,
+              "outputPerMTokUsd": 2.4,
+              "cacheReadPerMTokUsd": 0.12
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://platform.minimax.io/docs/guides/pricing-paygo — M3 STANDARD <=512K input, permanent 50% off: input $0.30, output $1.20, cache read $0.06 per million; >512K input: $0.60/$2.40/$0.12; priority tier 1.5x",
+        "sourceRef": "https://platform.minimax.io/docs/guides/pricing-paygo (read 2026-11-24) — MiniMax-M3 Standard: ≤512k input tokens $0.30 input / $0.06 cache read / $1.20 output; >512k input tokens $0.60 / $0.12 / $2.40 per 1M tokens (permanent 50% discount from the list price). The page's \"512k\" is read as 524,288 tokens, so the tier starts at 524,289. Priority tier (1.5x) is not modelled.",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:58:15Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -70375,12 +70383,20 @@
         "value": {
           "inputPerMTokUsd": 0.3,
           "outputPerMTokUsd": 1.2,
-          "cacheReadPerMTokUsd": 0.06
+          "cacheReadPerMTokUsd": 0.06,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 524289,
+              "inputPerMTokUsd": 0.6,
+              "outputPerMTokUsd": 2.4,
+              "cacheReadPerMTokUsd": 0.12
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://platform.minimax.io/docs/guides/pricing-paygo — M3 STANDARD <=512K input, permanent 50% off: input $0.30, output $1.20, cache read $0.06 per million; >512K input: $0.60/$2.40/$0.12; priority tier 1.5x",
+        "sourceRef": "https://platform.minimax.io/docs/guides/pricing-paygo (read 2026-11-24) — MiniMax-M3 Standard: ≤512k input tokens $0.30 input / $0.06 cache read / $1.20 output; >512k input tokens $0.60 / $0.12 / $2.40 per 1M tokens (permanent 50% discount from the list price). The page's \"512k\" is read as 524,288 tokens, so the tier starts at 524,289. Priority tier (1.5x) is not modelled.",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:58:15Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "function_call"
