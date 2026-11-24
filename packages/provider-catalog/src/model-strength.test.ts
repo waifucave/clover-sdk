@@ -25,7 +25,7 @@ describe("each model's class, set by hand (model-strength.ts)", () => {
     const counts = { strong: 0, medium: 0, weak: 0 };
     for (const cls of Object.values(MODEL_STRENGTH)) counts[cls]++;
     const unsure = readFileSync(join(import.meta.dir, "model-strength.ts"), "utf8").split("\n").filter((l) => /^\s+".*":\s+"(strong|medium|weak)",\s+\/\/ unsure$/.test(l)).length;
-    expect({ models: Object.keys(MODEL_STRENGTH).length, ...counts, unsure }).toEqual({ models: 585, strong: 93, medium: 192, weak: 300, unsure: 245 });
+    expect({ models: Object.keys(MODEL_STRENGTH).length, ...counts, unsure }).toEqual({ models: 587, strong: 93, medium: 192, weak: 302, unsure: 247 });
   });
 
   test("every catalog row carries its canonical model's class, stamped at build", () => {

@@ -59211,6 +59211,128 @@
       "status": "candidate"
     },
     {
+      "key": "meta/muse-ember-1.0",
+      "providerId": "meta",
+      "upstreamId": "muse-ember-1.0",
+      "displayName": "Muse Ember 1.0",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Muse Ember, found via OpenRouter's public model list; every fact from Meta's own pages). https://dev.meta.ai/docs/muse-ember (read 2026-11-24): \"Muse Ember is the efficient execution model in the Muse family, built for high-volume, repeated work\" (sub-agent tasks, tool calls, routing, batch). Reasoning continuation and its scope are kept as on the Muse Spark 1.3 row of the same provider (the same API). Standard mode only: Meta does not train on its content.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — context window 1,048,576 tokens; https://dev.meta.ai/docs/models.md (read 2026-11-24): Muse Ember `muse-ember-1.0`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "audio",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — input text, image, video, audio and PDF; output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — output text only",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — \"works with computer use, image understanding, tool calling, structured output, and search grounding\"; API formats Responses, Chat Completions and Messages",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — tool calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/tool-calling — parallel_tool_calls true by default in Chat and Responses; multiple tool calls may be returned",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — structured output supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits — Muse Spark cached input has a separate price and prompt-prefix cache hits are documented",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — reasoning effort from \"minimal\" to \"max\", default \"max\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none",
+        "defaultEffort": "max"
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.1,
+          "outputPerMTokUsd": 0.5,
+          "cacheReadPerMTokUsd": 0.004,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200001,
+              "inputPerMTokUsd": 0.3,
+              "outputPerMTokUsd": 1.5,
+              "cacheReadPerMTokUsd": 0.012
+            }
+          ]
+        },
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits.md (read 2026-11-24) — Muse Ember (`muse-ember-1.0`, Standard only): up to 200K input tokens $0.10 input / $0.004 cached input / $0.50 output per 1M; over 200K input tokens $0.30 / $0.012 / $1.50, and \"A request over 200K input tokens is billed at the long-context rates for all of its tokens\". Contributor mode is not offered for Muse Ember.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "maxOutputTokens": {
+        "value": 524288,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — max output 524,288 tokens",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "meta/muse-spark-1.3-contributor",
       "providerId": "meta",
       "upstreamId": "muse-spark-1.3-contributor",
@@ -59742,6 +59864,134 @@
         "inference_geo"
       ],
       "status": "candidate"
+    },
+    {
+      "key": "meta-anthropic/muse-ember-1.0",
+      "providerId": "meta-anthropic",
+      "upstreamId": "muse-ember-1.0",
+      "displayName": "Muse Ember 1.0 (Anthropic format)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Muse Ember, found via OpenRouter's public model list; every fact from Meta's own pages). https://dev.meta.ai/docs/muse-ember (read 2026-11-24): \"Muse Ember is the efficient execution model in the Muse family, built for high-volume, repeated work\" (sub-agent tasks, tool calls, routing, batch). Reasoning continuation and its scope are kept as on the Muse Spark 1.3 row of the same provider (the same API). Standard mode only: Meta does not train on its content.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — context window 1,048,576 tokens; https://dev.meta.ai/docs/models.md (read 2026-11-24): Muse Ember `muse-ember-1.0`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "audio",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — input text, image, video, audio and PDF; output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — output text only",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — \"works with computer use, image understanding, tool calling, structured output, and search grounding\"; API formats Responses, Chat Completions and Messages",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — tool calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/protocols/messages — disable_parallel_tool_use true prevents parallel calls, implying parallel tool use normally available",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — structured output supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits — Muse Spark cached input has a separate price and prompt-prefix cache hits are documented",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://dev.meta.ai/docs/protocols/messages — Muse Spark always reasons; output_config.effort low/medium/high/xhigh; redacted_thinking encrypted blob can be replayed",
+          "confidence": "declared",
+          "observedAt": "2026-09-25T10:38:08Z"
+        },
+        "efforts": [],
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "meta-anthropic/muse-ember-1.0"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://dev.meta.ai/docs/protocols/messages (read 2026-10-29): assistant replay accepts \"thinking / redacted_thinking: prior reasoning. `redacted_thinking` carries the encrypted blob; replay it to preserve chain of thought\"; response \"reasoning maps to `thinking` (`encrypted_content` maps to `redacted_thinking`)\". The Anthropic adapter replays both block types verbatim on the producing model's next request. Why the domain is NARROW: the state is valid only for the model that produced it on this route -- a different model, or the same model at another provider (a different credential and account), never receives it, and the history renderer strips it there.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.1,
+          "outputPerMTokUsd": 0.5,
+          "cacheReadPerMTokUsd": 0.004,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200001,
+              "inputPerMTokUsd": 0.3,
+              "outputPerMTokUsd": 1.5,
+              "cacheReadPerMTokUsd": 0.012
+            }
+          ]
+        },
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits.md (read 2026-11-24) — Muse Ember (`muse-ember-1.0`, Standard only): up to 200K input tokens $0.10 input / $0.004 cached input / $0.50 output per 1M; over 200K input tokens $0.30 / $0.012 / $1.50, and \"A request over 200K input tokens is billed at the long-context rates for all of its tokens\". Contributor mode is not offered for Muse Ember.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [
+        "stop_sequences",
+        "top_k",
+        "container",
+        "inference_geo"
+      ],
+      "status": "candidate",
+      "maxOutputTokens": {
+        "value": 524288,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-ember (read 2026-11-24) — max output 524,288 tokens",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
     },
     {
       "key": "meta-anthropic/muse-spark-1.2",
@@ -66539,7 +66789,7 @@
       "upstreamId": "stealth/space-bunny-alpha",
       "displayName": "Space Bunny Alpha (via OpenRouter)",
       "aliases": [],
-      "$comment": "WS-27 (2026-09-27): a STEALTH model (https://openrouter.ai/stealth/space-bunny-alpha) -- its maker is not disclosed, so no family is stated and the row stamps `other`. Every field is OpenRouter's own public model entry. Reasoning is MANDATORY on this id (no `none` tier), so `efforts` lists only what the entry declares. Free for a limited time (`expiration_date: null`, no end date published): the zero price is dated. Data handling (OpenRouter's stealth-model terms: prompts and completions may be collected and shared with the model's provider for training) is on the provider row's risk reasons.",
+      "$comment": "WS-27 (2026-09-27): a STEALTH model (https://openrouter.ai/stealth/space-bunny-alpha) -- its maker is not disclosed, so no family is stated and the row stamps `other`. Every field is OpenRouter's own public model entry. Reasoning is MANDATORY on this id (no `none` tier), so `efforts` lists only what the entry declares. Free for a limited time (`expiration_date: null`, no end date published): the zero price is dated. Data handling (OpenRouter's stealth-model terms: prompts and completions may be collected and shared with the model's provider for training) is on the provider row's risk reasons. — 2026-11-24 refresh: `stealth/space-bunny-alpha` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -66578,7 +66828,7 @@
         "observedAt": "2026-09-27T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "contextWindow": {
         "value": 1000000,
         "source": "official-doc",
@@ -98888,6 +99138,119 @@
       }
     },
     {
+      "key": "openrouter/anthropic/claude-fable-5.2",
+      "providerId": "openrouter",
+      "upstreamId": "anthropic/claude-fable-5.2",
+      "displayName": "Claude Fable 5.2 (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug anthropic/claude-fable-5.2-20261109), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/anthropic/claude-fable-5.1` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): context_length 1000000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/anthropic/claude-fable-5.2"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8.0,
+          "outputPerMTokUsd": 40.0,
+          "cacheReadPerMTokUsd": 0.2,
+          "cacheWritePerMTokUsd": 10.0
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): OpenRouter's own current price, prompt 0.000008 / completion 0.00004 / input_cache_read 0.0000002 / input_cache_write 0.00001 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `anthropic/claude-fable-5.2` (read 2026-11-24): pricing.input_cache_read 0.0000002 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "openrouter/anthropic/claude-opus-5",
       "providerId": "openrouter",
       "upstreamId": "anthropic/claude-opus-5",
@@ -100074,6 +100437,123 @@
       }
     },
     {
+      "key": "openrouter/meta/muse-ember",
+      "providerId": "openrouter",
+      "upstreamId": "meta/muse-ember",
+      "displayName": "Muse Ember (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug meta/muse-ember-20261109), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/meta/muse-glimmer-30b` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62). canonicalModelId is set to muse-ember-1.0, Meta's own id for the model (https://dev.meta.ai/docs/models.md).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): architecture.input_modalities ['audio', 'file', 'image', 'text', 'video'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\", \"minimal\"], \"default_effort\": \"max\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low",
+          "minimal"
+        ],
+        "defaultEffort": "max",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/meta/muse-ember"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T22:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.1,
+          "outputPerMTokUsd": 0.5,
+          "cacheReadPerMTokUsd": 0.004,
+          "cacheWritePerMTokUsd": 0.125
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000001 / completion 0.0000005 / input_cache_read 0.000000004 / input_cache_write 0.000000125 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-ember` (read 2026-11-24): pricing.input_cache_read 0.000000004 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "muse-ember-1.0"
+    },
+    {
       "key": "openrouter/meta/muse-spark-1.3",
       "providerId": "openrouter",
       "upstreamId": "meta/muse-spark-1.3",
@@ -100488,6 +100968,119 @@
         "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6-astra` (read 2026-09-27): OpenRouter's own current price, prompt 0.00001 / completion 0.00005 / input_cache_read 0.000001 / input_cache_write 0.0000125 USD per token. Long-prompt overrides [{\"min_prompt_tokens\": 272000, \"prompt\": \"0.00002\", \"completion\": \"0.000075\", \"input_cache_read\": \"0.000002\", \"input_cache_write\": \"0.000025\"}] are NOT representable (ModelPricing has one rate per direction), so the base rate is stored and estimates UNDER-report that tier.",
         "confidence": "declared",
         "observedAt": "2026-09-27T00:00:00Z"
+      }
+    },
+    {
+      "key": "openrouter/openai/gpt-6.2-astra",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-astra",
+      "displayName": "GPT-6.2 Astra (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug openai/gpt-6.2-astra-20261117), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/openai/gpt-6-astra` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-astra"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8.0,
+          "outputPerMTokUsd": 40.0,
+          "cacheReadPerMTokUsd": 0.4,
+          "cacheWritePerMTokUsd": 10.0
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): OpenRouter's own current price, prompt 0.000008 / completion 0.00004 / input_cache_read 0.0000004 / input_cache_write 0.00001 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): pricing.input_cache_read 0.0000004 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -100907,6 +101500,119 @@
         "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-max-0902` (read 2026-09-27): OpenRouter's own current price, prompt 0.000002 / completion 0.000006 / input_cache_read 0.00000025 / input_cache_write 0.0000025 USD per token.",
         "confidence": "declared",
         "observedAt": "2026-09-27T00:00:00Z"
+      }
+    },
+    {
+      "key": "openrouter/qwen/qwen4-max",
+      "providerId": "openrouter",
+      "upstreamId": "qwen/qwen4-max",
+      "displayName": "Qwen4 Max (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug qwen/qwen4-max-20261115), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/qwen/qwen3.8-max-0902` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): context_length 1000000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): top_provider.max_completion_tokens 131072",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): architecture.input_modalities ['image', 'text', 'video']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): reasoning {\"mandatory\": false, \"supported_efforts\": [\"xhigh\", \"high\", \"low\", \"none\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "xhigh",
+          "high",
+          "low",
+          "none"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/qwen/qwen4-max"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.425,
+          "outputPerMTokUsd": 4.275,
+          "cacheReadPerMTokUsd": 0.07125,
+          "cacheWritePerMTokUsd": 1.78125
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): OpenRouter's own current price, prompt 0.000001425 / completion 0.000004275 / input_cache_read 0.00000007125 / input_cache_write 0.00000178125 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen4-max` (read 2026-11-24): pricing.input_cache_read 0.00000007125 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -108883,6 +109589,119 @@
       }
     },
     {
+      "key": "openrouter/openai/gpt-6.2-sol",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-sol",
+      "displayName": "GPT-6.2 Sol (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug openai/gpt-6.2-sol-20261117), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/openai/gpt-6.1-sol` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): pricing.input_cache_read 0.0000001 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-sol"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-24), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"). Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account).",
+          "confidence": "declared",
+          "observedAt": "2026-10-24T12:56:43Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2.0,
+          "outputPerMTokUsd": 10.0,
+          "cacheReadPerMTokUsd": 0.1,
+          "cacheWritePerMTokUsd": 2.5
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol` (read 2026-11-24): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000001 / input_cache_write 0.0000025 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "openrouter/meta/muse-spark-1.3-contributor",
       "providerId": "openrouter",
       "upstreamId": "meta/muse-spark-1.3-contributor",
@@ -115129,6 +115948,347 @@
       "status": "candidate"
     },
     {
+      "key": "openrouter/google/gemini-4-hydrogen",
+      "providerId": "openrouter",
+      "upstreamId": "google/gemini-4-hydrogen",
+      "displayName": "Gemini 4 Hydrogen (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug google/gemini-4-hydrogen-20261112), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/google/gemini-4-argon` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): architecture.input_modalities ['audio', 'file', 'image', 'text', 'video'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): pricing.input_cache_read 0.000000075 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/google/gemini-4-hydrogen"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.5,
+          "outputPerMTokUsd": 7.5,
+          "cacheReadPerMTokUsd": 0.075,
+          "cacheWritePerMTokUsd": 0.083333
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-hydrogen` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000015 / completion 0.0000075 / input_cache_read 0.000000075 / input_cache_write 0.0000000833333333333333 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "openrouter/google/gemini-4-neon",
+      "providerId": "openrouter",
+      "upstreamId": "google/gemini-4-neon",
+      "displayName": "Gemini 4 Neon (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug google/gemini-4-neon-20261118), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/google/gemini-4-argon` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): architecture.input_modalities ['audio', 'file', 'image', 'text', 'video'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): pricing.input_cache_read 0.00000015 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/google/gemini-4-neon"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 3.0,
+          "outputPerMTokUsd": 15.0,
+          "cacheReadPerMTokUsd": 0.15,
+          "cacheWritePerMTokUsd": 0.083333
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-neon` (read 2026-11-24): OpenRouter's own current price, prompt 0.000003 / completion 0.000015 / input_cache_read 0.00000015 / input_cache_write 0.0000000833333333333333 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "openrouter/google/gemini-4-carbon",
+      "providerId": "openrouter",
+      "upstreamId": "google/gemini-4-carbon",
+      "displayName": "Gemini 4 Carbon (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug google/gemini-4-carbon-20261110), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/google/gemini-4-argon` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): architecture.input_modalities ['audio', 'file', 'image', 'text', 'video'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): pricing.input_cache_read 0.0000001 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/google/gemini-4-carbon"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2.0,
+          "outputPerMTokUsd": 10.0,
+          "cacheReadPerMTokUsd": 0.1,
+          "cacheWritePerMTokUsd": 0.1875
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-4-carbon` (read 2026-11-24): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000001 / input_cache_write 0.0000001875 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
       "key": "openrouter/google/gemini-3.5-flash-lite",
       "providerId": "openrouter",
       "upstreamId": "google/gemini-3.5-flash-lite",
@@ -115673,7 +116833,7 @@
       "upstreamId": "x-ai/grok-build-0.1",
       "displayName": "Grok Build 0.1 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug x-ai/grok-build-0.1-20260520), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: xAI lists grok-build-0.1 on https://docs.x.ai/developers/models (read 2026-10-29); direct row xai/grok-build-0.1. OpenRouter's entry states reasoning mandatory with no effort levels.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug x-ai/grok-build-0.1-20260520), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: xAI lists grok-build-0.1 on https://docs.x.ai/developers/models (read 2026-10-29); direct row xai/grok-build-0.1. OpenRouter's entry states reasoning mandatory with no effort levels. — 2026-11-24 refresh: `x-ai/grok-build-0.1` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -115778,7 +116938,7 @@
         "observedAt": "2026-10-29T15:22:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "openrouter/meta/muse-spark-open",
@@ -118158,7 +119318,7 @@
       "upstreamId": "inception/mercury-3",
       "displayName": "Mercury 3 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inception/mercury-3-20261019), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Inception's models page (https://docs.inceptionlabs.ai/get-started/models, read 2026-10-29) — Mercury 3, 1M context, 131,072 max output, `reasoning_effort` instant/low/medium/high (default low); OpenRouter's own effort vocabulary for the route is recorded. Direct row inception/mercury-3.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inception/mercury-3-20261019), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Inception's models page (https://docs.inceptionlabs.ai/get-started/models, read 2026-10-29) — Mercury 3, 1M context, 131,072 max output, `reasoning_effort` instant/low/medium/high (default low); OpenRouter's own effort vocabulary for the route is recorded. Direct row inception/mercury-3. — 2026-11-24 refresh: `inception/mercury-3` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -118260,7 +119420,7 @@
         "observedAt": "2026-10-29T15:22:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "openrouter/inception/mercury-2.5",
@@ -118268,7 +119428,7 @@
       "upstreamId": "inception/mercury-2.5",
       "displayName": "Mercury 2.5 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inception/mercury-2.5-20260908), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Inception's models page lists Mercury 2.5 as \"Our previous-generation reasoning model\" (260K context, 65,536 max output), still served; direct row inception/mercury-2.5.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inception/mercury-2.5-20260908), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Inception's models page lists Mercury 2.5 as \"Our previous-generation reasoning model\" (260K context, 65,536 max output), still served; direct row inception/mercury-2.5. — 2026-11-24 refresh: `inception/mercury-2.5` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -118370,7 +119530,7 @@
         "observedAt": "2026-10-29T15:22:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "openrouter/meituan/longcat-2.0",
@@ -118378,7 +119538,7 @@
       "upstreamId": "meituan/longcat-2.0",
       "displayName": "LongCat 2.0 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug meituan/longcat-2.0-20260720), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: LongCat's pricing page (https://longcat.chat/platform/docs/pricing/longcat-2.0) lists LongCat-2.0; direct row longcat/LongCat-2.0. OpenRouter's context_length is 1048756 as published (not 1048576), recorded verbatim.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug meituan/longcat-2.0-20260720), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: LongCat's pricing page (https://longcat.chat/platform/docs/pricing/longcat-2.0) lists LongCat-2.0; direct row longcat/LongCat-2.0. OpenRouter's context_length is 1048756 as published (not 1048576), recorded verbatim. — 2026-11-24 refresh: `meituan/longcat-2.0` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -118467,7 +119627,7 @@
         "observedAt": "2026-10-29T15:22:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "openrouter/inclusionai/ling-3.1-flash",
@@ -118884,6 +120044,228 @@
       },
       "unsupportedParameters": [],
       "status": "candidate"
+    },
+    {
+      "key": "openrouter/tencent/hy4-flash",
+      "providerId": "openrouter",
+      "upstreamId": "tencent/hy4-flash",
+      "displayName": "Hunyuan Hy4 Flash (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug tencent/hy4-flash-20261116), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/tencent/hy3` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62). canonicalModelId is set to hy4-flash so the route joins the TokenHub Hy line (the hunyuan family), not `other`.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): top_provider.max_completion_tokens 65536",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): pricing.input_cache_read 0.0000000015 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy3` (read 2026-10-29): reasoning {\"mandatory\": false, \"default_enabled\": true, \"supported_efforts\": [\"high\", \"low\", \"none\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning` and `reasoning_effort`",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T15:22:00Z"
+        },
+        "efforts": [
+          "high",
+          "low",
+          "none"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/tencent/hy4-flash"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.035,
+          "outputPerMTokUsd": 0.1405,
+          "cacheReadPerMTokUsd": 0.0015
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000035 / completion 0.0000001405 / input_cache_read 0.0000000015 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4-flash"
+    },
+    {
+      "key": "openrouter/tencent/hy4",
+      "providerId": "openrouter",
+      "upstreamId": "tencent/hy4",
+      "displayName": "Hunyuan Hy4 (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug tencent/hy4-20261104), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/tencent/hy3` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62). canonicalModelId is set to hy4 so the route joins the TokenHub Hy line (the hunyuan family), not `other`.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): top_provider.max_completion_tokens 65536",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): pricing.input_cache_read 0.000000021 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): reasoning {\"mandatory\": false, \"supported_efforts\": [\"high\", \"low\", \"none\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "high",
+          "low",
+          "none"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/tencent/hy4"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.417,
+          "outputPerMTokUsd": 1.2505,
+          "cacheReadPerMTokUsd": 0.021
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy4` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000417 / completion 0.0000012505 / input_cache_read 0.000000021 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "hy4"
     },
     {
       "key": "openrouter/bytedance-seed/seed-2-1-turbo",
@@ -119729,7 +121111,7 @@
       "upstreamId": "liquid/lfm-2.5-2.6b",
       "displayName": "LFM2.5-2.6B (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug liquid/lfm-2.5-2.6b-20260811), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Liquid AI has no provider row in the catalog and its own docs were not read.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug liquid/lfm-2.5-2.6b-20260811), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Liquid AI has no provider row in the catalog and its own docs were not read. — 2026-11-24 refresh: `liquid/lfm-2.5-2.6b` is absent from OpenRouter's own public model list (https://openrouter.ai/api/v1/models, read 2026-11-24, 470 entries), so OpenRouter no longer serves it; status `deprecated` (the removal has already happened). The row stays so a stored tag still resolves.",
       "endpoints": [
         "chat"
       ],
@@ -119825,7 +121207,7 @@
         "observedAt": "2026-10-29T15:22:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "openrouter/ibm-granite/granite-4.2-8b",

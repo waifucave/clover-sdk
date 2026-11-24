@@ -226,6 +226,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "hunyuan-vision": "weak",
   "hy3": "medium", // unsure
   "hy4": "medium", // unsure
+  "hy4-flash": "weak", // unsure
   "hy4-flash-free": "medium", // unsure
   "hy4-preview": "medium", // unsure
   // ---- kimi
@@ -314,6 +315,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "mistral-small-4-119b-2603": "weak", // unsure
   "mistral-small-latest": "weak",
   // ---- muse
+  "muse-ember-1.0": "weak", // unsure
   "muse-glimmer-30b": "weak", // unsure
   "muse-spark-1.1": "medium", // unsure
   "muse-spark-1.2": "medium", // unsure
