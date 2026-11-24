@@ -122170,7 +122170,7 @@
         "observedAt": "2026-09-27T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "canonicalModelId": "adamo1139/hermes-3-llama-3.1-8b-fp8-dynamic",
       "modelFamily": "other",
       "strength": "weak"
@@ -122217,7 +122217,7 @@
         "observedAt": "2026-09-27T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "contextWindow": {
         "value": 256000,
         "source": "official-doc",
@@ -122271,7 +122271,7 @@
         "observedAt": "2026-09-27T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "contextWindow": {
         "value": 262144,
         "source": "official-doc",
@@ -122298,6 +122298,60 @@
         "continuation": "none"
       },
       "canonicalModelId": "qwen3.6-27b",
+      "modelFamily": "qwen",
+      "strength": "weak"
+    },
+    {
+      "key": "uncloseai/turboderp/Qwen3.8-27B-exl3",
+      "providerId": "uncloseai",
+      "upstreamId": "turboderp/Qwen3.8-27B-exl3",
+      "displayName": "Qwen3.8 27B EXL3 (free)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "inputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://uncloseai.com/inference.html (read 2026-11-24): the page documents text chat only for this model; no image input is described",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: upstream declares no output modality for ANY model, so `text` is Winter's inference for a chat registry, NOT an upstream statement. Stamped `source: winter-default` — the `EvidenceSource` member added for exactly this — so a reader filtering evidence BY SOURCE does not get a Winter guess wearing an upstream label. See PROVENANCE.md.",
+        "confidence": "unknown",
+        "observedAt": "2026-09-06T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "none",
+        "source": "official-doc",
+        "sourceRef": "https://uncloseai.com/inference.html (read 2026-11-24): the current vLLM launch command has neither --enable-auto-tool-choice nor --tool-call-parser (\"Off on purpose: ... the INT4-era --tool-call-parser: this entry passes no extra arguments\"); only the retired Hermes-3 command set --tool-call-parser hermes. vLLM (https://docs.vllm.ai/en/latest/features/tool_calling.html, read 2026-11-24): --enable-auto-tool-choice is what lets the model \"generate its own tool calls\", and without a loaded parser a required or named tool_choice returns HTTP 400. Whether an auto tool request returns tool_calls is unproven (live-call list).",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": false,
+        "source": "official-doc",
+        "sourceRef": "https://uncloseai.com/inference.html (read 2026-11-24): no tool-call parser is loaded (see toolCalling)",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "contextWindow": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://uncloseai.com/inference.html (read 2026-11-24): the launch command passes \"--max-model-len 65536\"; \"The 64k window is a hard floor: agent frameworks refuse endpoints under it.\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "qwen3.8-27b",
       "modelFamily": "qwen",
       "strength": "weak"
     },
