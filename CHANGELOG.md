@@ -4,6 +4,29 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.85
+
+### A host tool with a built-in's name is offered exactly as the host defined it
+
+- The runtime decorates only its own built-in tools per session: the `Agent` tool's `model` enum (the active model slots)
+  and its gate-aware schema, the `WebFetch`/`WebSearch` description and schema, the `Bash` sandbox section, and the
+  native `tool_search` marker on `ToolSearch`. A host's in-process tool that takes one of those names to replace the
+  built-in (`toolNames` + `shadowBuiltins`) is no longer decorated: before, a host `Agent` whose `model` is a free string
+  was offered the runtime's slot names as an enum, and with a gate off its default the host's schema was replaced
+  entirely. A host that renamed its field to avoid this can name it `model` again.
+
+### Catalog refresh 2026-11-24
+
+- New: **Gemini 4 Carbon, Neon and Hydrogen** (on `google`, `google-openai` and OpenRouter), **Qwen4 Max** on `alibaba`
+  and `alibaba-cn` (its reasoning replayed with `preserve_thinking`), **Muse Ember 1.0** and **Muse Wonder 1.0**,
+  **Mistral Large 4** (`mistral-large-latest` now points at it; Large 3 is deprecated), **Hy4 and Hy4 Flash** on the
+  TokenHub providers, and further OpenRouter rows (GPT-6.2 Sol and Astra, Claude Fable 5.2 and others).
+- Fixed: Alibaba Model Studio prices from the page's own USD figures; uncloseai is `blocked` (a key is now required);
+  the legacy Tencent Hunyuan platform is `blocked` (shut down 2026-09-30); OpenRouter rows absent from its list are
+  `deprecated`; `gpt-6-astra` on Codex defaults to `medium`; xAI's over-200K tiers; grok-build-0.1 is at end of life.
+- Families: `claude/haiku` -> `claude-haiku-5.5`, `gemini/flash` -> `gemini-3.8-flash`, `gemini/pro` ->
+  `gemini-4-carbon`, the `grok` slot -> 4.7.
+
 ## 0.0.84
 
 ### The runtime starts on Windows
