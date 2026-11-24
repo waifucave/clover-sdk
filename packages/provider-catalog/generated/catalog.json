@@ -34891,7 +34891,7 @@
           "xhigh",
           "max"
         ],
-        "defaultEffort": "low",
+        "defaultEffort": "medium",
         "continuation": "opaque-provider-state",
         "readableState": {
           "value": "summary",
