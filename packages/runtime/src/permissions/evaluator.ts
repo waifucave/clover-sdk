@@ -36,7 +36,7 @@
 //     was ALSO already deny-on-null (T7) — also unchanged by this ruling.
 import { resolve } from "node:path";
 import type { McpServerIdentity, PermissionBehavior, PermissionMode, PermissionUpdate, RuleSource, PermissionDecisionClassification } from "@waifucave/clover-agent-sdk";
-import { FILE_RULE_TOOLS, matchesRule, isRecognizedReadOnly, leadingWord, shellWords, stripWrappers, type ParsedRule } from "./grammar.ts";
+import { FILE_RULE_TOOLS, matchesRule, isRecognizedReadOnly, leadingWord, PARSE_LIMIT, shellWords, stripWrappers, type ParsedRule } from "./grammar.ts";
 import { checkSymlinkBothEnds, resolveRealTarget, resolveSymlinkTargetChain, resolveTargetPath } from "./paths.ts";
 import {
   fileRuleKindFor,
@@ -1720,9 +1720,25 @@ function isRuntimeBuiltinCall(call: PermissionCall): boolean {
 function isBashCallReadOnly(call: PermissionCall): boolean {
   if (call.toolName !== "Bash" || !isRuntimeBuiltinCall(call)) return false;
   const raw = call.input["command"];
-  if (typeof raw !== "string") return false;
+  return typeof raw === "string" && isReadOnlyShellCommand(raw);
+}
+
+/**
+ * Is `command` (a bash command line) read-only by the runtime's own rule -- the SAME decision the default-mode
+ * pre-approval makes for the built-in `Bash` tool? Every simple command it runs is judged, the bodies of command and
+ * process substitutions, subshells and unquoted here-documents included (`ls $(rm -rf ~)` is not a read); a
+ * redirection, a writer anywhere in a `;`/`&&`/`||`/`|` chain, or a dangerous assignment makes it not read-only; and
+ * anything it cannot parse (an unterminated quote, nesting too deep, over the parser's length limit) is NOT read-only.
+ * Time is bounded by that length limit.
+ *
+ * ADVISORY: it reads the text only. A host that uses it to skip its own approval for its own shell tool must still
+ * contain the command itself (its sandbox or fence): this says what the command line asks for, not what the shell
+ * that runs it will do.
+ */
+export function isReadOnlyShellCommand(command: string): boolean {
+  if (typeof command !== "string" || command.length > PARSE_LIMIT) return false;
   // EVERY command it runs, substitutions included: `ls $(rm -rf ~)` is not a read.
-  const parts = flattenSubcommands(raw);
+  const parts = flattenSubcommands(command);
   if (parts === null) return false; // unparseable -> WS-07 §3's own fallback: never recognized as safe
   return parts.length > 0 && parts.every((sub) => isRecognizedReadOnly(sub));
 }
