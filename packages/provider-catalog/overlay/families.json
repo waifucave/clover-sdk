@@ -46,11 +46,11 @@
         },
         {
           "name": "haiku",
-          "canonicalModelId": "claude-haiku-4.5",
+          "canonicalModelId": "claude-haiku-5.5",
           "description": "the fastest and cheapest; simple, well-specified tasks.",
           "reason": "Fourth: cost.",
-          "basis": "winter-curated",
-          "citation": "spec:WS-13c §9",
+          "basis": "vendor-doc",
+          "citation": "https://platform.claude.com/docs/en/about-claude/models/overview (read 2026-11-24): the current lineup is Fable 5.2, Opus 5.5, Sonnet 5.5 and Haiku 5.5 (`claude-haiku-5-5`, \"For high-volume, latency-sensitive tasks such as classification, extraction, and routing\", from $0.10/$0.50 per MTok); Claude Haiku 4.5 is listed under All models only. The open 2026-10-29 suggestion (claude/haiku -> haiku-5.5) is applied.",
           "status": "candidate"
         }
       ],
