@@ -115970,6 +115970,127 @@
       "status": "experimental"
     },
     {
+      "key": "vertex/gemini-4-hydrogen",
+      "providerId": "vertex",
+      "upstreamId": "gemini-4-hydrogen",
+      "displayName": "Gemini 4 Hydrogen (Vertex)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24, shaped as vertex/gemini-4-argon. https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions (read 2026-11-24): `gemini-4-hydrogen`, release date \"November 12, 2026\", \"No retirement date announced\", in \"Models available for shorter availability periods\". https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24): \"Model ID gemini-4-hydrogen\"; Context window 1,048,576 (\"a unified 1,048,576-token limit that includes both input and output tokens\"); Maximum output tokens 1,048,576, a single foreground segment \"up to 65,536 output tokens\"; text in and out, image/audio/video input only; function calling, thinking and structured output supported; implicit caching only. Thinking levels LOW, MEDIUM, HIGH (default), XHIGH, and the card says setting `thinking_budget` or `thinking_level=\"MINIMAL\"` returns HTTP 400. The GenerateContent adapter maps an effort to `thinkingConfig.thinkingBudget` only, so this row declares NO effort vocabulary: an effort is refused before the call instead of sent as a budget the endpoint rejects, and with none the model thinks at its default (high). When the adapter sends `thinkingLevel`, the efforts are low/medium/high/xhigh per the card. Unpriced, like every vertex row; status `experimental`, as on the Argon row.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen — \"Context window 1,048,576\" (read 2026-11-24).",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24) states \"Maximum output tokens 1,048,576\" (long decode) and a single foreground segment of \"up to 65,536 output tokens\"; this row records the synchronous cap the adapter can use.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen — Text input and output; Image / Audio / Video input only (read 2026-11-24)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "winter-default",
+        "sourceRef": "WINTER DEFAULT: this LLM adapter normalizes text only; image generation is not surfaced through its turn event contract.",
+        "confidence": "unknown"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen — Function calling Supported (read 2026-11-24)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen — Function calling Supported (read 2026-11-24)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen — Structured output Supported (read 2026-11-24)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24) — Thinking Supported; levels \"LOW, MEDIUM, HIGH (default), and XHIGH\"; setting `thinking_budget` returns HTTP 400, so no effort is declared while the adapter sends a budget (see the row's note)",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [],
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — thought summaries \"display intermediate reasoning steps\"; summary parts are marked `thought: true` and the underlying chain is not exposed.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinkingConfig.includeThoughts",
+            "values": [
+              "true"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"If true, the model will include its thoughts in the response ... If this is true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `vertex/gemini-2.5-pro`.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "vertex/gemini-4-hydrogen"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures (read 2026-10-29): Vertex returns `thoughtSignature` on response parts and documents passing it back on the exact part; \"Gemini 3 models enforce stricter validation ... If a required thought signature is not returned when using Gemini 3 models, the model will return a 400 error.\" https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): Gemini 2.5 signatures are optional to return, Gemini 3 and 4 mandatory on function calls. The GenerateContent adapter (shared by the Gemini API and Vertex) captures each signature and replays it on its part; same-model only -- a Vertex signature is never sent to the Gemini API or the reverse. Why the domain is NARROW: the state is valid only for the model that produced it on this route -- a different model, or the same model at another provider (a different credential and account), never receives it, and the history renderer strips it there.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "replayScope": {
+          "value": "current-turn",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"Strict validation is enforced for all function calls within the current turn. (Only current turn is required; we don't validate on previous turns)\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "toolLoopRequirement": {
+          "value": "hard-error",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        }
+      },
+      "unsupportedParameters": [],
+      "status": "experimental"
+    },
+    {
       "key": "alibaba/qwen3.8-2.4t-a95b",
       "providerId": "alibaba",
       "upstreamId": "qwen3.8-2.4t-a95b",
