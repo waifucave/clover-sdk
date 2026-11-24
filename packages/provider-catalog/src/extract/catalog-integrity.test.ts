@@ -308,6 +308,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "alibaba-cn/qwen3.8-2.4t-a95b",
       "alibaba-cn/qwen3.8-flash",
       "alibaba-cn/qwen3.8-max",
+      "alibaba-cn/qwen4-max",
       "alibaba/deepseek-v4-flash",
       "alibaba/deepseek-v4-pro",
       "alibaba/deepseek-v4.1-flash",
@@ -331,6 +332,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "alibaba/qwen3.8-flash",
       "alibaba/qwen3.8-max",
       "alibaba/qwen3.8-omni-flash",
+      "alibaba/qwen4-max",
       "ant-ling/Ling-2.6-1T",
       "ant-ling/Ling-2.6-flash",
       "ant-ling/Ling-3.0-flash",
@@ -2464,7 +2466,7 @@ describe("2026-10-29 continuation audit: each provider family's documented repla
   });
 
   test("Alibaba Model Studio / Qwen Cloud: preserve_thinking models and GLM-5.x are plaintext on the documented pay-as-you-go hosts, the same model alike on each; the rest, the Token Plan and the Coding Plan are none", () => {
-    const preserve = /^(qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
+    const preserve = /^(qwen4-max|qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
     const glm = /^glm-5(\.[123])?$/;
     // The parameter references document the standard compatible-mode base only; nothing is claimed on the plans' hosts.
     expectAll(reasoning("qwen-cloud-token-plan"), "none", 11);

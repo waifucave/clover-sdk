@@ -29332,6 +29332,138 @@
       }
     },
     {
+      "key": "alibaba/qwen4-max",
+      "providerId": "alibaba",
+      "upstreamId": "qwen4-max",
+      "displayName": "Qwen4 Max",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Qwen4 Max, found via OpenRouter's public model list; every fact from Alibaba Cloud's own pages). https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24): model calling ID \"qwen4-max\", no snapshot ids listed; deployments International (Singapore), China (Beijing) and United States (Virginia). Context cache: explicit and implicit (TTL 5m or 1h). Reasoning continuation is `plaintext`, replayed with preserve_thinking: the adapter's PRESERVE_THINKING_MODELS gains qwen4-max in the same change.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — Rate Limit & Context: context window \"1,000,000\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — input \"Text, Image, Video\", output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/vision-model — qwen3.8-max: text output",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — function calling supported, including parallel tool calls",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — function calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/text-generation-model — qwen3.8-max: Structured Outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing — qwen3.8-max: context caching discount/support listed",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — qwen4-max: \"Default value: `reasoning_effort=high`\"; minimal/low -> low, medium/high -> high, xhigh/max -> xhigh, none disables thinking; https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24): enable_thinking is true by default",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "none",
+          "low",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "plaintext",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "full-exposed",
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — reasoning returned in `reasoning_content`; https://www.alibabacloud.com/help/en/model-studio/deep-thinking",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "replayScope": {
+          "value": "all-turns",
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — preserve_thinking: \"Whether to concatenate the reasoning_content of assistant messages in the conversation history into the model input\"; \"Currently supported: qwen4-max, ...\" (default true for qwen4-max)",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "alibaba/qwen4-max"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) lists qwen4-max under preserve_thinking; narrowness: the reasoning is replayed only to this route.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.5,
+          "outputPerMTokUsd": 4.5
+        },
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — Singapore: input \"$1.5\", output \"$4.5\" per 1M tokens; https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) lists the same. The cache unit price is not shown (linked to the explicit cache billing page), so no cache rate is recorded.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — max output \"131,072\" non-thinking, \"262,144\" in thinking mode; the row records the non-thinking cap",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 991808,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — max input \"991,808\" (thinking mode \"983,616\")",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "alibaba/qwen3.7-max",
       "providerId": "alibaba",
       "upstreamId": "qwen3.7-max",
@@ -31991,6 +32123,138 @@
       }
     },
     {
+      "key": "alibaba-cn/qwen4-max",
+      "providerId": "alibaba-cn",
+      "upstreamId": "qwen4-max",
+      "displayName": "Qwen4 Max",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Qwen4 Max, found via OpenRouter's public model list; every fact from Alibaba Cloud's own pages). https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24): model calling ID \"qwen4-max\", no snapshot ids listed; deployments International (Singapore), China (Beijing) and United States (Virginia). Context cache: explicit and implicit (TTL 5m or 1h). Reasoning continuation is `plaintext`, replayed with preserve_thinking: the adapter's PRESERVE_THINKING_MODELS gains qwen4-max in the same change.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — Rate Limit & Context: context window \"1,000,000\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — input \"Text, Image, Video\", output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/vision-model — qwen3.8-max: text output",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — function calling supported, including parallel tool calls",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — function calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/text-generation-model — qwen3.8-max: Structured Outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing — qwen3.8-max: context caching discount/support listed",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T09:40:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — qwen4-max: \"Default value: `reasoning_effort=high`\"; minimal/low -> low, medium/high -> high, xhigh/max -> xhigh, none disables thinking; https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24): enable_thinking is true by default",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "none",
+          "low",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "plaintext",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "full-exposed",
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — reasoning returned in `reasoning_content`; https://www.alibabacloud.com/help/en/model-studio/deep-thinking",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "replayScope": {
+          "value": "all-turns",
+          "source": "official-doc",
+          "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) — preserve_thinking: \"Whether to concatenate the reasoning_content of assistant messages in the conversation history into the model input\"; \"Currently supported: qwen4-max, ...\" (default true for qwen4-max)",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "continuationDomain": {
+          "value": [
+            "alibaba-cn/qwen4-max"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions (read 2026-11-24) lists qwen4-max under preserve_thinking; narrowness: the reasoning is replayed only to this route.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.413,
+          "outputPerMTokUsd": 4.24
+        },
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — China (Beijing): input \"$1.413\", output \"$4.24\" per 1M tokens; https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) lists the same. The cache unit price is not shown (linked to the explicit cache billing page), so no cache rate is recorded.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — max output \"131,072\" non-thinking, \"262,144\" in thinking mode; the row records the non-thinking cap",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 991808,
+        "source": "official-doc",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/qwen4-max (read 2026-11-24) — max input \"991,808\" (thinking mode \"983,616\")",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "alibaba-cn/qwen3.7-max",
       "providerId": "alibaba-cn",
       "upstreamId": "qwen3.7-max",
@@ -32433,7 +32697,7 @@
       "upstreamId": "qwen3.8-flash",
       "displayName": "Qwen3.8 Flash",
       "aliases": [],
-      "$comment": "PAYG China (Beijing) OpenAI-compatible Chat base: https://dashscope.aliyuncs.com/compatible-mode/v1. Thinking off: reasoning_effort=none (maps to enable_thinking=false), also enable_thinking=false. Chat effort: reasoning_effort low/medium/xhigh; minimal maps low and high/max map xhigh. Do not combine reasoning_effort with thinking_budget. Responses uses reasoning.effort separately. — The vendor also serves this model on its OpenAI Responses endpoint (same host and key); `endpoints` lists only what this row's Chat Completions adapter routes, so `responses` is omitted until adapter-level Responses support lands (tracked follow-up, 2026-09-25). — 2026-09-25 audit fix (0.0.24): https://help.aliyun.com/zh/model-studio/model-pricing — Beijing CNY base-tier price and the catalog-wide 0.1490 USD/CNY rate (2026-09-25) cat34 (2026-09-27): maxOutputTokens filled from official evidence (see each field's sourceRef). — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone.",
+      "$comment": "PAYG China (Beijing) OpenAI-compatible Chat base: https://dashscope.aliyuncs.com/compatible-mode/v1. Thinking off: reasoning_effort=none (maps to enable_thinking=false), also enable_thinking=false. Chat effort: reasoning_effort low/medium/xhigh; minimal maps low and high/max map xhigh. Do not combine reasoning_effort with thinking_budget. Responses uses reasoning.effort separately. — The vendor also serves this model on its OpenAI Responses endpoint (same host and key); `endpoints` lists only what this row's Chat Completions adapter routes, so `responses` is omitted until adapter-level Responses support lands (tracked follow-up, 2026-09-25). — 2026-09-25 audit fix (0.0.24): https://help.aliyun.com/zh/model-studio/model-pricing — Beijing CNY base-tier price and the catalog-wide 0.1490 USD/CNY rate (2026-09-25) cat34 (2026-09-27): maxOutputTokens filled from official evidence (see each field's sourceRef). — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone. — 2026-11-24 refresh: price corrected from {'inputPerMTokUsd': 0.1192, 'outputPerMTokUsd': 0.4023} to the page's own USD figures (https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24)).",
       "endpoints": [
         "chat"
       ],
@@ -32534,13 +32798,13 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.1192,
-          "outputPerMTokUsd": 0.4023
+          "inputPerMTokUsd": 0.113,
+          "outputPerMTokUsd": 0.382
         },
         "source": "official-doc",
-        "sourceRef": "https://help.aliyun.com/zh/model-studio/model-pricing — Beijing CNY list, qwen3.8-flash, 0–1M input tier: ¥0.8 input/¥2.7 output per million; USD = CNY × 0.1490 (CNY→USD reference rate for 2026-09-25, https://www.investing.com/currencies/cny-usd-historical-data) — the one rate every CNY-derived price in this catalog uses; not an Alibaba FX quote.",
-        "confidence": "inferred",
-        "observedAt": "2026-09-25T12:31:56.381Z"
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) — China (Beijing) qwen3.8-flash, 0<Token≤1M: $0.113 input / $0.382 output per 1M tokens.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -114268,7 +114532,7 @@
       "upstreamId": "qwen3.8-2.4t-a95b",
       "displayName": "Qwen3.8 2.4T A95B (CN)",
       "aliases": [],
-      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope.aliyuncs.com/compatible-mode/v1 (PAYG China, Beijing). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.8-2.4t-a95b` (\"1M | 128k | 128k\" context / max output / thinking budget; function calling, built-in tools and structured output ✓); https://help.aliyun.com/zh/model-studio/deep-thinking: \"Qwen3.8 open-source series (Supports thinking mode only): qwen3.8-2.4t-a95b\" — so `none` (which this endpoint maps to enable_thinking=False) is NOT listed in `efforts`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. CNY converted at the catalog-wide 0.149. — 2026-10-29 continuation audit: continuation `none` (Model Studio documents taking `reasoning_content` back only through `preserve_thinking` (Qwen 3.6/3.7/3.8 and Kimi K2.6/K2.7 Code) and `clear_thinking` (GLM-5 to 5.3); this model is in neither list, and its own page says nothing about passing reasoning back (https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions, read 2026-10-29). The adapter sends nothing back for it).",
+      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope.aliyuncs.com/compatible-mode/v1 (PAYG China, Beijing). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.8-2.4t-a95b` (\"1M | 128k | 128k\" context / max output / thinking budget; function calling, built-in tools and structured output ✓); https://help.aliyun.com/zh/model-studio/deep-thinking: \"Qwen3.8 open-source series (Supports thinking mode only): qwen3.8-2.4t-a95b\" — so `none` (which this endpoint maps to enable_thinking=False) is NOT listed in `efforts`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. CNY converted at the catalog-wide 0.149. — 2026-10-29 continuation audit: continuation `none` (Model Studio documents taking `reasoning_content` back only through `preserve_thinking` (Qwen 3.6/3.7/3.8 and Kimi K2.6/K2.7 Code) and `clear_thinking` (GLM-5 to 5.3); this model is in neither list, and its own page says nothing about passing reasoning back (https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions, read 2026-10-29). The adapter sends nothing back for it). — 2026-11-24 refresh: price corrected from {'inputPerMTokUsd': 1.788, 'outputPerMTokUsd': 5.364} to the page's own USD figures (https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24)).",
       "endpoints": [
         "chat"
       ],
@@ -114351,13 +114615,13 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 1.788,
-          "outputPerMTokUsd": 5.364
+          "inputPerMTokUsd": 1.65,
+          "outputPerMTokUsd": 4.951
         },
         "source": "official-doc",
-        "sourceRef": "https://help.aliyun.com/zh/model-studio/model-pricing (read 2026-10-29) — 华北2（北京）qwen3.8-2.4t-a95b, 非思考和思考模式, 0<Token≤1M: 输入 12 元 / 输出 36 元 per million tokens; USD = CNY × 0.1490 (https://www.investing.com/currencies/cny-usd-historical-data).",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) — China (Beijing) qwen3.8-2.4t-a95b, 0<Token≤1M: $1.650 input / $4.951 output per 1M tokens.",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -114468,7 +114732,7 @@
       "upstreamId": "qwen3.7-flash",
       "displayName": "Qwen3.7 Flash",
       "aliases": [],
-      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope-intl.aliyuncs.com/compatible-mode/v1 (PAYG Singapore). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.7-flash` (\"1M | 64k | 256k\"; \"Currently equivalent to qwen3.7-flash-2026-07-15\"); https://www.alibabacloud.com/help/en/model-studio/deep-thinking: \"Qwen3.7 Flash series (Hybrid thinking mode, thinking mode enabled by default)\". Chat `reasoning_effort` is documented only for the Qwen3.8 ids and Omni (https://docs.qwencloud.com/api-reference/chat/openai-chat); Qwen3.7 takes `thinking_budget`, which this adapter cannot send as a generic effort — hence `efforts: []`, as on alibaba/qwen3.6-flash. Price is TIERED by the request's total input (\"All tokens in the request are billed at the unit price of the corresponding tier\"); the page's \"32K\"/\"256K\" are recorded as 32001/256001 (decimal reading, as this catalog reads Qwen's \"1M\" as 1,000,000) in `longContextTiers`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone.",
+      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope-intl.aliyuncs.com/compatible-mode/v1 (PAYG Singapore). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.7-flash` (\"1M | 64k | 256k\"; \"Currently equivalent to qwen3.7-flash-2026-07-15\"); https://www.alibabacloud.com/help/en/model-studio/deep-thinking: \"Qwen3.7 Flash series (Hybrid thinking mode, thinking mode enabled by default)\". Chat `reasoning_effort` is documented only for the Qwen3.8 ids and Omni (https://docs.qwencloud.com/api-reference/chat/openai-chat); Qwen3.7 takes `thinking_budget`, which this adapter cannot send as a generic effort — hence `efforts: []`, as on alibaba/qwen3.6-flash. Price is TIERED by the request's total input (\"All tokens in the request are billed at the unit price of the corresponding tier\"); the page's \"32K\"/\"256K\" are recorded as 32001/256001 (decimal reading, as this catalog reads Qwen's \"1M\" as 1,000,000) in `longContextTiers`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone. — 2026-11-24 refresh: price corrected from {'inputPerMTokUsd': 0.03, 'outputPerMTokUsd': 0.13, 'longContextTiers': [{'minPromptTokens': 32001, 'inputPerMTokUsd': 0.1, 'outputPerMTokUsd': 0.4}, {'minPromptTokens': 256001, 'inputPerMTokUsd': 0.2, 'outputPerMTokUsd': 0.8}]} to the page's own USD figures (https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24)).",
       "endpoints": [
         "chat"
       ],
@@ -114573,21 +114837,21 @@
           "outputPerMTokUsd": 0.13,
           "longContextTiers": [
             {
-              "minPromptTokens": 32001,
+              "minPromptTokens": 32769,
               "inputPerMTokUsd": 0.1,
               "outputPerMTokUsd": 0.4
             },
             {
-              "minPromptTokens": 256001,
+              "minPromptTokens": 262145,
               "inputPerMTokUsd": 0.2,
               "outputPerMTokUsd": 0.8
             }
           ]
         },
         "source": "official-doc",
-        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-10-29) — Singapore, qwen3.7-flash (\"Currently equivalent to qwen3.7-flash-2026-07-15\"), International: 0<Token≤32K $0.030 / $0.130; 32K<Token≤256K $0.100 / $0.400; 256K<Token≤1M $0.200 / $0.800 (input / output per 1 million tokens).",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) — International (Singapore) qwen3.7-flash: 0<Token≤32K $0.030 / $0.130; 32K<Token≤256K $0.100 / $0.400; 256K<Token≤1M $0.200 / $0.800 per 1M tokens. The page's \"256K\" and \"32K\" are read as 262,144 and 32,768 tokens (Model Studio's own spelling of a 256K context is 262,144), so the tiers start at 262,145 and 32,769.",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -114598,7 +114862,7 @@
       "upstreamId": "qwen3.7-flash",
       "displayName": "Qwen3.7 Flash (CN)",
       "aliases": [],
-      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope.aliyuncs.com/compatible-mode/v1 (PAYG China, Beijing). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.7-flash` (\"1M | 64k | 256k\"; \"Currently equivalent to qwen3.7-flash-2026-07-15\"); https://help.aliyun.com/zh/model-studio/deep-thinking: \"Qwen3.7 Flash series (Hybrid thinking mode, thinking mode enabled by default)\". Chat `reasoning_effort` is documented only for the Qwen3.8 ids and Omni (https://docs.qwencloud.com/api-reference/chat/openai-chat); Qwen3.7 takes `thinking_budget`, which this adapter cannot send as a generic effort — hence `efforts: []`, as on alibaba/qwen3.6-flash. Price is TIERED by the request's total input (\"All tokens in the request are billed at the unit price of the corresponding tier\"); the page's \"32K\"/\"256K\" are recorded as 32001/256001 (decimal reading, as this catalog reads Qwen's \"1M\" as 1,000,000) in `longContextTiers`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. CNY converted at the catalog-wide 0.149. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone.",
+      "$comment": "Winter-authored 2026-10-29 (catalog refresh: a current Qwen model this provider lacked). Chat base https://dashscope.aliyuncs.com/compatible-mode/v1 (PAYG China, Beijing). https://docs.qwencloud.com/developer-guides/getting-started/text-generation-models lists `qwen3.7-flash` (\"1M | 64k | 256k\"; \"Currently equivalent to qwen3.7-flash-2026-07-15\"); https://help.aliyun.com/zh/model-studio/deep-thinking: \"Qwen3.7 Flash series (Hybrid thinking mode, thinking mode enabled by default)\". Chat `reasoning_effort` is documented only for the Qwen3.8 ids and Omni (https://docs.qwencloud.com/api-reference/chat/openai-chat); Qwen3.7 takes `thinking_budget`, which this adapter cannot send as a generic effort — hence `efforts: []`, as on alibaba/qwen3.6-flash. Price is TIERED by the request's total input (\"All tokens in the request are billed at the unit price of the corresponding tier\"); the page's \"32K\"/\"256K\" are recorded as 32001/256001 (decimal reading, as this catalog reads Qwen's \"1M\" as 1,000,000) in `longContextTiers`. Max output is recorded as stated (\"128k\" -> 128000, \"64k\" -> 64000), as qwen-cloud/qwen3.8-max reads \"128k\". The vendor also serves these models on its Responses endpoint; `endpoints` lists only what this row's Chat Completions adapter routes. No cache price is published on the price table (only a \"context caching discount\" link), so no cache rate is recorded. CNY converted at the catalog-wide 0.149. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Model Studio reads it back with `preserve_thinking: true`, which the adapter sends for this row). Domain: this route alone. — 2026-11-24 refresh: price corrected from {'inputPerMTokUsd': 0.0298, 'outputPerMTokUsd': 0.1192, 'longContextTiers': [{'minPromptTokens': 32001, 'inputPerMTokUsd': 0.0894, 'outputPerMTokUsd': 0.3576}, {'minPromptTokens': 256001, 'inputPerMTokUsd': 0.1788, 'outputPerMTokUsd': 0.7152}]} to the page's own USD figures (https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24)).",
       "endpoints": [
         "chat"
       ],
@@ -114699,25 +114963,25 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.0298,
-          "outputPerMTokUsd": 0.1192,
+          "inputPerMTokUsd": 0.028,
+          "outputPerMTokUsd": 0.11,
           "longContextTiers": [
             {
-              "minPromptTokens": 32001,
-              "inputPerMTokUsd": 0.0894,
-              "outputPerMTokUsd": 0.3576
+              "minPromptTokens": 32769,
+              "inputPerMTokUsd": 0.083,
+              "outputPerMTokUsd": 0.33
             },
             {
-              "minPromptTokens": 256001,
-              "inputPerMTokUsd": 0.1788,
-              "outputPerMTokUsd": 0.7152
+              "minPromptTokens": 262145,
+              "inputPerMTokUsd": 0.165,
+              "outputPerMTokUsd": 0.66
             }
           ]
         },
         "source": "official-doc",
-        "sourceRef": "https://help.aliyun.com/zh/model-studio/model-pricing (read 2026-10-29) — 华北2（北京）qwen3.7-flash (当前能力等同于 qwen3.7-flash-2026-07-15), 非思考和思考模式: 0<Token≤32K 0.2 / 0.8 元; 32K<Token≤256K 0.6 / 2.4 元; 256K<Token≤1M 1.2 / 4.8 元 (input / output per million); USD = CNY × 0.1490.",
+        "sourceRef": "https://www.alibabacloud.com/help/en/model-studio/model-pricing (read 2026-11-24) — China (Beijing) qwen3.7-flash: 0<Token≤32K $0.028 / $0.110; 32K<Token≤256K $0.083 / $0.330; 256K<Token≤1M $0.165 / $0.660 per 1M tokens. The page's \"256K\" and \"32K\" are read as 262,144 and 32,768 tokens (Model Studio's own spelling of a 256K context is 262,144), so the tiers start at 262,145 and 32,769.",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
