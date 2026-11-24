@@ -39,7 +39,7 @@
 //      is looked up from the assistant `tool_use` that minted the id. A lookup that fails is a
 //      typed error, never a dropped result -- a silently missing tool response is indistinguishable
 //      to the model from a tool that was never called.
-import type { WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
+import type { GeminiThinkingLevel, WinterCatalog, WinterModelDescriptor } from "@waifucave/clover-provider-catalog";
 import { loadCatalog } from "@waifucave/clover-provider-catalog";
 import { boundedFetch, ProviderRequestError } from "../../http.ts";
 import { normalizeHttpError, normalizeThrown } from "../../errors.ts";
@@ -430,7 +430,20 @@ export function findDescriptor(catalog: WinterCatalog, providerId: string, model
   return catalog.models.find((m) => m.providerId === providerId && (m.upstreamId === model || m.key === model || m.aliases.includes(model)));
 }
 
-export type GoogleEffortMapping = { ok: true; value: { thinkingBudget: number } } | { ok: false; reason: string };
+export type GoogleEffortMapping = { ok: true; value: { thinkingBudget: number } | { thinkingLevel: GeminiThinkingLevel } } | { ok: false; reason: string };
+
+/**
+ * The row's documented named-level form, or `undefined` for the budget ladder. The row SAYS which form its thinking
+ * control takes (`reasoning.effortRequest`, `thinkingConfig.thinkingLevel` + `levels`); the adapter never guesses it
+ * from the model's name. Vertex, read 2026-11-24 (https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking):
+ * "Setting `thinking_budget` on Gemini 4 models returns a `400: INVALID_ARGUMENT` error" and "Specifying both
+ * `thinking_level` and `thinking_budget` in the same request returns an error" -- so a level row is sent a level and
+ * nothing else.
+ */
+function levelForm(descriptor: WinterModelDescriptor | undefined): Readonly<Record<string, GeminiThinkingLevel>> | undefined {
+  const declared = descriptor?.reasoning?.effortRequest?.value;
+  return declared?.field === "thinkingConfig.thinkingLevel" ? declared.levels : undefined;
+}
 
 /** Effort -> the model's VERIFIED vocabulary, or a refusal (WS-13 §8.2). Identical rule to the Anthropic adapter's; the LADDER differs because the families' budgets do. */
 export function mapGoogleEffort(effort: TurnRequest["effort"], descriptor: WinterModelDescriptor | undefined): GoogleEffortMapping {
@@ -451,12 +464,19 @@ export function mapGoogleEffort(effort: TurnRequest["effort"], descriptor: Winte
     }
     tier = effort;
   }
+  const levels = levelForm(descriptor);
+  if (levels !== undefined) {
+    const level = levels[tier];
+    if (level === undefined) return { ok: false, reason: `model "${descriptor.key}" declares effort tier "${tier}" but no thinking level for it` };
+    return { ok: true, value: { thinkingLevel: level } };
+  }
   const budget = EFFORT_THINKING_BUDGET[tier];
   if (budget === undefined) return { ok: false, reason: `model "${descriptor.key}" declares effort tier "${tier}", which this adapter has no verified thinking budget for` };
   return { ok: true, value: { thinkingBudget: budget } };
 }
 
-type WireThinkingConfig = { thinkingBudget?: number; includeThoughts?: boolean };
+/** Never both a budget and a level (see `levelForm`). */
+type WireThinkingConfig = { thinkingBudget?: number; thinkingLevel?: GeminiThinkingLevel; includeThoughts?: boolean };
 
 /**
  * The `thinkingConfig`, from `TurnRequest.thinking`, `TurnRequest.effort` and `requestSummary`.
@@ -478,6 +498,15 @@ function buildThinkingConfig(req: TurnRequest, descriptor: WinterModelDescriptor
           descriptor === undefined
             ? `thinking was requested for "${req.model}", which is not in the catalog; Winter refuses an unverified reasoning request rather than sending it and hoping`
             : `model "${descriptor.key}" does not declare reasoning support, so a thinking config cannot be honoured`,
+      };
+    }
+    // A LEVEL row takes no budget at all, and documents no "off" level ("MINIMAL ... Not supported on Gemini 4
+    // models", Vertex and AI Studio, 2026-11-24): `disabled` and a budgeted `enabled` have no wire form there and are
+    // refused rather than sent as a 400. `adaptive` (the model decides) is the absence of a config, as everywhere.
+    if (levelForm(descriptor) !== undefined && req.thinking.type !== "adaptive") {
+      return {
+        ok: false,
+        reason: `model "${descriptor!.key}" takes its thinking as a named level (thinkingConfig.thinkingLevel), so "${req.thinking.type}" thinking, which is a token budget on this family, has no form it accepts; request an effort instead`,
       };
     }
     if (req.thinking.type === "disabled") config = { thinkingBudget: 0 };
@@ -505,7 +534,11 @@ function buildThinkingConfig(req: TurnRequest, descriptor: WinterModelDescriptor
     const mapped = mapGoogleEffort(req.effort, descriptor);
     if (!mapped.ok) return { ok: false, reason: mapped.reason };
     if (!supported) return { ok: false, reason: `model "${descriptor?.key ?? req.model}" does not declare reasoning support, so an effort level cannot be mapped onto its thinking budget` };
-    config = config ?? mapped.value;
+    // An explicit `thinking` wins, as before. On a LEVEL row the only `thinking` that reaches here is `adaptive` ({}),
+    // and the effort's level is what that row is steered by, so it fills it: still one form, never a budget beside a
+    // level. A budget row keeps its old precedence unchanged.
+    const levelRow = levelForm(descriptor) !== undefined;
+    config = config === undefined || (levelRow && Object.keys(config).length === 0) ? mapped.value : config;
   }
 
   if (req.requestSummary === true && config !== undefined && config.thinkingBudget !== 0) {
@@ -520,7 +553,8 @@ function buildThinkingConfig(req: TurnRequest, descriptor: WinterModelDescriptor
 }
 
 /** `purpose` exists for the same reason as the Anthropic adapter's (Minor 4): a COUNT has no output allowance, so it is not subject to a generation ceiling. */
-function buildRequestBody(req: TurnRequest, descriptor: WinterModelDescriptor | undefined, opts: GoogleAdapterOptions, ctx: ProviderContext, purpose: "generate" | "count" = "generate"): Record<string, unknown> {
+/** The `generateContent` body for one turn (both transports send it as built). Exported for the request-shape tests. */
+export function buildRequestBody(req: TurnRequest, descriptor: WinterModelDescriptor | undefined, opts: GoogleAdapterOptions, ctx: ProviderContext, purpose: "generate" | "count" = "generate"): Record<string, unknown> {
   if (req.tools !== undefined && req.tools.length > 0 && descriptor !== undefined && descriptor.toolCalling.value !== "native") {
     throw capabilityRefusal(
       `model "${descriptor.key}" declares tool calling "${descriptor.toolCalling.value}", so the ${req.tools.length} advertised tool(s) cannot be sent natively; Winter fails capability negotiation rather than silently dropping them (WS-13 §8.1)`,

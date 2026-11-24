@@ -664,7 +664,9 @@ export function mapAnthropicEffort(effort: TurnRequest["effort"], descriptor: Wi
     tier = effort;
   }
 
-  const effortRequest = descriptor.reasoning?.effortRequest?.value;
+  // This dialect's own form only (`output_config.effort`); the Gemini level form is the Google adapter's.
+  const declared = descriptor.reasoning?.effortRequest?.value;
+  const effortRequest = declared?.field === "output_config.effort" ? declared : undefined;
   const rejectsAdaptive = descriptor.unsupportedParameters.includes("thinking.type.adaptive");
   if (effortRequest !== undefined && !rejectsAdaptive) {
     // `output_config.effort` takes the tier directly; the model steers its own adaptive thinking, so

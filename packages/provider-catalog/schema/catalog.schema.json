@@ -54,7 +54,15 @@
           "type": "object",
           "additionalProperties": false,
           "required": ["field"],
-          "properties": { "field": { "enum": ["output_config.effort"] } }
+          "properties": {
+            "field": { "enum": ["output_config.effort", "thinkingConfig.thinkingLevel"] },
+            "levels": {
+              "type": "object",
+              "description": "For `thinkingConfig.thinkingLevel` only (and required there): each of the row's `efforts` -> the documented `ThinkingLevel` enum name sent for it.",
+              "minProperties": 1,
+              "additionalProperties": { "enum": ["MINIMAL", "LOW", "MEDIUM", "HIGH", "XHIGH"] }
+            }
+          }
         }
       }
     },

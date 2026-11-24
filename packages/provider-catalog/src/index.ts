@@ -6,10 +6,12 @@
 export type {
   CapabilityEvidence,
   CatalogValidationResult,
+  EffortRequest,
   EvidenceConfidence,
   EvidenceSource,
   // WS-13c §1/§2 (P6.6 spine): the family layer's data shapes.
   FamilySlot,
+  GeminiThinkingLevel,
   ModelFamilyDescriptor,
   ModelPricing,
   ModelStrength,
