@@ -365,21 +365,12 @@
       ],
       "slots": [
         {
-          "name": "grok-4.6",
-          "canonicalModelId": "grok-4.6",
-          "description": "the stronger Grok, for reasoning-heavy work.",
+          "name": "grok-4.7",
+          "canonicalModelId": "grok-4.7",
+          "description": "xAI's frontier model for coding, agentic tasks and knowledge work.",
           "reason": "First: strength.",
-          "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 D-Grok (user: \"grok 4.6 and grok build 01 as like stronger/implementer\") via §9; served by `xai-oauth` from the start, and now also by the token-priced `xai` provider — VERIFIED on https://docs.x.ai/docs/models (retrieved 2026-09-07), which lists `grok-4.6` in its plain Text API pricing table (P6.6 Task 1b's owed `xai/grok-4.6` row). The canonicalModelId does not change — both rows already shared `grok-4.6` — so this is a servability widening, not a repoint. NOT pinned to a provider — §4's ordering decides.",
-          "status": "candidate"
-        },
-        {
-          "name": "grok-build",
-          "canonicalModelId": "grok-build-0.1",
-          "description": "the implementer — xAI's coding-tuned build model.",
-          "reason": "Second: implementation.",
-          "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 D-Grok (user: \"grok 4.6 and grok build 01 as like stronger/implementer\") via §9",
+          "basis": "vendor-doc",
+          "citation": "https://docs.x.ai/docs/release-notes.md (read 2026-11-24): \"Grok 4.7, SpaceXSI's frontier model for coding, agentic tasks, and knowledge work, is now available\" (September 2026), 500k context, the same price as Grok 4.6 (https://docs.x.ai/docs/models).",
           "status": "candidate"
         }
       ],

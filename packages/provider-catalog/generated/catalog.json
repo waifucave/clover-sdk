@@ -6800,8 +6800,10 @@
         "sourcePaths": []
       },
       "risk": {
-        "class": "review-required",
+        "class": "blocked",
         "reasons": [
+          "Keyless access closed on or before 2026-11-24: a keyless request to POST https://hermes.ai.unturf.com/v1/chat/completions (model turboderp/Qwen3.8-27B-exl3, one dummy tool) answered HTTP 401 on 2026-11-24 about 18:50 UTC: {\"error\": {\"message\": \"The public beta is closed for now. This endpoint needs an API key, and key registration is closed; check uncloseai.com for when it reopens.\", \"type\": \"public_beta_closed\", \"code\": 401}} (one live call made by the MOSS controller).",
+          "Privacy (https://uncloseai.com/privacy-policy.html and https://uncloseai.com/terms-of-use.html, both last updated 2026-10-18, read 2026-11-24): IP addresses and request metadata are kept in access logs for up to one year; traffic, including prompts, is subject to automated scanning and random sampling, and captured content is kept as long as needed to act on abuse and may be disclosed when required by law or to report abuse; no training use is stated; operated from the United States with no named legal entity.",
           "hobby-grade: audit §5.1 records no availability guarantee, and the ToU's one real constraint is not degrading service — a host must rate-limit conservatively",
           "the ToU prohibits developing \"competing machine learning services without attribution\", which is a term a host embedding this provider should read before shipping"
         ]
@@ -55235,14 +55237,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://ai.google.dev/gemini-api/docs/pricing (read 2026-10-29) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: Input price \"$2.00 through November 30, 2026. $4.00 starting December 1, 2026.\"; Output price (including thinking tokens) \"$10.00 through November 30, 2026. $20.00 starting December 1, 2026.\"; Context caching price \"$0.10 through November 30, 2026. $0.20 starting December 1, 2026. Implicit caching only (explicit caching is not supported).\" TIERED IN TIME, which `ModelPricing` cannot express: the CURRENT (through 2026-11-30) introductory rate is recorded, so from 2026-12-01 this row UNDER-reports by exactly 2x on every field until it is re-priced — the same disclosed gap as google/gemini-3.8-flash. No long-context tier is published for this model (flat across the 1M window); \"Gemini 4 Argon is not available on the Free tier.\" Batch/Flex (50%) and Priority are separate rate cards and are not folded in; no cache-write rate is published, so that key is absent.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -55364,12 +55366,12 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
         "observedAt": "2026-11-24T00:00:00Z"
       },
@@ -57199,14 +57201,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://ai.google.dev/gemini-api/docs/pricing (read 2026-10-29) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: Input price \"$2.00 through November 30, 2026. $4.00 starting December 1, 2026.\"; Output price (including thinking tokens) \"$10.00 through November 30, 2026. $20.00 starting December 1, 2026.\"; Context caching price \"$0.10 through November 30, 2026. $0.20 starting December 1, 2026. Implicit caching only (explicit caching is not supported).\" TIERED IN TIME, which `ModelPricing` cannot express: the CURRENT (through 2026-11-30) introductory rate is recorded, so from 2026-12-01 this row UNDER-reports by exactly 2x on every field until it is re-priced — the same disclosed gap as google/gemini-3.8-flash. No long-context tier is published for this model (flat across the 1M window); \"Gemini 4 Argon is not available on the Free tier.\" Batch/Flex (50%) and Priority are separate rate cards and are not folded in; no cache-write rate is published, so that key is absent.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "candidate_count"
@@ -57333,12 +57335,12 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
         "observedAt": "2026-11-24T00:00:00Z"
       },
@@ -64842,6 +64844,115 @@
       "strength": "medium"
     },
     {
+      "key": "meta/muse-wonder-1.0",
+      "providerId": "meta",
+      "upstreamId": "muse-wonder-1.0",
+      "displayName": "Muse Wonder 1.0 (preview)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — context window 1,048,576 tokens",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "audio",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — input text, image, video, audio and PDF; output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/models — muse-spark-1.3 table lists text output",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tool calling supported, in parallel",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tool calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tools called in parallel",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/structured-output — Muse Spark example uses response_format json_schema; family capability",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits — Muse Spark cached input has a separate price and prompt-prefix cache hits are documented",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — reasoning effort from \"minimal\" to \"max\", default \"max\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none",
+        "defaultEffort": "max"
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
+        },
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits.md (read 2026-11-24) — Muse Wonder (`muse-wonder-1.0`), Standard mode: $4.00 input / $0.20 cached input / $20.00 output per 1M; Contributor mode not available",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "muse-wonder-1.0",
+      "modelFamily": "muse",
+      "strength": "strong"
+    },
+    {
       "key": "minimax-anthropic/MiniMax-M2",
       "providerId": "minimax-anthropic",
       "upstreamId": "MiniMax-M2",
@@ -71113,20 +71224,20 @@
       "strength": "medium"
     },
     {
-      "key": "mistral/mistral-large-latest",
+      "key": "mistral/mistral-large-4",
       "providerId": "mistral",
-      "upstreamId": "mistral-large-latest",
-      "displayName": "Mistral Large 3",
+      "upstreamId": "mistral-large-4",
+      "displayName": "Mistral Large 4",
       "aliases": [],
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 256000,
+        "value": 1000000,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 model card lists 256k context; https://docs.mistral.ai/vibe/code/cli/configuration lists mistral-large-latest for this model",
-        "confidence": "inferred",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"contextWindow\": 1000000; Context 1M",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "inputModalities": {
         "value": [
@@ -71134,9 +71245,9 @@
           "image"
         ],
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/studio/conversations/vision — mistral-large-2512 model is multimodal / has vision input for chat; text also supported",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"inputs\": [\"text\", \"image\"]; outputs reasoning, text",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "outputModalities": {
         "value": [
@@ -71150,16 +71261,16 @@
       "toolCalling": {
         "value": "native",
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Function Calling",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "nativeTools": {
         "value": true,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Function Calling",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "parallelTools": {
         "value": true,
@@ -71171,9 +71282,96 @@
       "structuredOutput": {
         "value": true,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Structured Outputs",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include structured-outputs",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/studio/conversations/advanced/prompt-caching — Chat API supports prompt_cache_key; cache hits on shared prefixes are charged at 10% of standard input",
+        "confidence": "inferred",
+        "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.7,
+          "outputPerMTokUsd": 2.1,
+          "cacheReadPerMTokUsd": 0.07
+        },
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — Input $0.7, Cached input $0.07, Output $2.1 per M tokens (USD)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "mistral-large-4",
+      "modelFamily": "mistral",
+      "strength": "strong"
+    },
+    {
+      "key": "mistral/mistral-large-latest",
+      "providerId": "mistral",
+      "upstreamId": "mistral-large-latest",
+      "displayName": "Mistral Large (latest: Large 4)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"contextWindow\": 1000000; Context 1M",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"inputs\": [\"text\", \"image\"]; outputs reasoning, text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 chat text output is shown",
         "confidence": "declared",
         "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/studio/conversations/function-calling — parallel_tool_calls true is default for Mistral function calling; applied to this function-calling model",
+        "confidence": "inferred",
+        "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include structured-outputs",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "promptCaching": {
         "value": true,
@@ -71184,20 +71382,20 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.5,
-          "outputPerMTokUsd": 1.5,
-          "cacheReadPerMTokUsd": 0.05
+          "inputPerMTokUsd": 0.7,
+          "outputPerMTokUsd": 2.1,
+          "cacheReadPerMTokUsd": 0.07
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/inference/pricing — current Mistral Standard regional-inference USD rates, per million tokens (retrieved 2026-09-19). Batch and Priority are distinct rate cards; the published page has no cache-write rate.",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — Input $0.7, Cached input $0.07, Output $2.1 per M tokens (USD)",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
-      "canonicalModelId": "mistral-large-latest",
+      "canonicalModelId": "mistral-large-4",
       "modelFamily": "mistral",
-      "strength": "medium"
+      "strength": "strong"
     },
     {
       "key": "mistral/mistral-medium-3-5",
@@ -92133,14 +92331,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.9483,
-          "outputPerMTokUsd": 1.8966,
-          "cacheReadPerMTokUsd": 0.079025
+          "inputPerMTokUsd": 1.28,
+          "outputPerMTokUsd": 2.56,
+          "cacheReadPerMTokUsd": 0.108
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro` (read 2026-09-28): prompt 0.0000009483 / completion 0.0000018966 / input_cache_read 0.000000079025 USD per token — re-read at controller review: price drift since 2026-09-27",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000128 / completion 0.00000256 / input_cache_read 0.000000108 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-28T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "deepseek-v4-pro",
       "modelFamily": "deepseek",
@@ -92243,14 +92441,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 1.32,
-          "outputPerMTokUsd": 3.96,
-          "cacheReadPerMTokUsd": 0.044
+          "inputPerMTokUsd": 0.111,
+          "outputPerMTokUsd": 4.44,
+          "cacheReadPerMTokUsd": 0.097
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro-0813` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000066 / completion 0.00000198 / input_cache_read 0.000000022 USD per token; time-of-day overrides [{\"utc_days\": [\"saturday\", \"sunday\"], \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 0, \"utc_end\": 100, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 100, \"utc_end\": 400, \"prompt\": \"0.00000132\", \"completion\": \"0.00000396\", \"input_cache_read\": \"0.000000044\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 400, \"utc_end\": 600, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 600, \"utc_end\": 1000, \"prompt\": \"0.00000132\", \"completion\": \"0.00000396\", \"input_cache_read\": \"0.000000044\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 1000, \"utc_end\": 0, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro-0813` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000111 / completion 0.00000444 / input_cache_read 0.000000097 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -92350,14 +92548,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.02975,
-          "outputPerMTokUsd": 0.6,
-          "cacheReadPerMTokUsd": 0.02678
+          "inputPerMTokUsd": 0.0507,
+          "outputPerMTokUsd": 0.2028,
+          "cacheReadPerMTokUsd": 0.001014
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash` (read 2026-09-28): prompt 0.00000002975 / completion 0.0000006 / input_cache_read 0.00000002678 USD per token — re-read at controller review: price drift since 2026-09-27",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000507 / completion 0.0000002028 / input_cache_read 0.000000001014 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-28T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "deepseek-v4.1-flash",
       "modelFamily": "deepseek",
@@ -92461,14 +92659,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.3,
-          "outputPerMTokUsd": 1.2,
-          "cacheReadPerMTokUsd": 0.006
+          "inputPerMTokUsd": 0.03,
+          "outputPerMTokUsd": 0.2,
+          "cacheReadPerMTokUsd": 0.001
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash-1017` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000006 / input_cache_read 0.000000003 USD per token; time-of-day overrides [{\"utc_days\": [\"saturday\", \"sunday\"], \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 0, \"utc_end\": 100, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 100, \"utc_end\": 400, \"prompt\": \"0.0000003\", \"completion\": \"0.0000012\", \"input_cache_read\": \"0.000000006\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 400, \"utc_end\": 600, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 600, \"utc_end\": 1000, \"prompt\": \"0.0000003\", \"completion\": \"0.0000012\", \"input_cache_read\": \"0.000000006\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 1000, \"utc_end\": 0, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash-1017` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000003 / completion 0.0000002 / input_cache_read 0.000000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -93233,15 +93431,15 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.75,
-          "outputPerMTokUsd": 3.75,
-          "cacheReadPerMTokUsd": 0.075,
+          "inputPerMTokUsd": 0.825,
+          "outputPerMTokUsd": 4.125,
+          "cacheReadPerMTokUsd": 0.0825,
           "cacheWritePerMTokUsd": 0.041667
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-3.8-flash` (read 2026-09-27): OpenRouter's own current price, prompt 0.00000075 / completion 0.00000375 / input_cache_read 0.000000075 / input_cache_write 0.0000000416666666666667 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-3.8-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000825 / completion 0.000004125 / input_cache_read 0.0000000825 / input_cache_write 0.0000000416666666666667 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "gemini-3.8-flash",
       "modelFamily": "gemini",
@@ -94469,11 +94667,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1000000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `inclusionai/ling-3.1-flash` (read 2026-10-29): context_length 1000000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `inclusionai/ling-3.1-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 262144,
@@ -95087,14 +95285,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.3,
-          "outputPerMTokUsd": 1.2,
+          "inputPerMTokUsd": 0.35,
+          "outputPerMTokUsd": 1.5,
           "cacheReadPerMTokUsd": 0.04
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-glimmer-30b` (read 2026-09-27): OpenRouter's own current price, prompt 0.0000003 / completion 0.0000012 / input_cache_read 0.00000004 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-glimmer-30b` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000035 / completion 0.0000015 / input_cache_read 0.00000004 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "muse-glimmer-30b",
       "modelFamily": "muse",
@@ -95642,14 +95840,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.15,
-          "outputPerMTokUsd": 0.6,
-          "cacheReadPerMTokUsd": 0.015
+          "inputPerMTokUsd": 0.075,
+          "outputPerMTokUsd": 0.3,
+          "cacheReadPerMTokUsd": 0.0075
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `minimax/minimax-m3.1-flash` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000006 / input_cache_read 0.000000015 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `minimax/minimax-m3.1-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000075 / completion 0.0000003 / input_cache_read 0.0000000075 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -96490,14 +96688,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 3,
-          "outputPerMTokUsd": 15,
-          "cacheReadPerMTokUsd": 0.3
+          "inputPerMTokUsd": 0.192,
+          "outputPerMTokUsd": 16,
+          "cacheReadPerMTokUsd": 0.182
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3` (read 2026-09-27): OpenRouter's own current price, prompt 0.000003 / completion 0.000015 / input_cache_read 0.0000003 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000192 / completion 0.000016 / input_cache_read 0.000000182 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "kimi-k3",
       "modelFamily": "kimi",
@@ -96601,14 +96799,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
+          "inputPerMTokUsd": 0.2403,
+          "outputPerMTokUsd": 8.4023,
           "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3.1-pro` (read 2026-10-29): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000002 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3.1-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000002403 / completion 0.0000084023 / input_cache_read 0.0000002 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -96936,14 +97134,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.6,
-          "outputPerMTokUsd": 2.4,
-          "cacheReadPerMTokUsd": 0.12
+          "inputPerMTokUsd": 0.5,
+          "outputPerMTokUsd": 2.2,
+          "cacheReadPerMTokUsd": 0.1
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3-ultra-550b-a55b` (read 2026-10-29): OpenRouter's own current price, prompt 0.0000006 / completion 0.0000024 / input_cache_read 0.00000012 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3-ultra-550b-a55b` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000005 / completion 0.0000022 / input_cache_read 0.0000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -96961,11 +97159,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 262144,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-10-29): context_length 262144",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 235929,
@@ -97042,14 +97240,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.07,
+          "inputPerMTokUsd": 0.05,
           "outputPerMTokUsd": 0.2,
-          "cacheReadPerMTokUsd": 0.04
+          "cacheReadPerMTokUsd": 0.01
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000007 / completion 0.0000002 / input_cache_read 0.00000004 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000005 / completion 0.0000002 / input_cache_read 0.00000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -97151,13 +97349,13 @@
       "pricing": {
         "value": {
           "inputPerMTokUsd": 0.15,
-          "outputPerMTokUsd": 0.5,
+          "outputPerMTokUsd": 0.47,
           "cacheReadPerMTokUsd": 0.02
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-super-vl` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000005 / input_cache_read 0.00000002 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-super-vl` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000015 / completion 0.00000047 / input_cache_read 0.00000002 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -98939,6 +99137,121 @@
       "strength": "strong"
     },
     {
+      "key": "openrouter/openai/gpt-6.2-astra-pro",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-astra-pro",
+      "displayName": "GPT-6.2 Astra Pro (via OpenRouter)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-astra-pro"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8,
+          "outputPerMTokUsd": 40,
+          "cacheReadPerMTokUsd": 0.4,
+          "cacheWritePerMTokUsd": 10
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.000008 / completion 0.00004 / input_cache_read 0.0000004 / input_cache_write 0.00001 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): pricing.input_cache_read 0.0000004 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-astra-pro",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
       "key": "openrouter/openai/gpt-6.2-sol",
       "providerId": "openrouter",
       "upstreamId": "openai/gpt-6.2-sol",
@@ -99050,6 +99363,121 @@
         "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "gpt-6.2-sol",
+      "modelFamily": "gpt",
+      "strength": "strong"
+    },
+    {
+      "key": "openrouter/openai/gpt-6.2-sol-pro",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-sol-pro",
+      "displayName": "GPT-6.2 Sol Pro (via OpenRouter)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): pricing.input_cache_read 0.0000001 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-sol-pro"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-24), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"). Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account).",
+          "confidence": "declared",
+          "observedAt": "2026-10-24T12:56:43Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2,
+          "outputPerMTokUsd": 10,
+          "cacheReadPerMTokUsd": 0.1,
+          "cacheWritePerMTokUsd": 2.5
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000001 / input_cache_write 0.0000025 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "gpt-6.2-sol-pro",
       "modelFamily": "gpt",
       "strength": "strong"
     },
@@ -99210,14 +99638,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.25,
-          "outputPerMTokUsd": 1,
+          "inputPerMTokUsd": 0.07,
+          "outputPerMTokUsd": 0.5,
           "cacheReadPerMTokUsd": 0.03
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `particle-ai/particle-1` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000025 / completion 0.000001 / input_cache_read 0.00000003 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `particle-ai/particle-1` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000007 / completion 0.0000005 / input_cache_read 0.00000003 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -100008,11 +100436,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1000000,
+        "value": 1024000,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-10-29): context_length 1000000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-11-24): context_length 1024000",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 65536,
@@ -100097,14 +100525,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.039,
-          "outputPerMTokUsd": 1.25,
-          "cacheReadPerMTokUsd": 0.0039
+          "inputPerMTokUsd": 0.06,
+          "outputPerMTokUsd": 1.96,
+          "cacheReadPerMTokUsd": 0.059
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-10-29): OpenRouter's own current price, prompt 0.000000039 / completion 0.00000125 / input_cache_read 0.0000000039 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000006 / completion 0.00000196 / input_cache_read 0.000000059 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -100887,11 +101315,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 262144,
+        "value": 256000,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `stepfun/step-3.7-flash` (read 2026-10-29): context_length 262144",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `stepfun/step-3.7-flash` (read 2026-11-24): context_length 256000",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 230400,
@@ -101086,14 +101514,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.132,
-          "outputPerMTokUsd": 0.528,
-          "cacheReadPerMTokUsd": 0.033
+          "inputPerMTokUsd": 0.0825,
+          "outputPerMTokUsd": 0.33,
+          "cacheReadPerMTokUsd": 0.020625
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy3` (read 2026-10-29): OpenRouter's own current price, prompt 0.000000132 / completion 0.000000528 / input_cache_read 0.000000033 USD per token; time-of-day overrides [{\"utc_start\": 0, \"utc_end\": 1600, \"prompt\": \"0.000000132\", \"completion\": \"0.000000528\", \"input_cache_read\": \"0.000000033\"}, {\"utc_start\": 1600, \"utc_end\": 0, \"prompt\": \"0.0000000825\", \"completion\": \"0.00000033\", \"input_cache_read\": \"0.000000020625\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy3` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000825 / completion 0.00000033 / input_cache_read 0.000000020625 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -101323,7 +101751,7 @@
       "status": "candidate",
       "canonicalModelId": "hy4-flash",
       "modelFamily": "hunyuan",
-      "strength": "weak"
+      "strength": "medium"
     },
     {
       "key": "openrouter/thinkingmachines/inkling",
@@ -101335,11 +101763,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 524288,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling` (read 2026-10-29): context_length 524288",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 471859,
@@ -101431,6 +101859,235 @@
       "unsupportedParameters": [],
       "status": "candidate",
       "canonicalModelId": "thinkingmachines/inkling",
+      "modelFamily": "other",
+      "strength": "medium"
+    },
+    {
+      "key": "openrouter/thinkingmachines/inkling-2-mini",
+      "providerId": "openrouter",
+      "upstreamId": "thinkingmachines/inkling-2-mini",
+      "displayName": "Inkling 2 Mini (via OpenRouter)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): top_provider.max_completion_tokens 65536",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): pricing.input_cache_read 0.000000015 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): reasoning {\"mandatory\": false, \"supported_efforts\": [\"max\", \"high\", \"medium\", \"low\", \"minimal\", \"none\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "medium",
+          "low",
+          "minimal",
+          "none"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/thinkingmachines/inkling-2-mini"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.075,
+          "outputPerMTokUsd": 0.3,
+          "cacheReadPerMTokUsd": 0.015
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000075 / completion 0.0000003 / input_cache_read 0.000000015 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "thinkingmachines/inkling-2-mini",
+      "modelFamily": "other",
+      "strength": "weak"
+    },
+    {
+      "key": "openrouter/thinkingmachines/inkling-2-small",
+      "providerId": "openrouter",
+      "upstreamId": "thinkingmachines/inkling-2-small",
+      "displayName": "Inkling 2 Small (via OpenRouter)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): pricing.input_cache_read 0.00000003 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"high\", \"medium\", \"low\", \"minimal\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "medium",
+          "low",
+          "minimal"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/thinkingmachines/inkling-2-small"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.3,
+          "outputPerMTokUsd": 1,
+          "cacheReadPerMTokUsd": 0.03
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000003 / completion 0.000001 / input_cache_read 0.00000003 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "thinkingmachines/inkling-2-small",
       "modelFamily": "other",
       "strength": "medium"
     },
@@ -102118,11 +102775,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1050000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-flash` (read 2026-10-29): context_length 1050000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 131072,
@@ -102227,11 +102884,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1050000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-pro` (read 2026-10-29): context_length 1050000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-pro` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 131072,
@@ -102445,11 +103102,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1310720,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-09-27): context_length 1310720",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 943717,
@@ -102526,14 +103183,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 1.4,
-          "outputPerMTokUsd": 4.4,
-          "cacheReadPerMTokUsd": 0.26
+          "inputPerMTokUsd": 0.0699,
+          "outputPerMTokUsd": 1.4,
+          "cacheReadPerMTokUsd": 0.0689
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-09-27): OpenRouter's own current price, prompt 0.0000014 / completion 0.0000044 / input_cache_read 0.00000026 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000699 / completion 0.0000014 / input_cache_read 0.0000000689 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "canonicalModelId": "glm-5.3",
       "modelFamily": "glm",
@@ -102549,11 +103206,11 @@
         "chat"
       ],
       "contextWindow": {
-        "value": 1310720,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flash` (read 2026-09-27): context_length 1310720",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 943717,
@@ -102748,6 +103405,119 @@
       "unsupportedParameters": [],
       "status": "candidate",
       "canonicalModelId": "glm-5.3-flashx",
+      "modelFamily": "glm",
+      "strength": "medium"
+    },
+    {
+      "key": "openrouter/z-ai/glm-5.3-flashx-legal",
+      "providerId": "openrouter",
+      "upstreamId": "z-ai/glm-5.3-flashx-legal",
+      "displayName": "GLM-5.3 FlashX Legal (via OpenRouter)",
+      "aliases": [],
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): top_provider.max_completion_tokens 131072",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): architecture.input_modalities ['image', 'text', 'video']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): pricing.input_cache_read 0.000000075 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"high\", \"low\"], \"default_effort\": \"max\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "low"
+        ],
+        "defaultEffort": "max",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/z-ai/glm-5.3-flashx-legal"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.37,
+          "outputPerMTokUsd": 1.25,
+          "cacheReadPerMTokUsd": 0.075
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000037 / completion 0.00000125 / input_cache_read 0.000000075 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "canonicalModelId": "glm-5.3-flashx-legal",
       "modelFamily": "glm",
       "strength": "medium"
     },
@@ -122270,7 +123040,7 @@
       "status": "candidate",
       "canonicalModelId": "hy4-flash",
       "modelFamily": "hunyuan",
-      "strength": "weak"
+      "strength": "medium"
     },
     {
       "key": "tencent-tokenhub-anthropic/hy4-preview",
@@ -122666,7 +123436,7 @@
       "status": "candidate",
       "canonicalModelId": "hy4-flash",
       "modelFamily": "hunyuan",
-      "strength": "weak"
+      "strength": "medium"
     },
     {
       "key": "tencent-tokenhub-intl-anthropic/hy4-preview",
@@ -123104,7 +123874,7 @@
       "status": "candidate",
       "canonicalModelId": "hy4-flash",
       "modelFamily": "hunyuan",
-      "strength": "weak"
+      "strength": "medium"
     },
     {
       "key": "tencent-tokenhub-intl/hy4-preview",
@@ -123724,7 +124494,7 @@
       "status": "candidate",
       "canonicalModelId": "hy4-flash",
       "modelFamily": "hunyuan",
-      "strength": "weak"
+      "strength": "medium"
     },
     {
       "key": "tencent-tokenhub/hy4-preview",
@@ -130174,12 +130944,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — current global Standard Text API price table for grok-4.20-0309-non-reasoning; it charges the listed long-context rate for every token after the prompt reaches 200K and applies a 10% US-regional premium. This catalog records the standard short-context rate (retrieved 2026-09-19).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-0309-non-reasoning: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -130293,12 +131071,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — current global Standard Text API price table for grok-4.20-0309-reasoning; it charges the listed long-context rate for every token after the prompt reaches 200K and applies a 10% US-regional premium. This catalog records the standard short-context rate (retrieved 2026-09-19).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-0309-reasoning: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -130396,12 +131182,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.20-multi-agent-0309 Standard global short-context rate (<200k prompt tokens): $1.25 input, $0.20 cached input, $2.50 output per 1M; >=200k the entire request is charged $2.50/$0.40/$5.00. US-regional 1.1x applies only to models currently on that endpoint, listed as grok-4.7 and grok-4.6; not this model (re-read 2026-09-25, WS-23).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-multi-agent-0309: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T17:09:48Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "max_output_tokens",
@@ -130500,12 +131294,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.3 Standard global short-context rate: $1.25 input/$2.5 output/$0.2 cached per million; long-context threshold 200K. US-regional 1.1x applies only to models currently on that endpoint, listed as grok-4.7 and grok-4.6; not grok-4.3.",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.3: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T12:31:56.381Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -130600,12 +131402,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.3
+          "cacheReadPerMTokUsd": 0.3,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 0.6
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.5 global short-context <200k prompt tokens: $2 input, $0.3 cached input, $6 output per 1M; >=200k entire request is charged long-context rates of $4/$0.6/$12; US regional endpoint adds 10%",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.5: below 200k prompt tokens $2 input / $0.3 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $0.6 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:40:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -130702,12 +131512,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.5
+          "cacheReadPerMTokUsd": 0.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 1
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/docs/models — Text API pricing table, headers \"Model | Context | Input / 1M tokens | Cached input / 1M tokens | Output / 1M tokens\": grok-4.6 (<200k prompt tokens) row reads $2.00 input / $0.50 cached input / $6.00 output per 1M tokens (retrieved 2026-09-07; ADDED in P6.6 Task 1b fix r1, I-1 — the cached-input column was on the page at authoring and was missed). The table also lists a >=200k tier at $4.00 input / $1.00 cached input / $12.00 output; `ModelPricing` carries one rate per direction, so the STANDARD (<200k) tier is recorded and the estimator UNDER-counts long-context turns on this row — same disclosed gap as openai/gpt-6-astra's long-context tier.",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.6: below 200k prompt tokens $2 input / $0.5 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $1 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-07T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -130825,12 +131643,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.5
+          "cacheReadPerMTokUsd": 0.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 1
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.7 global short-context <200k prompt tokens: $2 input, $0.5 cached input, $6 output per 1M; >=200k entire request is charged long-context rates of $4/$1/$12; US regional endpoint adds 10%",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.7: below 200k prompt tokens $2 input / $0.5 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $1 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:40:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -130933,7 +131759,7 @@
         "observedAt": "2026-09-25T12:31:56.381Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate",
+      "status": "deprecated",
       "canonicalModelId": "grok-build-0.1",
       "modelFamily": "grok",
       "strength": "medium"
@@ -141093,21 +141919,12 @@
       ],
       "slots": [
         {
-          "name": "grok-4.6",
-          "canonicalModelId": "grok-4.6",
-          "description": "the stronger Grok, for reasoning-heavy work.",
+          "name": "grok-4.7",
+          "canonicalModelId": "grok-4.7",
+          "description": "xAI's frontier model for coding, agentic tasks and knowledge work.",
           "reason": "First: strength.",
-          "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 D-Grok (user: \"grok 4.6 and grok build 01 as like stronger/implementer\") via §9; served by `xai-oauth` from the start, and now also by the token-priced `xai` provider — VERIFIED on https://docs.x.ai/docs/models (retrieved 2026-09-07), which lists `grok-4.6` in its plain Text API pricing table (P6.6 Task 1b's owed `xai/grok-4.6` row). The canonicalModelId does not change — both rows already shared `grok-4.6` — so this is a servability widening, not a repoint. NOT pinned to a provider — §4's ordering decides.",
-          "status": "candidate"
-        },
-        {
-          "name": "grok-build",
-          "canonicalModelId": "grok-build-0.1",
-          "description": "the implementer — xAI's coding-tuned build model.",
-          "reason": "Second: implementation.",
-          "basis": "user-ruling",
-          "citation": "spec:WS-13c §0 D-Grok (user: \"grok 4.6 and grok build 01 as like stronger/implementer\") via §9",
+          "basis": "vendor-doc",
+          "citation": "https://docs.x.ai/docs/release-notes.md (read 2026-11-24): \"Grok 4.7, SpaceXSI's frontier model for coding, agentic tasks, and knowledge work, is now available\" (September 2026), 500k context, the same price as Grok 4.6 (https://docs.x.ai/docs/models).",
           "status": "candidate"
         }
       ],

@@ -4281,7 +4281,7 @@
       "upstreamId": "kimi-k2.6",
       "displayName": "Kimi K2.6",
       "aliases": [],
-      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.6 thinking enabled by default, disabled allowed; reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (K2.6 takes the current tool loop's `reasoning_content` back; earlier turns are ignored at the default `thinking.keep`). Domain: this route alone.",
+      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.6 thinking enabled by default, disabled allowed; reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (K2.6 takes the current tool loop's `reasoning_content` back; earlier turns are ignored at the default `thinking.keep`). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -4396,7 +4396,7 @@
       "upstreamId": "kimi-k2.7-code",
       "displayName": "Kimi K2.7 Code",
       "aliases": [],
-      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone.",
+      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -4511,7 +4511,7 @@
       "upstreamId": "kimi-k2.7-code-highspeed",
       "displayName": "Kimi K2.7 Code HighSpeed",
       "aliases": [],
-      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone.",
+      "$comment": "Read from the pinned entry's own ACCEPTED literals (`MOONSHOT_KIMI_MODELS`), which the extractor resolves — only the provider's `executor` is unrepresentable, not its model list. `reasoning.efforts` is deliberately EMPTY: upstream notes K3 accepts the literal `max` only and rejects its own `xhigh` tier, so borrowing an effort vocabulary here would invent a control the endpoint refuses (WS-13 §8.2). — 2026-09-25 refresh: Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -5949,7 +5949,7 @@
       "upstreamId": "turboderp/Qwen3.8-27B-exl3",
       "displayName": "Qwen3.8 27B EXL3 (free)",
       "aliases": [],
-      "$comment": "2026-11-24 refresh: the model uncloseai serves today. https://uncloseai.com/inference.html (read 2026-11-24): \"Two consumer cards, one model. Either hostname gives you turboderp/Qwen3.8-27B-exl3\"; \"hermes.ai.unturf.com: public, 3 requests per second per IP\"; \"qwen.ai.unturf.com: API key required; anonymous traffic gets 403\" (so only the hermes host, which this provider's endpoint names, is keyless). Thinking: \"Our clients send \\\"chat_template_kwargs\\\": {\\\"enable_thinking\\\": false} by default\"; no effort control is documented, so the row has no reasoning block. canonicalModelId is set to qwen3.8-27b so the model shares the class and family of the same weights elsewhere.",
+      "$comment": "2026-11-24 refresh: the model uncloseai serves today. https://uncloseai.com/inference.html (read 2026-11-24): \"Two consumer cards, one model. Either hostname gives you turboderp/Qwen3.8-27B-exl3\"; \"hermes.ai.unturf.com: public, 3 requests per second per IP\"; \"qwen.ai.unturf.com: API key required; anonymous traffic gets 403\" (so only the hermes host, which this provider's endpoint names, is keyless). Thinking: \"Our clients send \\\"chat_template_kwargs\\\": {\\\"enable_thinking\\\": false} by default\"; no effort control is documented, so the row has no reasoning block. canonicalModelId is set to qwen3.8-27b so the model shares the class and family of the same weights elsewhere. — 2026-11-24 refresh: not usable now (the PROVIDER is blocked; a row may not be): keyless access is closed and a key is required, with key registration closed: a keyless request to POST https://hermes.ai.unturf.com/v1/chat/completions (model turboderp/Qwen3.8-27B-exl3, one dummy tool) answered HTTP 401 on 2026-11-24 about 18:50 UTC: {\"error\": {\"message\": \"The public beta is closed for now. This endpoint needs an API key, and key registration is closed; check uncloseai.com for when it reopens.\", \"type\": \"public_beta_closed\", \"code\": 401}} (one live call made by the MOSS controller). Its pages (https://uncloseai.com/, https://uncloseai.com/inference.html) still say it is free with no key; the live answer is what holds today.",
       "endpoints": [
         "chat"
       ],
@@ -6171,12 +6171,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — current global Standard Text API price table for grok-4.20-0309-non-reasoning; it charges the listed long-context rate for every token after the prompt reaches 200K and applies a 10% US-regional premium. This catalog records the standard short-context rate (retrieved 2026-09-19).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-0309-non-reasoning: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate",
@@ -6288,12 +6296,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — current global Standard Text API price table for grok-4.20-0309-reasoning; it charges the listed long-context rate for every token after the prompt reaches 200K and applies a 10% US-regional premium. This catalog records the standard short-context rate (retrieved 2026-09-19).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-0309-reasoning: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -6389,12 +6405,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.20-multi-agent-0309 Standard global short-context rate (<200k prompt tokens): $1.25 input, $0.20 cached input, $2.50 output per 1M; >=200k the entire request is charged $2.50/$0.40/$5.00. US-regional 1.1x applies only to models currently on that endpoint, listed as grok-4.7 and grok-4.6; not this model (re-read 2026-09-25, WS-23).",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.20-multi-agent-0309: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T17:09:48Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "max_output_tokens",
@@ -6491,12 +6515,20 @@
         "value": {
           "inputPerMTokUsd": 1.25,
           "outputPerMTokUsd": 2.5,
-          "cacheReadPerMTokUsd": 0.2
+          "cacheReadPerMTokUsd": 0.2,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 2.5,
+              "outputPerMTokUsd": 5,
+              "cacheReadPerMTokUsd": 0.4
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.3 Standard global short-context rate: $1.25 input/$2.5 output/$0.2 cached per million; long-context threshold 200K. US-regional 1.1x applies only to models currently on that endpoint, listed as grok-4.7 and grok-4.6; not grok-4.3.",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.3: below 200k prompt tokens $1.25 input / $0.2 cached / $2.5 output per 1M; at 200k prompt tokens and above $2.5 / $0.4 / $5; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T12:31:56.381Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -6511,7 +6543,7 @@
         "grok-code-fast",
         "grok-code-fast-1-0825"
       ],
-      "$comment": "Read from the pinned entry's own accepted literals — only the provider's `executor` is unrepresentable. Upstream's two `targetFormat: \"openai-responses\"` siblings are now representable (WS-23): `grok-4.6` is its own overlay row and `grok-4.20-multi-agent-0309` is a Responses-only row; see the provider row's comment. — 2026-09-25 refresh: Model and aliases documented at https://docs.x.ai/developers/models/grok-build-0.1. The catalog's xai provider declared Chat Completions until WS-23 and now speaks Responses (same host and key).  No model-specific max output token cap was found. xAI's models page says logprobs/top_logprobs on grok-4.20 and newer are silently ignored, not rejected (https://docs.x.ai/developers/models). Legacy Anthropic-compatible POST /v1/messages remains documented but fully deprecated (https://docs.x.ai/developers/rest-api-reference/inference/legacy); unauthenticated POST today returned 401 after validating the request, so route exists but successful inference was not verified. POST /anthropic returned 404. xAI's May 15 retirement page says grok-code-fast-1 redirects to grok-4.3, whereas this model page lists it as a grok-build-0.1 alias; live resolution of that alias needs checking (https://docs.x.ai/developers/migration/may-15-retirement). — WS-23 (2026-09-25): the `xai` provider now routes through `winter.openai-responses`, so `endpoints` lists both surfaces the family routes (the `openai/*` convention) rather than only Chat Completions. — 2026-09-25 audit fix (0.0.24): https://docs.x.ai/developers/pricing — US regional availability currently only grok-4.7 and grok-4.6 Continuation (WS-23): `opaque-provider-state` — on Responses the reasoning item carries `encrypted_content` when `include: [\"reasoning.encrypted_content\"]` is sent and is replayed unchanged in the next `input` (https://docs.x.ai/developers/model-capabilities/text/reasoning, \"Encrypted Reasoning Content\"). Effort (WS-23 fix of the \"supported, no efforts, continuation none\" incoherence): the model page says \"Reasoning: Yes\", but https://docs.x.ai/developers/model-capabilities/text/reasoning names `reasoning_effort` only for `grok-4.7`, `grok-4.6`, `grok-4.5` (and the multi-agent model's agent count), so this model reasons with NO documented effort knob and `efforts` stays empty — an effort or `thinking` request is refused before the request rather than guessed. What was incoherent was `continuation: \"none\"`, now `opaque-provider-state` per the note above. Since WS-23 fix round 1 the adapter asks for `include` on EVERY turn of an opaque-continuation row, effort or not, so the item is requested here although no effort can be named. LIVE-GATE ITEM: that xAI returns it for this model (WS-23 probe step 5b/5c); if it does not, `continuation` goes back to `none`. — 2026-11-24 refresh: https://docs.x.ai/docs/models (read 2026-11-24) lists seven language models (grok-4.7, 4.6, 4.5, 4.3, grok-4.20-0309-reasoning/-non-reasoning, grok-4.20-multi-agent-0309) and not grok-build-0.1; its model page https://docs.x.ai/docs/models/grok-build-0.1 answers 404, and OpenRouter no longer lists x-ai/grok-build-0.1. No retirement is announced, so the row stays `candidate`; whether the id still answers is on the live-call list.",
+      "$comment": "Read from the pinned entry's own accepted literals — only the provider's `executor` is unrepresentable. Upstream's two `targetFormat: \"openai-responses\"` siblings are now representable (WS-23): `grok-4.6` is its own overlay row and `grok-4.20-multi-agent-0309` is a Responses-only row; see the provider row's comment. — 2026-09-25 refresh: Model and aliases documented at https://docs.x.ai/developers/models/grok-build-0.1. The catalog's xai provider declared Chat Completions until WS-23 and now speaks Responses (same host and key).  No model-specific max output token cap was found. xAI's models page says logprobs/top_logprobs on grok-4.20 and newer are silently ignored, not rejected (https://docs.x.ai/developers/models). Legacy Anthropic-compatible POST /v1/messages remains documented but fully deprecated (https://docs.x.ai/developers/rest-api-reference/inference/legacy); unauthenticated POST today returned 401 after validating the request, so route exists but successful inference was not verified. POST /anthropic returned 404. xAI's May 15 retirement page says grok-code-fast-1 redirects to grok-4.3, whereas this model page lists it as a grok-build-0.1 alias; live resolution of that alias needs checking (https://docs.x.ai/developers/migration/may-15-retirement). — WS-23 (2026-09-25): the `xai` provider now routes through `winter.openai-responses`, so `endpoints` lists both surfaces the family routes (the `openai/*` convention) rather than only Chat Completions. — 2026-09-25 audit fix (0.0.24): https://docs.x.ai/developers/pricing — US regional availability currently only grok-4.7 and grok-4.6 Continuation (WS-23): `opaque-provider-state` — on Responses the reasoning item carries `encrypted_content` when `include: [\"reasoning.encrypted_content\"]` is sent and is replayed unchanged in the next `input` (https://docs.x.ai/developers/model-capabilities/text/reasoning, \"Encrypted Reasoning Content\"). Effort (WS-23 fix of the \"supported, no efforts, continuation none\" incoherence): the model page says \"Reasoning: Yes\", but https://docs.x.ai/developers/model-capabilities/text/reasoning names `reasoning_effort` only for `grok-4.7`, `grok-4.6`, `grok-4.5` (and the multi-agent model's agent count), so this model reasons with NO documented effort knob and `efforts` stays empty — an effort or `thinking` request is refused before the request rather than guessed. What was incoherent was `continuation: \"none\"`, now `opaque-provider-state` per the note above. Since WS-23 fix round 1 the adapter asks for `include` on EVERY turn of an opaque-continuation row, effort or not, so the item is requested here although no effort can be named. LIVE-GATE ITEM: that xAI returns it for this model (WS-23 probe step 5b/5c); if it does not, `continuation` goes back to `none`. — 2026-11-24 refresh: https://docs.x.ai/docs/models (read 2026-11-24) lists seven language models (grok-4.7, 4.6, 4.5, 4.3, grok-4.20-0309-reasoning/-non-reasoning, grok-4.20-multi-agent-0309) and not grok-build-0.1; its model page https://docs.x.ai/docs/models/grok-build-0.1 answers 404, and OpenRouter no longer lists x-ai/grok-build-0.1. No retirement is announced, so the row stays `candidate`; whether the id still answers is on the live-call list. — 2026-11-24 refresh: https://docs.x.ai/docs/release-notes.md (read 2026-11-24): \"`grok-build-0.1` reached end of life on November 19, 2026 and is no longer served on the API.\" The date has passed: `deprecated`.",
       "endpoints": [
         "chat",
         "responses"
@@ -6593,7 +6625,7 @@
         "observedAt": "2026-09-25T12:31:56.381Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "deprecated"
     },
     {
       "key": "zai/glm-4.7",
@@ -8660,12 +8692,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.5
+          "cacheReadPerMTokUsd": 0.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 1
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/docs/models — Text API pricing table, headers \"Model | Context | Input / 1M tokens | Cached input / 1M tokens | Output / 1M tokens\": grok-4.6 (<200k prompt tokens) row reads $2.00 input / $0.50 cached input / $6.00 output per 1M tokens (retrieved 2026-09-07; ADDED in P6.6 Task 1b fix r1, I-1 — the cached-input column was on the page at authoring and was missed). The table also lists a >=200k tier at $4.00 input / $1.00 cached input / $12.00 output; `ModelPricing` carries one rate per direction, so the STANDARD (<200k) tier is recorded and the estimator UNDER-counts long-context turns on this row — same disclosed gap as openai/gpt-6-astra's long-context tier.",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.6: below 200k prompt tokens $2 input / $0.5 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $1 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-07T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -15010,18 +15050,18 @@
       "key": "mistral/mistral-large-latest",
       "providerId": "mistral",
       "upstreamId": "mistral-large-latest",
-      "displayName": "Mistral Large 3",
+      "displayName": "Mistral Large (latest: Large 4)",
       "aliases": [],
-      "$comment": "https://docs.mistral.ai/models/mistral-large-3-25-12 — model card identifies mistral-large-2512. https://docs.mistral.ai/vibe/code/cli/configuration — mistral-large-latest is an alias; as of 2026-09-25 it points to mistral-large-2512. Aliases can move with a new GA release (https://docs.mistral.ai/inference/model-lifecycle). No model-specific reasoning_effort support documented; do not assume it from the generic schema.",
+      "$comment": "2026-11-24 refresh: Mistral Large 4, https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record): \"status\": \"GA\", version 26.10, \"releasedAt\": \"2026-10-05\", \"modelIds\": [\"mistral-large-4\", \"mistral-large-4-0\", \"mistral-large-latest\"], 1.05T parameters, 52B active, open weights; \"Our most capable model for agentic coding and cybersecurity.\" It outputs reasoning, but the page gives no effort control, so the row has no reasoning block (no effort is sent). `mistral-large-latest` is the id sent. Before this refresh the row described Large 3 ({'inputPerMTokUsd': 0.5, 'outputPerMTokUsd': 1.5, 'cacheReadPerMTokUsd': 0.05}); the alias now points to Large 4 (https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) lists mistral-large-latest among Large 4's modelIds).",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 256000,
+        "value": 1000000,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 model card lists 256k context; https://docs.mistral.ai/vibe/code/cli/configuration lists mistral-large-latest for this model",
-        "confidence": "inferred",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"contextWindow\": 1000000; Context 1M",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "inputModalities": {
         "value": [
@@ -15029,9 +15069,9 @@
           "image"
         ],
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/studio/conversations/vision — mistral-large-2512 model is multimodal / has vision input for chat; text also supported",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"inputs\": [\"text\", \"image\"]; outputs reasoning, text",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "outputModalities": {
         "value": [
@@ -15045,16 +15085,16 @@
       "toolCalling": {
         "value": "native",
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Function Calling",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "nativeTools": {
         "value": true,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Function Calling",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "parallelTools": {
         "value": true,
@@ -15066,9 +15106,9 @@
       "structuredOutput": {
         "value": true,
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 feature list includes Structured Outputs",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include structured-outputs",
         "confidence": "declared",
-        "observedAt": "2026-09-25T10:33:43Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "promptCaching": {
         "value": true,
@@ -15079,17 +15119,18 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.5,
-          "outputPerMTokUsd": 1.5,
-          "cacheReadPerMTokUsd": 0.05
+          "inputPerMTokUsd": 0.7,
+          "outputPerMTokUsd": 2.1,
+          "cacheReadPerMTokUsd": 0.07
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.mistral.ai/inference/pricing — current Mistral Standard regional-inference USD rates, per million tokens (retrieved 2026-09-19). Batch and Priority are distinct rate cards; the published page has no cache-write rate.",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — Input $0.7, Cached input $0.07, Output $2.1 per M tokens (USD)",
         "confidence": "declared",
-        "observedAt": "2026-09-19T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
-      "status": "candidate"
+      "status": "candidate",
+      "canonicalModelId": "mistral-large-4"
     },
     {
       "key": "mistral/mistral-medium-3-5",
@@ -15099,7 +15140,7 @@
       "aliases": [
         "mistral-medium-3"
       ],
-      "$comment": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04 — model card identifies mistral-medium-3-5. The requested family-name id, if different, is not the card's wire id; use mistral-medium-3-5. Reasoning can be made minimal / hidden using reasoning_effort=\"none\" (not equivalent to no internal thinking); reasoning_effort=\"high\" exposes ThinkChunk. Full ThinkChunk must be replayed in the assistant message on the next turn. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`: the reasoning is Mistral's ThinkChunk, which the Chat Completions adapter now reads from the chunk-list `content`, captures, and replays as a ThinkChunk at the head of the assistant `content` on the model's own next request (Mistral defines no `reasoning_content`). Domain: this route alone. — 2026-11-24 refresh: https://docs.mistral.ai/models (read 2026-11-24), \"Deprecated & retired models\": Mistral Medium 3.5 (26.04), `mistral-medium-3-5`, `mistral-medium-latest`: deprecation 06/09/2026, retirement 05/03/2027 (the page's day/month order; 5 March 2027), alternative \"Mistral Large 4\". The retirement has not passed, so status stays `candidate`.",
+      "$comment": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04 — model card identifies mistral-medium-3-5. The requested family-name id, if different, is not the card's wire id; use mistral-medium-3-5. Reasoning can be made minimal / hidden using reasoning_effort=\"none\" (not equivalent to no internal thinking); reasoning_effort=\"high\" exposes ThinkChunk. Full ThinkChunk must be replayed in the assistant message on the next turn. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`: the reasoning is Mistral's ThinkChunk, which the Chat Completions adapter now reads from the chunk-list `content`, captures, and replays as a ThinkChunk at the head of the assistant `content` on the model's own next request (Mistral defines no `reasoning_content`). Domain: this route alone. — 2026-11-24 refresh: https://docs.mistral.ai/models (read 2026-11-24), \"Deprecated & retired models\": Mistral Medium 3.5 (26.04), `mistral-medium-3-5`, `mistral-medium-latest`: deprecation 06/09/2026, retirement 05/03/2027 (the page's day/month order; 5 March 2027), alternative \"Mistral Large 4\". The retirement has not passed, so status stays `candidate`. — 2026-11-24 refresh: CORRECTION of the note above: https://docs.mistral.ai/models (read 2026-11-24; the page's own model records) prints Medium 3.5's dates as \"06/09/2026\" and \"05/03/2027\" in its table, and the day/month order is not stated, so the retirement date is not settled here; it is deprecated with Mistral Large 4 as the named alternative. Status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -26191,12 +26232,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.5
+          "cacheReadPerMTokUsd": 0.5,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 1
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.7 global short-context <200k prompt tokens: $2 input, $0.5 cached input, $6 output per 1M; >=200k entire request is charged long-context rates of $4/$1/$12; US regional endpoint adds 10%",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.7: below 200k prompt tokens $2 input / $0.5 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $1 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:40:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -26293,12 +26342,20 @@
         "value": {
           "inputPerMTokUsd": 2,
           "outputPerMTokUsd": 6,
-          "cacheReadPerMTokUsd": 0.3
+          "cacheReadPerMTokUsd": 0.3,
+          "longContextTiers": [
+            {
+              "minPromptTokens": 200000,
+              "inputPerMTokUsd": 4,
+              "outputPerMTokUsd": 12,
+              "cacheReadPerMTokUsd": 0.6
+            }
+          ]
         },
         "source": "official-doc",
-        "sourceRef": "https://docs.x.ai/developers/pricing — grok-4.5 global short-context <200k prompt tokens: $2 input, $0.3 cached input, $6 output per 1M; >=200k entire request is charged long-context rates of $4/$0.6/$12; US regional endpoint adds 10%",
+        "sourceRef": "https://docs.x.ai/docs/models (read 2026-11-24) — grok-4.5: below 200k prompt tokens $2 input / $0.3 cached / $6 output per 1M; at 200k prompt tokens and above $4 / $0.6 / $12; \"Long-context pricing applies to the whole request once the prompt reaches 200k tokens\" (so the tier starts at 200,000, inclusive).",
         "confidence": "declared",
-        "observedAt": "2026-09-25T08:40:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "presence_penalty",
@@ -51995,7 +52052,7 @@
       "upstreamId": "kimi-k2.7-code",
       "displayName": "Kimi K2.7 Code (CN)",
       "aliases": [],
-      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone.",
+      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -52110,7 +52167,7 @@
       "upstreamId": "kimi-k2.7-code-highspeed",
       "displayName": "Kimi K2.7 Code HighSpeed (CN)",
       "aliases": [],
-      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Official CN homepage does not display a highspeed price, so pricing is intentionally omitted. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. cat34 (2026-09-27): pricing filled from official evidence (see each field's sourceRef). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone.",
+      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Official CN homepage does not display a highspeed price, so pricing is intentionally omitted. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.7 always thinks and only thinking={type:enabled,keep:all} if explicit; top-level reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. cat34 (2026-09-27): pricing filled from official evidence (see each field's sourceRef). — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (Preserved Thinking is always on for K2.7 Code: historical `reasoning_content` must be kept as-is). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -52225,7 +52282,7 @@
       "upstreamId": "kimi-k2.6",
       "displayName": "Kimi K2.6 (CN)",
       "aliases": [],
-      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.6 thinking enabled by default, disabled allowed; reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (K2.6 takes the current tool loop's `reasoning_content` back; earlier turns are ignored at the default `thinking.keep`). Domain: this route alone.",
+      "$comment": "https://platform.kimi.com/docs/api/overview — CN host https://api.moonshot.cn/v1 with /chat/completions and /responses using the same platform key. https://platform.kimi.com/ — current CN homepage lists K3, K2.7 Code and K2.6; https://platform.kimi.com/docs/guide/kimi-k2-7-code-quickstart — the CN K2.7 quickstart explicitly names kimi-k2.7-code-highspeed. Responses not listed for this ID: https://platform.kimi.ai/docs/api/responses currently supports only kimi-k3. K2.6 thinking enabled by default, disabled allowed; reasoning_effort unsupported. tool_choice required rejected; fixed sampling defaults reject other values (https://platform.kimi.ai/docs/api/models-overview). Field-level capability evidence from the international Kimi docs is reused where the CN model guide presents the same model/version; CN endpoint and roster independently confirmed. — 2026-10-29 refresh: retirement announced, date not yet passed, so status stays `candidate`: https://platform.kimi.ai/docs/models (read 2026-10-29): \"starting October 31, 2026, K2 series models will no longer be available to newly registered users; existing users are not affected. We plan to retire all K2 series models by the end of December 2026\". — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`, so the Chat Completions adapter captures the turn's reasoning and replays it on the model's own next request (K2.6 takes the current tool loop's `reasoning_content` back; earlier turns are ignored at the default `thinking.keep`). Domain: this route alone. — 2026-11-24 refresh: https://platform.kimi.ai/docs/pricing/chat (read 2026-11-24): the K2 series has been closed to newly registered users since 2026-10-31 (existing users unaffected) and Kimi plans to retire all K2 models by the end of December 2026. Not passed: status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -59413,7 +59470,7 @@
       "aliases": [
         "mistral-large-3"
       ],
-      "$comment": "https://docs.mistral.ai/models/mistral-large-3-25-12 — model card identifies mistral-large-2512. The requested family-name id, if different, is not the card's wire id; use mistral-large-2512. No model-specific reasoning_effort support documented; do not assume it from the generic schema.",
+      "$comment": "https://docs.mistral.ai/models/mistral-large-3-25-12 — model card identifies mistral-large-2512. The requested family-name id, if different, is not the card's wire id; use mistral-large-2512. No model-specific reasoning_effort support documented; do not assume it from the generic schema. — 2026-11-24 refresh: https://docs.mistral.ai/models (read 2026-11-24; the page's own model records): Mistral Large 3 (`mistral-large-2512`) \"status\": \"Deprecated\", \"deprecatedAt\": \"2026-10-31\", \"retiredAt\": \"2027-04-30\", \"replacedBy\": mistral-large-4. The retirement has not passed, so status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -59493,12 +59550,98 @@
       "status": "candidate"
     },
     {
+      "key": "mistral/mistral-large-4",
+      "providerId": "mistral",
+      "upstreamId": "mistral-large-4",
+      "displayName": "Mistral Large 4",
+      "aliases": [],
+      "$comment": "2026-11-24 refresh: Mistral Large 4, https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record): \"status\": \"GA\", version 26.10, \"releasedAt\": \"2026-10-05\", \"modelIds\": [\"mistral-large-4\", \"mistral-large-4-0\", \"mistral-large-latest\"], 1.05T parameters, 52B active, open weights; \"Our most capable model for agentic coding and cybersecurity.\" It outputs reasoning, but the page gives no effort control, so the row has no reasoning block (no effort is sent). `mistral-large-4` is the id sent.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1000000,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"contextWindow\": 1000000; Context 1M",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — \"inputs\": [\"text\", \"image\"]; outputs reasoning, text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-3-25-12 — mistral-large-2512 chat text output is shown",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include function-calling",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/studio/conversations/function-calling — parallel_tool_calls true is default for Mistral function calling; applied to this function-calling model",
+        "confidence": "inferred",
+        "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — features include structured-outputs",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/studio/conversations/advanced/prompt-caching — Chat API supports prompt_cache_key; cache hits on shared prefixes are charged at 10% of standard input",
+        "confidence": "inferred",
+        "observedAt": "2026-09-25T10:33:43Z"
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.7,
+          "outputPerMTokUsd": 2.1,
+          "cacheReadPerMTokUsd": 0.07
+        },
+        "source": "official-doc",
+        "sourceRef": "https://docs.mistral.ai/models/mistral-large-4 (read 2026-11-24; the page's own model record) — Input $0.7, Cached input $0.07, Output $2.1 per M tokens (USD)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "canonicalModelId": "mistral-large-4"
+    },
+    {
       "key": "mistral/mistral-medium-latest",
       "providerId": "mistral",
       "upstreamId": "mistral-medium-latest",
       "displayName": "Mistral Medium 3.5",
       "aliases": [],
-      "$comment": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04 — model card identifies mistral-medium-3-5. https://docs.mistral.ai/vibe/code/cli/configuration — mistral-medium-latest is an alias; as of 2026-09-25 it points to mistral-medium-3-5. Aliases can move with a new GA release (https://docs.mistral.ai/inference/model-lifecycle). Reasoning can be made minimal / hidden using reasoning_effort=\"none\" (not equivalent to no internal thinking); reasoning_effort=\"high\" exposes ThinkChunk. Full ThinkChunk must be replayed in the assistant message on the next turn. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`: the reasoning is Mistral's ThinkChunk, which the Chat Completions adapter now reads from the chunk-list `content`, captures, and replays as a ThinkChunk at the head of the assistant `content` on the model's own next request (Mistral defines no `reasoning_content`). Domain: this route alone. — 2026-11-24 refresh: https://docs.mistral.ai/models (read 2026-11-24), \"Deprecated & retired models\": Mistral Medium 3.5 (26.04), `mistral-medium-3-5`, `mistral-medium-latest`: deprecation 06/09/2026, retirement 05/03/2027 (the page's day/month order; 5 March 2027), alternative \"Mistral Large 4\". The retirement has not passed, so status stays `candidate`.",
+      "$comment": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04 — model card identifies mistral-medium-3-5. https://docs.mistral.ai/vibe/code/cli/configuration — mistral-medium-latest is an alias; as of 2026-09-25 it points to mistral-medium-3-5. Aliases can move with a new GA release (https://docs.mistral.ai/inference/model-lifecycle). Reasoning can be made minimal / hidden using reasoning_effort=\"none\" (not equivalent to no internal thinking); reasoning_effort=\"high\" exposes ThinkChunk. Full ThinkChunk must be replayed in the assistant message on the next turn. — 2026-10-29 continuation audit: continuation `plaintext` with readableState `full-exposed`: the reasoning is Mistral's ThinkChunk, which the Chat Completions adapter now reads from the chunk-list `content`, captures, and replays as a ThinkChunk at the head of the assistant `content` on the model's own next request (Mistral defines no `reasoning_content`). Domain: this route alone. — 2026-11-24 refresh: https://docs.mistral.ai/models (read 2026-11-24), \"Deprecated & retired models\": Mistral Medium 3.5 (26.04), `mistral-medium-3-5`, `mistral-medium-latest`: deprecation 06/09/2026, retirement 05/03/2027 (the page's day/month order; 5 March 2027), alternative \"Mistral Large 4\". The retirement has not passed, so status stays `candidate`. — 2026-11-24 refresh: CORRECTION of the note above: https://docs.mistral.ai/models (read 2026-11-24; the page's own model records) prints Medium 3.5's dates as \"06/09/2026\" and \"05/03/2027\" in its table, and the day/month order is not stated, so the retirement date is not settled here; it is deprecated with Mistral Large 4 as the named alternative. Status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -60242,6 +60385,113 @@
         "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits — Standard tier muse-spark-1.3: input $1.25, cached input $0.15, output $4.25 per 1M tokens",
         "confidence": "declared",
         "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "meta/muse-wonder-1.0",
+      "providerId": "meta",
+      "upstreamId": "muse-wonder-1.0",
+      "displayName": "Muse Wonder 1.0 (preview)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24: Meta's frontier Muse model, in preview (https://dev.meta.ai/docs/muse-wonder (read 2026-11-24): \"is in preview\"); Responses, Chat Completions and Messages. Reasoning continuation as on this provider's Muse Spark 1.3 row (the same API).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — context window 1,048,576 tokens",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video",
+          "audio",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — input text, image, video, audio and PDF; output text",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/models — muse-spark-1.3 table lists text output",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tool calling supported, in parallel",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tool calling supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "parallelTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — tools called in parallel",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/structured-output — Muse Spark example uses response_format json_schema; family capability",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits — Muse Spark cached input has a separate price and prompt-prefix cache hits are documented",
+        "confidence": "declared",
+        "observedAt": "2026-09-25T10:38:08Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://dev.meta.ai/docs/muse-wonder (read 2026-11-24) — reasoning effort from \"minimal\" to \"max\", default \"max\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "continuation": "none",
+        "defaultEffort": "max"
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
+        },
+        "source": "official-doc",
+        "sourceRef": "https://dev.meta.ai/docs/pricing-rate-limits.md (read 2026-11-24) — Muse Wonder (`muse-wonder-1.0`), Standard mode: $4.00 input / $0.20 cached input / $20.00 output per 1M; Contributor mode not available",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -73206,7 +73456,7 @@
       "upstreamId": "anthropic.claude-sonnet-4-5",
       "displayName": "Claude Sonnet 4.5 (Bedrock)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for maxOutputTokens (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ.",
+      "$comment": "cat34 (2026-09-27): promoted from the upstream layer to carry official evidence for maxOutputTokens (each field's sourceRef names its page). Otherwise the upstream-extracted row verbatim (copied whole: the overlay replaces a row, it never merges one); only those fields differ. — 2026-11-24 refresh: https://platform.claude.com/docs/en/about-claude/model-deprecations (read 2026-11-24): claude-sonnet-4-5-20250929 retires on the Claude API on 2026-11-30; Amazon Bedrock sets its own lifecycle dates (same page), so this row's date is Bedrock's to state. Status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -100744,7 +100994,7 @@
       "upstreamId": "deepseek/deepseek-v4-pro",
       "displayName": "DeepSeek V4 Pro 0423 (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.9483/1.8966 -> 1.28/2.56.",
       "endpoints": [
         "chat"
       ],
@@ -100829,14 +101079,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.9483,
-          "outputPerMTokUsd": 1.8966,
-          "cacheReadPerMTokUsd": 0.079025
+          "inputPerMTokUsd": 1.28,
+          "outputPerMTokUsd": 2.56,
+          "cacheReadPerMTokUsd": 0.108
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro` (read 2026-09-28): prompt 0.0000009483 / completion 0.0000018966 / input_cache_read 0.000000079025 USD per token — re-read at controller review: price drift since 2026-09-27",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000128 / completion 0.00000256 / input_cache_read 0.000000108 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-28T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -100845,7 +101095,7 @@
       "upstreamId": "deepseek/deepseek-v4.1-flash",
       "displayName": "DeepSeek V4.1 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.02975/0.6 -> 0.0507/0.2028.",
       "endpoints": [
         "chat"
       ],
@@ -100932,14 +101182,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.02975,
-          "outputPerMTokUsd": 0.6,
-          "cacheReadPerMTokUsd": 0.02678
+          "inputPerMTokUsd": 0.0507,
+          "outputPerMTokUsd": 0.2028,
+          "cacheReadPerMTokUsd": 0.001014
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash` (read 2026-09-28): prompt 0.00000002975 / completion 0.0000006 / input_cache_read 0.00000002678 USD per token — re-read at controller review: price drift since 2026-09-27",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000507 / completion 0.0000002028 / input_cache_read 0.000000001014 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-28T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -101268,7 +101518,7 @@
       "upstreamId": "google/gemini-3.8-flash",
       "displayName": "Gemini 3.8 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.75/3.75 -> 0.825/4.125.",
       "endpoints": [
         "chat"
       ],
@@ -101357,15 +101607,15 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.75,
-          "outputPerMTokUsd": 3.75,
-          "cacheReadPerMTokUsd": 0.075,
+          "inputPerMTokUsd": 0.825,
+          "outputPerMTokUsd": 4.125,
+          "cacheReadPerMTokUsd": 0.0825,
           "cacheWritePerMTokUsd": 0.041667
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-3.8-flash` (read 2026-09-27): OpenRouter's own current price, prompt 0.00000075 / completion 0.00000375 / input_cache_read 0.000000075 / input_cache_write 0.0000000416666666666667 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `google/gemini-3.8-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000825 / completion 0.000004125 / input_cache_read 0.0000000825 / input_cache_write 0.0000000416666666666667 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -101374,7 +101624,7 @@
       "upstreamId": "meta/muse-glimmer-30b",
       "displayName": "Muse Glimmer 30B (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this OpenRouter route, on OpenRouter's generic `reasoning_details` evidence: this open-weight model is not served by Meta on OpenRouter (its endpoints are third-party hosts), so Meta's own API docs say nothing about it. Documented, not live-probed per upstream.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this OpenRouter route, on OpenRouter's generic `reasoning_details` evidence: this open-weight model is not served by Meta on OpenRouter (its endpoints are third-party hosts), so Meta's own API docs say nothing about it. Documented, not live-probed per upstream. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.3/1.2 -> 0.35/1.5.",
       "endpoints": [
         "chat"
       ],
@@ -101462,14 +101712,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.3,
-          "outputPerMTokUsd": 1.2,
+          "inputPerMTokUsd": 0.35,
+          "outputPerMTokUsd": 1.5,
           "cacheReadPerMTokUsd": 0.04
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-glimmer-30b` (read 2026-09-27): OpenRouter's own current price, prompt 0.0000003 / completion 0.0000012 / input_cache_read 0.00000004 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `meta/muse-glimmer-30b` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000035 / completion 0.0000015 / input_cache_read 0.00000004 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -101802,7 +102052,7 @@
       "upstreamId": "moonshotai/kimi-k3",
       "displayName": "Kimi K3 (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: price synced to OpenRouter's list: 3/15 -> 0.192/16.0.",
       "endpoints": [
         "chat"
       ],
@@ -101890,14 +102140,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 3,
-          "outputPerMTokUsd": 15,
-          "cacheReadPerMTokUsd": 0.3
+          "inputPerMTokUsd": 0.192,
+          "outputPerMTokUsd": 16.0,
+          "cacheReadPerMTokUsd": 0.182
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3` (read 2026-09-27): OpenRouter's own current price, prompt 0.000003 / completion 0.000015 / input_cache_read 0.0000003 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000192 / completion 0.000016 / input_cache_read 0.000000182 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -102115,6 +102365,119 @@
         "value": true,
         "source": "official-doc",
         "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra` (read 2026-11-24): pricing.input_cache_read 0.0000004 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
+      "key": "openrouter/openai/gpt-6.2-astra-pro",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-astra-pro",
+      "displayName": "GPT-6.2 Astra Pro (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug openai/gpt-6.2-astra-pro-20261117), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/openai/gpt-6.2-astra` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-astra-pro"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 8.0,
+          "outputPerMTokUsd": 40.0,
+          "cacheReadPerMTokUsd": 0.4,
+          "cacheWritePerMTokUsd": 10.0
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.000008 / completion 0.00004 / input_cache_read 0.0000004 / input_cache_write 0.00001 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-astra-pro` (read 2026-11-24): pricing.input_cache_read 0.0000004 — a cached-input price is listed for this route",
         "confidence": "inferred",
         "observedAt": "2026-11-24T00:00:00Z"
       }
@@ -102873,16 +103236,16 @@
       "upstreamId": "z-ai/glm-5.3",
       "displayName": "GLM 5.3 (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: price synced to OpenRouter's list: 1.4/4.4 -> 0.0699/1.4. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1310720 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1310720,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-09-27): context_length 1310720",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 943717,
@@ -102959,14 +103322,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 1.4,
-          "outputPerMTokUsd": 4.4,
-          "cacheReadPerMTokUsd": 0.26
+          "inputPerMTokUsd": 0.0699,
+          "outputPerMTokUsd": 1.4,
+          "cacheReadPerMTokUsd": 0.0689
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-09-27): OpenRouter's own current price, prompt 0.0000014 / completion 0.0000044 / input_cache_read 0.00000026 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000699 / completion 0.0000014 / input_cache_read 0.0000000689 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       }
     },
     {
@@ -102975,16 +103338,16 @@
       "upstreamId": "z-ai/glm-5.3-flash",
       "displayName": "GLM 5.3 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair.",
+      "$comment": "cat34 (2026-09-27): every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models), the pricing authority for this provider/model pair. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1310720 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1310720,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flash` (read 2026-09-27): context_length 1310720",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-09-27T00:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 943717,
@@ -110738,6 +111101,119 @@
       }
     },
     {
+      "key": "openrouter/openai/gpt-6.2-sol-pro",
+      "providerId": "openrouter",
+      "upstreamId": "openai/gpt-6.2-sol-pro",
+      "displayName": "GPT-6.2 Sol Pro (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug openai/gpt-6.2-sol-pro-20261117), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/openai/gpt-6.2-sol` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1050000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): context_length 1050000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 128000,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): top_provider.max_completion_tokens 128000",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): architecture.input_modalities ['file', 'image', 'text'] (file/pdf inputs are not a Winter modality)",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): pricing.input_cache_read 0.0000001 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"xhigh\", \"high\", \"medium\", \"low\"], \"default_effort\": \"medium\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "defaultEffort": "medium",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/openai/gpt-6.2-sol-pro"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-24), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"). Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account).",
+          "confidence": "declared",
+          "observedAt": "2026-10-24T12:56:43Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2.0,
+          "outputPerMTokUsd": 10.0,
+          "cacheReadPerMTokUsd": 0.1,
+          "cacheWritePerMTokUsd": 2.5
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `openai/gpt-6.2-sol-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000001 / input_cache_write 0.0000025 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "openrouter/meta/muse-spark-1.3-contributor",
       "providerId": "openrouter",
       "upstreamId": "meta/muse-spark-1.3-contributor",
@@ -114038,7 +114514,7 @@
       "upstreamId": "gemini-4-argon",
       "displayName": "Gemini 4 Argon",
       "aliases": [],
-      "$comment": "Winter-authored 2026-10-29 (catalog refresh: Gemini 4 Argon, found via OpenRouter's list, every fact from Google's own pages read 2026-10-29). https://ai.google.dev/gemini-api/docs/models/gemini-4-argon: \"Gemini 4 Argon (`gemini-4-argon`) is our flagship reasoning model\"; Versions \"Stable: `gemini-4-argon`\", Latest update \"October 2026\" — GA (Vertex: \"Launch stage: GA Release date: October 13, 2026\", https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-argon). maxOutputTokens is the SYNCHRONOUS cap: \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"; https://ai.google.dev/gemini-api/docs/thinking: \"Setting `max_output_tokens > 65536` with `background=False` returns a `400` error\" — long decode needs `background=True`, which this adapter does not send. Context is unified: \"Input, thinking, and output tokens share a single 1M-token context window (`1,048,576` tokens)\". Thinking is on by default at medium and tunable low/medium/high via thinking_level (https://ai.google.dev/gemini-api/docs/thinking table: \"gemini-4-argon | On (medium) | low, medium, high\"); no thinkingBudget for this model. https://ai.google.dev/gemini-api/docs/latest-model: sampling parameters are ignored (\"Remove `temperature`, `top_p`, and `top_k` from your requests. If provided, they are ignored.\"). Thought signatures must be resent unchanged in stateless mode (\"You **MUST** always resend all `thought` blocks exactly as they were received\"). Explicit caching is NOT supported (implicit only). Mirrors google/gemini-3.8-flash's field set; the time-tiered price is disclosed on the pricing field. `candidate_count` stays unsupported as on every Gemini 3+ row. Price note: the recorded $2.00 input / $10.00 output / $0.10 context-caching rate runs THROUGH 2026-11-30; from 2026-12-01 Google's Standard paid tier is $4.00 / $20.00 / $0.20 per 1M tokens (https://ai.google.dev/gemini-api/docs/pricing#gemini-4-argon, read 2026-10-29) — re-price this row then.",
+      "$comment": "Winter-authored 2026-10-29 (catalog refresh: Gemini 4 Argon, found via OpenRouter's list, every fact from Google's own pages read 2026-10-29). https://ai.google.dev/gemini-api/docs/models/gemini-4-argon: \"Gemini 4 Argon (`gemini-4-argon`) is our flagship reasoning model\"; Versions \"Stable: `gemini-4-argon`\", Latest update \"October 2026\" — GA (Vertex: \"Launch stage: GA Release date: October 13, 2026\", https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-argon). maxOutputTokens is the SYNCHRONOUS cap: \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"; https://ai.google.dev/gemini-api/docs/thinking: \"Setting `max_output_tokens > 65536` with `background=False` returns a `400` error\" — long decode needs `background=True`, which this adapter does not send. Context is unified: \"Input, thinking, and output tokens share a single 1M-token context window (`1,048,576` tokens)\". Thinking is on by default at medium and tunable low/medium/high via thinking_level (https://ai.google.dev/gemini-api/docs/thinking table: \"gemini-4-argon | On (medium) | low, medium, high\"); no thinkingBudget for this model. https://ai.google.dev/gemini-api/docs/latest-model: sampling parameters are ignored (\"Remove `temperature`, `top_p`, and `top_k` from your requests. If provided, they are ignored.\"). Thought signatures must be resent unchanged in stateless mode (\"You **MUST** always resend all `thought` blocks exactly as they were received\"). Explicit caching is NOT supported (implicit only). Mirrors google/gemini-3.8-flash's field set; the time-tiered price is disclosed on the pricing field. `candidate_count` stays unsupported as on every Gemini 3+ row. Price note: the recorded $2.00 input / $10.00 output / $0.10 context-caching rate runs THROUGH 2026-11-30; from 2026-12-01 Google's Standard paid tier is $4.00 / $20.00 / $0.20 per 1M tokens (https://ai.google.dev/gemini-api/docs/pricing#gemini-4-argon, read 2026-10-29) — re-price this row then. — 2026-11-24 refresh: price set to the 2026-12-01 rate ($4/$20/$0.20); until 2026-11-30 Google charges $2/$10/$0.10. ModelPricing has no field for a dated change.",
       "endpoints": [
         "chat"
       ],
@@ -114150,14 +114626,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://ai.google.dev/gemini-api/docs/pricing (read 2026-10-29) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: Input price \"$2.00 through November 30, 2026. $4.00 starting December 1, 2026.\"; Output price (including thinking tokens) \"$10.00 through November 30, 2026. $20.00 starting December 1, 2026.\"; Context caching price \"$0.10 through November 30, 2026. $0.20 starting December 1, 2026. Implicit caching only (explicit caching is not supported).\" TIERED IN TIME, which `ModelPricing` cannot express: the CURRENT (through 2026-11-30) introductory rate is recorded, so from 2026-12-01 this row UNDER-reports by exactly 2x on every field until it is re-priced — the same disclosed gap as google/gemini-3.8-flash. No long-context tier is published for this model (flat across the 1M window); \"Gemini 4 Argon is not available on the Free tier.\" Batch/Flex (50%) and Priority are separate rate cards and are not folded in; no cache-write rate is published, so that key is absent.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [
         "candidate_count"
@@ -114436,7 +114912,7 @@
       "upstreamId": "gemini-4-carbon",
       "displayName": "Gemini 4 Carbon",
       "aliases": [],
-      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. Native GenerateContent; NOTE the adapter sends effort as thinkingConfig.thinkingBudget, not the documented thinking_level (adapter-level, reported).",
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. Native GenerateContent; NOTE the adapter sends effort as thinkingConfig.thinkingBudget, not the documented thinking_level (adapter-level, reported). — 2026-11-24 refresh: price set to the 2026-12-01 rate ($4/$20/$0.20); until 2026-11-30 Google charges $2/$10/$0.10. ModelPricing has no field for a dated change.",
       "endpoints": [
         "chat"
       ],
@@ -114548,12 +115024,12 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
         "observedAt": "2026-11-24T00:00:00Z"
       },
@@ -114568,7 +115044,7 @@
       "upstreamId": "gemini-4-argon",
       "displayName": "Gemini 4 Argon (OpenAI compatible)",
       "aliases": [],
-      "$comment": "Winter-authored 2026-10-29. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai (https://ai.google.dev/gemini-api/docs/openai). Unlike the 3.8 Flash row, the compatibility page now gives this model its OWN reasoning_effort mapping column: \"| `reasoning_effort` (OpenAI) | `thinking_level` (Gemini 4 Argon) |\" — minimal->low, low->low, medium->medium, high->high; \"If no `reasoning_effort` is specified, Gemini uses the model's default\" (medium). `minimal` is a documented alias of `low` here, so `efforts` lists the three distinct levels (as the native row does) rather than an alias that maps onto one of them; `none` is not offered (\"Reasoning cannot be turned off for Gemini 2.5 Pro or 3 models\" and the table has no `none` row for Argon). Synchronous output cap 65,536 (https://ai.google.dev/gemini-api/docs/thinking). Every other fact is google/gemini-4-argon's (same model, same key, same billing); price time-tiered exactly as there. Price note: the recorded $2.00 input / $10.00 output / $0.10 context-caching rate runs THROUGH 2026-11-30; from 2026-12-01 Google's Standard paid tier is $4.00 / $20.00 / $0.20 per 1M tokens (https://ai.google.dev/gemini-api/docs/pricing#gemini-4-argon, read 2026-10-29) — re-price this row then. — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation).",
+      "$comment": "Winter-authored 2026-10-29. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai (https://ai.google.dev/gemini-api/docs/openai). Unlike the 3.8 Flash row, the compatibility page now gives this model its OWN reasoning_effort mapping column: \"| `reasoning_effort` (OpenAI) | `thinking_level` (Gemini 4 Argon) |\" — minimal->low, low->low, medium->medium, high->high; \"If no `reasoning_effort` is specified, Gemini uses the model's default\" (medium). `minimal` is a documented alias of `low` here, so `efforts` lists the three distinct levels (as the native row does) rather than an alias that maps onto one of them; `none` is not offered (\"Reasoning cannot be turned off for Gemini 2.5 Pro or 3 models\" and the table has no `none` row for Argon). Synchronous output cap 65,536 (https://ai.google.dev/gemini-api/docs/thinking). Every other fact is google/gemini-4-argon's (same model, same key, same billing); price time-tiered exactly as there. Price note: the recorded $2.00 input / $10.00 output / $0.10 context-caching rate runs THROUGH 2026-11-30; from 2026-12-01 Google's Standard paid tier is $4.00 / $20.00 / $0.20 per 1M tokens (https://ai.google.dev/gemini-api/docs/pricing#gemini-4-argon, read 2026-10-29) — re-price this row then. — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation). — 2026-11-24 refresh: price set to the 2026-12-01 rate ($4/$20/$0.20); until 2026-11-30 Google charges $2/$10/$0.10. ModelPricing has no field for a dated change.",
       "endpoints": [
         "chat"
       ],
@@ -114677,14 +115153,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://ai.google.dev/gemini-api/docs/pricing (read 2026-10-29) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: Input price \"$2.00 through November 30, 2026. $4.00 starting December 1, 2026.\"; Output price (including thinking tokens) \"$10.00 through November 30, 2026. $20.00 starting December 1, 2026.\"; Context caching price \"$0.10 through November 30, 2026. $0.20 starting December 1, 2026. Implicit caching only (explicit caching is not supported).\" TIERED IN TIME, which `ModelPricing` cannot express: the CURRENT (through 2026-11-30) introductory rate is recorded, so from 2026-12-01 this row UNDER-reports by exactly 2x on every field until it is re-priced — the same disclosed gap as google/gemini-3.8-flash. No long-context tier is published for this model (flat across the 1M window); \"Gemini 4 Argon is not available on the Free tier.\" Batch/Flex (50%) and Priority are separate rate cards and are not folded in; no cache-write rate is published, so that key is absent.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
-        "observedAt": "2026-10-29T12:00:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -114951,7 +115427,7 @@
       "upstreamId": "gemini-4-carbon",
       "displayName": "Gemini 4 Carbon (OpenAI compatible)",
       "aliases": [],
-      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai.",
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai. — 2026-11-24 refresh: price set to the 2026-12-01 rate ($4/$20/$0.20); until 2026-11-30 Google charges $2/$10/$0.10. ModelPricing has no field for a dated change.",
       "endpoints": [
         "chat"
       ],
@@ -115060,12 +115536,12 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
-          "cacheReadPerMTokUsd": 0.1
+          "inputPerMTokUsd": 4,
+          "outputPerMTokUsd": 20,
+          "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: \"$4.00 starting December 1, 2026\" input, \"$20.00 starting December 1, 2026\" output, \"$0.20 starting December 1, 2026\" context caching; through November 30, 2026 it is $2.00 / $10.00 / $0.10. The catalog has no dated price, so the row carries the price from 2026-12-01 (six days after this refresh, and before any release of it can ship).",
         "confidence": "declared",
         "observedAt": "2026-11-24T00:00:00Z"
       },
@@ -116652,7 +117128,7 @@
       "upstreamId": "moonshotai/kimi-k3.1-pro",
       "displayName": "Kimi K3.1 Pro (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug moonshotai/kimi-k3.1-pro-20261023), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Moonshot's own pages (https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart, read 2026-10-29) — K3.1 Pro \"always has thinking mode enabled\" (\"How do I turn off Kimi K3.1 Pro's chain-of-thought? You can't\"), effort low/high/max default max. OpenRouter's entry also lists `none`; it is DROPPED here because the model cannot run without thinking. Direct rows: moonshot*/kimi-k3.1-pro and the Kimi Code k3.1-pro rows.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug moonshotai/kimi-k3.1-pro-20261023), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Moonshot's own pages (https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart, read 2026-10-29) — K3.1 Pro \"always has thinking mode enabled\" (\"How do I turn off Kimi K3.1 Pro's chain-of-thought? You can't\"), effort low/high/max default max. OpenRouter's entry also lists `none`; it is DROPPED here because the model cannot run without thinking. Direct rows: moonshot*/kimi-k3.1-pro and the Kimi Code k3.1-pro rows. — 2026-11-24 refresh: price synced to OpenRouter's list: 2/10 -> 0.2403/8.4023.",
       "endpoints": [
         "chat"
       ],
@@ -116745,14 +117221,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 2,
-          "outputPerMTokUsd": 10,
+          "inputPerMTokUsd": 0.2403,
+          "outputPerMTokUsd": 8.4023,
           "cacheReadPerMTokUsd": 0.2
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3.1-pro` (read 2026-10-29): OpenRouter's own current price, prompt 0.000002 / completion 0.00001 / input_cache_read 0.0000002 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `moonshotai/kimi-k3.1-pro` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000002403 / completion 0.0000084023 / input_cache_read 0.0000002 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -116763,7 +117239,7 @@
       "upstreamId": "minimax/minimax-m3.1-flash",
       "displayName": "MiniMax M3.1 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug minimax/minimax-m3.1-flash-20261019), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: MiniMax's own pages (https://platform.minimax.io/docs/api-reference/text-openai-api, read 2026-10-29) — 1,000,000 context, max_completion_tokens up to 524,288, efforts low..max default max, thinking cannot be disabled. Direct rows: minimax*/MiniMax-M3.1-Flash.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug minimax/minimax-m3.1-flash-20261019), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: MiniMax's own pages (https://platform.minimax.io/docs/api-reference/text-openai-api, read 2026-10-29) — 1,000,000 context, max_completion_tokens up to 524,288, efforts low..max default max, thinking cannot be disabled. Direct rows: minimax*/MiniMax-M3.1-Flash. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.15/0.6 -> 0.075/0.3.",
       "endpoints": [
         "chat"
       ],
@@ -116858,14 +117334,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.15,
-          "outputPerMTokUsd": 0.6,
-          "cacheReadPerMTokUsd": 0.015
+          "inputPerMTokUsd": 0.075,
+          "outputPerMTokUsd": 0.3,
+          "cacheReadPerMTokUsd": 0.0075
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `minimax/minimax-m3.1-flash` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000006 / input_cache_read 0.000000015 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `minimax/minimax-m3.1-flash` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000075 / completion 0.0000003 / input_cache_read 0.0000000075 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -117648,7 +118124,7 @@
       "upstreamId": "deepseek/deepseek-v4.1-flash-1017",
       "displayName": "DeepSeek V4.1 Flash 1017 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug deepseek/deepseek-v4.1-flash-20261017), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: DeepSeek's pricing page (https://api-docs.deepseek.com/quick_start/pricing, read 2026-10-29) names model version \"DeepSeek-V4.1-Flash-1017\", served on DeepSeek's own API under the `deepseek-flash` name (the direct row deepseek/deepseek-flash); this is OpenRouter's separate id for that snapshot, distinct from its earlier `deepseek/deepseek-v4.1-flash` entry. DeepSeek's thinking can be disabled, so OpenRouter's `none` is kept.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug deepseek/deepseek-v4.1-flash-20261017), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: DeepSeek's pricing page (https://api-docs.deepseek.com/quick_start/pricing, read 2026-10-29) names model version \"DeepSeek-V4.1-Flash-1017\", served on DeepSeek's own API under the `deepseek-flash` name (the direct row deepseek/deepseek-flash); this is OpenRouter's separate id for that snapshot, distinct from its earlier `deepseek/deepseek-v4.1-flash` entry. DeepSeek's thinking can be disabled, so OpenRouter's `none` is kept. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.3/1.2 -> 0.03/0.2.",
       "endpoints": [
         "chat"
       ],
@@ -117741,14 +118217,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.3,
-          "outputPerMTokUsd": 1.2,
-          "cacheReadPerMTokUsd": 0.006
+          "inputPerMTokUsd": 0.03,
+          "outputPerMTokUsd": 0.2,
+          "cacheReadPerMTokUsd": 0.001
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash-1017` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000006 / input_cache_read 0.000000003 USD per token; time-of-day overrides [{\"utc_days\": [\"saturday\", \"sunday\"], \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 0, \"utc_end\": 100, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 100, \"utc_end\": 400, \"prompt\": \"0.0000003\", \"completion\": \"0.0000012\", \"input_cache_read\": \"0.000000006\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 400, \"utc_end\": 600, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 600, \"utc_end\": 1000, \"prompt\": \"0.0000003\", \"completion\": \"0.0000012\", \"input_cache_read\": \"0.000000006\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 1000, \"utc_end\": 0, \"prompt\": \"0.00000015\", \"completion\": \"0.0000006\", \"input_cache_read\": \"0.000000003\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4.1-flash-1017` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000003 / completion 0.0000002 / input_cache_read 0.000000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -117759,7 +118235,7 @@
       "upstreamId": "deepseek/deepseek-v4-pro-0813",
       "displayName": "DeepSeek V4 Pro 0813 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug deepseek/deepseek-v4-pro-20260813), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: DeepSeek's pricing page https://api-docs.deepseek.com/quick_start/pricing (read 2026-10-29; MODEL VERSION row: \"DeepSeek-V4.1-Flash-1017 | DeepSeek-V4-Pro-0813\") shows V4 Pro 0813 served on DeepSeek's own API under `deepseek-v4-pro` (OpenRouter's description: \"This is the GA release of DeepSeek V4 Pro.\") (the direct row deepseek/deepseek-v4-pro); this is OpenRouter's separate id for that release, distinct from its `deepseek/deepseek-v4-pro` entry.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug deepseek/deepseek-v4-pro-20260813), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: DeepSeek's pricing page https://api-docs.deepseek.com/quick_start/pricing (read 2026-10-29; MODEL VERSION row: \"DeepSeek-V4.1-Flash-1017 | DeepSeek-V4-Pro-0813\") shows V4 Pro 0813 served on DeepSeek's own API under `deepseek-v4-pro` (OpenRouter's description: \"This is the GA release of DeepSeek V4 Pro.\") (the direct row deepseek/deepseek-v4-pro); this is OpenRouter's separate id for that release, distinct from its `deepseek/deepseek-v4-pro` entry. — 2026-11-24 refresh: price synced to OpenRouter's list: 1.32/3.96 -> 0.111/4.44.",
       "endpoints": [
         "chat"
       ],
@@ -117851,14 +118327,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 1.32,
-          "outputPerMTokUsd": 3.96,
-          "cacheReadPerMTokUsd": 0.044
+          "inputPerMTokUsd": 0.111,
+          "outputPerMTokUsd": 4.44,
+          "cacheReadPerMTokUsd": 0.097
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro-0813` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000066 / completion 0.00000198 / input_cache_read 0.000000022 USD per token; time-of-day overrides [{\"utc_days\": [\"saturday\", \"sunday\"], \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 0, \"utc_end\": 100, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 100, \"utc_end\": 400, \"prompt\": \"0.00000132\", \"completion\": \"0.00000396\", \"input_cache_read\": \"0.000000044\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 400, \"utc_end\": 600, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 600, \"utc_end\": 1000, \"prompt\": \"0.00000132\", \"completion\": \"0.00000396\", \"input_cache_read\": \"0.000000044\"}, {\"utc_days\": [\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\"], \"utc_start\": 1000, \"utc_end\": 0, \"prompt\": \"0.00000066\", \"completion\": \"0.00000198\", \"input_cache_read\": \"0.000000022\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `deepseek/deepseek-v4-pro-0813` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000111 / completion 0.00000444 / input_cache_read 0.000000097 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -118828,6 +119304,117 @@
       "status": "candidate"
     },
     {
+      "key": "openrouter/z-ai/glm-5.3-flashx-legal",
+      "providerId": "openrouter",
+      "upstreamId": "z-ai/glm-5.3-flashx-legal",
+      "displayName": "GLM-5.3 FlashX Legal (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug z-ai/glm-5.3-flashx-legal-20261102), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/z-ai/glm-5.3-flashx` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 131072,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): top_provider.max_completion_tokens 131072",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "video"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): architecture.input_modalities ['image', 'text', 'video']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): pricing.input_cache_read 0.000000075 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"high\", \"low\"], \"default_effort\": \"max\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "low"
+        ],
+        "defaultEffort": "max",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/z-ai/glm-5.3-flashx-legal"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.37,
+          "outputPerMTokUsd": 1.25,
+          "cacheReadPerMTokUsd": 0.075
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000037 / completion 0.00000125 / input_cache_read 0.000000075 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `z-ai/glm-5.3-flashx-legal` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
       "key": "openrouter/qwen/qwen3.8-flash",
       "providerId": "openrouter",
       "upstreamId": "qwen/qwen3.8-flash",
@@ -119046,16 +119633,16 @@
       "upstreamId": "qwen/qwen3.8-27b",
       "displayName": "Qwen3.8 27B (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug qwen/qwen3.8-27b-20260814), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Qwen's chat parameter reference (https://docs.qwencloud.com/api-reference/chat/openai-chat, read 2026-10-29) names qwen3.8-27b among the Qwen3.8 models with reasoning_effort low/medium/xhigh (default xhigh) and `none` mapping to enable_thinking=false.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug qwen/qwen3.8-27b-20260814), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Qwen's chat parameter reference (https://docs.qwencloud.com/api-reference/chat/openai-chat, read 2026-10-29) names qwen3.8-27b among the Qwen3.8 models with reasoning_effort low/medium/xhigh (default xhigh) and `none` mapping to enable_thinking=false. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.039/1.25 -> 0.06/1.96. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1000000 -> 1024000.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1000000,
+        "value": 1024000,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-10-29): context_length 1000000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-11-24): context_length 1024000",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 65536,
@@ -119140,14 +119727,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.039,
-          "outputPerMTokUsd": 1.25,
-          "cacheReadPerMTokUsd": 0.0039
+          "inputPerMTokUsd": 0.06,
+          "outputPerMTokUsd": 1.96,
+          "cacheReadPerMTokUsd": 0.059
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-10-29): OpenRouter's own current price, prompt 0.000000039 / completion 0.00000125 / input_cache_read 0.0000000039 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `qwen/qwen3.8-27b` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000006 / completion 0.00000196 / input_cache_read 0.000000059 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -119498,16 +120085,16 @@
       "upstreamId": "xiaomi/mimo-v2.6-pro",
       "displayName": "MiMo-V2.6-Pro (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug xiaomi/mimo-v2.6-pro-20260921), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: the direct row xiaomi/mimo-v2.6-pro cites Xiaomi's own model page (https://mimo.mi.com/models/en-US/mimo-v2.6-pro); that page is client-rendered and was not re-read on 2026-10-29.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug xiaomi/mimo-v2.6-pro-20260921), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: the direct row xiaomi/mimo-v2.6-pro cites Xiaomi's own model page (https://mimo.mi.com/models/en-US/mimo-v2.6-pro); that page is client-rendered and was not re-read on 2026-10-29. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1050000 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1050000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-pro` (read 2026-10-29): context_length 1050000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-pro` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 131072,
@@ -119605,16 +120192,16 @@
       "upstreamId": "xiaomi/mimo-v2.6-flash",
       "displayName": "MiMo-V2.6-Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug xiaomi/mimo-v2.6-flash-20260921), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: the direct row xiaomi/mimo-v2.6-flash cites Xiaomi's own model page (https://mimo.mi.com/models/en-US/mimo-v2.6-flash); that page is client-rendered and was not re-read on 2026-10-29.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug xiaomi/mimo-v2.6-flash-20260921), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: the direct row xiaomi/mimo-v2.6-flash cites Xiaomi's own model page (https://mimo.mi.com/models/en-US/mimo-v2.6-flash); that page is client-rendered and was not re-read on 2026-10-29. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1050000 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1050000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-flash` (read 2026-10-29): context_length 1050000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `xiaomi/mimo-v2.6-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 131072,
@@ -119819,16 +120406,16 @@
       "upstreamId": "stepfun/step-3.7-flash",
       "displayName": "Step 3.7 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug stepfun/step-3.7-flash-20260528), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: StepFun's model list (https://platform.stepfun.com/docs/zh/guides/models/list, read 2026-10-29) lists step-3.7-flash (256K, effort low/medium/high); direct row stepfun/step-3.7-flash.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug stepfun/step-3.7-flash-20260528), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: StepFun's model list (https://platform.stepfun.com/docs/zh/guides/models/list, read 2026-10-29) lists step-3.7-flash (256K, effort low/medium/high); direct row stepfun/step-3.7-flash. — 2026-11-24 refresh: context window synced to OpenRouter's list: 262144 -> 256000.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 262144,
+        "value": 256000,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `stepfun/step-3.7-flash` (read 2026-10-29): context_length 262144",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `stepfun/step-3.7-flash` (read 2026-11-24): context_length 256000",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 230400,
@@ -120035,7 +120622,7 @@
       "upstreamId": "nvidia/nemotron-3.5-super-vl",
       "displayName": "Nemotron 3.5 Super VL (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3.5-super-vl-20261015), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's model card (https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b/modelcard, read 2026-10-29) — NVIDIA-Nemotron-3.5-Super-VL-120B-A12B (GA), up to 1M context, text/image/video in, thinking toggled by `enable_thinking`; direct row nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3.5-super-vl-20261015), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's model card (https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b/modelcard, read 2026-10-29) — NVIDIA-Nemotron-3.5-Super-VL-120B-A12B (GA), up to 1M context, text/image/video in, thinking toggled by `enable_thinking`; direct row nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b. — 2026-11-24 refresh: price synced to OpenRouter's list: 0.15/0.5 -> 0.15/0.47.",
       "endpoints": [
         "chat"
       ],
@@ -120124,13 +120711,13 @@
       "pricing": {
         "value": {
           "inputPerMTokUsd": 0.15,
-          "outputPerMTokUsd": 0.5,
+          "outputPerMTokUsd": 0.47,
           "cacheReadPerMTokUsd": 0.02
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-super-vl` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000015 / completion 0.0000005 / input_cache_read 0.00000002 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-super-vl` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000015 / completion 0.00000047 / input_cache_read 0.00000002 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -120141,16 +120728,16 @@
       "upstreamId": "nvidia/nemotron-3.5-lightning",
       "displayName": "Nemotron 3.5 Lightning (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3.5-lightning-20260807), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's own build catalog serves it as nvidia/nemotron-3.5-lightning-30b-a3b (the direct row of that key).",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3.5-lightning-20260807), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's own build catalog serves it as nvidia/nemotron-3.5-lightning-30b-a3b (the direct row of that key). — 2026-11-24 refresh: price synced to OpenRouter's list: 0.07/0.2 -> 0.05/0.2. — 2026-11-24 refresh: context window synced to OpenRouter's list: 262144 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 262144,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-10-29): context_length 262144",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 235929,
@@ -120227,14 +120814,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.07,
+          "inputPerMTokUsd": 0.05,
           "outputPerMTokUsd": 0.2,
-          "cacheReadPerMTokUsd": 0.04
+          "cacheReadPerMTokUsd": 0.01
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000007 / completion 0.0000002 / input_cache_read 0.00000004 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3.5-lightning` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000005 / completion 0.0000002 / input_cache_read 0.00000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -120245,7 +120832,7 @@
       "upstreamId": "nvidia/nemotron-3-ultra-550b-a55b",
       "displayName": "Nemotron 3 Ultra (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3-ultra-550b-a55b-20260604), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's own build catalog serves it as nvidia/nemotron-3-ultra-550b-a55b (the direct row of that key).",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug nvidia/nemotron-3-ultra-550b-a55b-20260604), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: NVIDIA's own build catalog serves it as nvidia/nemotron-3-ultra-550b-a55b (the direct row of that key). — 2026-11-24 refresh: price synced to OpenRouter's list: 0.6/2.4 -> 0.5/2.2.",
       "endpoints": [
         "chat"
       ],
@@ -120336,14 +120923,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.6,
-          "outputPerMTokUsd": 2.4,
-          "cacheReadPerMTokUsd": 0.12
+          "inputPerMTokUsd": 0.5,
+          "outputPerMTokUsd": 2.2,
+          "cacheReadPerMTokUsd": 0.1
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3-ultra-550b-a55b` (read 2026-10-29): OpenRouter's own current price, prompt 0.0000006 / completion 0.0000024 / input_cache_read 0.00000012 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `nvidia/nemotron-3-ultra-550b-a55b` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000005 / completion 0.0000022 / input_cache_read 0.0000001 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -120671,16 +121258,16 @@
       "upstreamId": "inclusionai/ling-3.1-flash",
       "displayName": "Ling 3.1 Flash (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inclusionai/ling-3.1-flash-20261002), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Ant Ling's model page (https://developer.ant-ling.com/en/docs/models/ling, read 2026-10-29) — Ling-3.1-flash \"context window caps at 1M, with the official service currently exposing a 256K context window\"; OpenRouter's 1,000,000 is its own route figure. Direct row ant-ling/Ling-3.1-flash.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug inclusionai/ling-3.1-flash-20261002), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Ant Ling's model page (https://developer.ant-ling.com/en/docs/models/ling, read 2026-10-29) — Ling-3.1-flash \"context window caps at 1M, with the official service currently exposing a 256K context window\"; OpenRouter's 1,000,000 is its own route figure. Direct row ant-ling/Ling-3.1-flash. — 2026-11-24 refresh: context window synced to OpenRouter's list: 1000000 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 1000000,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `inclusionai/ling-3.1-flash` (read 2026-10-29): context_length 1000000",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `inclusionai/ling-3.1-flash` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 262144,
@@ -120978,7 +121565,7 @@
       "upstreamId": "tencent/hy3",
       "displayName": "Hy3 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug tencent/hy3-20260706), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Tencent serves Hy3 on its own TokenHub (the direct rows tencent-tokenhub*/hy3 cite Tencent Cloud's pages).",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug tencent/hy3-20260706), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker: Tencent serves Hy3 on its own TokenHub (the direct rows tencent-tokenhub*/hy3 cite Tencent Cloud's pages). — 2026-11-24 refresh: price synced to OpenRouter's list: 0.132/0.528 -> 0.0825/0.33.",
       "endpoints": [
         "chat"
       ],
@@ -121069,14 +121656,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.132,
-          "outputPerMTokUsd": 0.528,
-          "cacheReadPerMTokUsd": 0.033
+          "inputPerMTokUsd": 0.0825,
+          "outputPerMTokUsd": 0.33,
+          "cacheReadPerMTokUsd": 0.020625
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy3` (read 2026-10-29): OpenRouter's own current price, prompt 0.000000132 / completion 0.000000528 / input_cache_read 0.000000033 USD per token; time-of-day overrides [{\"utc_start\": 0, \"utc_end\": 1600, \"prompt\": \"0.000000132\", \"completion\": \"0.000000528\", \"input_cache_read\": \"0.000000033\"}, {\"utc_start\": 1600, \"utc_end\": 0, \"prompt\": \"0.0000000825\", \"completion\": \"0.00000033\", \"input_cache_read\": \"0.000000020625\"}] cannot be represented by `ModelPricing`, so the PEAK (highest) rate of each field is recorded — it over-reports off-peak usage rather than under-reporting peak usage (as deepseek/deepseek-flash records DeepSeek's own peak rate).",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `tencent/hy3` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000000825 / completion 0.00000033 / input_cache_read 0.000000020625 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -121407,7 +121994,7 @@
       "upstreamId": "particle-ai/particle-1",
       "displayName": "Particle-1 (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug particle-ai/particle-1-20261027), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Particle AI has no provider row in the catalog and its own docs were not read; OpenRouter's description: \"a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash\".",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug particle-ai/particle-1-20261027), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Particle AI has no provider row in the catalog and its own docs were not read; OpenRouter's description: \"a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash\". — 2026-11-24 refresh: price synced to OpenRouter's list: 0.25/1 -> 0.07/0.5.",
       "endpoints": [
         "chat"
       ],
@@ -121503,14 +122090,14 @@
       },
       "pricing": {
         "value": {
-          "inputPerMTokUsd": 0.25,
-          "outputPerMTokUsd": 1,
+          "inputPerMTokUsd": 0.07,
+          "outputPerMTokUsd": 0.5,
           "cacheReadPerMTokUsd": 0.03
         },
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `particle-ai/particle-1` (read 2026-10-29): OpenRouter's own current price, prompt 0.00000025 / completion 0.000001 / input_cache_read 0.00000003 USD per token.",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `particle-ai/particle-1` (read 2026-11-24): OpenRouter's own current price, prompt 0.00000007 / completion 0.0000005 / input_cache_read 0.00000003 USD per token; OpenRouter's headline price is its cheapest route's, and a request may be routed to a dearer one",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"
@@ -122795,16 +123382,16 @@
       "upstreamId": "thinkingmachines/inkling",
       "displayName": "Inkling (via OpenRouter)",
       "aliases": [],
-      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug thinkingmachines/inkling-20260715), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Thinking Machines Lab has no provider row in the catalog and its own docs were not read; the open weights are also served by deepinfra/thinkingmachines/Inkling.",
+      "$comment": "2026-10-29 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug thinkingmachines/inkling-20260715), the pricing authority for this provider/model pair. Reasoning continuation is `opaque-provider-state` (0.0.61): the route's own `reasoning_details` are replayed verbatim, as OpenRouter documents for every upstream; not live-probed on this route. Maker Thinking Machines Lab has no provider row in the catalog and its own docs were not read; the open weights are also served by deepinfra/thinkingmachines/Inkling. — 2026-11-24 refresh: context window synced to OpenRouter's list: 524288 -> 1048576.",
       "endpoints": [
         "chat"
       ],
       "contextWindow": {
-        "value": 524288,
+        "value": 1048576,
         "source": "official-doc",
-        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling` (read 2026-10-29): context_length 524288",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling` (read 2026-11-24): context_length 1048576",
         "confidence": "declared",
-        "observedAt": "2026-10-29T15:22:00Z"
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "maxOutputTokens": {
         "value": 471859,
@@ -122895,6 +123482,231 @@
       },
       "unsupportedParameters": [],
       "status": "candidate"
+    },
+    {
+      "key": "openrouter/thinkingmachines/inkling-2-mini",
+      "providerId": "openrouter",
+      "upstreamId": "thinkingmachines/inkling-2-mini",
+      "displayName": "Inkling 2 Mini (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug thinkingmachines/inkling-2-mini-20261120), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/thinkingmachines/inkling` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): top_provider.max_completion_tokens 65536",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): pricing.input_cache_read 0.000000015 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): reasoning {\"mandatory\": false, \"supported_efforts\": [\"max\", \"high\", \"medium\", \"low\", \"minimal\", \"none\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "medium",
+          "low",
+          "minimal",
+          "none"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/thinkingmachines/inkling-2-mini"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.075,
+          "outputPerMTokUsd": 0.3,
+          "cacheReadPerMTokUsd": 0.015
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): OpenRouter's own current price, prompt 0.000000075 / completion 0.0000003 / input_cache_read 0.000000015 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-mini` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
+    },
+    {
+      "key": "openrouter/thinkingmachines/inkling-2-small",
+      "providerId": "openrouter",
+      "upstreamId": "thinkingmachines/inkling-2-small",
+      "displayName": "Inkling 2 Small (via OpenRouter)",
+      "aliases": [],
+      "$comment": "2026-11-24 catalog refresh: every field is OpenRouter's own public model entry (https://openrouter.ai/api/v1/models, canonical_slug thinkingmachines/inkling-2-small-20261107), the pricing authority for this provider/model pair. Reasoning continuation and its replay scope are kept as on `openrouter/thinkingmachines/inkling` (the same maker on OpenRouter): the route's own `reasoning_details` are replayed (0.0.61/0.0.62).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): context_length 1048576",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 943718,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): top_provider.max_completion_tokens 943718",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): architecture.input_modalities ['image', 'text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): architecture.output_modalities ['text']",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `tools` and `tool_choice`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): pricing.input_cache_read 0.00000003 — a cached-input price is listed for this route",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): reasoning {\"mandatory\": true, \"supported_efforts\": [\"max\", \"high\", \"medium\", \"low\", \"minimal\"], \"default_effort\": \"high\"}; supported_parameters include `reasoning`",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "max",
+          "high",
+          "medium",
+          "low",
+          "minimal"
+        ],
+        "defaultEffort": "high",
+        "continuation": "opaque-provider-state",
+        "continuationDomain": {
+          "value": [
+            "openrouter/thinkingmachines/inkling-2-small"
+          ],
+          "source": "official-doc",
+          "sourceRef": "https://openrouter.ai/docs/use-cases/reasoning-tokens (read 2026-10-29), BOTH halves. Own-state acceptance: \"Preserving reasoning\" -- the assistant message's `reasoning_details` are sent back unchanged (\"Pass the full reasoning_details block\"); OpenRouter normalizes every upstream's reasoning into `reasoning_details`, and the adapter's capture and verbatim replay are gated on the OpenRouter connection and this row's continuation alone, not on the upstream. Why the domain is NARROW: \"the entire sequence of consecutive reasoning blocks must match the outputs generated by the model\", so the state is valid for the model that produced it; the domain is this OpenRouter route alone, never the upstream vendor's own row (a different provider, credential and account). Set catalog-wide for every OpenRouter reasoning row on 2026-10-29, the same shape as openrouter/openai/gpt-6.1-sol; documented, not live-probed per upstream.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T18:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 0.3,
+          "outputPerMTokUsd": 1.0,
+          "cacheReadPerMTokUsd": 0.03
+        },
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): OpenRouter's own current price, prompt 0.0000003 / completion 0.000001 / input_cache_read 0.00000003 USD per token",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate",
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://openrouter.ai/api/v1/models — OpenRouter's own public model entry `thinkingmachines/inkling-2-small` (read 2026-11-24): supported_parameters include `structured_outputs`",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      }
     },
     {
       "key": "openrouter/thinkingmachines/inkling-small",

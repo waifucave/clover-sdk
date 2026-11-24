@@ -153,10 +153,11 @@ describe("the seed is fully replaced", () => {
     expect(row("minimax-anthropic/MiniMax-M3.1-Flash").reasoning!.effortRequest?.value).toEqual({ field: "output_config.effort" });
     expect(mm.reasoning!.effortRequest).toBeUndefined();
     expect(row("minimax-token-plan/MiniMax-M3.1-Flash").pricing).toBeUndefined();
-    // Gemini 4 Argon: the SYNCHRONOUS output cap (long decode needs background=True), the introductory price.
+    // Gemini 4 Argon: the SYNCHRONOUS output cap (long decode needs background=True); the price from 2026-12-01 (2026-11-24
+    // refresh: the catalog has no dated price, and the introductory $2/$10/$0.10 ends 2026-11-30).
     const argon = row("google/gemini-4-argon");
     expect([argon.contextWindow!.value, argon.maxOutputTokens!.value, argon.reasoning!.efforts]).toEqual([1048576, 65536, ["low", "medium", "high"]]);
-    expect(argon.pricing!.value).toEqual({ inputPerMTokUsd: 2, outputPerMTokUsd: 10, cacheReadPerMTokUsd: 0.1 });
+    expect(argon.pricing!.value).toEqual({ inputPerMTokUsd: 4, outputPerMTokUsd: 20, cacheReadPerMTokUsd: 0.2 });
     expect(row("vertex/gemini-4-argon").pricing).toBeUndefined();
   });
 
@@ -647,6 +648,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "meta/muse-spark-1.2-contributor",
       "meta/muse-spark-1.3",
       "meta/muse-spark-1.3-contributor",
+      "meta/muse-wonder-1.0",
       "minimax-anthropic/MiniMax-M2",
       "minimax-anthropic/MiniMax-M2.1",
       "minimax-anthropic/MiniMax-M2.1-highspeed",
@@ -689,6 +691,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "mistral/ministral-3b-2512",
       "mistral/ministral-8b-2512",
       "mistral/mistral-large-2512",
+      "mistral/mistral-large-4",
       "mistral/mistral-large-latest",
       "mistral/mistral-medium-3-5",
       "mistral/mistral-medium-latest",
@@ -864,7 +867,9 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/openai/gpt-6.1-sol",
       "openrouter/openai/gpt-6.1-terra",
       "openrouter/openai/gpt-6.2-astra",
+      "openrouter/openai/gpt-6.2-astra-pro",
       "openrouter/openai/gpt-6.2-sol",
+      "openrouter/openai/gpt-6.2-sol-pro",
       "openrouter/particle-ai/particle-1",
       "openrouter/perceptron/perceptron-mk1.5",
       "openrouter/prism-ml/ternary-bonsai-2-27b",
@@ -886,6 +891,8 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/tencent/hy4",
       "openrouter/tencent/hy4-flash",
       "openrouter/thinkingmachines/inkling",
+      "openrouter/thinkingmachines/inkling-2-mini",
+      "openrouter/thinkingmachines/inkling-2-small",
       "openrouter/thinkingmachines/inkling-small",
       "openrouter/upstage/solar-mini4",
       "openrouter/upstage/solar-pro4",
@@ -898,6 +905,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/z-ai/glm-5.3",
       "openrouter/z-ai/glm-5.3-flash",
       "openrouter/z-ai/glm-5.3-flashx",
+      "openrouter/z-ai/glm-5.3-flashx-legal",
       "ovhcloud/Meta-Llama-3_3-70B-Instruct",
       "ovhcloud/Qwen2.5-VL-72B-Instruct",
       "ovhcloud/Qwen3.5-397B-A17B",
