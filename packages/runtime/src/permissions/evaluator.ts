@@ -1570,7 +1570,7 @@ export const UNFETCHABLE_URL_REASON = "WebFetch refuses this URL before any netw
  * new call and is judged again -- and never an unparseable url.
  */
 function isPreapprovedWebFetch(call: PermissionCall): boolean {
-  if (call.toolName !== WEB_FETCH_TOOL) return false;
+  if (call.toolName !== WEB_FETCH_TOOL || !isRuntimeBuiltinCall(call)) return false;
   const url = webFetchUrlOf(call.input);
   return url !== undefined && isPreapprovedUrl(url);
 }
@@ -1700,8 +1700,25 @@ function stampExplicitApproval(record: PermissionDecisionRecord, call: Permissio
 // else here. WS-06 §3.2/WS-07's own framing treats Monitor as a background-process primitive, never
 // a read -- see this fix wave's own `shellCommandOf` (edit-recognition.ts) header for why Monitor is
 // deliberately excluded from THIS ONE check while joining every other Bash-keyed one.
+/**
+ * Is this a call to the RUNTIME's own built-in tool, rather than to a tool an MCP server or the host supplied
+ * (the engine sets `mcpServer` from the name the model called, for every tool a server owns -- a host's
+ * plain-named in-process tool included, whatever name it took: `Bash`, `Read`, `Agent`)?
+ *
+ * The mode baseline's silent allows below vouch for what a built-in DOES when it runs: that a read-only
+ * looking `Bash` command runs through the runtime's own shell (and sandbox), that `Read`/`Glob`/`Grep` read
+ * the path in the field the runtime's schema names, that an `Edit` writes only the path it names. A tool the
+ * runtime does not run has none of those guarantees, so it gets none of those allows and is judged as any other
+ * host or MCP tool (rules, hooks, the host's `canUseTool`). The RESTRICTIVE name-keyed checks (the shell
+ * write-target floor, the sandbox-escape ask, the protected and critical paths, plan's write withholding) still
+ * apply to a host tool of that name: stricter, never looser.
+ */
+function isRuntimeBuiltinCall(call: PermissionCall): boolean {
+  return call.mcpServer === undefined;
+}
+
 function isBashCallReadOnly(call: PermissionCall): boolean {
-  if (call.toolName !== "Bash") return false;
+  if (call.toolName !== "Bash" || !isRuntimeBuiltinCall(call)) return false;
   const raw = call.input["command"];
   if (typeof raw !== "string") return false;
   // EVERY command it runs, substitutions included: `ls $(rm -rf ~)` is not a read.
@@ -1727,6 +1744,7 @@ function isBashCallReadOnly(call: PermissionCall): boolean {
 // "scan from cwd", i.e. "."), mirroring `matchesRuleForCall`'s own identical default one section up.
 function dedicatedReadToolPath(call: PermissionCall): string | undefined {
   if (call.toolName !== "Read" && call.toolName !== "Glob" && call.toolName !== "Grep") return undefined;
+  if (!isRuntimeBuiltinCall(call)) return undefined;
   const raw = call.input[fileRulePathField(call.toolName)];
   // Fix round 11: trim here too, matching edit-recognition.ts's own recognizeEditOperation fix --
   // this is the SEPARATE root for Read/Glob/Grep's own candidate path (recognizeEditOperation only
@@ -1797,6 +1815,7 @@ const TASK_MODE_CLASS_SILENT_ALLOW: ReadonlySet<string> = new Set([
 ]);
 
 function isTaskModeClassSilentAllow(call: PermissionCall): boolean {
+  if (!isRuntimeBuiltinCall(call)) return false;
   if (call.toolName === "CronCreate") return call.input["durable"] !== true;
   return TASK_MODE_CLASS_SILENT_ALLOW.has(call.toolName);
 }
@@ -1946,7 +1965,7 @@ function evaluateModeStage(call: PermissionCall, ctx: EvaluationContext, mode: P
   // available on this host, and on the call's own `dangerouslyDisableSandbox` (a call that opts out of
   // the fence has none of the containment this allow is paying for; it is an escape, handled by
   // `resolveSandboxEscape`). `evaluator.ts` knows none of those; `engine.ts` knows all three.
-  if ((mode === "default" || mode === "dontAsk" || mode === "acceptEdits" || mode === "auto") && ctx.bashRunsSandboxed?.(call) === true) {
+  if ((mode === "default" || mode === "dontAsk" || mode === "acceptEdits" || mode === "auto") && isRuntimeBuiltinCall(call) && ctx.bashRunsSandboxed?.(call) === true) {
     return { kind: "allow" };
   }
 
@@ -1995,7 +2014,7 @@ function evaluateModeStage(call: PermissionCall, ctx: EvaluationContext, mode: P
     // (feeding protected/critical/plan-write detection above and in isPlanWriteShaped, which IS what
     // I2 asked for); only the acceptEdits/auto-mode SILENT ALLOW stays Bash-only.
     const recognized = call.toolName !== "Monitor" ? recognizeEditOperation(call, { sessionRoot: ctx.sessionRoot, home: ctx.home, ...(ctx.brand !== undefined ? { brand: ctx.brand } : {}) }) : null;
-    if (recognized !== null && (recognized.kind === "edit" || recognized.kind === "bashFsOp")) {
+    if (recognized !== null && (recognized.kind === "edit" || recognized.kind === "bashFsOp") && isRuntimeBuiltinCall(call)) {
       // "other" (a redirect, or a subcommand mixed with an unblessed one) NEVER auto-approves here
       // — it falls through to "unresolved" below, same as an unrecognized command.
       // A `cd` first moves the base the paths were resolved against (Claude Code asks for this compound).
@@ -2068,7 +2087,7 @@ function evaluateModeStage(call: PermissionCall, ctx: EvaluationContext, mode: P
   // I2 (fix wave, P3 close-out): Monitor excluded from THIS arm's auto-approve outcome too -- see
   // the acceptEdits arm's own identical comment, above, for the full rationale.
   const recognizedForAuto = call.toolName !== "Monitor" ? recognizeEditOperation(call, { sessionRoot: ctx.sessionRoot, home: ctx.home, ...(ctx.brand !== undefined ? { brand: ctx.brand } : {}) }) : null;
-  if (shellGate === undefined && recognizedForAuto !== null && (recognizedForAuto.kind === "edit" || recognizedForAuto.kind === "bashFsOp") && recognizedForAuto.paths.every((p) => isWithinBounds(p, ctx)) && !(isShellCall(call) && shellCommandChangesDirectory(call))) {
+  if (shellGate === undefined && isRuntimeBuiltinCall(call) && recognizedForAuto !== null && (recognizedForAuto.kind === "edit" || recognizedForAuto.kind === "bashFsOp") && recognizedForAuto.paths.every((p) => isWithinBounds(p, ctx)) && !(isShellCall(call) && shellCommandChangesDirectory(call))) {
     return { kind: "allow" };
   }
   return { kind: "unresolved" };
