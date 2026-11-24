@@ -113,6 +113,9 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "gemini-3.8-flash": "strong",
   "gemini-3.8-flash-cyber": "strong", // unsure
   "gemini-4-argon": "strong", // unsure
+  "gemini-4-carbon": "strong", // unsure
+  "gemini-4-hydrogen": "strong", // unsure
+  "gemini-4-neon": "strong", // unsure
   // ---- gemma
   "gemma-2-2b-it": "weak",
   "gemma-2-9b-it": "weak",
@@ -151,6 +154,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "glm-5.3": "strong",
   "glm-5.3-flash": "medium",
   "glm-5.3-flashx": "medium",
+  "glm-5.3-flashx-legal": "medium", // unsure
   "glm-5p1": "strong",
   "glm-5p3": "strong",
   // ---- gpt
@@ -192,7 +196,9 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "gpt-6.1-sol": "strong",
   "gpt-6.1-terra": "strong",
   "gpt-6.2-astra": "strong",
+  "gpt-6.2-astra-pro": "strong",
   "gpt-6.2-sol": "strong",
+  "gpt-6.2-sol-pro": "strong",
   "gpt-chat-latest": "medium", // unsure
   // ---- gpt-oss
   "gpt-oss-120b": "medium",
@@ -223,6 +229,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "hunyuan-vision": "weak",
   "hy3": "medium", // unsure
   "hy4": "medium", // unsure
+  "hy4-flash": "medium", // unsure (as hy4-flash-free, the same model)
   "hy4-flash-free": "medium", // unsure
   "hy4-preview": "medium", // unsure
   // ---- kimi
@@ -296,6 +303,7 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "mistral-7b": "weak",
   "mistral-7b-instruct": "weak",
   "mistral-large": "medium",
+  "mistral-large-4": "strong", // unsure
   "mistral-large-2512": "medium",
   "mistral-large-3-675b-instruct-2512": "medium",
   "mistral-large-latest": "medium",
@@ -311,6 +319,8 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "mistral-small-4-119b-2603": "weak", // unsure
   "mistral-small-latest": "weak",
   // ---- muse
+  "muse-ember-1.0": "weak", // unsure
+  "muse-wonder-1.0": "strong", // unsure
   "muse-glimmer-30b": "weak", // unsure
   "muse-spark-1.1": "medium", // unsure
   "muse-spark-1.2": "medium", // unsure
@@ -604,6 +614,8 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "thedrummer/cydonia-24b-v4.3": "weak", // unsure
   "thedrummer/skyfall-31b-v4.2": "weak", // unsure
   "thinkingmachines/inkling": "medium", // unsure
+  "thinkingmachines/inkling-2-mini": "weak", // unsure
+  "thinkingmachines/inkling-2-small": "medium", // unsure
   "thinkingmachines/inkling-small": "weak", // unsure
   "trinity-large-thinking": "weak", // unsure
   "typhoon-v2.5-30b-a3b-instruct": "weak", // unsure

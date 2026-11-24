@@ -2141,7 +2141,7 @@
       "protocols": [
         "openai-chat-completions"
       ],
-      "$comment": "WS-13b §8.4 / audit §5.1: a KEYLESS row, and the only one whose vendor requires no credential at all. `authKinds: [\"custom\"]` is the honest encoding: `local-none` is reserved for a LOCAL installation (the twelve WS-13 §12 rows), and this is a public REMOTE endpoint — labelling it `local-none` would tell `connectionFrom` to stamp `local: true` and hand a non-loopback https host the local-endpoint policy. `custom` says \"this provider's credential rule is its own\", which is exactly the state: no key needed, an optional one accepted. One of the three documented hosts is bound; the others are a host's `connection.baseUrl` to choose.",
+      "$comment": "WS-13b §8.4 / audit §5.1: a KEYLESS row, and the only one whose vendor requires no credential at all. `authKinds: [\"custom\"]` is the honest encoding: `local-none` is reserved for a LOCAL installation (the twelve WS-13 §12 rows), and this is a public REMOTE endpoint — labelling it `local-none` would tell `connectionFrom` to stamp `local: true` and hand a non-loopback https host the local-endpoint policy. `custom` says \"this provider's credential rule is its own\", which is exactly the state: no key needed, an optional one accepted. One of the three documented hosts is bound; the others are a host's `connection.baseUrl` to choose. — 2026-11-24 refresh: blocked (keyless beta closed, a key required, registration closed); see risk.reasons.",
       "authKinds": [
         "custom"
       ],
@@ -2158,8 +2158,10 @@
         "sourcePaths": []
       },
       "risk": {
-        "class": "review-required",
+        "class": "blocked",
         "reasons": [
+          "Keyless access closed on or before 2026-11-24: a keyless request to POST https://hermes.ai.unturf.com/v1/chat/completions (model turboderp/Qwen3.8-27B-exl3, one dummy tool) answered HTTP 401 on 2026-11-24 about 18:50 UTC: {\"error\": {\"message\": \"The public beta is closed for now. This endpoint needs an API key, and key registration is closed; check uncloseai.com for when it reopens.\", \"type\": \"public_beta_closed\", \"code\": 401}} (one live call made by the MOSS controller).",
+          "Privacy (https://uncloseai.com/privacy-policy.html and https://uncloseai.com/terms-of-use.html, both last updated 2026-10-18, read 2026-11-24): IP addresses and request metadata are kept in access logs for up to one year; traffic, including prompts, is subject to automated scanning and random sampling, and captured content is kept as long as needed to act on abuse and may be disclosed when required by law or to report abuse; no training use is stated; operated from the United States with no named legal entity.",
           "hobby-grade: audit §5.1 records no availability guarantee, and the ToU's one real constraint is not degrading service — a host must rate-limit conservatively",
           "the ToU prohibits developing \"competing machine learning services without attribution\", which is a term a host embedding this provider should read before shipping"
         ]
@@ -4504,9 +4506,9 @@
         ]
       },
       "risk": {
-        "class": "review-required",
+        "class": "blocked",
         "reasons": [
-          "Platform shutting down 2026-09-30 per https://cloud.tencent.com/document/product/1729/131925; use `tencent-tokenhub`.",
+          "The legacy Hunyuan platform was shut down on 2026-09-30 (https://cloud.tencent.com/document/product/1729/131925 (read 2026-11-24): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\" (the original Tencent Hunyuan platform is fully shut down on 30 September 2026); \"建议迁移至 TokenHub\" (migrate to TokenHub)); its successor is `tencent-tokenhub` / `tencent-tokenhub-intl`.",
           "Admitted on the vendor's own fetched documentation; this application has not run a live key gate against this endpoint."
         ]
       },
@@ -4517,7 +4519,7 @@
         "citation": "https://hunyuan.tencent.com — the vendor's own site as OmniRoute's product catalog records it at 5458026 (src/shared/constants/providers/apikey/*.ts, blob-pinned in extraction-manifest.json). The api-key path is attested by the pinned RegistryEntry: authType \"apikey\", OpenAI Chat Completions at https://api.hunyuan.cloud.tencent.com/v1. EVIDENCE TIER: pinned-upstream, NOT a page this lane fetched and read — see PROVENANCE.md \"Two tiers of admission citation\".",
         "tier": "pinned-upstream"
       },
-      "$comment": "2026-09-25 refresh: Tencent announced (https://cloud.tencent.com/document/product/1729/131925) that the old Hunyuan platform at api.hunyuan.cloud.tencent.com shuts down on 2026-09-30 and that its main ids (hunyuan-turbos-latest, -t1-latest, -pro, -lite, -functioncall, the 2.0 dated ids) went offline on 2026-06-22. Successor: `tencent-tokenhub`."
+      "$comment": "2026-09-25 refresh: Tencent announced (https://cloud.tencent.com/document/product/1729/131925) that the old Hunyuan platform at api.hunyuan.cloud.tencent.com shuts down on 2026-09-30 and that its main ids (hunyuan-turbos-latest, -t1-latest, -pro, -lite, -functioncall, the 2.0 dated ids) went offline on 2026-06-22. Successor: `tencent-tokenhub`. — 2026-11-24 refresh: blocked, as `meta-llama` was for its retired API: https://cloud.tencent.com/document/product/1729/131925 (read 2026-11-24): \"原 腾讯混元大模型平台 将于 9 月 30 日 全面停服下线\" (the original Tencent Hunyuan platform is fully shut down on 30 September 2026); \"建议迁移至 TokenHub\" (migrate to TokenHub)."
     },
     {
       "id": "minimax-cn",

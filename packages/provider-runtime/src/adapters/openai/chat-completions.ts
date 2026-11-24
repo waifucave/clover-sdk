@@ -197,14 +197,14 @@ export function chatExposedReasoningFieldFor(providerId: string): ChatExposedRea
  * Without it, the reasoning the adapter sends back is accepted and dropped. So on these providers, for a row
  * whose continuation is `plaintext` (the catalog's statement that the reasoning is replayed), the request
  * carries `preserve_thinking: true` -- only for the models the page lists as supporting it ("Currently
- * supported by qwen3.8-max ..., qwen3.8-flash, qwen3.8-omni-flash, qwen3.7-max ..., qwen3.7-plus ...,
+ * supported by qwen4-max (added 2026-11-24, same page), qwen3.8-max ..., qwen3.8-flash, qwen3.8-omni-flash, qwen3.7-max ..., qwen3.7-plus ...,
  * qwen3.6-plus ..., qwen3.7-flash ..., qwen3.6-flash ..., kimi-k2.6 ..., kimi-k2.7-code ..."). GLM rows
  * there use `clear_thinking` instead and are never sent this. The Coding Plan and Token Plan endpoints
  * are not listed: the parameter references document the standard compatible-mode base only, and no page
  * defines the parameter for either plan's host.
  */
 const PRESERVE_THINKING_PROVIDERS: ReadonlySet<string> = new Set(["alibaba", "alibaba-cn", "qwen-cloud"]);
-const PRESERVE_THINKING_MODELS = /^(qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
+const PRESERVE_THINKING_MODELS = /^(qwen4-max|qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
 
 /** Whether this turn's request carries `preserve_thinking: true` (see above). */
 export function chatPreserveThinkingFor(providerId: string, descriptor: WinterModelDescriptor | undefined): boolean {

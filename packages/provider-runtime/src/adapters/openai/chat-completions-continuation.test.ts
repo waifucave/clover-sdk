@@ -293,6 +293,8 @@ describe("reasoning_content replay on the surfaces that document it", () => {
   test("preserve_thinking: Model Studio / Qwen Cloud rows on the documented list only -- never GLM, never the Coding Plan, never another provider", () => {
     expect(chatPreserveThinkingFor("alibaba", row("alibaba/qwen3.8-flash"))).toBe(true);
     expect(chatPreserveThinkingFor("qwen-cloud", row("qwen-cloud/qwen3.7-max-2026-06-08"))).toBe(true);
+    expect(chatPreserveThinkingFor("alibaba", row("alibaba/qwen4-max"))).toBe(true); // 2026-11-24: listed under preserve_thinking
+    expect(chatPreserveThinkingFor("alibaba-cn", row("alibaba-cn/qwen4-max"))).toBe(true);
     // The plans' hosts are undocumented for the parameter: never sent there, whatever the row says.
     expect(chatPreserveThinkingFor("qwen-cloud-token-plan", { ...row("qwen-cloud-token-plan/qwen3.6-flash"), reasoning: { ...row("qwen-cloud-token-plan/qwen3.6-flash").reasoning!, continuation: "plaintext" } })).toBe(false);
     expect(row("qwen-cloud-token-plan/qwen3.6-flash").reasoning!.continuation).toBe("none");

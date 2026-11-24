@@ -153,10 +153,11 @@ describe("the seed is fully replaced", () => {
     expect(row("minimax-anthropic/MiniMax-M3.1-Flash").reasoning!.effortRequest?.value).toEqual({ field: "output_config.effort" });
     expect(mm.reasoning!.effortRequest).toBeUndefined();
     expect(row("minimax-token-plan/MiniMax-M3.1-Flash").pricing).toBeUndefined();
-    // Gemini 4 Argon: the SYNCHRONOUS output cap (long decode needs background=True), the introductory price.
+    // Gemini 4 Argon: the SYNCHRONOUS output cap (long decode needs background=True); the price from 2026-12-01 (2026-11-24
+    // refresh: the catalog has no dated price, and the introductory $2/$10/$0.10 ends 2026-11-30).
     const argon = row("google/gemini-4-argon");
     expect([argon.contextWindow!.value, argon.maxOutputTokens!.value, argon.reasoning!.efforts]).toEqual([1048576, 65536, ["low", "medium", "high"]]);
-    expect(argon.pricing!.value).toEqual({ inputPerMTokUsd: 2, outputPerMTokUsd: 10, cacheReadPerMTokUsd: 0.1 });
+    expect(argon.pricing!.value).toEqual({ inputPerMTokUsd: 4, outputPerMTokUsd: 20, cacheReadPerMTokUsd: 0.2 });
     expect(row("vertex/gemini-4-argon").pricing).toBeUndefined();
   });
 
@@ -308,6 +309,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "alibaba-cn/qwen3.8-2.4t-a95b",
       "alibaba-cn/qwen3.8-flash",
       "alibaba-cn/qwen3.8-max",
+      "alibaba-cn/qwen4-max",
       "alibaba/deepseek-v4-flash",
       "alibaba/deepseek-v4-pro",
       "alibaba/deepseek-v4.1-flash",
@@ -331,6 +333,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "alibaba/qwen3.8-flash",
       "alibaba/qwen3.8-max",
       "alibaba/qwen3.8-omni-flash",
+      "alibaba/qwen4-max",
       "ant-ling/Ling-2.6-1T",
       "ant-ling/Ling-2.6-flash",
       "ant-ling/Ling-3.0-flash",
@@ -606,6 +609,9 @@ describe("pricing (R6-H, R6-9)", () => {
       "google-openai/gemini-3.7-flash",
       "google-openai/gemini-3.8-flash",
       "google-openai/gemini-4-argon",
+      "google-openai/gemini-4-carbon",
+      "google-openai/gemini-4-hydrogen",
+      "google-openai/gemini-4-neon",
       "google/gemini-2.5-flash",
       "google/gemini-2.5-flash-lite",
       "google/gemini-2.5-pro",
@@ -618,6 +624,9 @@ describe("pricing (R6-H, R6-9)", () => {
       "google/gemini-3.7-flash",
       "google/gemini-3.8-flash",
       "google/gemini-4-argon",
+      "google/gemini-4-carbon",
+      "google/gemini-4-hydrogen",
+      "google/gemini-4-neon",
       "groq/openai/gpt-oss-120b",
       "groq/openai/gpt-oss-20b",
       "groq/openai/gpt-oss-safeguard-20b",
@@ -629,14 +638,17 @@ describe("pricing (R6-H, R6-9)", () => {
       "kilocode/google/gemini-3.1-pro-preview",
       "kilocode/openai/gpt-5.6-sol",
       "longcat/LongCat-2.0",
+      "meta-anthropic/muse-ember-1.0",
       "meta-anthropic/muse-spark-1.1",
       "meta-anthropic/muse-spark-1.2",
       "meta-anthropic/muse-spark-1.3",
+      "meta/muse-ember-1.0",
       "meta/muse-spark-1.1",
       "meta/muse-spark-1.2",
       "meta/muse-spark-1.2-contributor",
       "meta/muse-spark-1.3",
       "meta/muse-spark-1.3-contributor",
+      "meta/muse-wonder-1.0",
       "minimax-anthropic/MiniMax-M2",
       "minimax-anthropic/MiniMax-M2.1",
       "minimax-anthropic/MiniMax-M2.1-highspeed",
@@ -679,6 +691,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "mistral/ministral-3b-2512",
       "mistral/ministral-8b-2512",
       "mistral/mistral-large-2512",
+      "mistral/mistral-large-4",
       "mistral/mistral-large-latest",
       "mistral/mistral-medium-3-5",
       "mistral/mistral-medium-latest",
@@ -782,6 +795,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "opencode/big-pickle",
       "opencode/space-bunny-free",
       "openrouter/anthropic/claude-fable-5.1",
+      "openrouter/anthropic/claude-fable-5.2",
       "openrouter/anthropic/claude-haiku-5.5",
       "openrouter/anthropic/claude-opus-5",
       "openrouter/anthropic/claude-opus-5.5",
@@ -801,6 +815,9 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/google/gemini-3.7-flash",
       "openrouter/google/gemini-3.8-flash",
       "openrouter/google/gemini-4-argon",
+      "openrouter/google/gemini-4-carbon",
+      "openrouter/google/gemini-4-hydrogen",
+      "openrouter/google/gemini-4-neon",
       "openrouter/google/gemma-4-26b-a4b-it",
       "openrouter/google/gemma-4-31b-it",
       "openrouter/ibm-granite/granite-4.2-8b",
@@ -812,6 +829,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/liquid/lfm-2.5-2.6b",
       "openrouter/liquid/lfm-2.5-24b-a2b",
       "openrouter/meituan/longcat-2.0",
+      "openrouter/meta/muse-ember",
       "openrouter/meta/muse-glimmer-30b",
       "openrouter/meta/muse-spark-1.3",
       "openrouter/meta/muse-spark-1.3-contributor",
@@ -848,6 +866,10 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/openai/gpt-6-sol",
       "openrouter/openai/gpt-6.1-sol",
       "openrouter/openai/gpt-6.1-terra",
+      "openrouter/openai/gpt-6.2-astra",
+      "openrouter/openai/gpt-6.2-astra-pro",
+      "openrouter/openai/gpt-6.2-sol",
+      "openrouter/openai/gpt-6.2-sol-pro",
       "openrouter/particle-ai/particle-1",
       "openrouter/perceptron/perceptron-mk1.5",
       "openrouter/prism-ml/ternary-bonsai-2-27b",
@@ -860,12 +882,17 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/qwen/qwen3.8-flash",
       "openrouter/qwen/qwen3.8-max-0902",
       "openrouter/qwen/qwen3.8-omni-flash",
+      "openrouter/qwen/qwen4-max",
       "openrouter/reflection/beam-1.0-501b-a23b",
       "openrouter/sakana/sakana-namazu",
       "openrouter/stealth/space-bunny-alpha",
       "openrouter/stepfun/step-3.7-flash",
       "openrouter/tencent/hy3",
+      "openrouter/tencent/hy4",
+      "openrouter/tencent/hy4-flash",
       "openrouter/thinkingmachines/inkling",
+      "openrouter/thinkingmachines/inkling-2-mini",
+      "openrouter/thinkingmachines/inkling-2-small",
       "openrouter/thinkingmachines/inkling-small",
       "openrouter/upstage/solar-mini4",
       "openrouter/upstage/solar-pro4",
@@ -878,6 +905,7 @@ describe("pricing (R6-H, R6-9)", () => {
       "openrouter/z-ai/glm-5.3",
       "openrouter/z-ai/glm-5.3-flash",
       "openrouter/z-ai/glm-5.3-flashx",
+      "openrouter/z-ai/glm-5.3-flashx-legal",
       "ovhcloud/Meta-Llama-3_3-70B-Instruct",
       "ovhcloud/Qwen2.5-VL-72B-Instruct",
       "ovhcloud/Qwen3.5-397B-A17B",
@@ -2446,7 +2474,7 @@ describe("2026-10-29 continuation audit: each provider family's documented repla
   });
 
   test("Alibaba Model Studio / Qwen Cloud: preserve_thinking models and GLM-5.x are plaintext on the documented pay-as-you-go hosts, the same model alike on each; the rest, the Token Plan and the Coding Plan are none", () => {
-    const preserve = /^(qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
+    const preserve = /^(qwen4-max|qwen3\.6-(plus|flash)|qwen3\.7-(max|plus|flash)|qwen3\.8-(max|flash|omni-flash)|kimi-k2\.6|kimi-k2\.7-code)(-[0-9-]+)?$/;
     const glm = /^glm-5(\.[123])?$/;
     // The parameter references document the standard compatible-mode base only; nothing is claimed on the plans' hosts.
     expectAll(reasoning("qwen-cloud-token-plan"), "none", 11);
