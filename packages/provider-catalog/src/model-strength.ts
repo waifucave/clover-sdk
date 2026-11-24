@@ -113,6 +113,9 @@ export const MODEL_STRENGTH: Readonly<Record<string, ModelStrength>> = {
   "gemini-3.8-flash": "strong",
   "gemini-3.8-flash-cyber": "strong", // unsure
   "gemini-4-argon": "strong", // unsure
+  "gemini-4-carbon": "strong", // unsure
+  "gemini-4-hydrogen": "strong", // unsure
+  "gemini-4-neon": "strong", // unsure
   // ---- gemma
   "gemma-2-2b-it": "weak",
   "gemma-2-9b-it": "weak",

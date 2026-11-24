@@ -8309,7 +8309,7 @@
       "upstreamId": "gemini-3.8-flash",
       "displayName": "Gemini 3.8 Flash",
       "aliases": [],
-      "$comment": "P6.6 Task 1b (WS-13c owed row): FOUND on https://ai.google.dev/gemini-api/docs/models (retrieved 2026-09-07): the models table lists `gemini-3.8-flash` as \"New Stable\" ahead of `gemini-3.7-flash` (\"previous-generation Flash model\"), described as \"Our most intelligent Flash model, engineered for long-horizon software engineering, autonomous agents, and complex enterprise workflows\" — the vendor-doc basis the family slot's citation already named. The page is an INDEX: it gives the id, a one-line description and a status badge, then links out to a per-model page (/gemini-api/docs/models/gemini-3.8-flash) for token limits, modality tables and pricing; that per-model page is outside this task's allowed page set (only the exact URL above), so `maxOutputTokens`/`pricing` are NOT set here rather than guessed. **This row does NOT back the `gemini` family's `flash` slot** (fix round 1b, reversing fix r1's first attempt): review r1's I-4 found the row shipped with no `contextWindow` at all on the false premise that no sibling had one either (wrong — `google/gemini-3.7-flash` carries `1048576`), and the controller's binding ruling for I-4 was explicit: carry the number forward WITH THE PAGE'S OWN QUOTE, or — if the page states no number, which it does not for any per-model token limit — leave the slot on the OLD row. Fix r1 mistakenly took the reviewer's third, controller-not-chosen option (infer the sibling's number) and repointed the slot anyway; fix r1b reverts the repoint (`families.json`'s `flash` slot is back on `gemini-3.7-flash`) while KEEPING this row, including its inferred `contextWindow` below, so it stays servable outside the slot and the repoint is a one-line change if a future ruling accepts the inference. `contextWindow`/`inputModalities`/`outputModalities`/`toolCalling`/`nativeTools` are ALL carried forward from `google/gemini-3.7-flash`'s own catalogued facts (same Flash lineup, same provider; this page's own copy — \"autonomous agents\" — presumes the same agentic tool-calling surface), marked `confidence: \"inferred\"` because this exact page names no per-model modality/tool/context table. Vertex AI is NOT mentioned anywhere on this page (checked directly), so no `vertex/gemini-3.8-flash` sibling is authored — that would need evidence outside this task's allowed page set. — 2026-09-25 refresh: introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking).",
+      "$comment": "P6.6 Task 1b (WS-13c owed row): FOUND on https://ai.google.dev/gemini-api/docs/models (retrieved 2026-09-07): the models table lists `gemini-3.8-flash` as \"New Stable\" ahead of `gemini-3.7-flash` (\"previous-generation Flash model\"), described as \"Our most intelligent Flash model, engineered for long-horizon software engineering, autonomous agents, and complex enterprise workflows\" — the vendor-doc basis the family slot's citation already named. The page is an INDEX: it gives the id, a one-line description and a status badge, then links out to a per-model page (/gemini-api/docs/models/gemini-3.8-flash) for token limits, modality tables and pricing; that per-model page is outside this task's allowed page set (only the exact URL above), so `maxOutputTokens`/`pricing` are NOT set here rather than guessed. **This row does NOT back the `gemini` family's `flash` slot** (fix round 1b, reversing fix r1's first attempt): review r1's I-4 found the row shipped with no `contextWindow` at all on the false premise that no sibling had one either (wrong — `google/gemini-3.7-flash` carries `1048576`), and the controller's binding ruling for I-4 was explicit: carry the number forward WITH THE PAGE'S OWN QUOTE, or — if the page states no number, which it does not for any per-model token limit — leave the slot on the OLD row. Fix r1 mistakenly took the reviewer's third, controller-not-chosen option (infer the sibling's number) and repointed the slot anyway; fix r1b reverts the repoint (`families.json`'s `flash` slot is back on `gemini-3.7-flash`) while KEEPING this row, including its inferred `contextWindow` below, so it stays servable outside the slot and the repoint is a one-line change if a future ruling accepts the inference. `contextWindow`/`inputModalities`/`outputModalities`/`toolCalling`/`nativeTools` are ALL carried forward from `google/gemini-3.7-flash`'s own catalogued facts (same Flash lineup, same provider; this page's own copy — \"autonomous agents\" — presumes the same agentic tool-calling surface), marked `confidence: \"inferred\"` because this exact page names no per-model modality/tool/context table. Vertex AI is NOT mentioned anywhere on this page (checked directly), so no `vertex/gemini-3.8-flash` sibling is authored — that would need evidence outside this task's allowed page set. — 2026-09-25 refresh: introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). — 2026-11-24 refresh: https://aistudio.google.com/docs/pricing (read 2026-11-24): today $0.75 input / $3.75 output / $0.075 caching per 1M tokens (unchanged); scheduled: \"$1.50 starting January 1, 2027\" / \"$7.50 starting January 1, 2027\" / \"$0.15 starting January 1, 2027\". Not applied yet.",
       "endpoints": [
         "chat"
       ],
@@ -14788,7 +14788,7 @@
       "upstreamId": "gemini-3.7-flash",
       "displayName": "Gemini 3.7 Flash",
       "aliases": [],
-      "$comment": "introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking).",
+      "$comment": "introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.7-flash (released 2026-08-13) is \"no longer in Google AI Studio; API requests route automatically\" to gemini-3.8-flash; shutdown N/A. Requests to this id are served by 3.8 Flash; status stays `candidate` (no shutdown date has passed). The `flash` slot moves to gemini-3.8-flash.",
       "endpoints": [
         "chat"
       ],
@@ -23688,7 +23688,7 @@
       },
       "unsupportedParameters": [],
       "status": "experimental",
-      "$comment": "2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this route (https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures (read 2026-10-29): Vertex returns `thoughtSignature` on response parts and documents passing it back on the exact part; \"Gemini 3 models enforce stricter validation ... If a required thought signature is not returned when using Gemini 3 models, the model will return a 400 error.\" https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): Gemini 2.5 signatures are optional to return, Gemini 3 and 4 mandatory on function calls. The GenerateContent adapter (shared by the Gemini API and Vertex) captures each signature and replays it on its part; same-model only -- a Vertex signature is never sent to the Gemini API or the reverse.)."
+      "$comment": "2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this route (https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures (read 2026-10-29): Vertex returns `thoughtSignature` on response parts and documents passing it back on the exact part; \"Gemini 3 models enforce stricter validation ... If a required thought signature is not returned when using Gemini 3 models, the model will return a 400 error.\" https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): Gemini 2.5 signatures are optional to return, Gemini 3 and 4 mandatory on function calls. The GenerateContent adapter (shared by the Gemini API and Vertex) captures each signature and replays it on its part; same-model only -- a Vertex signature is never sent to the Gemini API or the reverse.). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.7-flash (released 2026-08-13) is \"no longer in Google AI Studio; API requests route automatically\" to gemini-3.8-flash; shutdown N/A. Requests to this id are served by 3.8 Flash; status stays `candidate` (no shutdown date has passed). The `flash` slot moves to gemini-3.8-flash."
     },
     {
       "key": "vertex/gemini-3.6-flash",
@@ -23926,7 +23926,7 @@
       },
       "unsupportedParameters": [],
       "status": "experimental",
-      "$comment": "2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this route (https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures (read 2026-10-29): Vertex returns `thoughtSignature` on response parts and documents passing it back on the exact part; \"Gemini 3 models enforce stricter validation ... If a required thought signature is not returned when using Gemini 3 models, the model will return a 400 error.\" https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): Gemini 2.5 signatures are optional to return, Gemini 3 and 4 mandatory on function calls. The GenerateContent adapter (shared by the Gemini API and Vertex) captures each signature and replays it on its part; same-model only -- a Vertex signature is never sent to the Gemini API or the reverse.)."
+      "$comment": "2026-10-29 continuation audit: continuation `opaque-provider-state`, scoped to this route (https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures (read 2026-10-29): Vertex returns `thoughtSignature` on response parts and documents passing it back on the exact part; \"Gemini 3 models enforce stricter validation ... If a required thought signature is not returned when using Gemini 3 models, the model will return a 400 error.\" https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): Gemini 2.5 signatures are optional to return, Gemini 3 and 4 mandatory on function calls. The GenerateContent adapter (shared by the Gemini API and Vertex) captures each signature and replays it on its part; same-model only -- a Vertex signature is never sent to the Gemini API or the reverse.). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.5-flash (released 2026-05-19) is no longer in Google AI Studio; API requests route automatically to gemini-3.6-flash; shutdown N/A. Status stays `candidate`."
     },
     {
       "key": "vertex/gemini-3.5-flash-lite",
@@ -24265,7 +24265,7 @@
       "upstreamId": "gemini-3.6-flash",
       "displayName": "Gemini 3.6 Flash",
       "aliases": [],
-      "$comment": "introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). — Effort vocabulary restricted to this adapter's thinking-budget ladder (low/medium/high/xhigh/max); the vendor also documents ['minimal'], which this adapter cannot send (thinking off is the adapter's separate `thinking: disabled` switch).",
+      "$comment": "introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). — Effort vocabulary restricted to this adapter's thinking-budget ladder (low/medium/high/xhigh/max); the vendor also documents ['minimal'], which this adapter cannot send (thinking off is the adapter's separate `thinking: disabled` switch). — 2026-11-24 refresh: https://aistudio.google.com/docs/pricing (read 2026-11-24): today $0.75 input / $3.75 output / $0.075 caching per 1M tokens (unchanged); scheduled: \"$1.50 starting January 1, 2027\" / \"$7.50 starting January 1, 2027\" / \"$0.15 starting January 1, 2027\". Not applied yet.",
       "endpoints": [
         "chat"
       ],
@@ -24399,7 +24399,7 @@
       "aliases": [
         "gemini-flash-latest"
       ],
-      "$comment": "Standard paid tier; changelog says gemini-flash-latest currently points here. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). Gemini changelog says gemini-flash-latest points to Gemini 3.5 Flash as of 2026-05-19 (https://ai.google.dev/gemini-api/docs/changelog). — Effort vocabulary restricted to this adapter's thinking-budget ladder (low/medium/high/xhigh/max); the vendor also documents ['minimal'], which this adapter cannot send (thinking off is the adapter's separate `thinking: disabled` switch).",
+      "$comment": "Standard paid tier; changelog says gemini-flash-latest currently points here. Native reasoning uses thinkingConfig.thinkingLevel; candidate_count is unsupported in Gemini 3 and later, while temperature/top_p/top_k are deprecated or discouraged rather than proven rejected (https://ai.google.dev/gemini-api/docs/latest-model). Google documents thought signatures for Gemini 3 and 2.5; preserve original parts across tool turns (https://ai.google.dev/gemini-api/docs/generate-content/thinking). Gemini changelog says gemini-flash-latest points to Gemini 3.5 Flash as of 2026-05-19 (https://ai.google.dev/gemini-api/docs/changelog). — Effort vocabulary restricted to this adapter's thinking-budget ladder (low/medium/high/xhigh/max); the vendor also documents ['minimal'], which this adapter cannot send (thinking off is the adapter's separate `thinking: disabled` switch). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.5-flash (released 2026-05-19) is no longer in Google AI Studio; API requests route automatically to gemini-3.6-flash; shutdown N/A. Status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -24670,7 +24670,7 @@
       "upstreamId": "gemini-3.8-flash",
       "displayName": "Gemini 3.8 Flash (OpenAI compatible)",
       "aliases": [],
-      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  The compatibility guide explicitly uses this exact ID. — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation).",
+      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  The compatibility guide explicitly uses this exact ID. — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation). — 2026-11-24 refresh: https://aistudio.google.com/docs/pricing (read 2026-11-24): today $0.75 input / $3.75 output / $0.075 caching per 1M tokens (unchanged); scheduled: \"$1.50 starting January 1, 2027\" / \"$7.50 starting January 1, 2027\" / \"$0.15 starting January 1, 2027\". Not applied yet.",
       "endpoints": [
         "chat"
       ],
@@ -24804,7 +24804,7 @@
       "upstreamId": "gemini-3.7-flash",
       "displayName": "Gemini 3.7 Flash (OpenAI compatible)",
       "aliases": [],
-      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation).",
+      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.7-flash (released 2026-08-13) is \"no longer in Google AI Studio; API requests route automatically\" to gemini-3.8-flash; shutdown N/A. Requests to this id are served by 3.8 Flash; status stays `candidate` (no shutdown date has passed). The `flash` slot moves to gemini-3.8-flash.",
       "endpoints": [
         "chat"
       ],
@@ -24938,7 +24938,7 @@
       "upstreamId": "gemini-3.6-flash",
       "displayName": "Gemini 3.6 Flash (OpenAI compatible)",
       "aliases": [],
-      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation).",
+      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native introductory Standard paid tier through 2026-12-31; 2027-01-01 rates $1.50/$7.50/$0.15.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation). — 2026-11-24 refresh: https://aistudio.google.com/docs/pricing (read 2026-11-24): today $0.75 input / $3.75 output / $0.075 caching per 1M tokens (unchanged); scheduled: \"$1.50 starting January 1, 2027\" / \"$7.50 starting January 1, 2027\" / \"$0.15 starting January 1, 2027\". Not applied yet.",
       "endpoints": [
         "chat"
       ],
@@ -25073,7 +25073,7 @@
       "upstreamId": "gemini-3.5-flash",
       "displayName": "Gemini 3.5 Flash (OpenAI compatible)",
       "aliases": [],
-      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native Standard paid tier; changelog says gemini-flash-latest currently points here.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation).",
+      "$comment": "OpenAI-compatible Chat Completions at https://ai.google.dev/gemini-api/docs/openai. reasoning_effort mapping: compatibility page demonstrates reasoning_effort on Gemini 3.8 but gives no model-specific mapping table for this release; efforts mirror documented native thinkingLevel values (inferred). Do not combine reasoning_effort with extra_body thinking_level/thinking_budget (documented conflict). Gemini 3 thought signatures are supported in Chat Completions; preserve them across tool turns. No per-model compatibility acceptance table or rejected top-level parameter list is published; inclusion is inferred from the docs' statement that Gemini models are accessible here and each listed native model's availability. Native Standard paid tier; changelog says gemini-flash-latest currently points here.  — 2026-10-29 continuation audit: continuation stays `opaque-provider-state`, now backed by the adapter: Gemini's thought signature rides each `tool_calls` entry as `extra_content.google.thought_signature`, which the Chat Completions adapter captures and replays on the same call (before this audit nothing sent it back, and a Gemini 3/4 tool loop's second request failed validation). — 2026-11-24 refresh: https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.5-flash (released 2026-05-19) is no longer in Google AI Studio; API requests route automatically to gemini-3.6-flash; shutdown N/A. Status stays `candidate`.",
       "endpoints": [
         "chat"
       ],
@@ -112310,6 +112310,404 @@
       "status": "candidate"
     },
     {
+      "key": "google/gemini-4-hydrogen",
+      "providerId": "google",
+      "upstreamId": "gemini-4-hydrogen",
+      "displayName": "Gemini 4 Hydrogen",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Hydrogen, released 2026-11-12 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24): Versions \"Stable: `gemini-4-hydrogen`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. Native GenerateContent; NOTE the adapter sends effort as thinkingConfig.thinkingBudget, not the documented thinking_level (adapter-level, reported). Positioning (https://deepmind.google/models/model-cards/gemini-4-hydrogen/): adapted from Gemini 4 Carbon, for fast, efficient everyday coding and agentic workflows.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — input is bounded only by the shared 1,048,576-token window",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/thinking (read 2026-11-24) — \"| gemini-4-hydrogen | On (high) | low, medium, high, xhigh |\"; https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24): \"Thinking Supported (low, medium, high, xhigh)\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — thought summaries \"display intermediate reasoning steps\"; summary parts are marked `thought: true` and the underlying chain is not exposed.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinkingConfig.includeThoughts",
+            "values": [
+              "true"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.5,
+          "outputPerMTokUsd": 7.5,
+          "cacheReadPerMTokUsd": 0.075
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Hydrogen, Standard, Paid Tier per 1M tokens in USD: Input $1.50, output $7.50, context caching $0.075 per 1M tokens; no scheduled change listed.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [
+        "candidate_count"
+      ],
+      "status": "candidate"
+    },
+    {
+      "key": "google/gemini-4-neon",
+      "providerId": "google",
+      "upstreamId": "gemini-4-neon",
+      "displayName": "Gemini 4 Neon",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Neon, released 2026-11-18 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24): Versions \"Stable: `gemini-4-neon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. Native GenerateContent; NOTE the adapter sends effort as thinkingConfig.thinkingBudget, not the documented thinking_level (adapter-level, reported). Positioning (https://deepmind.google/models/model-cards/gemini-4-neon/): \"Neon balances depth and efficiency\" between Carbon and Hydrogen.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — input is bounded only by the shared 1,048,576-token window",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/thinking (read 2026-11-24) — \"| gemini-4-neon | On (high) | low, medium, high, xhigh |\"; https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24): \"Thinking Supported (low, medium, high, xhigh)\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — thought summaries \"display intermediate reasoning steps\"; summary parts are marked `thought: true` and the underlying chain is not exposed.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinkingConfig.includeThoughts",
+            "values": [
+              "true"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 3,
+          "outputPerMTokUsd": 15,
+          "cacheReadPerMTokUsd": 0.15
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Neon, Standard, Paid Tier per 1M tokens in USD: Input $3.00, output $15.00, context caching $0.15 per 1M tokens; no scheduled change listed.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [
+        "candidate_count"
+      ],
+      "status": "candidate"
+    },
+    {
+      "key": "google/gemini-4-carbon",
+      "providerId": "google",
+      "upstreamId": "gemini-4-carbon",
+      "displayName": "Gemini 4 Carbon",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. Native GenerateContent; NOTE the adapter sends effort as thinkingConfig.thinkingBudget, not the documented thinking_level (adapter-level, reported).",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxInputTokens": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — input is bounded only by the shared 1,048,576-token window",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Function calling Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/thinking (read 2026-11-24) — \"| gemini-4-carbon | On (medium) | low, medium, high |\"; https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): \"Thinking Supported (low, medium, high)\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "medium",
+        "readableState": {
+          "value": "summary",
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — thought summaries \"display intermediate reasoning steps\"; summary parts are marked `thought: true` and the underlying chain is not exposed.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "summaryRequest": {
+          "value": {
+            "field": "thinkingConfig.includeThoughts",
+            "values": [
+              "true"
+            ]
+          },
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
+          "confidence": "declared",
+          "observedAt": "2026-10-05T00:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2,
+          "outputPerMTokUsd": 10,
+          "cacheReadPerMTokUsd": 0.1
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [
+        "candidate_count"
+      ],
+      "status": "candidate"
+    },
+    {
       "key": "google-openai/gemini-4-argon",
       "providerId": "google-openai",
       "upstreamId": "gemini-4-argon",
@@ -112432,6 +112830,389 @@
         "sourceRef": "https://ai.google.dev/gemini-api/docs/pricing (read 2026-10-29) — Gemini 4 Argon, Standard, Paid Tier per 1M tokens in USD: Input price \"$2.00 through November 30, 2026. $4.00 starting December 1, 2026.\"; Output price (including thinking tokens) \"$10.00 through November 30, 2026. $20.00 starting December 1, 2026.\"; Context caching price \"$0.10 through November 30, 2026. $0.20 starting December 1, 2026. Implicit caching only (explicit caching is not supported).\" TIERED IN TIME, which `ModelPricing` cannot express: the CURRENT (through 2026-11-30) introductory rate is recorded, so from 2026-12-01 this row UNDER-reports by exactly 2x on every field until it is re-priced — the same disclosed gap as google/gemini-3.8-flash. No long-context tier is published for this model (flat across the 1M window); \"Gemini 4 Argon is not available on the Free tier.\" Batch/Flex (50%) and Priority are separate rate cards and are not folded in; no cache-write rate is published, so that key is absent.",
         "confidence": "declared",
         "observedAt": "2026-10-29T12:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "google-openai/gemini-4-hydrogen",
+      "providerId": "google-openai",
+      "upstreamId": "gemini-4-hydrogen",
+      "displayName": "Gemini 4 Hydrogen (OpenAI compatible)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Hydrogen, released 2026-11-12 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24): Versions \"Stable: `gemini-4-hydrogen`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai. Positioning (https://deepmind.google/models/model-cards/gemini-4-hydrogen/): adapted from Gemini 4 Carbon, for fast, efficient everyday coding and agentic workflows.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-hydrogen (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/openai (read 2026-11-24) — reasoning_effort -> thinking_level (Gemini 4): low->low, medium->medium, high->high, \"xhigh\" -> \"xhigh (gemini-4-neon and gemini-4-hydrogen only)\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-4-hydrogen | On (high) | low, medium, high, xhigh |\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "continuationDomain": {
+          "value": [
+            "google-openai/gemini-4-hydrogen"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29), \"Signatures for OpenAI compatibility\": each `tool_calls` entry carries `\"extra_content\": {\"google\": {\"thought_signature\": \"<Signature A>\"}}`, sent back on the same entry (\"Required and Validated\"); in a parallel batch only the first call carries one. https://ai.google.dev/gemini-api/docs/openai: \"Gemini 3 supports OpenAI compatibility for thought signatures in chat completion APIs.\" The Chat Completions adapter captures `extra_content` per call id on this connection and replays it on that call. Why the domain is NARROW: the state is valid only for the model that produced it on this route -- a different model, or the same model at another provider (a different credential and account), never receives it, and the history renderer strips it there.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "replayScope": {
+          "value": "current-turn",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"Strict validation is enforced for all function calls within the current turn. (Only current turn is required; we don't validate on previous turns)\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "toolLoopRequirement": {
+          "value": "hard-error",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 1.5,
+          "outputPerMTokUsd": 7.5,
+          "cacheReadPerMTokUsd": 0.075
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Hydrogen, Standard, Paid Tier per 1M tokens in USD: Input $1.50, output $7.50, context caching $0.075 per 1M tokens; no scheduled change listed.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "google-openai/gemini-4-neon",
+      "providerId": "google-openai",
+      "upstreamId": "gemini-4-neon",
+      "displayName": "Gemini 4 Neon (OpenAI compatible)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Neon, released 2026-11-18 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24): Versions \"Stable: `gemini-4-neon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai. Positioning (https://deepmind.google/models/model-cards/gemini-4-neon/): \"Neon balances depth and efficiency\" between Carbon and Hydrogen.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-neon (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/openai (read 2026-11-24) — reasoning_effort -> thinking_level (Gemini 4): low->low, medium->medium, high->high, \"xhigh\" -> \"xhigh (gemini-4-neon and gemini-4-hydrogen only)\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-4-neon | On (high) | low, medium, high, xhigh |\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "high",
+        "continuationDomain": {
+          "value": [
+            "google-openai/gemini-4-neon"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29), \"Signatures for OpenAI compatibility\": each `tool_calls` entry carries `\"extra_content\": {\"google\": {\"thought_signature\": \"<Signature A>\"}}`, sent back on the same entry (\"Required and Validated\"); in a parallel batch only the first call carries one. https://ai.google.dev/gemini-api/docs/openai: \"Gemini 3 supports OpenAI compatibility for thought signatures in chat completion APIs.\" The Chat Completions adapter captures `extra_content` per call id on this connection and replays it on that call. Why the domain is NARROW: the state is valid only for the model that produced it on this route -- a different model, or the same model at another provider (a different credential and account), never receives it, and the history renderer strips it there.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "replayScope": {
+          "value": "current-turn",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"Strict validation is enforced for all function calls within the current turn. (Only current turn is required; we don't validate on previous turns)\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "toolLoopRequirement": {
+          "value": "hard-error",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 3,
+          "outputPerMTokUsd": 15,
+          "cacheReadPerMTokUsd": 0.15
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Neon, Standard, Paid Tier per 1M tokens in USD: Input $3.00, output $15.00, context caching $0.15 per 1M tokens; no scheduled change listed.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "unsupportedParameters": [],
+      "status": "candidate"
+    },
+    {
+      "key": "google-openai/gemini-4-carbon",
+      "providerId": "google-openai",
+      "upstreamId": "gemini-4-carbon",
+      "displayName": "Gemini 4 Carbon (OpenAI compatible)",
+      "aliases": [],
+      "$comment": "Winter-authored 2026-11-24 (catalog refresh: Gemini 4 Carbon, released 2026-11-10 per https://aistudio.google.com/docs/deprecations (read 2026-11-24); found via OpenRouter's public model list, every fact from Google's own pages). https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Versions \"Stable: `gemini-4-carbon`\", Latest update \"November 2026\". Continuation, readable-state and summary-request fields are the Gemini 4 API's own on this endpoint and are kept as on the Argon row of the same provider. OpenAI-compatible Chat Completions at https://generativelanguage.googleapis.com/v1beta/openai.",
+      "endpoints": [
+        "chat"
+      ],
+      "contextWindow": {
+        "value": 1048576,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Context window (unified input and output token limit) 1,048,576\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "maxOutputTokens": {
+        "value": 65536,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "inputModalities": {
+        "value": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Inputs Text, Image, Video, Audio, and PDF\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "outputModalities": {
+        "value": [
+          "text"
+        ],
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Output Text\"",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "toolCalling": {
+        "value": "native",
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "nativeTools": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Function calling Supported; https://aistudio.google.com/docs/openai (read 2026-11-24): the Chat Completions function-calling example",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "structuredOutput": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — Structured outputs Supported",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "promptCaching": {
+        "value": true,
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24) — \"Supported (Implicit only)\"; \"Explicit caching is not supported.\"",
+        "confidence": "inferred",
+        "observedAt": "2026-11-24T00:00:00Z"
+      },
+      "reasoning": {
+        "supported": {
+          "value": true,
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/docs/openai (read 2026-11-24) — reasoning_effort -> thinking_level (Gemini 4): low->low, medium->medium, high->high; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-4-carbon | On (medium) | low, medium, high |\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        },
+        "efforts": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "continuation": "opaque-provider-state",
+        "defaultEffort": "medium",
+        "continuationDomain": {
+          "value": [
+            "google-openai/gemini-4-carbon"
+          ],
+          "source": "official-doc",
+          "sourceRef": "BOTH halves. Own-state acceptance: https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29), \"Signatures for OpenAI compatibility\": each `tool_calls` entry carries `\"extra_content\": {\"google\": {\"thought_signature\": \"<Signature A>\"}}`, sent back on the same entry (\"Required and Validated\"); in a parallel batch only the first call carries one. https://ai.google.dev/gemini-api/docs/openai: \"Gemini 3 supports OpenAI compatibility for thought signatures in chat completion APIs.\" The Chat Completions adapter captures `extra_content` per call id on this connection and replays it on that call. Why the domain is NARROW: the state is valid only for the model that produced it on this route -- a different model, or the same model at another provider (a different credential and account), never receives it, and the history renderer strips it there.",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "replayScope": {
+          "value": "current-turn",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"Strict validation is enforced for all function calls within the current turn. (Only current turn is required; we don't validate on previous turns)\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "toolLoopRequirement": {
+          "value": "hard-error",
+          "source": "official-doc",
+          "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
+          "confidence": "declared",
+          "observedAt": "2026-10-29T20:00:00Z"
+        }
+      },
+      "pricing": {
+        "value": {
+          "inputPerMTokUsd": 2,
+          "outputPerMTokUsd": 10,
+          "cacheReadPerMTokUsd": 0.1
+        },
+        "source": "official-doc",
+        "sourceRef": "https://aistudio.google.com/docs/pricing (read 2026-11-24) — Gemini 4 Carbon, Standard, Paid Tier per 1M tokens in USD: Input $2.00, output $10.00, context caching $0.10 per 1M tokens; \"$4.00 starting December 1, 2026\" / \"$20.00 starting December 1, 2026\" / \"$0.20 starting December 1, 2026\". The row carries today's rate; the 2026-12-01 re-price is a dated fact, not applied yet.",
+        "confidence": "declared",
+        "observedAt": "2026-11-24T00:00:00Z"
       },
       "unsupportedParameters": [],
       "status": "candidate"

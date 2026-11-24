@@ -160,20 +160,20 @@
       "slots": [
         {
           "name": "pro",
-          "canonicalModelId": "gemini-3.1-pro-preview",
-          "description": "described by what it is good at — long-context analysis, multimodal understanding and careful, deliberate reasoning; the community still favours it for those.",
-          "reason": "First by breadth, not by the vendor's strength ranking.",
-          "basis": "winter-curated",
-          "citation": "spec:WS-13c §9 (user-ruling FRAMING, winter-curated text)",
+          "canonicalModelId": "gemini-4-carbon",
+          "description": "Google's strongest reasoning model, for long-horizon and demanding work.",
+          "reason": "First: strength.",
+          "basis": "vendor-doc",
+          "citation": "https://deepmind.google/models/model-cards/gemini-4-hydrogen/ (read 2026-11-24): \"Gemini 4 Carbon and Argon are the frontier models for deep, long-horizon reasoning\"; https://aistudio.google.com/docs/models/gemini-4-carbon (read 2026-11-24): Stable, Latest update November 2026, the same price as Argon. Replaces gemini-3.1-pro-preview, still a preview. The open 2026-10-29 suggestion was Argon; Carbon (released 2026-11-10, adapted into Neon and Hydrogen) is the newer of the two frontier models at the same price.",
           "status": "candidate"
         },
         {
           "name": "flash",
-          "canonicalModelId": "gemini-3.7-flash",
-          "description": "Google's strongest current model by its own documentation; fast agentic coding.",
-          "reason": "Second: strength.",
+          "canonicalModelId": "gemini-3.8-flash",
+          "description": "Google's current Flash model: fast agentic coding at a low price.",
+          "reason": "Second: the balanced price and speed.",
           "basis": "vendor-doc",
-          "citation": "spec:WS-13c §9 — vendor-doc basis; the id IS verified on https://ai.google.dev/gemini-api/docs/models (retrieved 2026-09-07), which lists `gemini-3.8-flash` as \"New Stable\" and \"Our most intelligent Flash model\" ahead of `gemini-3.7-flash`, and the owed `google/gemini-3.8-flash` row is authored — but per task-1b review r1's I-4 and the controller's binding ruling, the page states NO per-model context-window number (it is an index that links to a page outside this task's allowed set), so the slot stays on `gemini-3.7-flash` rather than repoint to a row whose context window would have to be inferred. `google/gemini-3.8-flash` remains in the catalog, servable outside this slot, with an inferred `contextWindow` disclosed on the row itself; repointing here is a one-line change if a future ruling accepts that inference for the slot",
+          "citation": "https://aistudio.google.com/docs/deprecations (read 2026-11-24): gemini-3.7-flash is no longer in Google AI Studio and its API requests route automatically to gemini-3.8-flash (released 2026-09-02, no shutdown announced); https://aistudio.google.com/docs/models lists gemini-3.8-flash as Stable. The 2026-09-07 reason for keeping 3.7 (no per-model context window for 3.8) no longer holds: the 3.8 rows carry their own.",
           "status": "candidate"
         },
         {
