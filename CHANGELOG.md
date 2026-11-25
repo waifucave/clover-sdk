@@ -4,6 +4,24 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.87
+
+### A host's PreToolUse hook may answer a call itself
+
+- New: `hookSpecificOutput.toolResult` (`PreToolUseHookToolResult`: `{ content, isError? }`) on a PreToolUse hook's
+  answer. The tool does not run, and the answer is the call's result for the model, the stream and
+  PostToolUse/PostToolUseFailure, with a true `is_error`. The call keeps the model's original input, and nothing is
+  checkpointed. It is bounded like a PostToolUse replacement: 100,000 characters, text and image blocks.
+- Only the host's own hooks may answer (source `sdk`: `Options.hooks` and the host's flag settings). A host that
+  points its flag settings at a file a project can write lets that file's command hooks answer calls. An answer from a
+  managed, user, project, local or plugin hook denies the call, as does a malformed answer from any hook, whatever
+  its fail-closed setting: a `toolResult` key never lets the tool run. An empty `content` array is an empty result.
+  Image blocks must be base64 PNG, JPEG, GIF or WebP.
+- An answer is the hook's allow. Deny wins: another hook's or a rule's deny refuses the call, and the answer is
+  dropped. Another hook's ask still asks, and a yes delivers the answer. A defer with an answer is a denial.
+- **A host will see this:** the turn's abort now reaches the `signal` of every running PreToolUse hook, so an
+  interrupt stops a hook as it stops a tool.
+
 ## 0.0.86
 
 ### A host tool named like a built-in gets none of the built-in's approvals

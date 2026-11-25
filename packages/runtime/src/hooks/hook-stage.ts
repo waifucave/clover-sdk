@@ -67,6 +67,15 @@ function stopAsDenial(composite: HookComposite): HookComposite {
   return { ...composite, decision: "deny", message: reason !== undefined ? `Stopped by hook: ${reason}` : "Stopped by hook", lifecycleMessages: composite.lifecycleMessages };
 }
 
+// 0.0.87: an answered call (a host hook's `toolResult`) that another hook would park (`defer`) is
+// denied: a parked call is re-run on its approval, and an answer has nothing to re-run. The answer
+// leaves the composite with the deny; the engine delivers an answer only on a final allow anyway.
+function answeredDefer(composite: HookComposite): HookComposite {
+  if (composite.answer === undefined || composite.decision !== "defer") return composite;
+  const { answer: _dropped, ...rest } = composite;
+  return { ...rest, decision: "deny", message: "Denied: a hook answered this call and another deferred it; an answered call can't be parked for a later approval." };
+}
+
 // The lifecycle entry that produced the composite's own WINNING decision, for HookDecision.hookId
 // attribution — the earliest `outcome:"decision"` record whose OWN reported decision equals the
 // composite's final one (reducer.ts's own "earliest of the final max rank" tie-break, so this is
@@ -98,10 +107,12 @@ export function createHookStage(deps: HookStageDeps): HookStage {
           ...(deps.timeouts !== undefined ? { timeouts: deps.timeouts } : {}),
           ...(deps.validator !== undefined ? { validator: deps.validator } : {}),
           ...(deps.lifecycle !== undefined ? { lifecycle: deps.lifecycle } : {}),
+          // 0.0.87: an interrupt of the turn aborts a running PreToolUse hook (one may do a tool's work).
+          ...(ctx.signal !== undefined ? { signal: ctx.signal } : {}),
         },
       );
       reportComposite(deps, "PreToolUse", call, rawComposite);
-      const composite = stopAsDenial(rawComposite);
+      const composite = answeredDefer(stopAsDenial(rawComposite));
 
       const hookId = winningHookId(composite) ?? composite.preventContinuation?.hookId;
 

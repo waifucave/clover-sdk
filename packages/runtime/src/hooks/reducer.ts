@@ -107,6 +107,17 @@ export interface HookOutcomeFields {
   systemMessage?: string;
   // `suppressOutput`: hide this hook's own stdout from the host-visible `hook_response` frame.
   suppressOutput?: boolean;
+  // 0.0.87: a PreToolUse hook's ANSWER to the call (`toolResult`): the result the host gives in the
+  // tool's place. Only ever set on an `allow` decision (runner.ts's interpreter), and only kept from a
+  // host (`sdk`) hook (runner.ts's runHooks turns any other source's answer into an error outcome).
+  answer?: HookToolAnswer;
+}
+
+/** 0.0.87: a hook's answer to a tool call, as the hook gave it; the engine bounds it as it bounds a
+ *  PostToolUse replacement (`toolOutputReplacement`). */
+export interface HookToolAnswer {
+  content: unknown;
+  isError: boolean;
 }
 
 export type HookOutcome =
@@ -183,6 +194,10 @@ export interface HookComposite {
   // The FIRST hook to ask for the turn to stop wins the reason (a scalar, like `message`); any later
   // one adds nothing a host could act on differently.
   preventContinuation?: { hookId: string; hookName?: string; reason?: string };
+  // 0.0.87: the EARLIEST hook's answer to the call (a scalar, like `message`), with the hook that gave
+  // it. Never present when the composite's decision is `deny`: another hook's deny wins, and the call
+  // is denied, not answered.
+  answer?: HookToolAnswer & { hookId: string; hookName?: string };
   lifecycleMessages: HookLifecycleRecord[];
 }
 
@@ -213,6 +228,7 @@ export function reduceHookOutcomes(results: HookOutcomeEntry[]): HookComposite {
   const blockReasons: AttributedContext[] = [];
   const systemMessages: AttributedContext[] = [];
   let preventContinuation: HookComposite["preventContinuation"];
+  let answer: HookComposite["answer"];
   const lifecycleMessages: HookLifecycleRecord[] = [];
 
   for (const { participant, outcome } of results) {
@@ -244,6 +260,8 @@ export function reduceHookOutcomes(results: HookOutcomeEntry[]): HookComposite {
     if (outcome.preventContinuation === true && preventContinuation === undefined) {
       preventContinuation = { ...attribution, ...(outcome.stopReason !== undefined ? { reason: outcome.stopReason } : {}) };
     }
+
+    if (outcome.kind === "decision" && outcome.answer !== undefined && answer === undefined) answer = { ...outcome.answer, ...attribution };
 
     if (outcome.kind === "decision") {
       const rank = RANK[outcome.decision];
@@ -290,6 +308,8 @@ export function reduceHookOutcomes(results: HookOutcomeEntry[]): HookComposite {
     ...(blockReasons.length > 0 ? { blockReasons } : {}),
     ...(systemMessages.length > 0 ? { systemMessages } : {}),
     ...(preventContinuation !== undefined ? { preventContinuation } : {}),
+    // Deny wins (0.0.87): a denied call is never answered.
+    ...(answer !== undefined && decision !== "deny" ? { answer } : {}),
     lifecycleMessages,
   };
 }
