@@ -85,6 +85,18 @@ export type ModelStatus = "candidate" | "experimental" | "supported" | "deprecat
 /** WS-23: how a row takes a per-message effort change -- see `ReasoningCapabilities.perMessageEffort`. */
 export type PerMessageEffortMechanism = { beta: "mid-conversation-output-config-2026-07-01" } | { item: "configuration_update" };
 
+/** A Gemini `ThinkingLevel` enum name, as `generateContent`'s `GenerationConfig.thinkingConfig.thinkingLevel` takes it. */
+export type GeminiThinkingLevel = "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "XHIGH";
+
+/**
+ * Where a row takes its effort on the wire (see `ReasoningCapabilities.effortRequest`):
+ *   - `output_config.effort`: Anthropic's top-level effort parameter;
+ *   - `thinkingConfig.thinkingLevel`: Gemini's named thinking level, `levels` mapping each of the row's `efforts` to
+ *     the enum name sent for it. On such a row the Google adapter sends that level and NEVER a `thinkingBudget`
+ *     (Vertex, 2026-11-24: a budget on Gemini 4 is a 400, and a budget beside a level is an error).
+ */
+export type EffortRequest = { field: "output_config.effort" } | { field: "thinkingConfig.thinkingLevel"; levels: Readonly<Record<string, GeminiThinkingLevel>> };
+
 export interface ReasoningCapabilities {
   supported: CapabilityEvidence<boolean>;
   /** The model's own effort vocabulary, verbatim. Vocabularies are NOT interchangeable across providers (WS-13 §8.2). */
@@ -106,9 +118,10 @@ export interface ReasoningCapabilities {
    * top-level effort parameter, which the model steers adaptive thinking with — Claude 4.7 and later
    * reject a manual `thinking.budget_tokens` outright, so an Anthropic-dialect adapter maps effort
    * HERE for such a row. ABSENT keeps the adapter's own mapping (the budget ladder on the Anthropic
-   * dialect). A closed vocabulary (`CATALOG_VOCABULARIES.effortRequestFields`).
+   * dialect). A closed vocabulary (`CATALOG_VOCABULARIES.effortRequestFields`). The Gemini level form
+   * (`thinkingConfig.thinkingLevel` + `levels`, 2026-11-24) is the same claim for Google's `generateContent`.
    */
-  effortRequest?: CapabilityEvidence<{ field: "output_config.effort" }>;
+  effortRequest?: CapabilityEvidence<EffortRequest>;
   /**
    * The vendor BINDS a replayed thinking block to the conversation prefix it was produced under
    * (2026-09-25; Claude Opus 5.5 and Fable 5.1). A block replayed after the `system` prompt, the `tools`

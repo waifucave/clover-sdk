@@ -221,6 +221,23 @@ describe("validateCatalog — evidence integrity", () => {
     expectRejected(baseCatalog({ models: [baseModel({ reasoning: reasoning(evidence({ field: "output_config.effort", thinking: "adaptive" })) } as never)] }), "unknown key");
   });
 
+  test("the Gemini level form: a {effort: LEVEL} map covering exactly the row's efforts, from the documented enum", () => {
+    const reasoning = (effortRequest: unknown, efforts = ["low", "high"]) => ({
+      supported: { value: true, source: "official-doc", confidence: "declared" },
+      efforts,
+      continuation: "none",
+      effortRequest,
+    });
+    const evidence = (value: unknown) => ({ value, source: "official-doc", confidence: "declared", sourceRef: "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking", observedAt: "2026-11-24T00:00:00Z" });
+    const level = (levels: unknown) => reasoning(evidence({ field: "thinkingConfig.thinkingLevel", levels }));
+    expect(validateCatalog(baseCatalog({ models: [baseModel({ reasoning: level({ low: "LOW", high: "HIGH" }) } as never)] })).ok).toBe(true);
+    expectRejected(baseCatalog({ models: [baseModel({ reasoning: reasoning(evidence({ field: "thinkingConfig.thinkingLevel" })) } as never)] }), "needs a non-empty");
+    expectRejected(baseCatalog({ models: [baseModel({ reasoning: level({ low: "LOW" }) } as never)] }), 'effort "high" has no thinking level');
+    expectRejected(baseCatalog({ models: [baseModel({ reasoning: level({ low: "LOW", high: "HIGH", max: "XHIGH" }) } as never)] }), "is not one of the row's efforts");
+    expectRejected(baseCatalog({ models: [baseModel({ reasoning: level({ low: "low", high: "HIGH" }) } as never)] }), "unknown thinking level");
+    expectRejected(baseCatalog({ models: [baseModel({ reasoning: reasoning(evidence({ field: "output_config.effort", levels: { low: "LOW" } })) } as never)] }), "levels belong to the thinkingConfig.thinkingLevel form only");
+  });
+
   test("accepts a documented `blockBinding` beta, and rejects an unknown one or an extra key", () => {
     const reasoning = (blockBinding: unknown) => ({
       supported: { value: true, source: "official-doc", confidence: "declared" },
@@ -579,6 +596,7 @@ describe("JSON Schema / validator enum parity (Minor 9)", () => {
     ["replayScopes", "$defs.evidenceReplayScope.properties.value"],
     ["toolLoopRequirements", "$defs.evidenceToolLoopRequirement.properties.value"],
     ["effortRequestFields", "$defs.evidenceEffortRequest.properties.value.properties.field"],
+    ["thinkingLevels", "$defs.evidenceEffortRequest.properties.value.properties.levels.additionalProperties"],
     ["blockBindingBetas", "$defs.evidenceBlockBinding.properties.value.properties.beta"],
     ["perMessageEffortBetas", "$defs.evidencePerMessageEffort.properties.value.oneOf.0.properties.beta"],
     ["perMessageEffortItems", "$defs.evidencePerMessageEffort.properties.value.oneOf.1.properties.item"],

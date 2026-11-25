@@ -120,7 +120,9 @@ const CONTINUATIONS = ["none", "plaintext", "opaque-provider-state", "server-res
 const READABLE_STATES = ["none", "summary", "full-exposed"] as const;
 const REPLAY_SCOPES = ["current-tool-loop", "current-turn", "selected-turns", "all-turns"] as const;
 const TOOL_LOOP_REQUIREMENTS = ["hard-error", "silent-degradation", "not-required"] as const;
-const EFFORT_REQUEST_FIELDS = ["output_config.effort"] as const;
+const EFFORT_REQUEST_FIELDS = ["output_config.effort", "thinkingConfig.thinkingLevel"] as const;
+/** Gemini `ThinkingLevel` enum names (generateContent `GenerationConfig.thinkingConfig.thinkingLevel`). */
+const THINKING_LEVELS = ["MINIMAL", "LOW", "MEDIUM", "HIGH", "XHIGH"] as const;
 const BLOCK_BINDING_BETAS = ["thinking-binding-controls-2026-08-01"] as const;
 const PER_MESSAGE_EFFORT_BETAS = ["mid-conversation-output-config-2026-07-01"] as const;
 const PER_MESSAGE_EFFORT_ITEMS = ["configuration_update"] as const;
@@ -167,6 +169,7 @@ export const CATALOG_VOCABULARIES = {
   replayScopes: REPLAY_SCOPES,
   toolLoopRequirements: TOOL_LOOP_REQUIREMENTS,
   effortRequestFields: EFFORT_REQUEST_FIELDS,
+  thinkingLevels: THINKING_LEVELS,
   blockBindingBetas: BLOCK_BINDING_BETAS,
   perMessageEffortBetas: PER_MESSAGE_EFFORT_BETAS,
   perMessageEffortItems: PER_MESSAGE_EFFORT_ITEMS,
@@ -443,8 +446,20 @@ function checkReasoning(errs: Errors, v: unknown, path: string): void {
   }, false);
   checkEvidence(errs, v["effortRequest"], `${path}.effortRequest`, (val, p) => {
     if (!isRecord(val)) return errs.add(p, `expected {field}, got ${describe(val)}`);
-    for (const key of Object.keys(val)) if (key !== "field") errs.add(`${p}.${key}`, "unknown key");
+    for (const key of Object.keys(val)) if (key !== "field" && key !== "levels") errs.add(`${p}.${key}`, "unknown key");
     if (typeof val["field"] !== "string" || !(EFFORT_REQUEST_FIELDS as readonly string[]).includes(val["field"])) errs.add(`${p}.field`, `unknown effort request field ${describe(val["field"])}`);
+    // `levels` belongs to the level form and only to it: a level row names the wire value for EVERY effort it
+    // declares (an effort with no level would be an effort the adapter cannot send), and nothing else.
+    if (val["field"] === "thinkingConfig.thinkingLevel") {
+      const levels = val["levels"];
+      if (!isRecord(levels) || Object.keys(levels).length === 0) return errs.add(`${p}.levels`, "a thinkingConfig.thinkingLevel row needs a non-empty {effort: LEVEL} map");
+      for (const [effort, level] of Object.entries(levels)) {
+        if (typeof level !== "string" || !(THINKING_LEVELS as readonly string[]).includes(level)) errs.add(`${p}.levels.${effort}`, `unknown thinking level ${describe(level)}`);
+      }
+      const efforts = Array.isArray(v["efforts"]) ? (v["efforts"] as unknown[]) : [];
+      for (const effort of efforts) if (typeof effort === "string" && !Object.hasOwn(levels, effort)) errs.add(`${p}.levels`, `effort "${effort}" has no thinking level`);
+      for (const effort of Object.keys(levels)) if (!efforts.includes(effort)) errs.add(`${p}.levels.${effort}`, `"${effort}" is not one of the row's efforts`);
+    } else if (val["levels"] !== undefined) errs.add(`${p}.levels`, "levels belong to the thinkingConfig.thinkingLevel form only");
   }, false);
   checkEvidence(errs, v["blockBinding"], `${path}.blockBinding`, (val, p) => {
     if (!isRecord(val)) return errs.add(p, `expected {beta}, got ${describe(val)}`);

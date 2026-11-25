@@ -10,11 +10,22 @@ export interface CapabilityEvidence<T> {
     confidence: EvidenceConfidence;
 }
 
+// packages/provider-catalog/src/types.ts EffortRequest
+export type EffortRequest = {
+    field: "output_config.effort";
+} | {
+    field: "thinkingConfig.thinkingLevel";
+    levels: Readonly<Record<string, GeminiThinkingLevel>>;
+};
+
 // packages/provider-catalog/src/types.ts EvidenceConfidence
 export type EvidenceConfidence = "verified" | "declared" | "inferred" | "unknown";
 
 // packages/provider-catalog/src/types.ts EvidenceSource
 export type EvidenceSource = "official-doc" | "live-discovery" | "live-probe" | "upstream-static" | "user-override" | "local-override" | "winter-default";
+
+// packages/provider-catalog/src/types.ts GeminiThinkingLevel
+export type GeminiThinkingLevel = "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "XHIGH";
 
 // packages/provider-catalog/src/types.ts ModelPricing
 export interface ModelPricing {
@@ -65,9 +76,7 @@ export interface ReasoningCapabilities {
     continuationDomain?: CapabilityEvidence<string[]>;
     completionEvent?: CapabilityEvidence<string>;
     toolLoopRequirement?: CapabilityEvidence<"hard-error" | "silent-degradation" | "not-required">;
-    effortRequest?: CapabilityEvidence<{
-        field: "output_config.effort";
-    }>;
+    effortRequest?: CapabilityEvidence<EffortRequest>;
     blockBinding?: CapabilityEvidence<{
         beta: "thinking-binding-controls-2026-08-01";
     }>;
