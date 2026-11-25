@@ -4,7 +4,7 @@
 // replaces the built-in: the model must be offered the HOST's definition exactly as the host wrote it, never the
 // runtime's decoration on top of it.
 import { describe, expect, test } from "bun:test";
-import type { ActiveSlotSet, RuntimeConfig } from "@waifucave/clover-agent-sdk";
+import type { ActiveSlotSet, RuntimeConfig, WinterFrame } from "@waifucave/clover-agent-sdk";
 import { createInMemoryChannel } from "../protocol/channel.ts";
 import { runEngine, type EngineOptions, type ProviderRequest } from "../engine.ts";
 import type { McpToolDefinition } from "./registry.ts";
@@ -18,7 +18,12 @@ const GPT_SET: ActiveSlotSet = {
 let seq = 0;
 
 async function firstRequestTools(over: Partial<RuntimeConfig>, engine: Partial<EngineOptions> = {}): Promise<NonNullable<ProviderRequest["tools"]>> {
+  return (await run(over, engine)).tools;
+}
+
+async function run(over: Partial<RuntimeConfig>, engine: Partial<EngineOptions> = {}): Promise<{ tools: NonNullable<ProviderRequest["tools"]>; frames: WinterFrame[] }> {
   const requests: ProviderRequest[] = [];
+  const frames: WinterFrame[] = [];
   const { host, runtime } = createInMemoryChannel();
   const config: RuntimeConfig = { sessionId: `host-tool-schema-${++seq}`, cwd: "/tmp/x", model: "winter-test/echo", permissionMode: "bypassPermissions", allowDangerouslySkipPermissions: true, ...over };
   let error: unknown;
@@ -40,14 +45,21 @@ async function firstRequestTools(over: Partial<RuntimeConfig>, engine: Partial<E
   host.output.write({ type: "user", text: "go" });
   host.output.write({ type: "control_request", requestId: "end", subtype: "end_input", payload: undefined });
   const reader = (async () => {
-    for await (const _ of host.input) {
-      // drained
-    }
+    for await (const f of host.input) frames.push(f);
   })();
   await done;
   await (error === undefined ? reader : Promise.race([reader, new Promise((r) => setTimeout(r, 50))]));
   expect(error).toBeUndefined();
-  return requests[0]?.tools ?? [];
+  return { tools: requests[0]?.tools ?? [], frames };
+}
+
+/** The `agents` (subagent_type names) of the session's init message, or undefined when it lists none. */
+function initAgents(frames: WinterFrame[]): string[] | undefined {
+  const init = frames
+    .filter((f) => f.type === "data")
+    .map((f) => (f as unknown as { message: Record<string, unknown> }).message)
+    .find((m) => m["type"] === "system" && m["subtype"] === "init") as { agents?: string[] } | undefined;
+  return init?.agents;
 }
 
 const CORE = "clover_core_schema_test";
@@ -110,6 +122,20 @@ describe("a host tool with a built-in's name is offered exactly as the host defi
     }));
     const tools = await firstRequestTools({ mcpServers: hostServer(defs), tools: BUILTINS });
     for (const def of defs) expectHostBytes(tools, def);
+  });
+});
+
+describe("the built-in ToolSearch marker and a host Agent's listing", () => {
+  test("the built-in ToolSearch on the same row is still marked", async () => {
+    const tools = await firstRequestTools({ tools: [...BUILTINS, "ToolSearch"], toolSearchEnabled: true, capabilities: ["winter.mcp"] }, { describeModel: () => ({ wire: { clientToolSearch: true } }) } as unknown as Partial<EngineOptions>);
+    expect(specNamed(tools, "ToolSearch").toolSearch).toBe(true);
+  });
+
+  test("a session whose Agent is the host's lists no subagent types; the built-in Agent's session does", async () => {
+    const hostSession = await run({ mcpServers: hostServer([HOST_AGENT]), tools: BUILTINS });
+    expect(initAgents(hostSession.frames)).toBeUndefined();
+    const builtinSession = await run({ tools: [...BUILTINS, "Agent"] });
+    expect(initAgents(builtinSession.frames)?.length ?? 0).toBeGreaterThan(0);
   });
 });
 

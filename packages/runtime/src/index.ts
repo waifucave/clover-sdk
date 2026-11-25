@@ -55,6 +55,9 @@ export {
 export type { ScenarioFake, ScenarioFakeOptions, ScenarioRequest } from "./provider/scenario-fake.ts";
 // Phase 5 Task 2 (R5-4 / WS-09 §8.5): the compaction reset seam.
 export { onCompaction } from "./tools/registry.ts";
+// The runtime's own read-only rule for a bash command line (the built-in Bash tool's default-mode pre-approval), for a
+// host whose OWN shell tool wants to match it. Advisory: the host must still contain the command itself.
+export { isReadOnlyShellCommand } from "./permissions/evaluator.ts";
 
 // WS-27: the workflow worker's seatbelt profile builder, so a host that spawns the runtime's worker can pin
 // its own profile against it; and the exit code a worker uses to refuse to run outside that sandbox.

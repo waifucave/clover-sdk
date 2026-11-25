@@ -6014,7 +6014,11 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // never a second, independently-derived list that could disagree with what `subagent_type`
   // resolution actually accepts. `AGENT_TOOL_CANONICAL_NAME` is imported already (provider/slots.ts,
   // line 95) for the per-turn model-slot render just below this block.
-  const initAgentNames = advertisedToolNames.includes(AGENT_TOOL_CANONICAL_NAME) ? [...sessionAvailableAgentDefinitions().keys()].sort((a, b) => a.localeCompare(b)) : undefined;
+  // The listing is the BUILT-IN Agent tool's: `subagent_type` names only it resolves. A host tool that took the
+  // `Agent` name (`toolNames` + `shadowBuiltins`) is not that tool, and its session lists no agent types.
+  const builtinAgentIn = (names: readonly string[]): boolean =>
+    names.includes(AGENT_TOOL_CANONICAL_NAME) && getRegisteredTool(AGENT_TOOL_CANONICAL_NAME)?.descriptor.source === "builtin";
+  const initAgentNames = builtinAgentIn(advertisedToolNames) ? [...sessionAvailableAgentDefinitions().keys()].sort((a, b) => a.localeCompare(b)) : undefined;
   // C2 continued: the same staleness fix as `liveMcpServersWire` immediately above, for the agents
   // list -- `sessionAvailableAgentDefinitions()` is already a live re-scan (a user/project `agents/
   // *.md` file that arrives mid-session, or a rules change that lifts/adds an `Agent(type)` deny,
@@ -6022,7 +6026,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
   // gate itself (`advertisedToolNames.includes(...)`) read the equally-frozen tool list. Gated on
   // `liveAdvertisedToolNames()` for the same reason `buildSdkInitMessage`'s own `tools` field is.
   const liveInitAgentNames = (): string[] | undefined =>
-    liveAdvertisedToolNames().includes(AGENT_TOOL_CANONICAL_NAME) ? [...sessionAvailableAgentDefinitions().keys()].sort((a, b) => a.localeCompare(b)) : undefined;
+    builtinAgentIn(liveAdvertisedToolNames()) ? [...sessionAvailableAgentDefinitions().keys()].sort((a, b) => a.localeCompare(b)) : undefined;
   output.write({
     type: "init",
     ...(config.requiredRuntimeContext !== undefined ? { runtimeContextVersion: RUNTIME_CONTEXT_VERSION } : {}),
@@ -7043,7 +7047,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
               type: "control_response",
               requestId: cf.requestId,
               ok: true,
-              payload: currentAdvertisedCanonicalNames.includes(AGENT_TOOL_CANONICAL_NAME) ? toAgentInfoList(sessionAvailableAgentDefinitions()) : [],
+              payload: builtinAgentIn(currentAdvertisedCanonicalNames) ? toAgentInfoList(sessionAvailableAgentDefinitions()) : [],
             });
             continue;
           }
@@ -8214,7 +8218,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
    * (child-engine.ts's depth gate) gets `undefined` here, which is also the depth filter.
    */
   const agentListingEntries = (): AgentListingEntry[] | undefined => {
-    if (!currentAdvertisedCanonicalNames.includes(AGENT_TOOL_CANONICAL_NAME)) return undefined;
+    if (!builtinAgentIn(currentAdvertisedCanonicalNames)) return undefined;
     // SDK 0.0.16 Lane P (R3b §4): the FILTERED set -- a denied/not-allowed/all-tools-denied type
     // never reaches the listing. `latestAgentDefinitions` (below) is now the filtered map too, which
     // is what makes `generalPurposeAvailable` (this file's own gate for the Agent tool's
