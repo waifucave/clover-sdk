@@ -340,6 +340,7 @@ export type {
   SyncHookJSONOutput,
   HookJSONOutput,
   PreToolUseHookSpecificOutput,
+  PreToolUseHookToolResult,
   PostToolUseHookSpecificOutput,
   PostToolUseFailureHookSpecificOutput,
   UserPromptSubmitHookSpecificOutput,

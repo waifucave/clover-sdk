@@ -2507,6 +2507,18 @@ export const STOP_HOOK_BLOCK_CAP = 8;
 // written into the history like any tool result, so an unbounded one would break every later request.
 // Block content counts text plus image payload; an oversized block list falls back to its text,
 // capped, with each image replaced by a one-line placeholder (a partial image is not an image).
+/**
+ * 0.0.87: a host hook's answer to a call (`PreToolUseHookSpecificOutput.toolResult`) as the tool's own
+ * result: bounded exactly as a PostToolUse replacement (`toolOutputReplacement`), its `isError` kept.
+ */
+export function answeredToolResult(answer: { content: unknown; isError: boolean }): { output: string; blocks?: ToolResultBlock[]; isError?: boolean; siteIcons?: ToolResultSiteIcon[] } {
+  const content = toolOutputReplacement(answer.content);
+  const flag = answer.isError ? { isError: true } : {};
+  if (typeof content === "string") return { output: content, ...flag };
+  const blocks = content.filter((b): b is ToolResultBlock => b.type === "text" || b.type === "image");
+  return { output: blocks.map((b) => (b.type === "text" ? b.text : "[image]")).join("\n"), blocks, ...flag };
+}
+
 function toolOutputReplacement(value: unknown): string | ContentBlock[] {
   const cap = MAX_HOOK_TOOL_OUTPUT_CHARS;
   const boundBlocks = (blocks: ContentBlock[]): string | ContentBlock[] => {
@@ -10601,6 +10613,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
             return "stop";
           }
           const decision = decisionRaced.value;
+          // 0.0.87: a host hook's answer to this call (`toolResult`), from the same side channel, read
+          // before it is drained below. Delivered only when the call is finally ALLOWED (a hook's or a
+          // rule's deny, a defer, a prompt's no: the call is refused as ever, and the answer dropped).
+          const hookAnswer = gatingHookComposites.get(call.id)?.PreToolUse?.answer;
           // WS-23: what the PreToolUse/PermissionRequest hooks said BESIDE their decision -- context
           // for the model, notices for the host, a stop request -- from the stage's side channel.
           takeGatingHookComposites(call.id, call.name);
@@ -10825,6 +10841,9 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           // callback that returns a shape the target tool cannot handle surfaces as that tool's own
           // execution error, not a permission-layer one.
           const executedCall = decision.transformedInput !== undefined ? { ...call, input: decision.transformedInput } : call;
+          // 0.0.87: the call a host hook answered: the tool doesn't run (so nothing is checkpointed
+          // either: no file of this computer changes), and the answer is its result below.
+          const answered = decision.decision === "allow" ? hookAnswer : undefined;
 
           // --- Phase 5 Task 3 (R5-11): backup-before-modify ---------------------------------------
           //
@@ -10845,7 +10864,7 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           // happens, and the failure surfaces as a status message rather than a dead turn. That is
           // the safe direction for the user's work and the unsafe one for undo, which is why it is
           // reported rather than swallowed.
-          if (enableFileCheckpointing && fileCheckpointSink !== undefined && isCheckpointedTool(permissionCall.toolName)) {
+          if (answered === undefined && enableFileCheckpointing && fileCheckpointSink !== undefined && isCheckpointedTool(permissionCall.toolName)) {
             const checkpointTool: CheckpointedTool = permissionCall.toolName;
             for (const path of extractCandidateWritePaths({ ...permissionCall, input: typeof executedCall.input === "object" && executedCall.input !== null ? (executedCall.input as Record<string, unknown>) : {} }, makeEvalCtx())) {
               try {
@@ -10898,7 +10917,10 @@ async function runEngineBody(opts: EngineOptions, facetDisposers: Array<() => vo
           // calls that load tools (`ToolSearch`) are never concurrency-safe, and a concurrent call neither
           // sets nor reads it, so it can never take another call's references.
           if (!mode.concurrent) toolReferenceCollector = [];
-          const execution = tools.execute(executedCall, { signal: turnAbort.signal, ...(decision.explicitApproval !== undefined ? { explicitApproval: decision.explicitApproval } : {}) });
+          const execution =
+            answered !== undefined
+              ? Promise.resolve(answeredToolResult(answered))
+              : tools.execute(executedCall, { signal: turnAbort.signal, ...(decision.explicitApproval !== undefined ? { explicitApproval: decision.explicitApproval } : {}) });
           // An interrupt walks away from the execution below, but a LANE stays held until it has really stopped.
           mode.onExecution?.(execution);
           const raced = await raceInterrupt(execution, interruptSignal);

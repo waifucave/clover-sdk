@@ -348,6 +348,8 @@ export interface RunHooksContext {
   lifecycle?: HookLifecycleSink;
   /** WS-24: the MCP provenance lookup. Defaults to `mcpToolProvenance` (the live registry); a test seam. */
   mcpProvenance?: (toolName: string) => McpToolProvenanceInfo | undefined;
+  /** 0.0.87: the turn's abort (the hook stage's `EvaluationContext.signal`): an interrupt aborts each hook's own `signal`. */
+  signal?: AbortSignal;
 }
 
 function isObject(v: unknown): v is Record<string, unknown> {
@@ -377,6 +379,27 @@ function hasInvalidDefer(hso: Record<string, unknown> | undefined, event: HookEv
 }
 
 const VALID_PERMISSION_DECISIONS: ReadonlySet<string> = new Set(["allow", "ask", "deny", "defer"]);
+
+// 0.0.87: a `toolResult` as the hook wrote it: `content` a string, a non-empty array of text/image
+// blocks, or an MCP `CallToolResult`-shaped object with such a `content` array; `isError` a boolean
+// when present. Anything else is undefined (malformed). The size bound is the engine's, at delivery.
+function toolAnswerOf(raw: unknown): { content: unknown; isError: boolean } | undefined {
+  if (!isObject(raw)) return undefined;
+  const isError = raw["isError"];
+  if (isError !== undefined && typeof isError !== "boolean") return undefined;
+  const blocksOk = (v: unknown): boolean =>
+    Array.isArray(v) &&
+    v.length > 0 &&
+    v.every(
+      (b) =>
+        isObject(b) &&
+        ((b["type"] === "text" && typeof b["text"] === "string") ||
+          (b["type"] === "image" && isObject(b["source"]) && typeof (b["source"] as Record<string, unknown>)["data"] === "string")),
+    );
+  const content = raw["content"];
+  const ok = typeof content === "string" || blocksOk(content) || (isObject(content) && blocksOk(content["content"]));
+  return ok ? { content, isError: isError === true } : undefined;
+}
 
 // PreToolUse (WS-08 §3, derived-shapes item (b)): decision-capable, transform-capable, context-
 // capable. Task 11 (WS-08 §7): a raw `defer` now flows through UNRESOLVED — it is a real, distinct
@@ -417,6 +440,24 @@ function interpretPreToolUse(sync: Record<string, unknown>, opts: { validator: T
 
   const extraContext = typeof pre?.["additionalContext"] === "string" ? (pre["additionalContext"] as string) : undefined;
   const message = typeof pre?.["permissionDecisionReason"] === "string" ? (pre["permissionDecisionReason"] as string) : undefined;
+
+  // 0.0.87: the hook ANSWERS the call (`toolResult`). It is the hook's allow: with any other decision,
+  // on either channel, the output is malformed (never read as "deny and also here is a result").
+  const rawAnswer = pre?.["toolResult"];
+  if (rawAnswer !== undefined) {
+    const answer = toolAnswerOf(rawAnswer);
+    if (answer === undefined) return { kind: "error", reason: "malformed toolResult: { content: string | blocks, isError?: boolean }" };
+    if (decision !== undefined && decision !== "allow") return { kind: "error", reason: `toolResult with permissionDecision ${JSON.stringify(decision)}: an answer is the hook's allow` };
+    if (decision === undefined && sync["decision"] !== undefined && sync["decision"] !== "approve") return { kind: "error", reason: "toolResult with a top-level block: an answer is the hook's allow" };
+    return {
+      kind: "decision",
+      decision: "allow",
+      answer,
+      ...(transformedInput !== undefined ? { transformedInput } : {}),
+      ...(extraContext !== undefined ? { extraContext } : {}),
+      ...(message !== undefined ? { message } : {}),
+    };
+  }
 
   if (decision === undefined) {
     // Finding 2 (P2 fix-wave, IMPORTANT): the pinned `SyncHookJSONOutput.decision?: "approve" |
@@ -804,8 +845,13 @@ type InvocationResult = { kind: "resolved"; value: unknown } | { kind: "rejected
 // (mirrors engine.ts's own raceInterrupt/rejectAllPending "abandoned promise" precedent). The signal
 // is aborted on timeout regardless of whether the real invoker respects AbortSignal — a backstop,
 // not a trust assumption (see HookInvoker's own header).
-async function invokeWithTimeout(invoker: HookInvoker, request: HookInvocationRequest, timeoutMs: number): Promise<InvocationResult> {
+async function invokeWithTimeout(invoker: HookInvoker, request: HookInvocationRequest, timeoutMs: number, outer?: AbortSignal): Promise<InvocationResult> {
   const controller = new AbortController();
+  // 0.0.87: the turn's own abort reaches the hook too (an interrupt stops a hook that does a tool's
+  // work, as it stops a tool); the run itself still settles by the race below or the hook's return.
+  const onOuter = () => controller.abort();
+  if (outer?.aborted) controller.abort();
+  else outer?.addEventListener("abort", onOuter, { once: true });
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<InvocationResult>((resolve) => {
     timer = setTimeout(() => {
@@ -829,6 +875,7 @@ async function invokeWithTimeout(invoker: HookInvoker, request: HookInvocationRe
     return await Promise.race([invokePromise, timeoutPromise]);
   } finally {
     if (timer !== undefined) clearTimeout(timer);
+    outer?.removeEventListener("abort", onOuter);
   }
 }
 
@@ -898,7 +945,7 @@ export async function runHooks(event: HookEvent, call: RunHooksCallInfo, ctx: Ru
     // public stream, not just retroactively once it settles.
     ctx.lifecycle?.started({ hookId: entry.id, ...(entry.name !== undefined ? { hookName: entry.name } : {}), hookEvent: event, sessionId: ctx.sessionId });
     const started = Date.now();
-    const invocation = await invokeWithTimeout(ctx.invoker, request, timeoutMs);
+    const invocation = await invokeWithTimeout(ctx.invoker, request, timeoutMs, ctx.signal);
     const durationMs = Date.now() - started;
 
     // Fix round 1 (I2): a fail-closed hook on a gating event is held to a STRICTER shape. Shapes
@@ -925,6 +972,14 @@ export async function runHooks(event: HookEvent, call: RunHooksCallInfo, ctx: Ru
           hookLabel: hookLabelOf(entry),
         });
         if (outcome.kind === "error" && outcome.code === undefined) outcome = { ...outcome, code: "malformed_output" };
+        // 0.0.87: only the HOST answers a call. The registry tags each entry with where it came from:
+        // `sdk` is the host's own `Options.hooks` (query.ts's conversion, the one producer), so a
+        // settings file's or a plugin's hook (`managed`/`user`/`project`/`local`/`plugin`) can never
+        // stand in for a tool. Its answer is malformed output: no contribution, or a denial when it is
+        // fail-closed (below) -- never an allow that would run the tool it meant to replace.
+        if (outcome.kind === "decision" && outcome.answer !== undefined && entry.source !== "sdk") {
+          outcome = { kind: "error", code: "malformed_output", reason: `toolResult from a ${entry.source} hook: only the host's own hooks may answer a call` };
+        }
       }
     }
     // The lifecycle frame reports what the hook actually DID -- an error stays an error there even

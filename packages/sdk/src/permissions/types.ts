@@ -442,12 +442,38 @@ export interface AsyncHookJSONOutput {
   asyncTimeout?: number;
 }
 
+/**
+ * 0.0.87: a PreToolUse hook's ANSWER to a call (`PreToolUseHookSpecificOutput.toolResult`): the call's
+ * result, given by the host instead of the tool. `content` is a string or a non-empty array of text and
+ * image blocks (an MCP `CallToolResult`-shaped `{ content: [...] }` works too), bounded exactly as a
+ * PostToolUse `updatedToolOutput` is (100,000 characters, images counted by their base64 length; over
+ * that, the text capped and each image replaced by a placeholder). `isError: true` makes the result a
+ * failed call (`is_error: true`, PostToolUseFailure).
+ */
+export interface PreToolUseHookToolResult {
+  content: string | ReadonlyArray<{ type: "text"; text: string } | { type: "image"; source: { type: "base64"; media_type: string; data: string } }> | { content: ReadonlyArray<unknown> };
+  isError?: boolean;
+}
+
 export interface PreToolUseHookSpecificOutput {
   hookEventName: "PreToolUse";
   permissionDecision?: HookPermissionDecision;
   permissionDecisionReason?: string;
   updatedInput?: Record<string, unknown>;
   additionalContext?: string;
+  /**
+   * 0.0.87: the hook ANSWERS the call: the tool does not run, and this is its result. Honoured only from
+   * the host's own in-process hooks (`Options.hooks`, source `sdk`); from a settings or plugin hook it is
+   * malformed output (that hook contributes nothing; a fail-closed one denies). It is the hook's `allow`
+   * (`permissionDecision` left out or `"allow"`; any other value with it is malformed), so the runtime
+   * raises no prompt of its own for it, save the standing floors any hook allow meets. Every other gate
+   * still applies: another hook's or a rule's `deny` wins (the answer is dropped, the call is denied),
+   * another hook's `ask` still asks (and on a yes the answer is the result), and a `defer` with it is a
+   * denial (an answered call can't be parked). The call is recorded as the tool's own call with the
+   * model's input; PostToolUse (or PostToolUseFailure) runs on the answer as on any result. The hook
+   * runs under its matcher's `timeout`, and an interrupt of the turn aborts its `signal`.
+   */
+  toolResult?: PreToolUseHookToolResult;
 }
 export interface PostToolUseHookSpecificOutput {
   hookEventName: "PostToolUse";
