@@ -4,6 +4,35 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.86
+
+### A host tool named like a built-in gets none of the built-in's approvals
+
+- A host's or an MCP server's tool that takes a built-in's name (`Bash`, `PowerShell`, `Read`, `Glob`, `Grep`, `Edit`,
+  `WebFetch`, `TodoWrite` and the rest) no longer gets the approvals the runtime grants its own tool by name: the
+  read-only Bash pre-approval, the in-folder Read/Glob/Grep and edit allows, the sandboxed-Bash auto-allow, the task-tool
+  allows and the preapproved WebFetch hosts. Its calls reach the host's own approval handler (`canUseTool`) or its rules,
+  like any other host tool. **A host will see this:** its own Bash and PowerShell, and its other built-in-named tools,
+  now ask in default, acceptEdits and auto modes where they did not before. The checks that make things stricter still
+  apply to a host tool of that name.
+- New: `isReadOnlyShellCommand(command)` from `@waifucave/clover-agent-runtime`, the same read-only rule the built-in
+  Bash pre-approval uses (substitutions, here-documents, chains and redirections judged; anything it cannot parse is not
+  read-only). A host can use it in its own rule to let read-only commands through its own contained shell, as the
+  runtime does for its own. Advisory: the host must still contain the command itself. There is no PowerShell equivalent.
+- The list of subagent types is offered only with the runtime's own `Agent` tool, not with a host's tool of that name.
+
+### The thinking control is sent in the form each row declares
+
+- A catalog row now says which form its thinking control takes (`reasoning.effortRequest`, the new
+  `thinkingConfig.thinkingLevel` form with its `levels`). **A host will see this:** on such a row the Google adapter (AI
+  Studio and Vertex) sends the effort as a named `thinkingLevel` and never a `thinkingBudget`; every other row keeps the
+  token-budget mapping it had. No effort sends no thinking config. On a level row, `disabled` thinking and a token
+  budget are refused before the request (Gemini 4 has no documented off level, and Vertex answers a budget with a 400).
+- The Gemini 4 rows (Hydrogen, Neon, Argon, Carbon on `google`; Argon and Hydrogen on `vertex`) and the Gemini 3.x rows
+  that Google's and Vertex's level tables cover take the level form, with the levels those tables list (2026-11-24).
+  `google/gemini-3.7-flash` and `google/gemini-3.5-flash`, absent from AI Studio's table, keep the budget.
+- New row: **Gemini 4 Hydrogen on Vertex** (`vertex/gemini-4-hydrogen`), efforts low, medium, high and xhigh, default high.
+
 ## 0.0.85
 
 ### A host tool with a built-in's name is offered exactly as the host defined it
