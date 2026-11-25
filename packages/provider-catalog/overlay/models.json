@@ -115975,7 +115975,7 @@
       "upstreamId": "gemini-4-hydrogen",
       "displayName": "Gemini 4 Hydrogen (Vertex)",
       "aliases": [],
-      "$comment": "Winter-authored 2026-11-24, shaped as vertex/gemini-4-argon. https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions (read 2026-11-24): `gemini-4-hydrogen`, release date \"November 12, 2026\", \"No retirement date announced\", in \"Models available for shorter availability periods\". https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24): \"Model ID gemini-4-hydrogen\"; Context window 1,048,576 (\"a unified 1,048,576-token limit that includes both input and output tokens\"); Maximum output tokens 1,048,576, a single foreground segment \"up to 65,536 output tokens\"; text in and out, image/audio/video input only; function calling, thinking and structured output supported; implicit caching only. Thinking levels LOW, MEDIUM, HIGH (default), XHIGH, and the card says setting `thinking_budget` or `thinking_level=\"MINIMAL\"` returns HTTP 400. The GenerateContent adapter maps an effort to `thinkingConfig.thinkingBudget` only, so this row declares NO effort vocabulary: an effort is refused before the call instead of sent as a budget the endpoint rejects, and with none the model thinks at its default (high). When the adapter sends `thinkingLevel`, the efforts are low/medium/high/xhigh per the card. Unpriced, like every vertex row; status `experimental`, as on the Argon row.",
+      "$comment": "Winter-authored 2026-11-24, shaped as vertex/gemini-4-argon. https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions (read 2026-11-24): `gemini-4-hydrogen`, release date \"November 12, 2026\", \"No retirement date announced\", in \"Models available for shorter availability periods\". https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24): \"Model ID gemini-4-hydrogen\"; Context window 1,048,576 (\"a unified 1,048,576-token limit that includes both input and output tokens\"); Maximum output tokens 1,048,576, a single foreground segment \"up to 65,536 output tokens\"; text in and out, image/audio/video input only; function calling, thinking and structured output supported; implicit caching only. Thinking levels LOW, MEDIUM, HIGH (default), XHIGH, and the card says setting `thinking_budget` or `thinking_level=\"MINIMAL\"` returns HTTP 400. The GenerateContent adapter sends this row's effort as `thinkingConfig.thinkingLevel` (`reasoning.effortRequest`) and never a budget, so the efforts are low/medium/high/xhigh per the card and Vertex's thinking page (\"Gemini 4 Hydrogen: LOW, MEDIUM, HIGH, XHIGH\"), default high; with no effort no thinking config is sent and the model thinks at its default. Unpriced, like every vertex row; status `experimental`, as on the Argon row.",
       "endpoints": [
         "chat"
       ],
@@ -116038,11 +116038,17 @@
         "supported": {
           "value": true,
           "source": "official-doc",
-          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24) — Thinking Supported; levels \"LOW, MEDIUM, HIGH (default), and XHIGH\"; setting `thinking_budget` returns HTTP 400, so no effort is declared while the adapter sends a budget (see the row's note)",
+          "sourceRef": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24) — Thinking Supported; levels \"LOW, MEDIUM, HIGH (default), and XHIGH\"; setting `thinking_budget` returns HTTP 400, so the effort is sent as a level (see `effortRequest`)",
           "confidence": "declared",
           "observedAt": "2026-11-24T00:00:00Z"
         },
-        "efforts": [],
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "xhigh"
+        ],
+        "defaultEffort": "high",
         "readableState": {
           "value": "summary",
           "source": "official-doc",
@@ -116085,6 +116091,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH",
+              "xhigh": "XHIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 4 Hydrogen: LOW, MEDIUM, HIGH, XHIGH\", \"Setting `thinking_budget` on Gemini 4 models returns a `400: INVALID_ARGUMENT` error\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\", MINIMAL \"Not supported on Gemini 4 models\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-hydrogen (read 2026-11-24): levels \"LOW, MEDIUM, HIGH (default), and XHIGH\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],

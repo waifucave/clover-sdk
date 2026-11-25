@@ -35,6 +35,16 @@ describe("a level row (Gemini 4) is sent a named level and never a budget", () =
     });
   }
 
+  test("vertex/gemini-4-hydrogen at medium (and its other levels): a level, no budget", () => {
+    const config = generationConfig("vertex", "gemini-4-hydrogen", { effort: "medium" });
+    expect(config["thinkingConfig"]).toEqual({ thinkingLevel: "MEDIUM" });
+    expect(JSON.stringify(config)).not.toContain("thinkingBudget");
+    expect(thinkingOf("vertex", "gemini-4-hydrogen", { effort: "low" })).toEqual({ thinkingLevel: "LOW" });
+    expect(thinkingOf("vertex", "gemini-4-hydrogen", { effort: "high" })).toEqual({ thinkingLevel: "HIGH" });
+    expect(thinkingOf("vertex", "gemini-4-hydrogen", { effort: "xhigh" })).toEqual({ thinkingLevel: "XHIGH" });
+    expect("thinkingConfig" in generationConfig("vertex", "gemini-4-hydrogen")).toBe(false);
+  });
+
   test("google/gemini-4-hydrogen: xhigh, and Argon refuses xhigh (not one of its levels)", () => {
     expect(thinkingOf("google", "gemini-4-hydrogen", { effort: "xhigh" })).toEqual({ thinkingLevel: "XHIGH" });
     expect(() => thinkingOf("google", "gemini-4-argon", { effort: "xhigh" })).toThrow(/not in model .*verified vocabulary/);
@@ -114,6 +124,7 @@ describe("the catalog's Gemini 4 and Gemini 3.x rows declare the level form, so 
     ["google/gemini-4-argon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
     ["google/gemini-4-carbon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
     ["vertex/gemini-4-argon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-4-hydrogen", { low: "LOW", medium: "MEDIUM", high: "HIGH", xhigh: "XHIGH" }],
     // Gemini 3.x, from AI Studio's and Vertex's level tables (read 2026-11-24).
     ["google/gemini-3.8-flash", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
     ["google/gemini-3.6-flash", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
