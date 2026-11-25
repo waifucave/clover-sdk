@@ -73,13 +73,13 @@ describe("Gemini 3.x rows the references cover take the level form too", () => {
 
   // `TurnRequest.effort` names no "minimal", so a typed caller reaches a row's MINIMAL level through the numeric
   // scale (0 is the row's first effort); a named "minimal" arrives only from an untyped host, and is held to the row.
-  const minimal = "minimal" as unknown as TurnRequest["effort"];
+  const minimal = { effort: "minimal" } as unknown as Partial<TurnRequest>;
   test("minimal exists where the reference lists it (3.6 Flash), and is refused where it does not (3.8 Flash)", () => {
     expect(thinkingOf("google", "gemini-3.6-flash", { effort: 0 })).toEqual({ thinkingLevel: "MINIMAL" });
     expect(thinkingOf("vertex", "gemini-3.6-flash", { effort: 0 })).toEqual({ thinkingLevel: "MINIMAL" });
-    expect(thinkingOf("google", "gemini-3.6-flash", { effort: minimal })).toEqual({ thinkingLevel: "MINIMAL" });
+    expect(thinkingOf("google", "gemini-3.6-flash", minimal)).toEqual({ thinkingLevel: "MINIMAL" });
     expect(thinkingOf("google", "gemini-3.8-flash", { effort: 0 })).toEqual({ thinkingLevel: "LOW" });
-    expect(() => thinkingOf("google", "gemini-3.8-flash", { effort: minimal })).toThrow(/not in model .*verified vocabulary/);
+    expect(() => thinkingOf("google", "gemini-3.8-flash", minimal)).toThrow(/not in model .*verified vocabulary/);
   });
 });
 
