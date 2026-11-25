@@ -59,17 +59,36 @@ describe("a level row (Gemini 4) is sent a named level and never a budget", () =
   });
 });
 
+describe("Gemini 3.x rows the references cover take the level form too", () => {
+  test("Gemini 3.8 Flash at medium (MOSS's Vertex fallback and light model) is a level on both providers, no budget", () => {
+    for (const providerId of ["google", "vertex"] as const) {
+      const config = generationConfig(providerId, "gemini-3.8-flash", { effort: "medium" });
+      expect(config["thinkingConfig"]).toEqual({ thinkingLevel: "MEDIUM" });
+      expect(JSON.stringify(config)).not.toContain("thinkingBudget");
+    }
+    expect(thinkingOf("vertex", "gemini-3.8-flash", { effort: "low" })).toEqual({ thinkingLevel: "LOW" });
+    expect(thinkingOf("vertex", "gemini-3.8-flash", { effort: "high" })).toEqual({ thinkingLevel: "HIGH" });
+    expect("thinkingConfig" in generationConfig("vertex", "gemini-3.8-flash")).toBe(false);
+  });
+
+  test("minimal exists where the reference lists it (3.6 Flash), and is refused where it does not (3.8 Flash)", () => {
+    expect(thinkingOf("google", "gemini-3.6-flash", { effort: "minimal" })).toEqual({ thinkingLevel: "MINIMAL" });
+    expect(thinkingOf("vertex", "gemini-3.6-flash", { effort: "minimal" })).toEqual({ thinkingLevel: "MINIMAL" });
+    expect(() => thinkingOf("google", "gemini-3.8-flash", { effort: "minimal" })).toThrow(/not in model .*verified vocabulary/);
+  });
+});
+
 describe("a budget row keeps the ladder, unchanged", () => {
-  test("google/gemini-3.8-flash: low, medium, high are 1024, 4096, 8192 tokens; no level", () => {
-    expect(thinkingOf("google", "gemini-3.8-flash", { effort: "low" })).toEqual({ thinkingBudget: 1024 });
-    expect(thinkingOf("google", "gemini-3.8-flash", { effort: "medium" })).toEqual({ thinkingBudget: 4096 });
-    expect(thinkingOf("google", "gemini-3.8-flash", { effort: "high" })).toEqual({ thinkingBudget: 8192 });
-    expect(JSON.stringify(generationConfig("google", "gemini-3.8-flash", { effort: "medium" }))).not.toContain("thinkingLevel");
+  test("google/gemini-3.7-flash (absent from AI Studio's level table): low, medium, high are 1024, 4096, 8192 tokens; no level", () => {
+    expect(thinkingOf("google", "gemini-3.7-flash", { effort: "low" })).toEqual({ thinkingBudget: 1024 });
+    expect(thinkingOf("google", "gemini-3.7-flash", { effort: "medium" })).toEqual({ thinkingBudget: 4096 });
+    expect(thinkingOf("google", "gemini-3.7-flash", { effort: "high" })).toEqual({ thinkingBudget: 8192 });
+    expect(JSON.stringify(generationConfig("google", "gemini-3.7-flash", { effort: "medium" }))).not.toContain("thinkingLevel");
   });
 
   test("no effort: no thinkingConfig; disabled is still a zero budget", () => {
-    expect("thinkingConfig" in generationConfig("google", "gemini-3.8-flash")).toBe(false);
-    expect(thinkingOf("google", "gemini-3.8-flash", { thinking: { type: "disabled" } } as Partial<TurnRequest>)).toEqual({ thinkingBudget: 0 });
+    expect("thinkingConfig" in generationConfig("google", "gemini-3.7-flash")).toBe(false);
+    expect(thinkingOf("google", "gemini-3.7-flash", { thinking: { type: "disabled" } } as Partial<TurnRequest>)).toEqual({ thinkingBudget: 0 });
   });
 });
 
@@ -83,17 +102,42 @@ describe("a row that declares no effort", () => {
   });
 });
 
-describe("the catalog's Gemini 4 rows declare the level form, so a later refresh cannot quietly put the budget back", () => {
+describe("the catalog's Gemini 4 and Gemini 3.x rows declare the level form, so a later refresh cannot quietly put the budget back", () => {
   for (const [key, levels] of [
     ["google/gemini-4-hydrogen", { low: "LOW", medium: "MEDIUM", high: "HIGH", xhigh: "XHIGH" }],
     ["google/gemini-4-neon", { low: "LOW", medium: "MEDIUM", high: "HIGH", xhigh: "XHIGH" }],
     ["google/gemini-4-argon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
     ["google/gemini-4-carbon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
     ["vertex/gemini-4-argon", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    // Gemini 3.x, from AI Studio's and Vertex's level tables (read 2026-11-24).
+    ["google/gemini-3.8-flash", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["google/gemini-3.6-flash", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["google/gemini-3.5-flash-lite", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["google/gemini-3.1-pro-preview", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["google/gemini-3.1-flash-lite", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["google/gemini-3-flash-preview", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.8-flash", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.8-flash-cyber", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.7-flash", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.6-flash", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.5-flash", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.5-flash-lite", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.1-flash-lite", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3-flash-preview", { minimal: "MINIMAL", low: "LOW", medium: "MEDIUM", high: "HIGH" }],
+    ["vertex/gemini-3.1-pro-preview", { low: "LOW", medium: "MEDIUM", high: "HIGH" }],
   ] as const) {
     test(key, () => {
       const model = catalog.models.find((m) => m.key === key)!;
       expect(model.reasoning?.effortRequest?.value).toEqual({ field: "thinkingConfig.thinkingLevel", levels });
+    });
+  }
+});
+
+describe("rows the references do not cover stay on the budget ladder", () => {
+  // AI Studio's level table (read 2026-11-24) has no row for gemini-3.7-flash or gemini-3.5-flash on `google`.
+  for (const key of ["google/gemini-3.7-flash", "google/gemini-3.5-flash"]) {
+    test(key, () => {
+      expect(catalog.models.find((m) => m.key === key)!.reasoning?.effortRequest).toBeUndefined();
     });
   }
 });

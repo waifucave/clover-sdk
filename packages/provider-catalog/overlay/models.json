@@ -8457,6 +8457,20 @@
           "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3.8-flash | ... |\" levels low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "pricing": {
@@ -8565,6 +8579,7 @@
           "observedAt": "2026-09-25T08:40:00Z"
         },
         "efforts": [
+          "minimal",
           "low",
           "medium",
           "high"
@@ -8588,7 +8603,22 @@
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
         },
-        "continuation": "opaque-provider-state"
+        "continuation": "opaque-provider-state",
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3.5-flash-lite | ... |\" levels minimal, low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        }
       },
       "pricing": {
         "value": {
@@ -14511,6 +14541,7 @@
           "observedAt": "2026-09-25T08:40:00Z"
         },
         "efforts": [
+          "minimal",
           "low",
           "medium",
           "high"
@@ -14535,6 +14566,21 @@
           "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3-flash-preview | ... |\" levels minimal, low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "pricing": {
@@ -14650,6 +14696,7 @@
           "observedAt": "2026-09-25T08:40:00Z"
         },
         "efforts": [
+          "minimal",
           "low",
           "medium",
           "high"
@@ -14673,7 +14720,22 @@
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
         },
-        "continuation": "opaque-provider-state"
+        "continuation": "opaque-provider-state",
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3.1-flash-lite | ... |\" levels minimal, low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
+        }
       },
       "pricing": {
         "value": {
@@ -14812,6 +14874,20 @@
           "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3.1-pro-preview | ... |\" levels low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "pricing": {
@@ -19767,6 +19843,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3 Flash (preview)\": MINIMAL, LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -19895,6 +19986,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.1 Flash-Lite\": MINIMAL, LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -20022,6 +20128,20 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.1 Pro (preview)\": LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -23495,6 +23615,20 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.8 Flash\": LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -23615,6 +23749,20 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.8 Flash Cyber\": LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -23733,6 +23881,20 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.7 Flash\": LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -23852,6 +24014,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.6 Flash\": MINIMAL, LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -23971,6 +24148,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.5 Flash\": MINIMAL, LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -24090,6 +24282,21 @@
           "sourceRef": "https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures (read 2026-10-29): \"When using Gemini 4 and Gemini 3 models, you must pass back thought signatures during function calling, otherwise you will get a validation error (4xx status code)\"; \"Function call `FC1` in the `1.` content block is missing a `thought_signature`\"",
           "confidence": "declared",
           "observedAt": "2026-10-29T20:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/rest/v1/GenerationConfig (read 2026-11-24): ThinkingConfig.thinkingLevel, enum LOW/MEDIUM/HIGH/MINIMAL/XHIGH; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"Gemini 3.5 Flash-Lite\": MINIMAL, LOW, MEDIUM, HIGH; \"Gemini 3 models use the `thinking_level` parameter\", \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\", \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\", \"Specifying both `thinking_level` and `thinking_budget` in the same request returns an error\"",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "unsupportedParameters": [],
@@ -24398,6 +24605,7 @@
           "observedAt": "2026-09-25T08:40:00Z"
         },
         "efforts": [
+          "minimal",
           "low",
           "medium",
           "high"
@@ -24422,6 +24630,21 @@
           "sourceRef": "https://ai.google.dev/api/generate-content (read 2026-10-05) — `ThinkingConfig.includeThoughts`: \"Indicates whether to include thoughts in the response. If true, thoughts are returned only when available.\"; https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/thinking (read 2026-10-05) — \"Thought summaries are supported in Gemini 2.5 and later models\", and this model is in that page's thinking list. The field is a BOOLEAN, recorded as its single enabling spelling, as on `google/gemini-2.5-pro`.",
           "confidence": "declared",
           "observedAt": "2026-10-05T00:00:00Z"
+        },
+        "effortRequest": {
+          "value": {
+            "field": "thinkingConfig.thinkingLevel",
+            "levels": {
+              "minimal": "MINIMAL",
+              "low": "LOW",
+              "medium": "MEDIUM",
+              "high": "HIGH"
+            }
+          },
+          "source": "official-doc",
+          "sourceRef": "https://aistudio.google.com/api-reference/generate-content (read 2026-11-24): generationConfig.thinkingConfig.thinkingLevel, enum MINIMAL/LOW/MEDIUM/HIGH/XHIGH, \"Recommended for Gemini 3 or later models\"; https://aistudio.google.com/docs/thinking (read 2026-11-24): \"| gemini-3.6-flash | ... |\" levels minimal, low, medium, high. https://docs.cloud.google.com/vertex-ai/generative-ai/docs/thinking (read 2026-11-24): \"The `thinking_budget` parameter is deprecated for Gemini 3 and later models\" and \"using it with Gemini 3 models can cause intermittent `400: INVALID_ARGUMENT` errors\". Value spelling on generateContent: the reference's enum names; lowercase values are not documented for generateContent.",
+          "confidence": "declared",
+          "observedAt": "2026-11-24T00:00:00Z"
         }
       },
       "pricing": {
