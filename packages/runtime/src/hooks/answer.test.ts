@@ -43,34 +43,42 @@ describe("a PreToolUse hook's answer (0.0.87)", () => {
     }
   });
 
-  test("permissionDecision \"allow\" with it is fine; deny, ask or defer with it, or a top-level block, is malformed (no contribution)", async () => {
+  test("permissionDecision \"allow\" with it is fine; deny, ask or defer with it, or a top-level block, denies", async () => {
     const ok = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([answer("x", { permissionDecision: "allow" })]).invoker));
     expect(ok.answer?.content).toBe("x");
     for (const d of ["deny", "ask", "defer"]) {
       const c = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([answer("x", { permissionDecision: d })]).invoker));
-      expect([d, c.decision, c.answer]).toEqual([d, undefined, undefined]);
-      expect(c.lifecycleMessages[0]?.outcome).toBe("error");
+      expect([d, c.decision, c.answer]).toEqual([d, "deny", undefined]);
     }
     const blocked = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([{ decision: "block", hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: { content: "x" } } }]).invoker));
-    expect(blocked.answer).toBeUndefined();
+    expect([blocked.decision, blocked.answer]).toEqual(["deny", undefined]);
   });
 
-  test("a malformed toolResult is no answer: never read as an allow that would run the tool", async () => {
-    for (const bad of [{}, { content: 5 }, { content: [] }, { content: [{ type: "video" }] }, { content: "x", isError: "yes" }, "x", null]) {
-      const c = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([{ hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: bad } }]).invoker));
-      expect([bad, c.decision, c.answer]).toEqual([bad, undefined, undefined]);
+  test("a malformed toolResult DENIES, fail-closed or not: a toolResult key never lets the tool run", async () => {
+    const pngBlock = (media_type: string, type = "base64") => ({ type: "image", source: { type, media_type, data: "AAAA" } });
+    for (const bad of [{}, { content: 5 }, { content: [{ type: "video" }] }, { content: "x", isError: "true" }, { content: [pngBlock("image/svg+xml")] }, { content: [pngBlock("image/png", "url")] }, "x", null]) {
+      for (const failClosed of [false, true]) {
+        const c = await runHooks("PreToolUse", call, ctx([pre("h1", { failClosed })], sequenceInvoker([{ hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: bad } }]).invoker));
+        expect([bad, failClosed, c.decision, c.answer]).toEqual([bad, failClosed, "deny", undefined]);
+        expect(c.message).toContain("was not run");
+      }
     }
-    // Fail-closed: a malformed answer denies.
-    const closed = await runHooks("PreToolUse", call, ctx([pre("h1", { failClosed: true })], sequenceInvoker([{ hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: { content: 5 } } }]).invoker));
-    expect(closed.decision).toBe("deny");
   });
 
-  test("only the host answers: a plugin's, a user settings', a project's or a managed hook's answer is refused", async () => {
+  test("an empty content array is an empty result, an answer like any other", async () => {
+    for (const content of [[], { content: [] }]) {
+      const c = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([answer(content)]).invoker));
+      expect([c.decision, c.answer?.content]).toEqual(["allow", content]);
+    }
+  });
+
+  test("only the host answers: a plugin's, a user settings', a project's or a managed hook's answer denies the call, fail-closed or not", async () => {
     for (const source of ["plugin", "user", "project", "local", "managed"] as const) {
-      const c = await runHooks("PreToolUse", call, ctx([pre("h1", { source })], sequenceInvoker([answer("forged")]).invoker));
-      expect([source, c.decision, c.answer]).toEqual([source, undefined, undefined]);
-      const closed = await runHooks("PreToolUse", call, ctx([pre("h1", { source, failClosed: true })], sequenceInvoker([answer("forged")]).invoker));
-      expect([source, closed.decision, closed.answer]).toEqual([source, "deny", undefined]);
+      for (const failClosed of [false, true]) {
+        const c = await runHooks("PreToolUse", call, ctx([pre("h1", { source, failClosed })], sequenceInvoker([answer("forged")]).invoker));
+        expect([source, failClosed, c.decision, c.answer]).toEqual([source, failClosed, "deny", undefined]);
+        expect(c.message).toContain("only the host's own hooks may answer");
+      }
     }
   });
 

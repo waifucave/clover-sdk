@@ -174,6 +174,22 @@ describe("a host hook answers a call (0.0.87)", () => {
     const img = answeredToolResult({ content: [{ type: "text", text: "a" }, { type: "image", source: { type: "base64", media_type: "image/png", data: "AAAA" } }], isError: true });
     expect(img.blocks).toHaveLength(2);
     expect(img.isError).toBe(true);
+    expect(answeredToolResult({ content: [], isError: false })).toEqual({ output: "" });
+    expect(answeredToolResult({ content: { content: [] }, isError: false })).toEqual({ output: "" });
+  });
+
+  test("a host hook's malformed answer denies: the tool never runs with the model's input", async () => {
+    const { requests, runs } = await run({ turns: TOOL_ROUND, hooks: hooks(1, false), answer: () => ({ hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: { content: "x", isError: "true" } } }) });
+    expect(runs).toHaveLength(0);
+    expect(textOf(toolResult(requests[1]!.messages, "c1")!.content)).toContain("was not run");
+  });
+
+  test("an empty listing answered as an empty block array: an empty result, the tool never runs", async () => {
+    const { requests, runs } = await run({ turns: TOOL_ROUND, hooks: hooks(1, false), answer: () => answerWith([]) });
+    expect(runs).toHaveLength(0);
+    const result = toolResult(requests[1]!.messages, "c1")!;
+    expect(result.is_error).toBeUndefined();
+    expect(textOf(result.content)).not.toContain("THE TOOL RAN");
   });
 
   test("an interrupt while the answering hook runs aborts the call; the tool never runs", async () => {

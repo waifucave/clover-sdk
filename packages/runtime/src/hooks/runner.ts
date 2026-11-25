@@ -383,19 +383,23 @@ const VALID_PERMISSION_DECISIONS: ReadonlySet<string> = new Set(["allow", "ask",
 // 0.0.87: a `toolResult` as the hook wrote it: `content` a string, a non-empty array of text/image
 // blocks, or an MCP `CallToolResult`-shaped object with such a `content` array; `isError` a boolean
 // when present. Anything else is undefined (malformed). The size bound is the engine's, at delivery.
+// The image types a model request accepts: a block with another `source` would break every later request.
+const ANSWER_IMAGE_TYPES: ReadonlySet<string> = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
+
 function toolAnswerOf(raw: unknown): { content: unknown; isError: boolean } | undefined {
   if (!isObject(raw)) return undefined;
   const isError = raw["isError"];
   if (isError !== undefined && typeof isError !== "boolean") return undefined;
+  // An empty array is an empty result (an empty listing), not a malformed one.
   const blocksOk = (v: unknown): boolean =>
     Array.isArray(v) &&
-    v.length > 0 &&
-    v.every(
-      (b) =>
-        isObject(b) &&
-        ((b["type"] === "text" && typeof b["text"] === "string") ||
-          (b["type"] === "image" && isObject(b["source"]) && typeof (b["source"] as Record<string, unknown>)["data"] === "string")),
-    );
+    v.every((b) => {
+      if (!isObject(b)) return false;
+      if (b["type"] === "text") return typeof b["text"] === "string";
+      if (b["type"] !== "image" || !isObject(b["source"])) return false;
+      const s = b["source"] as Record<string, unknown>;
+      return s["type"] === "base64" && typeof s["media_type"] === "string" && ANSWER_IMAGE_TYPES.has(s["media_type"]) && typeof s["data"] === "string";
+    });
   const content = raw["content"];
   const ok = typeof content === "string" || blocksOk(content) || (isObject(content) && blocksOk(content["content"]));
   return ok ? { content, isError: isError === true } : undefined;
@@ -443,12 +447,15 @@ function interpretPreToolUse(sync: Record<string, unknown>, opts: { validator: T
 
   // 0.0.87: the hook ANSWERS the call (`toolResult`). It is the hook's allow: with any other decision,
   // on either channel, the output is malformed (never read as "deny and also here is a result").
+  // A `toolResult` key says "don't run this tool": one that can't be honoured DENIES (whatever the hook's fail-closed
+  // setting), never falls back to "no opinion", which would run the tool with the model's input.
   const rawAnswer = pre?.["toolResult"];
   if (rawAnswer !== undefined) {
     const answer = toolAnswerOf(rawAnswer);
-    if (answer === undefined) return { kind: "error", reason: "malformed toolResult: { content: string | blocks, isError?: boolean }" };
-    if (decision !== undefined && decision !== "allow") return { kind: "error", reason: `toolResult with permissionDecision ${JSON.stringify(decision)}: an answer is the hook's allow` };
-    if (decision === undefined && sync["decision"] !== undefined && sync["decision"] !== "approve") return { kind: "error", reason: "toolResult with a top-level block: an answer is the hook's allow" };
+    const refuse = (why: string): HookOutcome => ({ kind: "decision", decision: "deny", message: `Denied: the hook ${opts.hookLabel} answered this call with ${why}, so the call was not run.` });
+    if (answer === undefined) return refuse("a malformed toolResult ({ content: string | text and image blocks, isError?: boolean })");
+    if (decision !== undefined && decision !== "allow") return refuse(`a toolResult and permissionDecision ${JSON.stringify(decision)} (an answer is the hook's allow)`);
+    if (decision === undefined && sync["decision"] !== undefined && sync["decision"] !== "approve") return refuse("a toolResult and a top-level block (an answer is the hook's allow)");
     return {
       kind: "decision",
       decision: "allow",
@@ -975,10 +982,11 @@ export async function runHooks(event: HookEvent, call: RunHooksCallInfo, ctx: Ru
         // 0.0.87: only the HOST answers a call. The registry tags each entry with where it came from:
         // `sdk` is the host's own `Options.hooks` (query.ts's conversion, the one producer), so a
         // settings file's or a plugin's hook (`managed`/`user`/`project`/`local`/`plugin`) can never
-        // stand in for a tool. Its answer is malformed output: no contribution, or a denial when it is
-        // fail-closed (below) -- never an allow that would run the tool it meant to replace.
+        // stand in for a tool. Its answer denies the call -- never an allow, nor "no opinion", that would run
+        // the tool it meant to replace.
         if (outcome.kind === "decision" && outcome.answer !== undefined && entry.source !== "sdk") {
-          outcome = { kind: "error", code: "malformed_output", reason: `toolResult from a ${entry.source} hook: only the host's own hooks may answer a call` };
+          // It meant "don't run this tool": a deny, never an allow that runs it.
+          outcome = { kind: "decision", decision: "deny", message: `Denied: the ${entry.source} hook ${hookLabelOf(entry)} answered this call itself, and only the host's own hooks may answer a call.` };
         }
       }
     }

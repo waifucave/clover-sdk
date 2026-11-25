@@ -2512,8 +2512,12 @@ export const STOP_HOOK_BLOCK_CAP = 8;
  * result: bounded exactly as a PostToolUse replacement (`toolOutputReplacement`), its `isError` kept.
  */
 export function answeredToolResult(answer: { content: unknown; isError: boolean }): { output: string; blocks?: ToolResultBlock[]; isError?: boolean; siteIcons?: ToolResultSiteIcon[] } {
-  const content = toolOutputReplacement(answer.content);
   const flag = answer.isError ? { isError: true } : {};
+  // An empty block list (an empty listing) is an empty result.
+  const raw = answer.content;
+  const list = Array.isArray(raw) ? raw : typeof raw === "object" && raw !== null && Array.isArray((raw as { content?: unknown }).content) ? (raw as { content: unknown[] }).content : undefined;
+  if (list !== undefined && list.length === 0) return { output: "", ...flag };
+  const content = toolOutputReplacement(raw);
   if (typeof content === "string") return { output: content, ...flag };
   const blocks = content.filter((b): b is ToolResultBlock => b.type === "text" || b.type === "image");
   return { output: blocks.map((b) => (b.type === "text" ? b.text : "[image]")).join("\n"), blocks, ...flag };

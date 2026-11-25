@@ -463,9 +463,11 @@ export interface PreToolUseHookSpecificOutput {
   additionalContext?: string;
   /**
    * 0.0.87: the hook ANSWERS the call: the tool does not run, and this is its result. Honoured only from
-   * the host's own in-process hooks (`Options.hooks`, source `sdk`); from a settings or plugin hook it is
-   * malformed output (that hook contributes nothing; a fail-closed one denies). It is the hook's `allow`
-   * (`permissionDecision` left out or `"allow"`; any other value with it is malformed), so the runtime
+   * the host's own hooks (source `sdk`: `Options.hooks` and the host's flag settings); from any other
+   * settings or a plugin hook it DENIES the call. A malformed one denies too, whatever the hook's
+   * fail-closed setting: a `toolResult` key never lets the tool run. An empty `content` array is an empty
+   * result; image blocks must be base64 PNG, JPEG, GIF or WebP. It is the hook's `allow`
+   * (`permissionDecision` left out or `"allow"`; any other value with it denies), so the runtime
    * raises no prompt of its own for it, save the standing floors any hook allow meets. Every other gate
    * still applies: another hook's or a rule's `deny` wins (the answer is dropped, the call is denied),
    * another hook's `ask` still asks (and on a yes the answer is the result), and a `defer` with it is a
