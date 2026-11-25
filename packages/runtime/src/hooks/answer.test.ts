@@ -65,6 +65,27 @@ describe("a PreToolUse hook's answer (0.0.87)", () => {
     }
   });
 
+  test("a toolResult is read first: beside a bad permissionDecision, a non-object updatedInput, a missing or wrong hookEventName, or in an async answer, it DENIES at both fail-closed settings", async () => {
+    const shapes: [string, unknown][] = [
+      ["a bad permissionDecision", { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "yes", toolResult: { content: "x" } } }],
+      ["a non-string permissionDecision", { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: 1, toolResult: { content: "x" } } }],
+      ["an updatedInput of null", { hookSpecificOutput: { hookEventName: "PreToolUse", updatedInput: null, toolResult: { content: "x" } } }],
+      ["an updatedInput array", { hookSpecificOutput: { hookEventName: "PreToolUse", updatedInput: [1], toolResult: { content: "x" } } }],
+      ["no hookEventName", { hookSpecificOutput: { toolResult: { content: "x" } } }],
+      ["another event's name", { hookSpecificOutput: { hookEventName: "PostToolUse", toolResult: { content: "x" } } }],
+      ["an async answer", { async: true, hookSpecificOutput: { hookEventName: "PreToolUse", toolResult: { content: "x" } } }],
+    ];
+    for (const [what, raw] of shapes) {
+      for (const failClosed of [false, true]) {
+        const c = await runHooks("PreToolUse", call, ctx([pre("h1", { failClosed })], sequenceInvoker([raw]).invoker));
+        expect([what, failClosed, c.decision, c.answer]).toEqual([what, failClosed, "deny", undefined]);
+      }
+    }
+    // An explicit allow and a valid updatedInput with it still deliver the answer.
+    const ok = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([{ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow", updatedInput: { file_path: "x" }, toolResult: { content: "ok" } } }]).invoker));
+    expect([ok.decision, ok.answer?.content]).toEqual(["allow", "ok"]);
+  });
+
   test("an empty content array is an empty result, an answer like any other", async () => {
     for (const content of [[], { content: [] }]) {
       const c = await runHooks("PreToolUse", call, ctx([pre("h1")], sequenceInvoker([answer(content)]).invoker));

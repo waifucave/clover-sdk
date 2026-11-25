@@ -405,6 +405,39 @@ function toolAnswerOf(raw: unknown): { content: unknown; isError: boolean } | un
   return ok ? { content, isError: isError === true } : undefined;
 }
 
+// 0.0.87: a PreToolUse output that carries a `toolResult`: the hook ANSWERS the call, as its allow. Any part of the
+// output that can't be honoured with it -- the toolResult itself, `hookEventName` missing or another event's, a
+// `permissionDecision` that isn't allow (or isn't a decision at all), an `updatedInput` that isn't a valid object, a
+// top-level block -- DENIES, whatever the hook's fail-closed setting: never an error ("no opinion"), which would run
+// the tool with the model's input.
+function interpretAnswer(sync: Record<string, unknown>, hso: Record<string, unknown>, opts: { validator: ToolInputValidator; toolName: string; hookLabel: string }): HookOutcome {
+  const refuse = (why: string): HookOutcome => ({ kind: "decision", decision: "deny", message: `Denied: the hook ${opts.hookLabel} answered this call with ${why}, so the call was not run.` });
+  const answer = toolAnswerOf(hso["toolResult"]);
+  if (answer === undefined) return refuse("a malformed toolResult ({ content: string | text and image blocks, isError?: boolean })");
+  if (hso["hookEventName"] !== "PreToolUse") return refuse(`a toolResult under hookEventName ${JSON.stringify(hso["hookEventName"])} (it must be "PreToolUse")`);
+  const decision = hso["permissionDecision"];
+  if (decision !== undefined && decision !== "allow") return refuse(`a toolResult and permissionDecision ${JSON.stringify(decision)} (an answer is the hook's allow)`);
+  if (decision === undefined && sync["decision"] !== undefined && sync["decision"] !== "approve") return refuse("a toolResult and a top-level block (an answer is the hook's allow)");
+  const rawUpdatedInput = hso["updatedInput"];
+  let transformedInput: Record<string, unknown> | undefined;
+  if (rawUpdatedInput !== undefined) {
+    if (!isObject(rawUpdatedInput) || Array.isArray(rawUpdatedInput)) return refuse("a toolResult and an updatedInput that is not an object");
+    const check = opts.validator.validate(opts.toolName, rawUpdatedInput);
+    if (!check.valid) return { kind: "decision", decision: "deny", message: invalidUpdatedInputMessage(opts.hookLabel, opts.toolName, check.reason) };
+    transformedInput = rawUpdatedInput;
+  }
+  const extraContext = typeof hso["additionalContext"] === "string" ? (hso["additionalContext"] as string) : undefined;
+  const message = typeof hso["permissionDecisionReason"] === "string" ? (hso["permissionDecisionReason"] as string) : undefined;
+  return {
+    kind: "decision",
+    decision: "allow",
+    answer,
+    ...(transformedInput !== undefined ? { transformedInput } : {}),
+    ...(extraContext !== undefined ? { extraContext } : {}),
+    ...(message !== undefined ? { message } : {}),
+  };
+}
+
 // PreToolUse (WS-08 §3, derived-shapes item (b)): decision-capable, transform-capable, context-
 // capable. Task 11 (WS-08 §7): a raw `defer` now flows through UNRESOLVED — it is a real, distinct
 // HookOutcome decision, exactly like allow/ask/deny, all the way to the reducer and beyond
@@ -413,6 +446,9 @@ function toolAnswerOf(raw: unknown): { content: unknown; isError: boolean } | un
 // is the malformed-shape/invalid-defer checks already above/below it (unchanged).
 function interpretPreToolUse(sync: Record<string, unknown>, opts: { validator: ToolInputValidator; toolName: string; hookLabel: string }): HookOutcome {
   const hso = hookSpecificOutputOf(sync);
+  // 0.0.87: a `toolResult` is looked for FIRST, whatever the rest of the output says: it means "don't run this tool",
+  // so with one present nothing that can't be honoured may fall back to an error (no opinion), which would run it.
+  if (hso !== undefined && hso["toolResult"] !== undefined) return interpretAnswer(sync, hso, opts);
   const pre = hso !== undefined && hso["hookEventName"] === "PreToolUse" ? hso : undefined;
 
   const rawDecision = pre?.["permissionDecision"];
@@ -445,26 +481,6 @@ function interpretPreToolUse(sync: Record<string, unknown>, opts: { validator: T
   const extraContext = typeof pre?.["additionalContext"] === "string" ? (pre["additionalContext"] as string) : undefined;
   const message = typeof pre?.["permissionDecisionReason"] === "string" ? (pre["permissionDecisionReason"] as string) : undefined;
 
-  // 0.0.87: the hook ANSWERS the call (`toolResult`). It is the hook's allow: with any other decision,
-  // on either channel, the output is malformed (never read as "deny and also here is a result").
-  // A `toolResult` key says "don't run this tool": one that can't be honoured DENIES (whatever the hook's fail-closed
-  // setting), never falls back to "no opinion", which would run the tool with the model's input.
-  const rawAnswer = pre?.["toolResult"];
-  if (rawAnswer !== undefined) {
-    const answer = toolAnswerOf(rawAnswer);
-    const refuse = (why: string): HookOutcome => ({ kind: "decision", decision: "deny", message: `Denied: the hook ${opts.hookLabel} answered this call with ${why}, so the call was not run.` });
-    if (answer === undefined) return refuse("a malformed toolResult ({ content: string | text and image blocks, isError?: boolean })");
-    if (decision !== undefined && decision !== "allow") return refuse(`a toolResult and permissionDecision ${JSON.stringify(decision)} (an answer is the hook's allow)`);
-    if (decision === undefined && sync["decision"] !== undefined && sync["decision"] !== "approve") return refuse("a toolResult and a top-level block (an answer is the hook's allow)");
-    return {
-      kind: "decision",
-      decision: "allow",
-      answer,
-      ...(transformedInput !== undefined ? { transformedInput } : {}),
-      ...(extraContext !== undefined ? { extraContext } : {}),
-      ...(message !== undefined ? { message } : {}),
-    };
-  }
 
   if (decision === undefined) {
     // Finding 2 (P2 fix-wave, IMPORTANT): the pinned `SyncHookJSONOutput.decision?: "approve" |
@@ -970,7 +986,11 @@ export async function runHooks(event: HookEvent, call: RunHooksCallInfo, ctx: Ru
     } else {
       const classified = classifyRawOutput(invocation.value);
       if (classified.kind === "malformed") outcome = { kind: "error", code: "malformed_output", reason: "malformed hook output" };
-      else if (classified.kind === "async") outcome = strict ? { kind: "error", code: "malformed_output", reason: "async answer from a fail-closed gating hook" } : { kind: "none" }; // Open Question 3 -- see this file's own header
+      // 0.0.87: an async answer that carries a toolResult meant "don't run this tool": it denies.
+      else if (classified.kind === "async" && event === "PreToolUse" && isObject(invocation.value) && isObject((invocation.value as Record<string, unknown>)["hookSpecificOutput"]) && ((invocation.value as Record<string, unknown>)["hookSpecificOutput"] as Record<string, unknown>)["toolResult"] !== undefined) {
+        outcome = { kind: "decision", decision: "deny", message: `Denied: the hook ${hookLabelOf(entry)} answered this call with a toolResult in an async answer, so the call was not run.` };
+      }
+      else if (classified.kind === "async") outcome = strict ?{ kind: "error", code: "malformed_output", reason: "async answer from a fail-closed gating hook" } : { kind: "none" }; // Open Question 3 -- see this file's own header
       else if (strict && mismatchedEventName(classified.value, event)) outcome = { kind: "error", code: "malformed_output", reason: "hookSpecificOutput names another event" };
       else {
         outcome = interpretSyncOutput(event, classified.value, {
