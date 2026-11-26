@@ -1114,7 +1114,9 @@ function hasTopLevelAlternation(source: string): boolean {
  *  that doesn't compile refuses the command (thrown `SyntaxError`): a deny is never dropped. */
 export function linuxSandboxListsFor(
   input: SeatbeltProfileInput,
-  expand: (prefix: string, regexes: readonly RegExp[]) => string[][] | { found: string[][]; complete: boolean },
+  expand: (prefix: string, regexes: readonly RegExp[], hint?: { first?: boolean; remaining?: number }) => string[][] | { found: string[][]; complete: boolean },
+  /** `sizeOf`: an earlier walk's entry count for a prefix (linux-bwrap.ts `walkSizes`), to walk the small ones first. */
+  o: { sizeOf?: (prefix: string) => number | undefined } = {},
 ): { writableRoots: string[]; denyWrite: string[]; denyRead: string[]; ensureFolders: string[]; notHeld?: { root: string; prefix: string }[] } {
   const brand = input.brand ?? WINTER_BRAND;
   const durableRoot = input.storeHome ?? input.winterHome;
@@ -1202,9 +1204,19 @@ export function linuxSandboxListsFor(
   // holds that prefix, or lies inside it, is kept, so nothing past the walk is writable (fails closed).
   const unfinished: string[] = [];
   // The working folder's walk first: a command's budget (`perCommandExpander`) goes to where it runs before the rest.
+  // Then the prefixes whose size an earlier walk remembers, smallest first (so a giant folder is what drops, not sixty
+  // small ones), then the ones never walked, in their order, each on a fair share of what's left (`WalkHint`).
   const inCwd = (p: string) => p === cwd || p.startsWith(`${cwd}/`);
-  for (const [prefix, list] of [...wanted].sort(([a], [b]) => Number(inCwd(b)) - Number(inCwd(a)))) {
-    const got = expand(prefix, list.map((w) => w.re));
+  const sizeOf = (p: string): number | undefined => o.sizeOf?.(p);
+  const rank = (p: string): [number, number] => {
+    if (inCwd(p)) return [0, 0];
+    const s = sizeOf(p);
+    return s === undefined ? [2, 0] : [1, s];
+  };
+  const ordered = [...wanted].map((e, i) => ({ e, i, r: rank(e[0]) }))
+    .sort((a, b) => a.r[0] - b.r[0] || a.r[1] - b.r[1] || a.i - b.i).map((x) => x.e);
+  for (const [n, [prefix, list]] of ordered.entries()) {
+    const got = expand(prefix, list.map((w) => w.re), { first: inCwd(prefix), remaining: ordered.length - n });
     const found = Array.isArray(got) ? got : got.found;
     if (!Array.isArray(got) && !got.complete) unfinished.push(prefix);
     list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });

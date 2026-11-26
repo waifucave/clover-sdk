@@ -173,6 +173,60 @@ describe("a pnpm-shaped project, on a real disk: the project stays writable, the
   });
 });
 
+describe("the walk's order and shares: the working folder first, small remembered folders next, a fair share for the unknown", () => {
+  type Lists = Parameters<typeof linuxSandboxListsFor>[0];
+  /** A home: `/w` (the working folder, 2 entries), `/g` (a giant, 1,000 files), sixty small folders of 2 files. */
+  const home = () => {
+    const smalls = Array.from({ length: 60 }, (_, i) => `/s${i}`);
+    const dirs = ["/w", "/w/a", "/g", ...smalls];
+    const files = ["/w/a/f", ...Array.from({ length: 1_000 }, (_, i) => `/g/f${i}`), ...smalls.flatMap((s) => [`${s}/1`, `${s}/2`])];
+    return { fs: fakeFs(dirs, files), smalls };
+  };
+  const run = (sizes: Map<string, number>, roots: string[], fs: BwrapFs, order: string[] = []) => linuxSandboxListsFor({ cwd: "/w", writableRoots: roots } as Lists, (() => {
+    const e = perCommandExpander({ fs, budget: { maxVisited: 400, maxMs: 60_000 }, sizes });
+    return (prefix: string, regexes: readonly RegExp[], hint?: { first?: boolean; remaining?: number }) => { order.push(prefix); return e(prefix, regexes, hint); };
+  })(), { sizeOf: (p) => sizes.get(p) });
+
+  test("a giant folder first in directory order no longer starves sixty small ones: with nothing known, each gets a fair share and the giant drops", () => {
+    const { fs, smalls } = home();
+    const lists = run(new Map(), ["/g", ...smalls], fs);
+    expect(lists.writableRoots).toContain("/w");
+    expect(lists.writableRoots).not.toContain("/g");
+    expect(smalls.filter((s) => !lists.writableRoots.includes(s))).toEqual([]);
+  });
+
+  test("with sizes remembered: the working folder, then smallest first; the next command keeps the small ones and drops the giant", () => {
+    const { fs, smalls } = home();
+    const sizes = new Map<string, number>();
+    run(sizes, ["/g", ...smalls], fs);
+    const order: string[] = [];
+    const again = run(sizes, ["/g", ...smalls], fs, order);
+    expect(order[0]).toBe("/w");
+    expect(order.at(-1)).toBe("/g");
+    expect(smalls.filter((s) => !again.writableRoots.includes(s))).toEqual([]);
+    expect(again.writableRoots).not.toContain("/g");
+  });
+
+  test("the working folder is walked first and on the whole budget, whatever its remembered size", () => {
+    const { fs } = home();
+    const sizes = new Map<string, number>([["/w", 10_000], ["/s0", 1]]);
+    const order: string[] = [];
+    const lists = run(sizes, ["/s0", "/g"], fs, order);
+    expect(order[0]).toBe("/w");
+    expect(order.slice(1, 2)).toEqual(["/s0"]);
+    expect(lists.writableRoots).toContain("/w");
+  });
+
+  test("the time cap is checked at each folder read, not only every 1,024 entries", () => {
+    const fs = fakeFs(["/r", "/r/a", "/r/b"], ["/r/a/1", "/r/b/1"]);
+    let t = 0;
+    // Each clock read moves a second on: the first folder read already passes a 1.5 s cap, long before 1,024 entries.
+    const r = expandPatternsChecked("/r", [/x$/], { fs, maxMs: 1_500, now: () => (t += 1_000) });
+    expect(r.complete).toBe(false);
+    expect(r.visited).toBeLessThan(5);
+  });
+});
+
 describe("linuxSandboxListsFor: each pattern only under the prefixes it can match, each prefix canonicalized once", () => {
   test("regexAnchorDir: the literal folder after `^`, never past a quantifier or a class", () => {
     expect(regexAnchorDir("^/h/top1/(.*/)?\\.git(/.*)?$")).toBe("/h/top1/");

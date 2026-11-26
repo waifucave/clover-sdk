@@ -273,23 +273,42 @@ export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { 
  *  only on a fast one. A host checking a root before handing it over uses the same cap or less. */
 export const PATTERN_WALK_PER_COMMAND = { maxVisited: 400_000, maxMs: 3_000 } as const;
 
+/** How many entries each prefix's last walk read, in this process (`perCommandExpander` writes it, the callers order the
+ *  next command's prefixes by it, smallest first). A walk that didn't finish keeps a lower bound. At most
+ *  `WALK_SIZES_MAX` prefixes; the oldest go first. */
+export const walkSizes = new Map<string, number>();
+const WALK_SIZES_MAX = 4_096;
+
+/** Where a prefix stands in the command's order: the working folder's walk first (it gets the command's whole budget),
+ *  and how many prefixes are left counting this one (one with no remembered size gets a fair share of what's left). */
+export interface WalkHint { first?: boolean; remaining?: number }
+
 /** An expander for one command: each prefix walked with its own limits (`expandPatternsChecked`) but never past what
  *  the command has left of `PATTERN_WALK_PER_COMMAND`. A prefix reached with nothing left is incomplete, so the roots it
- *  covers fail closed; the prefixes come in their callers' order (the working folder's first). */
-export function perCommandExpander(o: { fs?: BwrapFs; budget?: { maxVisited: number; maxMs: number }; now?: () => number } = {}): (prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean; visited: number } {
+ *  covers fail closed. The working folder's walk, and a prefix whose remembered size fits what's left, may use all of
+ *  it; a prefix of unknown size gets a fair share (what's left divided by the prefixes left, in entries and in time), so
+ *  one giant folder early in the order can't starve the small ones after it: the giant is what drops. */
+export function perCommandExpander(o: { fs?: BwrapFs; budget?: { maxVisited: number; maxMs: number }; now?: () => number; sizes?: Map<string, number> } = {}): (prefix: string, regexes: readonly RegExp[], hint?: WalkHint) => { found: string[][]; complete: boolean; visited: number } {
   const b = o.budget ?? PATTERN_WALK_PER_COMMAND;
   const now = o.now ?? Date.now;
+  const sizes = o.sizes ?? walkSizes;
   // The clock starts at the first walk, not when the expander is made: what the caller does before walking (gathering
   // the patterns) is never taken out of the walk's own time (the probe saw a minute of it leave every prefix unwalked).
   let until: number | undefined;
   let left = b.maxVisited;
-  return (prefix, regexes) => {
+  return (prefix, regexes, hint = {}) => {
     until ??= now() + b.maxMs;
     const ms = until - now();
     if (left <= 0 || ms <= 0) return { found: regexes.map(() => []), complete: false, visited: 0 };
-    const perPrefix = Math.min(200_000, left);
-    const r = expandPatternsChecked(prefix, regexes, { ...(o.fs ? { fs: o.fs } : {}), maxVisited: perPrefix, maxSkippedVisited: perPrefix, maxMs: Math.min(10_000, ms) });
+    const known = sizes.get(prefix);
+    const whole = hint.first === true || (known !== undefined && known <= left);
+    const share = whole ? 1 : Math.max(1, hint.remaining ?? 1);
+    const perPrefix = Math.min(200_000, Math.ceil(left / share));
+    const r = expandPatternsChecked(prefix, regexes, { ...(o.fs ? { fs: o.fs } : {}), now, maxVisited: perPrefix, maxSkippedVisited: perPrefix, maxMs: Math.min(10_000, ms / share) });
     left -= r.visited;
+    sizes.delete(prefix);
+    sizes.set(prefix, r.complete ? r.visited : Math.max(r.visited + 1, known ?? 0));
+    while (sizes.size > WALK_SIZES_MAX) sizes.delete(sizes.keys().next().value!);
     return r;
   };
 }
@@ -299,7 +318,7 @@ export function perCommandExpander(o: { fs?: BwrapFs; budget?: { maxVisited: num
  *  (`linuxSandboxListsFor` leaves such a root out of the writable ones). The skipped folders (`node_modules`) are walked
  *  too, for the patterns only and within a budget of their own (`maxSkippedVisited`): a package installed from git
  *  keeps its `.git` there. */
-export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number; maxSkippedDepth?: number; maxMs?: number } = {}): { found: string[][]; complete: boolean; visited: number } {
+export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number; maxSkippedDepth?: number; maxMs?: number; now?: () => number } = {}): { found: string[][]; complete: boolean; visited: number } {
   const fs = o.fs ?? realBwrapFs;
   // 200,000 entries per prefix (a home's top folder, as MOSS hands them; most fit), with a time cap: a walk past either
   // fails closed. A host that checks a root before handing it (MOSS's `linuxHoldProblem`) uses the same numbers or
@@ -307,7 +326,8 @@ export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[]
   const maxVisited = o.maxVisited ?? 200_000, maxDepth = o.maxDepth ?? 16, skip = o.skip ?? new Set(["node_modules"]);
   const maxSkipped = o.maxSkippedVisited ?? 200_000;
   const maxMs = o.maxMs ?? 10_000;
-  const started = Date.now();
+  const now = o.now ?? Date.now;
+  const started = now();
   const out: string[][] = regexes.map(() => []);
   let visited = 0;
   let skippedVisited = 0;
@@ -319,9 +339,11 @@ export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[]
   const walk = (dir: string, depth: number, skippedDepth: number | undefined): void => {
     if (!complete) return;
     if (skippedDepth === undefined ? depth > maxDepth : skippedDepth > maxSkippedDepth) { complete = false; return; }
+    // The time cap at each folder read too (the review's nit): one slow read is never followed by a thousand more.
+    if (now() - started > maxMs) { complete = false; return; }
     for (const name of fs.list(dir)) {
       if (skippedDepth !== undefined ? ++skippedVisited > maxSkipped : ++visited > maxVisited) { complete = false; return; }
-      if (((visited + skippedVisited) & 1023) === 0 && Date.now() - started > maxMs) { complete = false; return; }
+      if (((visited + skippedVisited) & 1023) === 0 && now() - started > maxMs) { complete = false; return; }
       const p = join(dir, name);
       let matched = false;
       regexes.forEach((re, i) => {
