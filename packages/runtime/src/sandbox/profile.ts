@@ -1065,6 +1065,30 @@ ${machRules})
 // linuxSandboxListsFor: the same policy as `buildSeatbeltProfile`, as paths for bubblewrap (linux-bwrap.ts)
 // ---------------------------------------------------------------------------------------------
 
+/** The folder a regex's matches all lie in: the literal path after its `^`, up to its last `/` before the first
+ *  unescaped metacharacter (the regex of `/h/a/` + `**` + `/.git` gives `/h/a/`). Undefined when it doesn't start that way (then
+ *  it is tried under every prefix, as before). A literal escaped as `\x` is the character `x`. */
+export function regexAnchorDir(source: string): string | undefined {
+  if (!source.startsWith("^/")) return undefined;
+  let literal = "";
+  for (let i = 1; i < source.length; i++) {
+    const ch = source[i]!;
+    if (ch === "\\") {
+      const next = source[i + 1];
+      if (next === undefined || /[A-Za-z0-9]/.test(next)) break; // \d, \w and the like are classes, not literals
+      literal += next;
+      i++;
+      continue;
+    }
+    // A quantifier makes the character before it optional (that one may be a `/`): it isn't part of the anchor.
+    if ("*+?{".includes(ch)) { literal = literal.slice(0, -1); break; }
+    if ("()[].|$^".includes(ch)) break;
+    literal += ch;
+  }
+  const cut = literal.lastIndexOf("/");
+  return cut < 0 ? undefined : literal.slice(0, cut + 1);
+}
+
 /** The Seatbelt profile's input as the Linux sandbox's paths: what may be written, and what may not be written or read.
  *  A pattern (an SBPL regex: a glob-shaped deny, a control-plane or default-protection name at any depth, the
  *  provider-state files) can only name what is on disk, so `expand(prefix, regex)` lists the existing paths under
@@ -1083,9 +1107,29 @@ export function linuxSandboxListsFor(
   const denyRead = new Set<string>();
   // Every pattern is gathered first and each prefix walked once for all of its patterns (`expand`), below.
   const wanted = new Map<string, { re: RegExp; into: Set<string> }[]>();
+  // Each prefix canonicalized once per command (a realpath each): a host handing thousands of patterns over a hundred
+  // roots had every pattern canonicalize every prefix again (6,000 × 6,000 realpaths, about a minute, before any walk;
+  // the clover-sdk probe on MOSS's lists, probe/linux-spawn-timing).
+  const canonical = new Map<string, string>();
+  const canonOnce = (p: string): string => {
+    let c = canonical.get(p);
+    if (c === undefined) { c = canon(p); canonical.set(p, c); }
+    return c;
+  };
+  const distinct = (prefixes: readonly string[]): string[] => [...new Set(prefixes.map(canonOnce))];
+  // Only under a prefix the pattern can match there: a regex is `^` and a literal path first (`regexAnchorDir`), so a
+  // match is a path under that literal, and a prefix beside it holds none (`/a/x/(.*/)?\.git` never matches under `/a/y`).
+  // The walk tested every pattern on every entry under every prefix; now each prefix gets its own patterns only.
+  const mayMatchUnder = (anchorDir: string | undefined, prefix: string): boolean => {
+    if (anchorDir === undefined) return true;
+    const p = prefix.endsWith("/") ? prefix : `${prefix}/`;
+    return anchorDir.startsWith(p) || p.startsWith(anchorDir);
+  };
   const expandUnder = (prefixes: readonly string[], source: string, into: Set<string>): void => {
     const re = new RegExp(source);
-    for (const prefix of new Set(prefixes.map(canon))) {
+    const anchorDir = regexAnchorDir(source);
+    for (const prefix of prefixes) {
+      if (!mayMatchUnder(anchorDir, prefix)) continue;
       const list = wanted.get(prefix) ?? [];
       list.push({ re, into });
       wanted.set(prefix, list);
@@ -1095,10 +1139,12 @@ export function linuxSandboxListsFor(
   // filesystem.denyWrite and denyRead: plain paths, and the glob-shaped ones as what they match now (under their fixed
   // prefixes, and under every writable root for a pattern anchored at `/`).
   for (const p of input.denyWritePaths ?? []) denyWrite.add(canon(p));
-  for (const r of input.denyWriteRegexes ?? []) expandUnder([...(input.denyWriteGlobFixedPrefixes ?? []), ...roots], r, denyWrite);
+  const writePrefixes = distinct([...(input.denyWriteGlobFixedPrefixes ?? []), ...roots]);
+  for (const r of input.denyWriteRegexes ?? []) expandUnder(writePrefixes, r, denyWrite);
   for (const p of input.denyReadPaths ?? []) denyRead.add(canon(p));
-  for (const r of input.denyReadRegexes ?? []) expandUnder([...(input.denyReadGlobFixedPrefixes ?? []), ...roots], r, denyRead);
-  for (const e of input.denyReadGlobEntries ?? []) expandUnder([e.fixedPrefix], e.regex, denyRead);
+  const readPrefixes = distinct([...(input.denyReadGlobFixedPrefixes ?? []), ...roots]);
+  for (const r of input.denyReadRegexes ?? []) expandUnder(readPrefixes, r, denyRead);
+  for (const e of input.denyReadGlobEntries ?? []) expandUnder(distinct([e.fixedPrefix]), e.regex, denyRead);
 
   // The default write protections at cwd (`buildDefaultWriteProtectionBlock`): plain, and at any depth under cwd.
   const proj = brand.projectDirName;
@@ -1133,7 +1179,7 @@ export function linuxSandboxListsFor(
   // The run folders and the provider-state files, read-denied.
   if (winterRoot !== undefined) denyRead.add(join(winterRoot, "run"));
   if (input.winterHome !== undefined) denyRead.add(join(canon(input.winterHome), "run"));
-  for (const a of anchors) expandUnder([join(a, "projects")], providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
+  for (const a of anchors) expandUnder(distinct([join(a, "projects")]), providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
   // A walk that couldn't finish (`expandPatternsChecked`) left what lies past it unmatched: no writable root that
   // holds that prefix, or lies inside it, is kept, so nothing past the walk is writable (fails closed).
   const unfinished: string[] = [];

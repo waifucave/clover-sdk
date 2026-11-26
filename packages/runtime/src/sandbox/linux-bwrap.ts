@@ -279,9 +279,12 @@ export const PATTERN_WALK_PER_COMMAND = { maxVisited: 400_000, maxMs: 3_000 } as
 export function perCommandExpander(o: { fs?: BwrapFs; budget?: { maxVisited: number; maxMs: number }; now?: () => number } = {}): (prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean; visited: number } {
   const b = o.budget ?? PATTERN_WALK_PER_COMMAND;
   const now = o.now ?? Date.now;
-  const until = now() + b.maxMs;
+  // The clock starts at the first walk, not when the expander is made: what the caller does before walking (gathering
+  // the patterns) is never taken out of the walk's own time (the probe saw a minute of it leave every prefix unwalked).
+  let until: number | undefined;
   let left = b.maxVisited;
   return (prefix, regexes) => {
+    until ??= now() + b.maxMs;
     const ms = until - now();
     if (left <= 0 || ms <= 0) return { found: regexes.map(() => []), complete: false, visited: 0 };
     const perPrefix = Math.min(200_000, left);
