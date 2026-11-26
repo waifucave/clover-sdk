@@ -220,3 +220,46 @@ describe("the Linux sandbox (bubblewrap)", () => {
     }
   });
 });
+
+/** A home as a host hands it over (MOSS: its top folders, each a root): `folders` top folders, `perFolder` entries in
+ *  each, a repo in every tenth, one pnpm tree. Returns the home and its top folders. */
+function homeShaped(folders: number, perFolder: number): { home: string; tops: string[] } {
+  const home = temp("clover-lx-home-");
+  const tops: string[] = [];
+  for (let f = 0; f < folders; f++) {
+    const top = join(home, `top${f}`);
+    tops.push(top);
+    const sub = join(top, "a", "b");
+    mkdirSync(sub, { recursive: true });
+    for (let i = 0; i < perFolder; i++) writeFileSync(join(i % 2 === 0 ? top : sub, `f${i}`), "");
+    if (f % 10 === 0) mkdirSync(join(top, "repo", ".git", "hooks"), { recursive: true });
+  }
+  let at = join(tops[1]!, "app", "node_modules", ".pnpm", "pkg@1.0.0", "node_modules", "pkg");
+  for (let d = 0; d < 30; d++) at = join(at, "node_modules", `dep${d}`);
+  mkdirSync(at, { recursive: true });
+  return { home, tops };
+}
+
+describe("the per-command walk's cost, live (#95's review)", () => {
+  linuxTest("a home of 100 top folders, about 300,000 entries: each command adds under 3.5 s, and the working folder is always writable", async () => {
+    const { home, tops } = homeShaped(100, 3_000);
+    const cwd = tops[0]!;
+    const denies = tops.map((t) => `${t}/**/*.git`);
+    const time = async (roots: string[]) => {
+      const start = Date.now();
+      const r = await run("echo ok > written.txt && echo done", cwd, { writableRoots: roots, denyWritePaths: denies, home });
+      return { ms: Date.now() - start, r };
+    };
+    const alone = await time([cwd]);
+    const all = await time(tops);
+    const added = all.ms - alone.ms;
+    console.log(`per-command walk: alone ${alone.ms} ms, with ${tops.length} roots ${all.ms} ms, added ${added} ms`);
+    expect(all.r.out).toContain("done");
+    expect(readFileSync(join(cwd, "written.txt"), "utf8")).toBe("ok\n");
+    expect(added).toBeLessThan(3_500);
+    // A repo's hooks in a root the walk reached stay held.
+    const hooked = await run(`echo planted > ${JSON.stringify(join(cwd, "repo", ".git", "hooks", "pre-commit"))} 2>/dev/null; echo done`, cwd, { writableRoots: tops, denyWritePaths: denies, home });
+    expect(hooked.out).toContain("done");
+    expect(existsSync(join(cwd, "repo", ".git", "hooks", "pre-commit"))).toBe(false);
+  }, 300_000);
+});
