@@ -181,6 +181,21 @@ describe("linuxSandboxListsFor: each pattern only under the prefixes it can matc
     expect(regexAnchorDir("^/a/?b")).toBe("/");
     expect(regexAnchorDir("^/a/b\\d/x")).toBe("/a/");
     expect(regexAnchorDir("(^|/)\\.git$")).toBeUndefined();
+    // A `|` outside every group: several patterns, so tried everywhere; inside a group or a class it isn't one.
+    expect(regexAnchorDir("^/a/x|^/b/y")).toBeUndefined();
+    expect(regexAnchorDir("^/a/x/(b|c)$")).toBe("/a/x/");
+    expect(regexAnchorDir("^/a/x/[|]$")).toBe("/a/x/");
+    expect(regexAnchorDir("^/a/x/\\|$")).toBe("/a/x/");
+  });
+
+  test("a regex with two top-level branches is tried under the second branch's folder too", () => {
+    const seen = new Map<string, string[]>();
+    const two = "^/a/x/(.*/)?\\.git$|^/b/y/(.*/)?\\.git$";
+    linuxSandboxListsFor({ cwd: "/b/y", writableRoots: ["/b/y"], denyWriteRegexes: [two] } as Parameters<typeof linuxSandboxListsFor>[0], (prefix, regexes) => {
+      seen.set(prefix, [...(seen.get(prefix) ?? []), ...regexes.map((r) => r.source)]);
+      return regexes.map(() => []);
+    });
+    expect(seen.get("/b/y")).toContain(new RegExp(two).source);
   });
 
   test("a pattern under one root isn't tried under another; one from `/` is tried under every root", () => {

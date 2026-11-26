@@ -1070,6 +1070,7 @@ ${machRules})
  *  it is tried under every prefix, as before). A literal escaped as `\x` is the character `x`. */
 export function regexAnchorDir(source: string): string | undefined {
   if (!source.startsWith("^/")) return undefined;
+  if (hasTopLevelAlternation(source)) return undefined; // `^/a/x|^/b/y`: a second branch the anchor doesn't cover
   let literal = "";
   for (let i = 1; i < source.length; i++) {
     const ch = source[i]!;
@@ -1087,6 +1088,23 @@ export function regexAnchorDir(source: string): string | undefined {
   }
   const cut = literal.lastIndexOf("/");
   return cut < 0 ? undefined : literal.slice(0, cut + 1);
+}
+
+/** Whether `source` holds a `|` outside every group and class (escapes skipped): then the regex is several patterns,
+ *  and its first literal anchors only the first. */
+function hasTopLevelAlternation(source: string): boolean {
+  let depth = 0;
+  let inClass = false;
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i]!;
+    if (ch === "\\") { i++; continue; }
+    if (inClass) { if (ch === "]") inClass = false; continue; }
+    if (ch === "[") inClass = true;
+    else if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    else if (ch === "|" && depth === 0) return true;
+  }
+  return false;
 }
 
 /** The Seatbelt profile's input as the Linux sandbox's paths: what may be written, and what may not be written or read.
