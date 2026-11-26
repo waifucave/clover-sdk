@@ -267,12 +267,34 @@ export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { 
   return expandPatternsChecked(prefix, regexes, o).found;
 }
 
+/** What one command's walks may read in all, over every prefix together (`perCommandExpander`): a home handed over as
+ *  many top folders must not cost a walk per folder at its full budget on every command. */
+export const PATTERN_WALK_PER_COMMAND = { maxVisited: 400_000, maxMs: 10_000 } as const;
+
+/** An expander for one command: each prefix walked with its own limits (`expandPatternsChecked`) but never past what
+ *  the command has left of `PATTERN_WALK_PER_COMMAND`. A prefix reached with nothing left is incomplete, so the roots it
+ *  covers fail closed; the prefixes come in their callers' order (the working folder's first). */
+export function perCommandExpander(o: { fs?: BwrapFs; budget?: { maxVisited: number; maxMs: number }; now?: () => number } = {}): (prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean; visited: number } {
+  const b = o.budget ?? PATTERN_WALK_PER_COMMAND;
+  const now = o.now ?? Date.now;
+  const until = now() + b.maxMs;
+  let left = b.maxVisited;
+  return (prefix, regexes) => {
+    const ms = until - now();
+    if (left <= 0 || ms <= 0) return { found: regexes.map(() => []), complete: false, visited: 0 };
+    const perPrefix = Math.min(200_000, left);
+    const r = expandPatternsChecked(prefix, regexes, { ...(o.fs ? { fs: o.fs } : {}), maxVisited: perPrefix, maxSkippedVisited: perPrefix, maxMs: Math.min(10_000, ms) });
+    left -= r.visited;
+    return r;
+  };
+}
+
 /** `expandPatterns`, and whether its walk reached everything under `prefix` (`complete`). A walk that stops at its
  *  limits leaves what lies past them unmatched, so a deny there wouldn't be held: the caller fails closed on it
  *  (`linuxSandboxListsFor` leaves such a root out of the writable ones). The skipped folders (`node_modules`) are walked
  *  too, for the patterns only and within a budget of their own (`maxSkippedVisited`): a package installed from git
  *  keeps its `.git` there. */
-export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number; maxMs?: number } = {}): { found: string[][]; complete: boolean } {
+export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number; maxSkippedDepth?: number; maxMs?: number } = {}): { found: string[][]; complete: boolean; visited: number } {
   const fs = o.fs ?? realBwrapFs;
   // 200,000 entries per prefix (a home's top folder, as MOSS hands them; most fit), with a time cap: a walk past either
   // fails closed. A host that checks a root before handing it (MOSS's `linuxHoldProblem`) uses the same numbers or
@@ -285,11 +307,15 @@ export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[]
   let visited = 0;
   let skippedVisited = 0;
   let complete = true;
-  const walk = (dir: string, depth: number, inSkipped: boolean): void => {
+  // Inside a skipped folder (node_modules) the depth is counted on its own, from that folder (pnpm's `.pnpm/<pkg>/
+  // node_modules/<dep>` trees nest far past 16): a deep package tree never drops the project around it, and past this
+  // limit the walk fails closed as anywhere.
+  const maxSkippedDepth = o.maxSkippedDepth ?? 64;
+  const walk = (dir: string, depth: number, skippedDepth: number | undefined): void => {
     if (!complete) return;
-    if (depth > maxDepth) { complete = false; return; }
+    if (skippedDepth === undefined ? depth > maxDepth : skippedDepth > maxSkippedDepth) { complete = false; return; }
     for (const name of fs.list(dir)) {
-      if (inSkipped ? ++skippedVisited > maxSkipped : ++visited > maxVisited) { complete = false; return; }
+      if (skippedDepth !== undefined ? ++skippedVisited > maxSkipped : ++visited > maxVisited) { complete = false; return; }
       if (((visited + skippedVisited) & 1023) === 0 && Date.now() - started > maxMs) { complete = false; return; }
       const p = join(dir, name);
       let matched = false;
@@ -299,10 +325,14 @@ export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[]
           matched = true;
         }
       });
-      if (!matched && fs.kind(p) === "dir") walk(p, depth + 1, inSkipped || skip.has(name));
+      if (!matched && fs.kind(p) === "dir") {
+        if (skippedDepth !== undefined) walk(p, depth, skippedDepth + 1);
+        else if (skip.has(name)) walk(p, depth, 0);
+        else walk(p, depth + 1, undefined);
+      }
       if (!complete) return;
     }
   };
-  if (fs.kind(prefix) === "dir") walk(prefix, 0, false);
-  return { found: out, complete };
+  if (fs.kind(prefix) === "dir") walk(prefix, 0, undefined);
+  return { found: out, complete, visited: visited + skippedVisited };
 }

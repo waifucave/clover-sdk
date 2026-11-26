@@ -2,7 +2,10 @@
 // arguments a policy becomes, the seccomp filter's bytes, and the paths the Seatbelt profile's policy maps to. The
 // real runs are linux-bwrap.linux.test.ts.
 import { describe, expect, test } from "bun:test";
-import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, expandPatterns, expandPatternsChecked, findBwrap, LINUX_UNSET_ENV, SECCOMP_FD, unixSocketFilter, type BwrapFs } from "./linux-bwrap.ts";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, expandPatterns, expandPatternsChecked, findBwrap, perCommandExpander, LINUX_UNSET_ENV, SECCOMP_FD, unixSocketFilter, type BwrapFs } from "./linux-bwrap.ts";
 import { linuxSandboxListsFor } from "./profile.ts";
 
 /** A disk from a list of folders and files. */
@@ -114,10 +117,51 @@ describe("expandPatterns", () => {
     const fs = fakeFs(["/r", "/r/node_modules", "/r/node_modules/p", "/r/node_modules/p/.git", "/r/node_modules/p/.git/hooks", "/r/a", "/r/a/b", "/r/a/b/c"]);
     const hooks = /\/\.git\/hooks(\/.*)?$/;
     const all = expandPatternsChecked("/r", [hooks], { fs });
-    expect(all).toEqual({ found: [["/r/node_modules/p/.git/hooks"]], complete: true });
+    expect(all).toMatchObject({ found: [["/r/node_modules/p/.git/hooks"]], complete: true });
     expect(expandPatternsChecked("/r", [hooks], { fs, maxVisited: 1 }).complete).toBe(false);
     expect(expandPatternsChecked("/r", [hooks], { fs, maxDepth: 1 }).complete).toBe(false);
     expect(expandPatternsChecked("/r", [hooks], { fs, maxSkippedVisited: 1 }).complete).toBe(false);
+  });
+});
+
+describe("a pnpm-shaped project, on a real disk: the project stays writable, the walk is quick", () => {
+  test.skipIf(process.platform === "win32")("nested .pnpm/<pkg>/node_modules/<dep> trees far past 16 levels keep the project root; a repo in them is found", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "pnpm-shape-")));
+    try {
+      const proj = join(root, "app");
+      mkdirSync(join(proj, "src"), { recursive: true });
+      // 40 packages, each nesting 30 levels of node_modules/<dep>, as pnpm's store links lay them out.
+      for (let p = 0; p < 40; p++) {
+        let at = join(proj, "node_modules", ".pnpm", `pkg${p}@1.0.0`, "node_modules", `pkg${p}`);
+        for (let d = 0; d < 30; d++) at = join(at, "node_modules", `dep${d}`);
+        mkdirSync(at, { recursive: true });
+        writeFileSync(join(at, "index.js"), "x");
+      }
+      const start = Date.now();
+      const lists = linuxSandboxListsFor({ cwd: proj, writableRoots: [proj] } as Parameters<typeof linuxSandboxListsFor>[0], perCommandExpander());
+      const ms = Date.now() - start;
+      expect(lists.writableRoots).toContain(proj);
+      expect(lists.notHeld).toBeUndefined();
+      expect(ms).toBeLessThan(5_000);
+      // A package from git deep in the tree: its .git hooks are held (a deny), and the project still writable.
+      const deep = join(proj, "node_modules", ".pnpm", "pkg7@1.0.0", "node_modules", "pkg7", "node_modules", "dep0", "node_modules", "dep1");
+      mkdirSync(join(deep, ".git", "hooks"), { recursive: true });
+      const again = linuxSandboxListsFor({ cwd: proj, writableRoots: [proj] } as Parameters<typeof linuxSandboxListsFor>[0], perCommandExpander());
+      expect(again.writableRoots).toContain(proj);
+      expect(again.denyWrite).toContain(join(deep, ".git", "hooks"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("one command's budget across every prefix: the working folder's walk first, the rest fail closed once it is spent", () => {
+    const fs = fakeFs(["/w", "/w/a", "/big", "/big/x", "/other"], ["/w/a/f", "/big/x/1", "/big/x/2", "/big/x/3"]);
+    let t = 0;
+    const lists = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/big", "/w", "/other"] } as Parameters<typeof linuxSandboxListsFor>[0], perCommandExpander({ fs, budget: { maxVisited: 4, maxMs: 10_000 }, now: () => t }));
+    expect(lists.writableRoots).toContain("/w");
+    expect(lists.writableRoots).not.toContain("/big");
+    const timed = perCommandExpander({ fs, budget: { maxVisited: 1_000, maxMs: 5 }, now: () => (t += 10) });
+    expect(timed("/w", [/x/]).complete).toBe(false);
   });
 });
 

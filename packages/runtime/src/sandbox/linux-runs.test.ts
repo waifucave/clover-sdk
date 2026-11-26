@@ -3,7 +3,7 @@
 // realm's sweep (a SIGTERM, SIGINT or embedded abort), and a crashed run finished by the next start. Plain files only:
 // every OS runs these.
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -170,14 +170,22 @@ describe("renameFromParent: the quarantine's move through the opened parent (ren
     temps.push(root);
     mkdirSync(join(root, "p", ".git"), { recursive: true });
     mkdirSync(join(root, "q"));
-    renameFromParent(join(root, "p"), ".git", join(root, "q", "moved"));
+    const id = (p: string) => { const s = statSync(p); return { dev: s.dev, ino: s.ino }; };
+    const walkedP = id(join(root, "p"));
+    renameFromParent(join(root, "p"), walkedP, ".git", join(root, "q", "moved"));
     expect(existsSync(join(root, "q", "moved"))).toBe(true);
     expect(existsSync(join(root, "p", ".git"))).toBe(false);
     // A parent that is a link now (swapped after the walk): nothing moves.
     mkdirSync(join(root, "elsewhere", ".git"), { recursive: true });
     symlinkSync(join(root, "elsewhere"), join(root, "linked"));
-    expect(() => renameFromParent(join(root, "linked"), ".git", join(root, "q", "nope"))).toThrow();
+    expect(() => renameFromParent(join(root, "linked"), id(join(root, "elsewhere")), ".git", join(root, "q", "nope"))).toThrow();
     expect(existsSync(join(root, "elsewhere", ".git"))).toBe(true);
-    for (const bad of ["", ".", "..", "a/b"]) expect(() => renameFromParent(join(root, "p"), bad, join(root, "q", "x"))).toThrow();
+    // A parent swapped for another folder of the same name after the walk: its identity differs, nothing moves.
+    mkdirSync(join(root, "p", ".git"));
+    renameSync(join(root, "p"), join(root, "p-old"));
+    mkdirSync(join(root, "p", ".git"), { recursive: true });
+    expect(() => renameFromParent(join(root, "p"), walkedP, ".git", join(root, "q", "swapped"))).toThrow();
+    expect(existsSync(join(root, "p", ".git"))).toBe(true);
+    for (const bad of ["", ".", "..", "a/b"]) expect(() => renameFromParent(join(root, "p-old"), walkedP, bad, join(root, "q", "x"))).toThrow();
   });
 });

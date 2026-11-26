@@ -1137,7 +1137,9 @@ export function linuxSandboxListsFor(
   // A walk that couldn't finish (`expandPatternsChecked`) left what lies past it unmatched: no writable root that
   // holds that prefix, or lies inside it, is kept, so nothing past the walk is writable (fails closed).
   const unfinished: string[] = [];
-  for (const [prefix, list] of wanted) {
+  // The working folder's walk first: a command's budget (`perCommandExpander`) goes to where it runs before the rest.
+  const inCwd = (p: string) => p === cwd || p.startsWith(`${cwd}/`);
+  for (const [prefix, list] of [...wanted].sort(([a], [b]) => Number(inCwd(b)) - Number(inCwd(a)))) {
     const got = expand(prefix, list.map((w) => w.re));
     const found = Array.isArray(got) ? got : got.found;
     if (!Array.isArray(got) && !got.complete) unfinished.push(prefix);
