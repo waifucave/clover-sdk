@@ -629,7 +629,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
   }, (line) => console.error(`winter: ${line}`));
   const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), perCommandExpander());
   // A root whose walk couldn't finish isn't writable this run (fails closed); a write refused there says why.
-  const notHeldNote = (lists.notHeld ?? []).length === 0 ? "" : `\n[sandbox] not writable this run, too large to check for protected paths (over 200,000 entries or 16 folders deep, or past the 400,000 entries or 10 s one command reads, node_modules included): ${(lists.notHeld ?? []).map((n) => n.root).join(", ")}\n`;
+  const notHeldNote = (lists.notHeld ?? []).length === 0 ? "" : `\n[sandbox] not writable this run, too large to check for protected paths (over 200,000 entries or 16 folders deep, or past the 400,000 entries or 3 s one command reads, node_modules included): ${(lists.notHeld ?? []).map((n) => n.root).join(", ")}\n`;
   const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
   const dir = mkdtempSync(join(tmpdir(), "clover-seccomp-"));

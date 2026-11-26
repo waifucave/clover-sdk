@@ -268,8 +268,10 @@ export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { 
 }
 
 /** What one command's walks may read in all, over every prefix together (`perCommandExpander`): a home handed over as
- *  many top folders must not cost a walk per folder at its full budget on every command. */
-export const PATTERN_WALK_PER_COMMAND = { maxVisited: 400_000, maxMs: 10_000 } as const;
+ *  many top folders must not cost a walk per folder at its full budget on every command. 3 s at most, every command
+ *  pays it: the time cap is what binds on a real disk (about 30,000 entries a second on a laptop's), the entries cap
+ *  only on a fast one. A host checking a root before handing it over uses the same cap or less. */
+export const PATTERN_WALK_PER_COMMAND = { maxVisited: 400_000, maxMs: 3_000 } as const;
 
 /** An expander for one command: each prefix walked with its own limits (`expandPatternsChecked`) but never past what
  *  the command has left of `PATTERN_WALK_PER_COMMAND`. A prefix reached with nothing left is incomplete, so the roots it
