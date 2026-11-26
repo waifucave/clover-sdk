@@ -141,7 +141,12 @@ jobs:
                                                      # steps run in between, and the bytes that SHIP must be built
                                                      # by a step adjacent to the one that publishes them.
       - run: bun test
+      # tsc runs under the Node 18 this job sets up, whose default heap (about 2 GB) the whole-repo typecheck outgrew at
+      # 0.0.88 (v0.0.88's first two runs died in it: "JavaScript heap out of memory"); CI's build job runs it under the
+      # runner's newer Node. A bigger heap for this one step changes nothing that is checked.
       - run: bun run typecheck
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
       - run: bun run conformance:fetch
       - run: bun run conformance:snapshot -- --check
       - run: bunx tsc --noEmit -p packages/conformance/tsconfig.winter.json
