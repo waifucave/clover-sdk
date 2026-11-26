@@ -33,7 +33,7 @@
 // an audit message cites, never the allow/deny/ask verdict, which depends on whether SOME rule in
 // the group matched.
 import { realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, normalize, relative } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, win32 } from "node:path";
 import ignoreFactory from "ignore";
 import { resolveRealTarget } from "./paths.ts";
 
@@ -565,6 +565,43 @@ export class FileRuleCompileError extends Error {
   }
 }
 
+/** A network or device path on Windows (`\\server\share\...`, `\\.\pipe\...`, `\\?\Volume{...}`), which the rules cannot judge: the call is denied, never passed. Names the
+ *  reason in plain words; `evaluate()` turns it into the call's deny message. */
+export class WindowsPathNotJudgeable extends FileRuleCompileError {
+  constructor() {
+    super("network and device paths can't be judged by file rules on Windows, so this call is denied");
+    this.name = "WindowsPathNotJudgeable";
+  }
+}
+
+/** A Windows path with its `\\?\` / `\\.\` prefix folded away where it only spells a drive (`\\?\C:\x` is `C:\x`) or the network (`\\?\UNC\s\x` is `\\s\x`). */
+export function windowsLongForm(path: string): string {
+  const unc = /^[\\/]{2}[?.][\\/]UNC[\\/]/i;
+  if (unc.test(path)) return "\\\\" + path.replace(unc, "");
+  // Only with something after the separator: a bare `\\\\.\\C:` or `\\\\?\\C:` is the raw volume device, not the folder `C:\\`, and stays as given (a device path).
+  const drive = /^[\\/]{2}[?.][\\/]([A-Za-z]:)(?=[\\/])/;
+  if (drive.test(path)) return path.replace(drive, "$1");
+  return path;
+}
+
+/** A raw Windows path that names a device, not a folder: the volume itself (`\\\\.\\C:`, `\\\\?\\C:`, `//./C:`, with or without trailing separators) or anything under the NT object prefix
+ *  (`\\??\\...`). `evaluate()` refuses it on the raw tool input, before any path normalisation can turn `\\\\.\\C:\\` into the folder `C:\\`. */
+export function isRawDevicePath(path: string): boolean {
+  return /^[\\/]{2}[?.][\\/][A-Za-z]:[\\/]*$/.test(path) || /^[\\/]\?\?[\\/]/.test(path);
+}
+
+/** A Glob `pattern` or Grep `glob` that starts in the device namespace (`\\\\.\\`, `\\\\?\\`, `//./`, `\\??\\`): a search rooted at a device or a volume is refused, whatever follows. */
+export function startsWithDevicePrefix(pattern: string): boolean {
+  return /^[\\/]{2}[?.][\\/]/.test(pattern) || /^[\\/]\?\?[\\/]/.test(pattern);
+}
+
+/** Whether a Windows path (after `windowsLongForm`) is a network or device one: it still starts with two separators. */
+export function isNetworkOrDevicePath(path: string): boolean {
+  // The NT object-manager prefix `\\??\\C:\\x` is a device path too: refused as given, never left to a real-path lookup to resolve.
+  if (/^[\\/]\?\?[\\/]/.test(path)) return true;
+  return /^[\\/]{2}/.test(windowsLongForm(path));
+}
+
 /**
  * Matches `path` against `candidates`, grouped by anchor root:
  *   - each candidate's anchor is resolved (`resolveFileRuleAnchor`, with its own `sourceDir`); an
@@ -586,7 +623,7 @@ export class FileRuleCompileError extends Error {
  * only fails then, on first use, never when it is added). The message names the group's root:
  * `a file-rule pattern under <JSON-quoted root> failed to compile`, with the package's error as `cause`.
  */
-export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandidate<TEntry>[], path: string, opts: { cwd: string; home: string }, behavior: "allow" | "denyAsk"): TEntry | null {
+export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandidate<TEntry>[], path: string, opts: { cwd: string; home: string; windows?: boolean; canonical?: (path: string) => string }, behavior: "allow" | "denyAsk"): TEntry | null {
   const isAllow = behavior === "allow";
   // Insertion order of a Map is the order each root first appears.
   const groups = new Map<string, { matcher: ReturnType<typeof ignoreFactory>; entryByPattern: Map<string, TEntry> }>();
@@ -604,25 +641,62 @@ export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandi
     group.entryByPattern.set(compiled, candidate.entry); // a later candidate with the same text wins
   }
 
+  const windows = opts.windows ?? process.platform === "win32";
+  // Windows: a network or device path can't be judged by a rule's folder: the call is denied (never skipped, which would let it through).
+  if (windows && isNetworkOrDevicePath(path)) throw new WindowsPathNotJudgeable();
+  const target = windows ? windowsLongForm(path) : path;
+  const canonical = opts.canonical ?? ((p: string) => canonicalWindowsPath(p));
   for (const [root, group] of groups) {
-    const rel = relative(root, path);
-    if (isOutsideIgnoreRoot(rel)) continue;
-    let result: { ignored: boolean; rule?: { pattern: string } | undefined };
-    try {
-      result = group.matcher.test(rel);
-    } catch (err) {
-      throw new FileRuleCompileError(`a file-rule pattern under ${JSON.stringify(root)} failed to compile`, { cause: err });
+    // The path as it was given, and (Windows) in the disk's one spelling too (long names, real case, links followed): a group applies, and each
+    // inside form is matched, when EITHER is inside it. The given form keeps a link inside the root as the evaluator checks it (a deny on
+    // `.claude/**` still holds when `.claude` is a junction); the canonical one names an 8.3 spelling of the same folder inside the root it names.
+    const rels = windows
+      ? [win32.relative(root, target), win32.relative(canonical(root), canonical(target))]
+      : [relative(root, target)];
+    for (const rel of new Set(rels)) {
+      if (isOutsideIgnoreRoot(rel, windows)) continue;
+      let result: { ignored: boolean; rule?: { pattern: string } | undefined };
+      try {
+        result = group.matcher.test(windows ? rel.replace(/\\/g, "/") : rel);
+      } catch (err) {
+        throw new FileRuleCompileError(`a file-rule pattern under ${JSON.stringify(root)} failed to compile`, { cause: err });
+      }
+      if (!result.ignored) continue;
+      const matchedPattern = result.rule?.pattern;
+      if (matchedPattern !== undefined && group.entryByPattern.has(matchedPattern)) return group.entryByPattern.get(matchedPattern) as TEntry;
     }
-    if (!result.ignored) continue;
-    const matchedPattern = result.rule?.pattern;
-    if (matchedPattern !== undefined && group.entryByPattern.has(matchedPattern)) return group.entryByPattern.get(matchedPattern) as TEntry;
   }
   return null;
 }
 
-/** A root-relative path the `ignore` package would refuse as not relative: empty, `.`/`..`, or starting `/`, `./`, `../`. */
-function isOutsideIgnoreRoot(rel: string): boolean {
-  return rel === "" || rel === "." || rel === ".." || rel.startsWith("/") || rel.startsWith("./") || rel.startsWith("../");
+/** A Windows path in its one canonical spelling: the long names (an 8.3 `RUNNER~1` expanded) and the real case, from the nearest existing parent's real path
+ *  with the rest appended as given (a file that is not there yet has no real path of its own). A path nothing of which exists is returned as it is. */
+export function canonicalWindowsPath(path: string, real: (p: string) => string = (p) => realpathSync.native(p)): string {
+  let head = path;
+  const rest: string[] = [];
+  for (;;) {
+    try {
+      const resolved = real(head);
+      return rest.length === 0 ? resolved : win32.join(resolved, ...rest.reverse());
+    } catch (err) {
+      // Only "not there" climbs to the parent; a refusal or a busy file is the caller's to fail closed on (as `resolveRealTarget` does).
+      const code = (err as { code?: unknown } | null)?.code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw err;
+      const parent = win32.dirname(head);
+      if (parent === head) return path;
+      rest.push(head.slice(parent.length).replace(/^[\\/]+/, ""));
+      head = parent;
+    }
+  }
+}
+
+/** A root-relative path the `ignore` package would refuse as not relative: empty, `.`/`..`, or starting `/`, `./`, `../`. On Windows (`windows`)
+ *  `path.relative` spells them with backslashes or a drive, so also `\`, `.\`, `..\`, `X:\` and `X:/` (another drive's result is absolute) and `\\`
+ *  (a UNC share). Such a path lies outside the root: the group simply does not apply to it, never an error (which would deny the whole call).
+ *  Off Windows a backslash or a colon is an ordinary file-name character and nothing of this applies. */
+export function isOutsideIgnoreRoot(rel: string, windows: boolean = process.platform === "win32"): boolean {
+  if (rel === "" || rel === "." || rel === ".." || rel.startsWith("/") || rel.startsWith("./") || rel.startsWith("../")) return true;
+  return windows && /^(\.{1,2}\\|\\|[A-Za-z]:[\\/])/.test(rel);
 }
 
 // ---------------------------------------------------------------------------------------------

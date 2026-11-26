@@ -47,6 +47,9 @@ import {
   isPathWithinRoot,
   canonicalizeTrustedSymlinkPath,
   FileRuleCompileError,
+  WindowsPathNotJudgeable,
+  isRawDevicePath,
+  startsWithDevicePrefix,
   type FileRuleCandidate,
   type FileRuleKind,
 } from "./file-rules.ts";
@@ -304,6 +307,8 @@ export interface EvaluationContext {
   // a mismatch (WS-07 §2's stale-policy-rejection contract).
   policy: PolicyState;
   cwd: string;
+  /** Judge Windows paths (the platform, injectable for tests); the running platform when absent. */
+  windows?: boolean;
   /**
    * Does this Bash call's `dangerouslyDisableSandbox` actually take it OUT of a sandbox it would
    * otherwise run in? (dist-session fixes, lane C C3 -- the call would be sandboxed without the flag
@@ -2326,6 +2331,25 @@ async function resolveSandboxEscape(
 }
 
 export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Promise<PermissionDecisionRecord> {
+  // Windows: a tool path that is a raw device (the volume `\\.\C:`, the NT prefix `\??\`) is refused on the RAW input (trimmed as every later step trims it), before
+  // `resolveTargetPath` can normalise `\\.\C:` to `\\.\C:\` and the rules judge it as the folder `C:\`. The same for an absolute Glob `pattern` / Grep `glob` rooted in
+  // the device namespace and for the write targets a shell command names (a redirect, `tee`, a file operation), as `recognizeEditOperation` extracts them.
+  if (ctx.windows ?? process.platform === "win32") {
+    const input = (call.input ?? {}) as Record<string, unknown>;
+    const given = input[fileRulePathField(call.toolName)];
+    const searched = call.toolName === "Glob" ? input["pattern"] : call.toolName === "Grep" ? input["glob"] : undefined;
+    const targets = recognizeEditOperation(call, { sessionRoot: ctx.sessionRoot, home: ctx.home, ...(ctx.brand !== undefined ? { brand: ctx.brand } : {}) })?.paths ?? [];
+    // A redirect whose operand starts in the device namespace, read off the raw command too: the shell scanner's own quote and escape rules would eat the backslashes of an unquoted `\\.\C:`.
+    const command = shellCommandOf(call);
+    const rawRedirect = command !== undefined && />>?\s*['"]?(?:[\\/]{2}[?.][\\/]|[\\/]\?\?[\\/])/.test(command);
+    const device = (typeof given === "string" && isRawDevicePath(given.trim()))
+      || (typeof searched === "string" && startsWithDevicePrefix(searched.trim()))
+      || targets.some((t) => typeof t === "string" && isRawDevicePath(t.trim()))
+      || rawRedirect;
+    if (device) {
+      return { decision: "deny", mechanism: "crash", policyVersion: ctx.policy.version, message: `The ${call.toolName} call names a network or device path: network and device paths can't be judged by file rules on Windows, so this call is denied.` };
+    }
+  }
   // Fix round 10, item 3: the ONE catch site for a `FileRuleCompileError` -- a malformed file-rule
   // pattern's own compile failure, thrown by `matchFileRulesGrouped` (file-rules.ts) from wherever
   // among the six stages below happens to reach it first (deny rules are consulted before ask,
@@ -2355,6 +2379,7 @@ export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Pr
       };
     }
     if (!(err instanceof FileRuleCompileError)) throw err;
+    if (err instanceof WindowsPathNotJudgeable) return { decision: "deny", mechanism: "crash", policyVersion: ctx.policy.version, message: `The ${call.toolName} call names a network or device path: ${err.message}.` };
     return {
       decision: "deny",
       mechanism: "crash",
