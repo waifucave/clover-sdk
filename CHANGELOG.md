@@ -4,6 +4,24 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.89
+
+### Linux sandbox: the held-names walk is budgeted and fails closed
+
+- One budget per command for the walk that finds the names the sandbox holds (`.git`, the run-later names): 400,000
+  entries and 3 s across all writable roots, the working folder first. Before, every root was walked separately at
+  every command with no overall cap: a home drawn as about 100 roots (300,000 entries) cost about 300 s per command;
+  it now adds under a second.
+- Fails closed: a writable root whose walk can't finish (the entry cap, the time cap, or past 16 levels) is not
+  writable for that command, the working folder included, and the command's note says so. Before, a `.git` beyond
+  the limits was simply not held.
+- `node_modules` is walked for `.git` and `*.git` names, within its own depth (64), so a repository inside a
+  dependency is held and deep package trees (pnpm) don't drop the project around them.
+- A planted item is moved aside through its parent folder opened without following a link, and only when that folder
+  is the one the walk saw (device and inode recorded during the walk).
+- `expandPatternsChecked` returns `{ found, complete }`; `expandPatterns` is unchanged for callers. A host that
+  pre-checks roots must use these limits or smaller ones.
+
 ## 0.0.88
 
 ### Windows: a path outside a file rule's folder is outside it, not an error
