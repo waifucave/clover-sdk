@@ -12,6 +12,8 @@ import { join } from "node:path";
 import {
   fileRuleKindFor,
   canonicalFileRuleAuthoringToolName,
+  canonicalWindowsPath,
+  isOutsideIgnoreRoot,
   matchFileRulesGrouped,
   resolveFileRuleAnchor,
   resolveFileRuleAbsolutePath,
@@ -901,5 +903,46 @@ describe("matchFileRulesGrouped -- fix round 10, item 3: an uncompilable rule TH
   test("a '//'-anchored broken rule's blast radius is every path (root '/' contains every absolute path) -- disclosed, not a bug: the one-ignore()-per-root design has this property by construction, since a throw during that root's own combined regex compilation aborts the WHOLE check for any query that root's group is even consulted for", () => {
     const candidates: FileRuleCandidate<{ id: string }>[] = [{ entry: { id: "bad" }, pattern: "//repo/foo[bar/baz" }];
     expect(() => matchFileRulesGrouped(candidates, `${CWD}/completely/unrelated/path`, { cwd: CWD, home: HOME }, "denyAsk")).toThrow(FileRuleCompileError);
+  });
+});
+
+describe("isOutsideIgnoreRoot (the shapes Windows' path.relative gives)", () => {
+  // `ignore` (on Windows) throws RangeError for each of these; a group the path lies outside of must skip it, not deny the call.
+  const shapes: Record<string, string> = {
+    "an 8.3 short name against the long root": "..\\..\\..\\..\\..\\RUNNER~1\\AppData\\Local\\Temp\\x\\a.txt",
+    "another drive": "D:\\a\\b.txt",
+    "another drive, forward slashes": "D:/a/b.txt",
+    "a sibling folder": "..\\q\\a.txt",
+    "the current folder spelled out": ".\\a.txt",
+    "a UNC share": "\\\\server\\share\\a.txt",
+  };
+  for (const [name, rel] of Object.entries(shapes)) {
+    test(`${name} is outside on Windows`, () => expect(isOutsideIgnoreRoot(rel, true)).toBe(true));
+  }
+  test("a file inside the root is not outside, on Windows or elsewhere", () => {
+    expect(isOutsideIgnoreRoot("sub\\a.txt", true)).toBe(false);
+    expect(isOutsideIgnoreRoot("a.txt", true)).toBe(false);
+    expect(isOutsideIgnoreRoot("..x\\evil.sh", true)).toBe(false);
+  });
+  test("off Windows a backslash or a colon is a file-name character: nothing there is outside", () => {
+    for (const rel of ["..\\q\\a.txt", "D:\\a\\b.txt", "D:/a/b.txt", "\\\\x", ".\\a"]) expect(isOutsideIgnoreRoot(rel, false)).toBe(false);
+    expect(isOutsideIgnoreRoot("../a", false)).toBe(true);
+  });
+});
+
+describe("canonicalWindowsPath", () => {
+  // A fake file system: the folder exists under its long name, and the short name resolves to it.
+  const longDir = "C:\\Users\\runneradmin\\Temp\\x";
+  const real = (p: string): string => {
+    const q = p.replace("RUNNER~1", "runneradmin");
+    if (q.toLowerCase() === longDir.toLowerCase()) return longDir;
+    if (q.toLowerCase() === "c:\\users\\runneradmin\\temp") return "C:\\Users\\runneradmin\\Temp";
+    throw new Error("ENOENT");
+  };
+  test("a short name is expanded through the nearest existing parent, a file not there yet keeps its own name", () => {
+    expect(canonicalWindowsPath("C:\\Users\\RUNNER~1\\Temp\\x\\new.txt", real)).toBe("C:\\Users\\runneradmin\\Temp\\x\\new.txt");
+  });
+  test("nothing of it existing leaves it as it is", () => {
+    expect(canonicalWindowsPath("Z:\\none\\a.txt", () => { throw new Error("ENOENT"); })).toBe("Z:\\none\\a.txt");
   });
 });

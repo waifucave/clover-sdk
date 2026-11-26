@@ -33,7 +33,7 @@
 // an audit message cites, never the allow/deny/ask verdict, which depends on whether SOME rule in
 // the group matched.
 import { realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, normalize, relative } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, win32 } from "node:path";
 import ignoreFactory from "ignore";
 import { resolveRealTarget } from "./paths.ts";
 
@@ -605,7 +605,8 @@ export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandi
   }
 
   for (const [root, group] of groups) {
-    const rel = relative(root, path);
+    // Windows: both sides in one spelling (long names, real case), so an 8.3 name for the same folder is inside the root it names, not outside it.
+    const rel = process.platform === "win32" ? relative(canonicalWindowsPath(root), canonicalWindowsPath(path)) : relative(root, path);
     if (isOutsideIgnoreRoot(rel)) continue;
     let result: { ignored: boolean; rule?: { pattern: string } | undefined };
     try {
@@ -620,9 +621,31 @@ export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandi
   return null;
 }
 
-/** A root-relative path the `ignore` package would refuse as not relative: empty, `.`/`..`, or starting `/`, `./`, `../`. */
-function isOutsideIgnoreRoot(rel: string): boolean {
-  return rel === "" || rel === "." || rel === ".." || rel.startsWith("/") || rel.startsWith("./") || rel.startsWith("../");
+/** A Windows path in its one canonical spelling: the long names (an 8.3 `RUNNER~1` expanded) and the real case, from the nearest existing parent's real path
+ *  with the rest appended as given (a file that is not there yet has no real path of its own). A path nothing of which exists is returned as it is. */
+export function canonicalWindowsPath(path: string, real: (p: string) => string = (p) => realpathSync.native(p)): string {
+  let head = path;
+  const rest: string[] = [];
+  for (;;) {
+    try {
+      const resolved = real(head);
+      return rest.length === 0 ? resolved : win32.join(resolved, ...rest.reverse());
+    } catch {
+      const parent = win32.dirname(head);
+      if (parent === head) return path;
+      rest.push(head.slice(parent.length).replace(/^[\\/]+/, ""));
+      head = parent;
+    }
+  }
+}
+
+/** A root-relative path the `ignore` package would refuse as not relative: empty, `.`/`..`, or starting `/`, `./`, `../`. On Windows (`windows`)
+ *  `path.relative` spells them with backslashes or a drive, so also `\`, `.\`, `..\`, `X:\` and `X:/` (another drive's result is absolute) and `\\`
+ *  (a UNC share). Such a path lies outside the root: the group simply does not apply to it, never an error (which would deny the whole call).
+ *  Off Windows a backslash or a colon is an ordinary file-name character and nothing of this applies. */
+export function isOutsideIgnoreRoot(rel: string, windows: boolean = process.platform === "win32"): boolean {
+  if (rel === "" || rel === "." || rel === ".." || rel.startsWith("/") || rel.startsWith("./") || rel.startsWith("../")) return true;
+  return windows && /^(\.{1,2}\\|\\|[A-Za-z]:[\\/])/.test(rel);
 }
 
 // ---------------------------------------------------------------------------------------------
