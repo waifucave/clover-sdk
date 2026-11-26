@@ -272,10 +272,15 @@ export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { 
  *  (`linuxSandboxListsFor` leaves such a root out of the writable ones). The skipped folders (`node_modules`) are walked
  *  too, for the patterns only and within a budget of their own (`maxSkippedVisited`): a package installed from git
  *  keeps its `.git` there. */
-export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number } = {}): { found: string[][]; complete: boolean } {
+export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number; maxMs?: number } = {}): { found: string[][]; complete: boolean } {
   const fs = o.fs ?? realBwrapFs;
-  const maxVisited = o.maxVisited ?? 50_000, maxDepth = o.maxDepth ?? 16, skip = o.skip ?? new Set(["node_modules"]);
-  const maxSkipped = o.maxSkippedVisited ?? 50_000;
+  // 200,000 entries per prefix (a home's top folder, as MOSS hands them; most fit), with a time cap: a walk past either
+  // fails closed. A host that checks a root before handing it (MOSS's `linuxHoldProblem`) uses the same numbers or
+  // smaller, never larger.
+  const maxVisited = o.maxVisited ?? 200_000, maxDepth = o.maxDepth ?? 16, skip = o.skip ?? new Set(["node_modules"]);
+  const maxSkipped = o.maxSkippedVisited ?? 200_000;
+  const maxMs = o.maxMs ?? 10_000;
+  const started = Date.now();
   const out: string[][] = regexes.map(() => []);
   let visited = 0;
   let skippedVisited = 0;
@@ -285,6 +290,7 @@ export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[]
     if (depth > maxDepth) { complete = false; return; }
     for (const name of fs.list(dir)) {
       if (inSkipped ? ++skippedVisited > maxSkipped : ++visited > maxVisited) { complete = false; return; }
+      if (((visited + skippedVisited) & 1023) === 0 && Date.now() - started > maxMs) { complete = false; return; }
       const p = join(dir, name);
       let matched = false;
       regexes.forEach((re, i) => {
