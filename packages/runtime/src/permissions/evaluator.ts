@@ -48,6 +48,7 @@ import {
   canonicalizeTrustedSymlinkPath,
   FileRuleCompileError,
   WindowsPathNotJudgeable,
+  isRawDevicePath,
   type FileRuleCandidate,
   type FileRuleKind,
 } from "./file-rules.ts";
@@ -305,6 +306,8 @@ export interface EvaluationContext {
   // a mismatch (WS-07 §2's stale-policy-rejection contract).
   policy: PolicyState;
   cwd: string;
+  /** Judge Windows paths (the platform, injectable for tests); the running platform when absent. */
+  windows?: boolean;
   /**
    * Does this Bash call's `dangerouslyDisableSandbox` actually take it OUT of a sandbox it would
    * otherwise run in? (dist-session fixes, lane C C3 -- the call would be sandboxed without the flag
@@ -2327,6 +2330,14 @@ async function resolveSandboxEscape(
 }
 
 export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Promise<PermissionDecisionRecord> {
+  // Windows: a tool path that is a raw device (the volume `\\\\.\\C:`, the NT prefix `\\??\\`) is refused on the RAW input, before `resolveTargetPath` can normalise
+  // `\\\\.\\C:` to `\\\\.\\C:\\` and the rules judge it as the folder `C:\\`.
+  if (ctx.windows ?? process.platform === "win32") {
+    const rawPath = (call.input as Record<string, unknown> | undefined)?.[fileRulePathField(call.toolName)];
+    if (typeof rawPath === "string" && isRawDevicePath(rawPath)) {
+      return { decision: "deny", mechanism: "crash", policyVersion: ctx.policy.version, message: `The ${call.toolName} call names a network or device path: network and device paths can't be judged by file rules on Windows, so this call is denied.` };
+    }
+  }
   // Fix round 10, item 3: the ONE catch site for a `FileRuleCompileError` -- a malformed file-rule
   // pattern's own compile failure, thrown by `matchFileRulesGrouped` (file-rules.ts) from wherever
   // among the six stages below happens to reach it first (deny rules are consulted before ask,

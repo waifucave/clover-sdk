@@ -584,6 +584,12 @@ export function windowsLongForm(path: string): string {
   return path;
 }
 
+/** A raw Windows path that names a device, not a folder: the volume itself (`\\\\.\\C:`, `\\\\?\\C:`, `//./C:`, with or without trailing separators) or anything under the NT object prefix
+ *  (`\\??\\...`). `evaluate()` refuses it on the raw tool input, before any path normalisation can turn `\\\\.\\C:\\` into the folder `C:\\`. */
+export function isRawDevicePath(path: string): boolean {
+  return /^[\\/]{2}[?.][\\/][A-Za-z]:[\\/]*$/.test(path) || /^[\\/]\?\?[\\/]/.test(path);
+}
+
 /** Whether a Windows path (after `windowsLongForm`) is a network or device one: it still starts with two separators. */
 export function isNetworkOrDevicePath(path: string): boolean {
   // The NT object-manager prefix `\\??\\C:\\x` is a device path too: refused as given, never left to a real-path lookup to resolve.

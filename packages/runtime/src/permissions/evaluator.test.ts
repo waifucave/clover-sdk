@@ -4516,3 +4516,28 @@ describe("a filesystem error inside the check", () => {
     await expect(evaluate(call("Write", { file_path: "/tmp/x", content: "y" }), ctx)).rejects.toThrow("a bug");
   });
 });
+
+describe("Windows raw device paths, through evaluate()", () => {
+  // `resolveTargetPath` would normalise `\\.\C:` to `\\.\C:\` and the fold to the folder `C:\`: the raw input is refused first, even with an allow rule that would let a folder through.
+  const spellings = ["\\\\.\\C:", "\\\\.\\C:\\", "\\\\?\\C:", "\\\\?\\C:\\\\", "//./C:", "//?/C:/", "\\??\\C:", "\\??\\C:\\Users\\me\\a.txt"];
+  for (const path of spellings) {
+    for (const tool of ["Read", "Write", "Edit"]) {
+      test(`${tool} of ${JSON.stringify(path)} is denied as a device path on Windows`, async () => {
+        const ctx = baseCtx({ windows: true, cwd: "C:\\work", policy: policy({ rules: withRules(rule(`${tool}(**)`, "allow")) }) });
+        const record = await evaluate(call(tool, { file_path: path, content: "x" }), ctx);
+        expect(record.decision).toBe("deny");
+        expect(record.message).toContain("network and device paths can't be judged by file rules on Windows");
+      });
+    }
+  }
+  test("a Glob's path and a NotebookEdit's notebook_path are checked too", async () => {
+    for (const [tool, input] of [["Glob", { path: "\\\\.\\C:", pattern: "*" }], ["NotebookEdit", { notebook_path: "\\\\.\\C:" }]] as const) {
+      const record = await evaluate(call(tool, { ...input }), baseCtx({ windows: true }));
+      expect(record.decision).toBe("deny");
+    }
+  });
+  test("off Windows the same strings are ordinary file names and are not refused as devices", async () => {
+    const record = await evaluate(call("Read", { file_path: "\\\\.\\C:" }), baseCtx({ windows: false }));
+    expect(record.message ?? "").not.toContain("network and device paths");
+  });
+});
