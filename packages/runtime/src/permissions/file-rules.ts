@@ -565,6 +565,29 @@ export class FileRuleCompileError extends Error {
   }
 }
 
+/** A network or device path on Windows (`\\server\share\...`, `\\.\pipe\...`, `\\?\Volume{...}`), which the rules cannot judge: the call is denied, never passed. Names the
+ *  reason in plain words; `evaluate()` turns it into the call's deny message. */
+export class WindowsPathNotJudgeable extends FileRuleCompileError {
+  constructor() {
+    super("network and device paths can't be judged by file rules on Windows, so this call is denied");
+    this.name = "WindowsPathNotJudgeable";
+  }
+}
+
+/** A Windows path with its `\\?\` / `\\.\` prefix folded away where it only spells a drive (`\\?\C:\x` is `C:\x`) or the network (`\\?\UNC\s\x` is `\\s\x`). */
+export function windowsLongForm(path: string): string {
+  const unc = /^[\\/]{2}[?.][\\/]UNC[\\/]/i;
+  if (unc.test(path)) return "\\\\" + path.replace(unc, "");
+  const drive = /^[\\/]{2}[?.][\\/]([A-Za-z]:)(?=[\\/]|$)/;
+  if (drive.test(path)) return path.replace(drive, "$1");
+  return path;
+}
+
+/** Whether a Windows path (after `windowsLongForm`) is a network or device one: it still starts with two separators. */
+export function isNetworkOrDevicePath(path: string): boolean {
+  return /^[\\/]{2}/.test(windowsLongForm(path));
+}
+
 /**
  * Matches `path` against `candidates`, grouped by anchor root:
  *   - each candidate's anchor is resolved (`resolveFileRuleAnchor`, with its own `sourceDir`); an
@@ -586,7 +609,7 @@ export class FileRuleCompileError extends Error {
  * only fails then, on first use, never when it is added). The message names the group's root:
  * `a file-rule pattern under <JSON-quoted root> failed to compile`, with the package's error as `cause`.
  */
-export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandidate<TEntry>[], path: string, opts: { cwd: string; home: string }, behavior: "allow" | "denyAsk"): TEntry | null {
+export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandidate<TEntry>[], path: string, opts: { cwd: string; home: string; windows?: boolean; canonical?: (path: string) => string }, behavior: "allow" | "denyAsk"): TEntry | null {
   const isAllow = behavior === "allow";
   // Insertion order of a Map is the order each root first appears.
   const groups = new Map<string, { matcher: ReturnType<typeof ignoreFactory>; entryByPattern: Map<string, TEntry> }>();
@@ -604,19 +627,30 @@ export function matchFileRulesGrouped<TEntry>(candidates: readonly FileRuleCandi
     group.entryByPattern.set(compiled, candidate.entry); // a later candidate with the same text wins
   }
 
+  const windows = opts.windows ?? process.platform === "win32";
+  // Windows: a network or device path can't be judged by a rule's folder: the call is denied (never skipped, which would let it through).
+  if (windows && isNetworkOrDevicePath(path)) throw new WindowsPathNotJudgeable();
+  const target = windows ? windowsLongForm(path) : path;
+  const canonical = opts.canonical ?? ((p: string) => canonicalWindowsPath(p));
   for (const [root, group] of groups) {
-    // Windows: both sides in one spelling (long names, real case), so an 8.3 name for the same folder is inside the root it names, not outside it.
-    const rel = process.platform === "win32" ? relative(canonicalWindowsPath(root), canonicalWindowsPath(path)) : relative(root, path);
-    if (isOutsideIgnoreRoot(rel)) continue;
-    let result: { ignored: boolean; rule?: { pattern: string } | undefined };
-    try {
-      result = group.matcher.test(rel);
-    } catch (err) {
-      throw new FileRuleCompileError(`a file-rule pattern under ${JSON.stringify(root)} failed to compile`, { cause: err });
+    // The path as it was given, and (Windows) in the disk's one spelling too (long names, real case, links followed): a group applies, and each
+    // inside form is matched, when EITHER is inside it. The given form keeps a link inside the root as the evaluator checks it (a deny on
+    // `.claude/**` still holds when `.claude` is a junction); the canonical one names an 8.3 spelling of the same folder inside the root it names.
+    const rels = windows
+      ? [win32.relative(root, target), win32.relative(canonical(root), canonical(target))]
+      : [relative(root, target)];
+    for (const rel of new Set(rels)) {
+      if (isOutsideIgnoreRoot(rel, windows)) continue;
+      let result: { ignored: boolean; rule?: { pattern: string } | undefined };
+      try {
+        result = group.matcher.test(windows ? rel.replace(/\\/g, "/") : rel);
+      } catch (err) {
+        throw new FileRuleCompileError(`a file-rule pattern under ${JSON.stringify(root)} failed to compile`, { cause: err });
+      }
+      if (!result.ignored) continue;
+      const matchedPattern = result.rule?.pattern;
+      if (matchedPattern !== undefined && group.entryByPattern.has(matchedPattern)) return group.entryByPattern.get(matchedPattern) as TEntry;
     }
-    if (!result.ignored) continue;
-    const matchedPattern = result.rule?.pattern;
-    if (matchedPattern !== undefined && group.entryByPattern.has(matchedPattern)) return group.entryByPattern.get(matchedPattern) as TEntry;
   }
   return null;
 }
@@ -630,7 +664,10 @@ export function canonicalWindowsPath(path: string, real: (p: string) => string =
     try {
       const resolved = real(head);
       return rest.length === 0 ? resolved : win32.join(resolved, ...rest.reverse());
-    } catch {
+    } catch (err) {
+      // Only "not there" climbs to the parent; a refusal or a busy file is the caller's to fail closed on (as `resolveRealTarget` does).
+      const code = (err as { code?: unknown } | null)?.code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw err;
       const parent = win32.dirname(head);
       if (parent === head) return path;
       rest.push(head.slice(parent.length).replace(/^[\\/]+/, ""));

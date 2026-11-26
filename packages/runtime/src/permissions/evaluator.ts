@@ -47,6 +47,7 @@ import {
   isPathWithinRoot,
   canonicalizeTrustedSymlinkPath,
   FileRuleCompileError,
+  WindowsPathNotJudgeable,
   type FileRuleCandidate,
   type FileRuleKind,
 } from "./file-rules.ts";
@@ -2355,6 +2356,7 @@ export async function evaluate(call: PermissionCall, ctx: EvaluationContext): Pr
       };
     }
     if (!(err instanceof FileRuleCompileError)) throw err;
+    if (err instanceof WindowsPathNotJudgeable) return { decision: "deny", mechanism: "crash", policyVersion: ctx.policy.version, message: `The ${call.toolName} call names a network or device path: ${err.message}.` };
     return {
       decision: "deny",
       mechanism: "crash",

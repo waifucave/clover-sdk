@@ -331,7 +331,7 @@ jobs:
       - run: pnpm install
       - run: bun run build:packages                # first, as in `build`: a dist-consuming step never runs before it
       - name: the start path and one plain turn, on the sources, and the platform-parameter unit tests of the changed checks (their Windows branch, and on Windows itself)
-        run: bun test packages/runtime/src/embedded-start.test.ts packages/runtime/src/paths/owner.test.ts packages/runtime/src/paths/segment.test.ts packages/sdk/src/store/level-owner.test.ts
+        run: bun test packages/runtime/src/embedded-start.test.ts packages/runtime/src/paths/owner.test.ts packages/runtime/src/paths/segment.test.ts packages/sdk/src/store/level-owner.test.ts packages/runtime/src/permissions/file-rules-windows.test.ts
       - name: the same turn on the built entry (what a published package runs)
         run: bun test packages/runtime/src/embedded-start.test.ts
         env:
