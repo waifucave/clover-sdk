@@ -4,6 +4,23 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.88
+
+### Windows: a path outside a file rule's folder is outside it, not an error
+
+- Fixed (Windows only): a file tool's path outside a rule group's root (another drive, a sibling folder, or the same
+  folder spelled with an 8.3 short name) made the matcher throw, and the permission check then denied the call ("its
+  fail-closed posture could not be determined"). Such a group now simply doesn't apply to that path.
+- A group is matched against both the path as given and its canonical spelling (long names, real case, through the
+  nearest existing parent), so a deny on a junction or symlink inside the root still holds, and an 8.3 spelling of a
+  denied folder can't slip past it. The parent walk climbs only on ENOENT/ENOTDIR; any other error denies.
+- On Windows, `\\?\C:\…` and `\\.\C:\…` are judged in their drive form. Any other network or device path (UNC shares
+  such as `\\localhost\C$\…`, `\\?\UNC\…`, `\\?\GLOBALROOT\…`, `\\?\Volume{…}`, pipes, a bare `\\.\C:` volume, and the
+  NT prefix `\??\…`), in either slash form, is denied with "network and device paths can't be judged by file rules on
+  Windows, so this call is denied". The raw-device check also covers an absolute Glob `pattern` / Grep `glob` and a
+  shell command's write targets and redirects. An allow rule can't override it.
+- Off Windows nothing changes. Tests run on a real Windows runner (`windows-runtime-start`), including a real junction.
+
 ## 0.0.87
 
 ### A host's PreToolUse hook may answer a call itself
