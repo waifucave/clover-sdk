@@ -90,7 +90,15 @@ describe("matchFileRulesGrouped on Windows", () => {
     expect(matchFileRulesGrouped(one("*.txt"), "\\\\.\\C:\\root\\a.txt", win(), "denyAsk")).not.toBeNull();
   });
 
-  for (const path of ["\\\\localhost\\C$\\Users\\me\\.ssh\\id_rsa", "\\\\127.0.0.1\\C$\\x", "\\\\?\\UNC\\server\\share\\a", "\\\\.\\pipe\\x", "\\\\?\\Volume{1}\\x", "//localhost/C$/x"]) {
+  test("a bare raw-volume path stays a device path as given, while a drive with something after it still folds; the NT prefix is never folded", () => {
+    expect(windowsLongForm("\\\\.\\C:")).toBe("\\\\.\\C:");
+    expect(windowsLongForm("\\\\?\\C:")).toBe("\\\\?\\C:");
+    expect(windowsLongForm("\\\\?\\C:\\")).toBe("C:\\");
+    expect(windowsLongForm("\\??\\C:\\x")).toBe("\\??\\C:\\x");
+    expect(isNetworkOrDevicePath("\\\\?\\C:\\")).toBe(false);
+  });
+
+  for (const path of ["\\\\localhost\\C$\\Users\\me\\.ssh\\id_rsa", "\\\\127.0.0.1\\C$\\x", "\\\\?\\UNC\\server\\share\\a", "\\\\.\\pipe\\x", "\\\\?\\Volume{1}\\x", "//localhost/C$/x", "\\\\.\\C:", "\\\\?\\C:", "\\??\\C:\\root\\a.txt", "\\??\\UNC\\server\\share\\a"]) {
     test(`a network or device path (${path}) fails closed with its own reason, never skipped`, () => {
       expect(isNetworkOrDevicePath(path)).toBe(true);
       expect(() => matchFileRulesGrouped(one("*.txt"), path, win(), "denyAsk")).toThrow(WindowsPathNotJudgeable);

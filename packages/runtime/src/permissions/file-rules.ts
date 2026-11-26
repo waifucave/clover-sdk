@@ -578,13 +578,16 @@ export class WindowsPathNotJudgeable extends FileRuleCompileError {
 export function windowsLongForm(path: string): string {
   const unc = /^[\\/]{2}[?.][\\/]UNC[\\/]/i;
   if (unc.test(path)) return "\\\\" + path.replace(unc, "");
-  const drive = /^[\\/]{2}[?.][\\/]([A-Za-z]:)(?=[\\/]|$)/;
+  // Only with something after the separator: a bare `\\\\.\\C:` or `\\\\?\\C:` is the raw volume device, not the folder `C:\\`, and stays as given (a device path).
+  const drive = /^[\\/]{2}[?.][\\/]([A-Za-z]:)(?=[\\/])/;
   if (drive.test(path)) return path.replace(drive, "$1");
   return path;
 }
 
 /** Whether a Windows path (after `windowsLongForm`) is a network or device one: it still starts with two separators. */
 export function isNetworkOrDevicePath(path: string): boolean {
+  // The NT object-manager prefix `\\??\\C:\\x` is a device path too: refused as given, never left to a real-path lookup to resolve.
+  if (/^[\\/]\?\?[\\/]/.test(path)) return true;
   return /^[\\/]{2}/.test(windowsLongForm(path));
 }
 
