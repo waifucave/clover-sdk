@@ -16,7 +16,7 @@
 // quarantine folder must be a real folder (never a link), and nothing here ever deletes recursively.
 // The protected folders a run made before it started (`ensureProtectedFolders`) are removed at its end when they are
 // still empty and no other sandboxed run is live (none in this realm, no record of a live process).
-import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { removePlanned } from "../tools/no-follow-write.ts";
 
@@ -64,6 +64,26 @@ function quarantineFolder(quarantineRoot: string | undefined): string | undefine
  * file or a link is unlinked and an empty folder removed, and a folder with something in it stays; a recovery
  * (`removeWhenStuck: false`) leaves it in place and reports it in `kept`. Never a recursive delete.
  */
+/** `renameat(parentfd, name, …)` as Node can say it on Linux: the parent opened as a folder without following a link
+ *  (`O_DIRECTORY | O_NOFOLLOW`), its identity (device, inode) checked against the folder at `parentReal` now, and the
+ *  move made through `/proc/self/fd/<fd>/<name>`, which names the entry in that opened folder whatever its path has
+ *  become. A parent swapped for a link, or for another folder, after the walk moves nothing. Elsewhere (no `/proc`):
+ *  the move by path, after the same identity check. */
+export function renameFromParent(parentReal: string, name: string, to: string): void {
+  if (name === "" || name === "." || name === ".." || name.includes("/")) throw new Error(`not one name: ${name}`);
+  const want = lstatSync(parentReal);
+  if (!want.isDirectory() || want.isSymbolicLink()) throw new Error(`${parentReal} isn't a folder`);
+  const fd = openSync(parentReal, fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+  try {
+    const got = fstatSync(fd);
+    if (got.dev !== want.dev || got.ino !== want.ino) throw new Error(`${parentReal} changed while it was opened`);
+    const viaFd = `/proc/self/fd/${fd}`;
+    renameSync(existsSync(viaFd) ? join(viaFd, name) : join(parentReal, name), to);
+  } finally {
+    closeSync(fd);
+  }
+}
+
 export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { removeWhenStuck?: boolean; kept?: string[] } = {}): string[] {
   const planted: string[] = [];
   const folder = quarantineFolder(quarantineRoot);
@@ -105,7 +125,7 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
     let gone = false;
     if (folder !== undefined && parentStill()) {
       try {
-        renameSync(target, join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
+        renameFromParent(parentReal, basename(target), join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
         gone = true;
       } catch { /* below */ }
     }

@@ -7,7 +7,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { beginLinuxRun, quarantinePlanted, recoverCrashedLinuxRuns, resetLinuxRunsForTest, sweepLinuxRuns, type LinuxRunRoots, type RecoveryCheck } from "./linux-runs.ts";
+import { beginLinuxRun, quarantinePlanted, recoverCrashedLinuxRuns, renameFromParent, resetLinuxRunsForTest, sweepLinuxRuns, type LinuxRunRoots, type RecoveryCheck } from "./linux-runs.ts";
 
 const temps: string[] = [];
 afterEach(() => {
@@ -161,5 +161,23 @@ describe("live sandboxed runs", () => {
     expect(recoverCrashedLinuxRuns(w.quarantineRoot, checkFor(w.cwd), (l) => said.push(l))).toEqual([]);
     expect(existsSync(join(w.cwd, ".mcp.json"))).toBe(true);
     expect(said.join("\n")).toContain(join(w.cwd, ".mcp.json"));
+  });
+});
+
+describe("renameFromParent: the quarantine's move through the opened parent (renameat)", () => {
+  test.skipIf(process.platform === "win32")("moves the entry; refuses a parent that is a link, and a name that isn't one name", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "rename-parent-")));
+    temps.push(root);
+    mkdirSync(join(root, "p", ".git"), { recursive: true });
+    mkdirSync(join(root, "q"));
+    renameFromParent(join(root, "p"), ".git", join(root, "q", "moved"));
+    expect(existsSync(join(root, "q", "moved"))).toBe(true);
+    expect(existsSync(join(root, "p", ".git"))).toBe(false);
+    // A parent that is a link now (swapped after the walk): nothing moves.
+    mkdirSync(join(root, "elsewhere", ".git"), { recursive: true });
+    symlinkSync(join(root, "elsewhere"), join(root, "linked"));
+    expect(() => renameFromParent(join(root, "linked"), ".git", join(root, "q", "nope"))).toThrow();
+    expect(existsSync(join(root, "elsewhere", ".git"))).toBe(true);
+    for (const bad of ["", ".", "..", "a/b"]) expect(() => renameFromParent(join(root, "p"), bad, join(root, "q", "x"))).toThrow();
   });
 });

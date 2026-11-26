@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type UnheldPath } from "./linux-runs.ts";
 export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
-import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, expandPatterns, findBwrap, heldFolderNote, unixSocketFilter } from "./linux-bwrap.ts";
+import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, expandPatternsChecked, findBwrap, heldFolderNote, unixSocketFilter } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
 import {
   buildSeatbeltProfile,
@@ -627,7 +627,9 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     }, false), (_p, regexes) => regexes.map(() => []));
     return { protectedPaths: new Set([...l.denyWrite, ...l.ensureFolders]), folders: new Set(l.ensureFolders), roots: l.writableRoots };
   }, (line) => console.error(`winter: ${line}`));
-  const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatterns(prefix, regexes));
+  const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expandPatternsChecked(prefix, regexes));
+  // A root whose walk couldn't finish isn't writable this run (fails closed); a write refused there says why.
+  const notHeldNote = (lists.notHeld ?? []).length === 0 ? "" : `\n[sandbox] not writable this run, too large to check for protected paths (over 50,000 entries or 16 folders deep, node_modules included): ${(lists.notHeld ?? []).map((n) => n.root).join(", ")}\n`;
   const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
   const dir = mkdtempSync(join(tmpdir(), "clover-seccomp-"));
@@ -640,7 +642,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     rmSync(dir, { recursive: true, force: true });
   }
   const args = [...plan.args, "--", "/bin/bash", "-c", opts.command];
-  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
 }
 
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {

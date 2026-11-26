@@ -1072,8 +1072,8 @@ ${machRules})
  *  that doesn't compile refuses the command (thrown `SyntaxError`): a deny is never dropped. */
 export function linuxSandboxListsFor(
   input: SeatbeltProfileInput,
-  expand: (prefix: string, regexes: readonly RegExp[]) => string[][],
-): { writableRoots: string[]; denyWrite: string[]; denyRead: string[]; ensureFolders: string[] } {
+  expand: (prefix: string, regexes: readonly RegExp[]) => string[][] | { found: string[][]; complete: boolean },
+): { writableRoots: string[]; denyWrite: string[]; denyRead: string[]; ensureFolders: string[]; notHeld?: { root: string; prefix: string }[] } {
   const brand = input.brand ?? WINTER_BRAND;
   const durableRoot = input.storeHome ?? input.winterHome;
   const roots = [...new Set([input.cwd, ...(input.writableRoots ?? [])].map(canon))];
@@ -1134,9 +1134,23 @@ export function linuxSandboxListsFor(
   if (winterRoot !== undefined) denyRead.add(join(winterRoot, "run"));
   if (input.winterHome !== undefined) denyRead.add(join(canon(input.winterHome), "run"));
   for (const a of anchors) expandUnder([join(a, "projects")], providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
+  // A walk that couldn't finish (`expandPatternsChecked`) left what lies past it unmatched: no writable root that
+  // holds that prefix, or lies inside it, is kept, so nothing past the walk is writable (fails closed).
+  const unfinished: string[] = [];
   for (const [prefix, list] of wanted) {
-    const found = expand(prefix, list.map((w) => w.re));
+    const got = expand(prefix, list.map((w) => w.re));
+    const found = Array.isArray(got) ? got : got.found;
+    if (!Array.isArray(got) && !got.complete) unfinished.push(prefix);
     list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });
+  }
+  const overlaps = (a: string, b: string) => a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
+  const notHeld = roots.flatMap((root) => {
+    const prefix = unfinished.find((u) => overlaps(root, u));
+    return prefix === undefined ? [] : [{ root, prefix }];
+  });
+  if (notHeld.length > 0) {
+    const out = new Set(notHeld.map((n) => n.root));
+    roots.splice(0, roots.length, ...roots.filter((r) => !out.has(r)));
   }
   // The protected folders a mount can only cover once they exist (#74's review B1): each root's project dot-dir (so its
   // control-plane files are held by it), the cwd's protected folders, and the cwd's `.git/hooks` (the caller makes that
@@ -1149,5 +1163,5 @@ export function linuxSandboxListsFor(
   const bookkeeping = runsBase === undefined ? [] : [join(runsBase, "quarantine"), join(runsBase, "sandbox-runs")];
   for (const b of bookkeeping) denyWrite.add(b);
   const ensureFolders = [...new Set([...roots.map((r) => join(r, proj)), ...(inHome ? [] : DEFAULT_PROTECTED_DIRS.map((rel) => join(cwd, rel))), join(cwd, ".git", "hooks"), ...bookkeeping])];
-  return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead], ensureFolders };
+  return { writableRoots: roots, denyWrite: [...denyWrite], denyRead: [...denyRead], ensureFolders, ...(notHeld.length > 0 ? { notHeld } : {}) };
 }

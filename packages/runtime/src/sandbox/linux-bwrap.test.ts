@@ -2,7 +2,7 @@
 // arguments a policy becomes, the seccomp filter's bytes, and the paths the Seatbelt profile's policy maps to. The
 // real runs are linux-bwrap.linux.test.ts.
 import { describe, expect, test } from "bun:test";
-import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, expandPatterns, findBwrap, LINUX_UNSET_ENV, SECCOMP_FD, unixSocketFilter, type BwrapFs } from "./linux-bwrap.ts";
+import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, expandPatterns, expandPatternsChecked, findBwrap, LINUX_UNSET_ENV, SECCOMP_FD, unixSocketFilter, type BwrapFs } from "./linux-bwrap.ts";
 import { linuxSandboxListsFor } from "./profile.ts";
 
 /** A disk from a list of folders and files. */
@@ -108,6 +108,26 @@ describe("expandPatterns", () => {
     expect(envs).toEqual(["/r/b/.env"]);
     const capped = expandPatterns("/r", [/\.env$/], { fs, maxVisited: 2 });
     expect(capped[0]).toEqual([]);
+  });
+
+  test("checked: a walk stopped at its limits says so; node_modules is walked for the patterns, within its own budget", () => {
+    const fs = fakeFs(["/r", "/r/node_modules", "/r/node_modules/p", "/r/node_modules/p/.git", "/r/node_modules/p/.git/hooks", "/r/a", "/r/a/b", "/r/a/b/c"]);
+    const hooks = /\/\.git\/hooks(\/.*)?$/;
+    const all = expandPatternsChecked("/r", [hooks], { fs });
+    expect(all).toEqual({ found: [["/r/node_modules/p/.git/hooks"]], complete: true });
+    expect(expandPatternsChecked("/r", [hooks], { fs, maxVisited: 1 }).complete).toBe(false);
+    expect(expandPatternsChecked("/r", [hooks], { fs, maxDepth: 1 }).complete).toBe(false);
+    expect(expandPatternsChecked("/r", [hooks], { fs, maxSkippedVisited: 1 }).complete).toBe(false);
+  });
+});
+
+describe("linuxSandboxListsFor: a walk that can't finish (fails closed)", () => {
+  test("the root it covers isn't a writable root, and says so", () => {
+    const lists = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w", "/big"] } as Parameters<typeof linuxSandboxListsFor>[0], (prefix, regexes) => ({ found: regexes.map(() => []), complete: prefix !== "/big" }));
+    expect(lists.writableRoots).toEqual(["/w"]);
+    expect(lists.notHeld).toEqual([{ root: "/big", prefix: "/big" }]);
+    const fine = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w"] } as Parameters<typeof linuxSandboxListsFor>[0], (_p, regexes) => regexes.map(() => []));
+    expect(fine.notHeld).toBeUndefined();
   });
 });
 

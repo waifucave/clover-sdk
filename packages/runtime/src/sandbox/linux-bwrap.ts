@@ -263,15 +263,28 @@ export function heldFolderNote(held: readonly HeldFolder[]): string {
 /** For each of `regexes`, the existing paths under `prefix` it matches: one walk, at most `maxVisited` entries and
  *  `maxDepth` levels down, skipping `node_modules`; a matched folder isn't walked into (the deny covers it). What a
  *  mount can bind of a pattern-shaped deny (see the header's residuals). */
-export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string> } = {}): string[][] {
+export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number } = {}): string[][] {
+  return expandPatternsChecked(prefix, regexes, o).found;
+}
+
+/** `expandPatterns`, and whether its walk reached everything under `prefix` (`complete`). A walk that stops at its
+ *  limits leaves what lies past them unmatched, so a deny there wouldn't be held: the caller fails closed on it
+ *  (`linuxSandboxListsFor` leaves such a root out of the writable ones). The skipped folders (`node_modules`) are walked
+ *  too, for the patterns only and within a budget of their own (`maxSkippedVisited`): a package installed from git
+ *  keeps its `.git` there. */
+export function expandPatternsChecked(prefix: string, regexes: readonly RegExp[], o: { fs?: BwrapFs; maxVisited?: number; maxDepth?: number; skip?: ReadonlySet<string>; maxSkippedVisited?: number } = {}): { found: string[][]; complete: boolean } {
   const fs = o.fs ?? realBwrapFs;
   const maxVisited = o.maxVisited ?? 50_000, maxDepth = o.maxDepth ?? 16, skip = o.skip ?? new Set(["node_modules"]);
+  const maxSkipped = o.maxSkippedVisited ?? 50_000;
   const out: string[][] = regexes.map(() => []);
   let visited = 0;
-  const walk = (dir: string, depth: number): void => {
-    if (depth > maxDepth) return;
+  let skippedVisited = 0;
+  let complete = true;
+  const walk = (dir: string, depth: number, inSkipped: boolean): void => {
+    if (!complete) return;
+    if (depth > maxDepth) { complete = false; return; }
     for (const name of fs.list(dir)) {
-      if (++visited > maxVisited) return;
+      if (inSkipped ? ++skippedVisited > maxSkipped : ++visited > maxVisited) { complete = false; return; }
       const p = join(dir, name);
       let matched = false;
       regexes.forEach((re, i) => {
@@ -280,9 +293,10 @@ export function expandPatterns(prefix: string, regexes: readonly RegExp[], o: { 
           matched = true;
         }
       });
-      if (!matched && !skip.has(name) && fs.kind(p) === "dir") walk(p, depth + 1);
+      if (!matched && fs.kind(p) === "dir") walk(p, depth + 1, inSkipped || skip.has(name));
+      if (!complete) return;
     }
   };
-  if (fs.kind(prefix) === "dir") walk(prefix, 0);
-  return out;
+  if (fs.kind(prefix) === "dir") walk(prefix, 0, false);
+  return { found: out, complete };
 }
