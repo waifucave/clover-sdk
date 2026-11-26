@@ -4541,3 +4541,31 @@ describe("Windows raw device paths, through evaluate()", () => {
     expect(record.message ?? "").not.toContain("network and device paths");
   });
 });
+
+describe("Windows raw device paths: trimmed input, search roots and shell write targets", () => {
+  const winCtx = () => baseCtx({ windows: true, cwd: "C:\\work" });
+  test("a leading space or a trailing newline does not hide the device (every later step trims)", async () => {
+    for (const path of [" \\\\.\\C:", "\\\\.\\C:\n", "\t\\??\\C:\\x ", " //./C:/ "]) {
+      const record = await evaluate(call("Read", { file_path: path }), winCtx());
+      expect(record.decision).toBe("deny");
+      expect(record.message).toContain("network and device paths can't be judged");
+    }
+  });
+  test("an absolute Glob pattern or Grep glob in the device namespace is refused", async () => {
+    for (const p of ["\\\\.\\C:\\**", "\\\\?\\C:\\Users\\**\\*.txt", "//./C:/*", " \\??\\C:\\x\\*"]) {
+      expect((await evaluate(call("Glob", { pattern: p }), winCtx())).decision).toBe("deny");
+      expect((await evaluate(call("Grep", { pattern: "x", glob: p }), winCtx())).decision).toBe("deny");
+    }
+  });
+  test("a shell redirect target in the device namespace is refused before it is resolved", async () => {
+    for (const command of ["echo x > \\\\.\\C:", "echo x > '\\??\\C:\\x'", "echo x >> \\\\?\\C:\\", "echo x | tee //./C:"]) {
+      const record = await evaluate(call("Bash", { command }), winCtx());
+      expect(record.decision).toBe("deny");
+      expect(record.message).toContain("network and device paths can't be judged");
+    }
+  });
+  test("an ordinary pattern and an ordinary redirect are not caught", async () => {
+    expect((await evaluate(call("Glob", { pattern: "**/*.ts" }), winCtx())).message ?? "").not.toContain("network and device paths");
+    expect((await evaluate(call("Bash", { command: "echo x > out.txt" }), winCtx())).message ?? "").not.toContain("network and device paths");
+  });
+});

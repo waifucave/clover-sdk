@@ -590,6 +590,11 @@ export function isRawDevicePath(path: string): boolean {
   return /^[\\/]{2}[?.][\\/][A-Za-z]:[\\/]*$/.test(path) || /^[\\/]\?\?[\\/]/.test(path);
 }
 
+/** A Glob `pattern` or Grep `glob` that starts in the device namespace (`\\\\.\\`, `\\\\?\\`, `//./`, `\\??\\`): a search rooted at a device or a volume is refused, whatever follows. */
+export function startsWithDevicePrefix(pattern: string): boolean {
+  return /^[\\/]{2}[?.][\\/]/.test(pattern) || /^[\\/]\?\?[\\/]/.test(pattern);
+}
+
 /** Whether a Windows path (after `windowsLongForm`) is a network or device one: it still starts with two separators. */
 export function isNetworkOrDevicePath(path: string): boolean {
   // The NT object-manager prefix `\\??\\C:\\x` is a device path too: refused as given, never left to a real-path lookup to resolve.
