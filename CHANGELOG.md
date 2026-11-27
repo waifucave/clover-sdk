@@ -4,6 +4,26 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.91
+
+### A host entry for the Linux sandbox (`./sandbox`), and what a command leaves behind
+
+- New package entry `@waifucave/clover-agent-runtime/sandbox` for a host that runs its own commands under the
+  runtime's sandbox: `runCommand`, `linuxSandboxReady`, `buildHostSandboxRunInputs`, the deny splitter and
+  `sweepLinuxRuns`. The entry's `runCommand` always requires the sandbox (a typed error before anything starts on any
+  other posture; no override) and always runs locally, never through a broker bound in the calling thread.
+- Held paths at a command's end (Linux, every run): an entry at a held path whose parent folder was swapped, or that
+  was a folder or a link and is now something else (a link is compared by its target too), is moved to quarantine.
+  A regular held file replaced in the same parent is left alone (a person's own save; the sandboxed command can't do
+  it, the file is mounted read-only).
+- New, opt-in per call (`sweepRoots`): at the command's end the named roots are walked again and anything the host's
+  deny patterns match that wasn't there at the start is moved to quarantine, whole. A root the sweep can't finish
+  (budget, an unreadable folder, more than 256 owner-closed folders) is reported in `unswept`; what can't be moved
+  stays and is reported in `notMoved`. Nothing is deleted. The Bash tool doesn't set it, so a local command's
+  behaviour for new matches is unchanged from 0.0.90.
+- The moved-aside and not-writable lines are carried outside the command's capped output.
+- Patterns match a folder name that holds a newline (Linux).
+
 ## 0.0.90
 
 ### Linux sandbox: the deny lists are gathered once, and the walk's budget is spent where it helps
