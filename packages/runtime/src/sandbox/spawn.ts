@@ -14,7 +14,7 @@ import { accessSync, closeSync, constants as fsConstants, existsSync, lstatSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
-import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type UnheldPath } from "./linux-runs.ts";
+import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type HeldPath, type UnheldPath } from "./linux-runs.ts";
 export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
 import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, findBwrap, perCommandExpander, heldFolderNote, unixSocketFilter, walkSizes } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
@@ -370,6 +370,12 @@ export interface RunCommandOptions {
    * override of its own sandbox-availability check would be a containment hole, not a test seam.
    */
   sandboxExecPath?: string;
+  /**
+   * Refuse, BEFORE anything is spawned, every posture but `"sandboxed"` (settings `enabled: false`, an excluded command,
+   * a `dangerouslyDisableSandbox` override): a typed `SandboxUnavailableError`. A host that must never run a command plain
+   * (another computer's command) sets it, so it never learns of a plain run only from the result. Omitted: as before.
+   */
+  requireSandboxed?: boolean;
   /** Extra writable roots beyond cwd -- session scratch, configured filesystem.allowWrite, outputs dir. */
   writableRoots?: string[];
   denyWritePaths?: string[];
@@ -611,7 +617,7 @@ export function bashCountsAsSandboxed(settings: SandboxSettings, where: Pick<Run
   return true;
 }
 
-function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
+function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; held: HeldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
   const bin = findBwrap();
   const filter = unixSocketFilter();
   if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
@@ -643,7 +649,16 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     rmSync(dir, { recursive: true, force: true });
   }
   const args = [...plan.args, "--", "/bin/bash", "-c", opts.command];
-  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), failed, made, quarantineRoot };
+  // Every held match inside a write root, by its identity now (device, inode): at the command's end anything at one of
+  // these paths that is another entry (the rename: the real one moved away, a new one made in its place) is moved aside,
+  // whatever the mounts held (`linux-runs.ts` `swappedHeld`).
+  const inRoot = (p: string) => lists.writableRoots.some((r) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`));
+  const held: HeldPath[] = [];
+  for (const d of lists.denyWrite) {
+    if (!inRoot(d)) continue;
+    try { const st = lstatSync(d); held.push({ path: d, dev: st.dev, ino: st.ino }); } catch { /* not there: an unheld path, checked as one */ }
+  }
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, failed, made, quarantineRoot };
 }
 
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
@@ -652,6 +667,9 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
     command: opts.matchCommand ?? opts.command,
     ...(opts.dangerouslyDisableSandbox !== undefined ? { dangerouslyDisableSandbox: opts.dangerouslyDisableSandbox } : {}),
   });
+  if (opts.requireSandboxed === true && posture !== "sandboxed") {
+    throw new SandboxUnavailableError(`this command would run outside the sandbox (${posture}), and the caller requires the sandbox: refused before it started`);
+  }
 
   let spawnFile: string;
   let spawnArgs: string[];
@@ -665,6 +683,8 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   let heldNote = "";
   // Linux: the protected paths the sandbox couldn't hold, checked at the command's end (B1), and where to move them.
   let unheld: UnheldPath[] = [];
+  // Linux: the held matches inside the write roots by their identity at the start (`swappedHeld` at the end).
+  let heldPaths: HeldPath[] = [];
   let failedFolders: string[] = [];
   let madeFolders: string[] = [];
   let quarantineRoot: string | undefined;
@@ -692,6 +712,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         seccompFd = linux.seccompFd;
         heldNote = linux.heldNote;
         unheld = linux.unheld;
+        heldPaths = linux.held;
         failedFolders = linux.failed;
         madeFolders = linux.made;
         quarantineRoot = linux.quarantineRoot;
@@ -774,7 +795,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
   // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
   // never comes (`linux-runs.ts`).
-  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 ? beginLinuxRun({ unheld, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 || heldPaths.length > 0 ? beginLinuxRun({ unheld, held: heldPaths, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {

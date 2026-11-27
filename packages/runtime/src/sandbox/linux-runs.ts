@@ -23,6 +23,27 @@ import { removePlanned } from "../tools/no-follow-write.ts";
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
 export interface UnheldPath { path: string; anchor: string }
 
+/** A held match that existed when the run started, by its identity then (device, inode). */
+export interface HeldPath { path: string; dev: number; ino: number }
+
+/**
+ * The held paths where, at the command's end, there is another entry than the one there at its start: the rename (the
+ * real `.git` moved away with its folder, a new one made at its path). Each comes back as an unheld path anchored at its
+ * parent, so `quarantinePlanted` moves it aside (into the quarantine folder, its parent's identity checked as for any
+ * plant). This does not rest on the mounts: whatever they held, a swapped entry at a held path doesn't stay. A held path
+ * that is gone now (the real one moved away and nothing made in its place) has nothing to move.
+ */
+export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
+  const out: UnheldPath[] = [];
+  for (const h of held) {
+    let st;
+    try { st = lstatSync(h.path); } catch { continue; }
+    if (st.dev === h.dev && st.ino === h.ino) continue;
+    out.push({ path: h.path, anchor: dirname(h.path) });
+  }
+  return out;
+}
+
 export function lexists(p: string): boolean {
   try {
     lstatSync(p);
@@ -166,6 +187,8 @@ export interface LinuxRunRoots {
 /** One live run. */
 export interface LinuxRun {
   unheld: UnheldPath[];
+  /** The held matches inside the write roots, by their identity at the start (`swappedHeld` at the end). */
+  held?: HeldPath[];
   quarantineRoot: string | undefined;
   /** The folders made for it before it started, top first. */
   made: string[];
@@ -265,7 +288,10 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
       if (!realDir(dir)) throw new Error("not a real folder");
       record = join(dir, `${process.pid}-${id}-${Math.random().toString(16).slice(2, 10)}.json`);
-      writeFileSync(record, JSON.stringify({ ...run, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
+      // The held identities stay in memory: a recovery recomputes only what the lists name and trusts no record's
+      // identities (a crashed run's swapped entry is the known gap the mounts still cover).
+      const { held: _held, ...recorded } = run;
+      writeFileSync(record, JSON.stringify({ ...recorded, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
     } catch {
       record = undefined;
     }
@@ -283,7 +309,7 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
 }
 
 function finishRun(entry: LinuxRun & { record?: string }, keepRecord = false): string[] {
-  const quarantined = quarantinePlanted(entry.unheld, entry.quarantineRoot);
+  const quarantined = quarantinePlanted([...entry.unheld, ...swappedHeld(entry.held ?? [])], entry.quarantineRoot);
   if (keepRecord) return quarantined;
   if (entry.record !== undefined) rmSync(entry.record, { force: true });
   const own = new Set([...live.values()].flatMap((r) => (r.record !== undefined ? [r.record] : [])));
