@@ -498,6 +498,8 @@ export interface RunCommandResult {
   notMoved?: { path: string; why: string }[];
   /** Linux: a root named in `sweepRoots` the end couldn't read through, and why: a new match there may have stayed. */
   unswept?: { root: string; why: string }[];
+  /** Linux: the write roots this command could not write, their walk unfinished (`notWritableLine` words it). */
+  notWritable?: string[];
   exitCode: number | null;
   timedOut: boolean;
   aborted: boolean;
@@ -558,6 +560,11 @@ function linuxListsInput(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" |
 
 /** How many moved-aside paths the note names one by one; the rest are counted. */
 export const MOVED_ASIDE_NOTE_CAP = 20;
+
+/** The line for the write roots a command's sandbox couldn't hold this run (its walk couldn't finish): not writable. */
+export function notWritableLine(roots: readonly string[]): string {
+  return roots.length === 0 ? "" : `[sandbox] not writable this run, too large to check for protected paths (over 200,000 entries or 16 folders deep, or past the 400,000 entries or 3 s one command reads, node_modules included): ${roots.map(notePath).join(", ")}`;
+}
 
 /** A path as one line of a note: a control character (a newline in a folder's name) written as an escape, so a name
  *  can never start a line of its own. */
@@ -790,8 +797,10 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   }, (line) => console.error(`winter: ${line}`));
   // Smallest remembered prefixes first, unknown ones on a fair share (`walkSizes`, this process's last walks).
   const lists = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), perCommandExpander(), { sizeOf: (p) => walkSizes.get(p) });
-  // A root whose walk couldn't finish isn't writable this run (fails closed); a write refused there says why.
-  const notHeldNote = (lists.notHeld ?? []).length === 0 ? "" : `\n[sandbox] not writable this run, too large to check for protected paths (over 200,000 entries or 16 folders deep, or past the 400,000 entries or 3 s one command reads, node_modules included): ${(lists.notHeld ?? []).map((n) => n.root).join(", ")}\n`;
+  // A root whose walk couldn't finish isn't writable this run (fails closed). Said on the result (`notWritable`) for every
+  // command, whatever its exit, and by Bash in its note outside the output cap (`notWritableLine`): a command that wrote
+  // there and exited 0 anyway would otherwise lose the write unseen.
+  report.notWritable = (lists.notHeld ?? []).map((n) => n.root);
   const { failed, made } = ensureProtectedFolders(lists.ensureFolders, canonicalizePath(opts.cwd));
   const plan = buildBwrapPlan({ ...lists, cwd: opts.cwd, allowNetwork, disableUserns: bwrapHasDisableUserns(bin), seccomp: true });
   const dir = mkdtempSync(join(tmpdir(), "clover-seccomp-"));
@@ -821,7 +830,16 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   // just handed): at the end those roots are swept for the same patterns (`sweepNewMatches`) and every match that wasn't
   // there at the start is moved aside whole, walked down from its root (never through a link), never deleted.
   const startHeld = new Set(held.map((h) => h.path));
-  const sweep = (opts.sweepRoots ?? []).map((r) => canonicalizePath(r)).filter((r) => lists.writableRoots.some((w) => r === w || r.startsWith(w.endsWith("/") ? w : `${w}/`)));
+  // What is swept: each asked root that lies in a writable root, and each KEPT writable root that lies inside an asked
+  // one (an asked folder whose own walk didn't finish is dropped this run, read-only, but a root inside it the command
+  // could still write is swept). An asked root that is neither writable nor holds a kept root needs no sweep: nothing
+  // in it was writable, and it is on the result as not writable already.
+  const under = (p: string, r: string) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`);
+  const asked = (opts.sweepRoots ?? []).map((r) => canonicalizePath(r));
+  const sweep = [...new Set([
+    ...asked.filter((r) => lists.writableRoots.some((w) => under(r, w))),
+    ...lists.writableRoots.filter((w) => asked.some((r) => under(w, r))),
+  ])];
   const rescan = sweep.length === 0 ? undefined : (): UnheldPath[] => {
     const found = new Set<string>();
     const expand = sweepExpander(sweep, report.unswept, { writeRoots: lists.writableRoots });
@@ -841,7 +859,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
     }
     return out;
   };
-  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, rescan, failed, made, quarantineRoot };
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: heldFolderNote(plan.held), unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, rescan, failed, made, quarantineRoot };
 }
 
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
@@ -1140,6 +1158,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         ...(quarantineRoot !== undefined && quarantined.length > 0 ? { quarantineRoot } : {}),
         ...(runReport.notMoved.length > 0 ? { notMoved: runReport.notMoved } : {}),
         ...(runReport.unswept.length > 0 ? { unswept: runReport.unswept } : {}),
+        ...((runReport.notWritable ?? []).length > 0 ? { notWritable: runReport.notWritable } : {}),
       };
       const monitor = violationMonitor;
       violationMonitor = undefined;

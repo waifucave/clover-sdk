@@ -36,6 +36,7 @@ export {
   sweepLinuxRuns,
   movedAsideNote,
   notePath,
+  notWritableLine,
   SandboxUnavailableError,
   type RunCommandOptions,
   type RunCommandResult,

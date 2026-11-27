@@ -101,6 +101,32 @@ describe("buildBwrapPlan", () => {
     expect(s).not.toContain("/missing");
     expect(args.indexOf("/h/.clover/run")).toBeGreaterThan(args.indexOf("/w"));
   });
+
+  test("a root bound back inside a read deny gets its held entries and its own read denies mounted again AFTER it", () => {
+    // /h/proj is a write root inside a read-denied /h; it holds a held .git (write-denied) and a read-denied .env.
+    const fs = fakeFs(["/h", "/h/proj", "/h/proj/.git", "/h/proj/src"], ["/h/proj/.env", "/h/proj/.envrc"]);
+    const { args } = buildBwrapPlan({ ...base, writableRoots: ["/h/proj"], denyWrite: ["/h/proj/.git", "/h/proj/.envrc"], denyRead: ["/h", "/h/proj/.env"], cwd: "/h/proj", fs });
+    const s = args.join(" ");
+    const rebind = s.lastIndexOf("--bind /h/proj /h/proj");
+    expect(rebind).toBeGreaterThan(s.indexOf("--tmpfs /h"));
+    // Every write deny and read deny inside the root comes after its last bind-back: none is shadowed by it.
+    expect(s.lastIndexOf("--ro-bind /h/proj/.git /h/proj/.git")).toBeGreaterThan(rebind);
+    expect(s.lastIndexOf("--ro-bind /h/proj/.envrc /h/proj/.envrc")).toBeGreaterThan(rebind);
+    expect(s.lastIndexOf("--ro-bind /dev/null /h/proj/.env")).toBeGreaterThan(rebind);
+  });
+
+  test("an inner root bound writable inside a read-only outer (its walk dropped): the inner root's held entries are read-only after its bind", () => {
+    // The outer /h/Projects isn't a write root this run (#99: its walk didn't finish); /h/Projects/app is.
+    const fs = fakeFs(["/h", "/h/Projects", "/h/Projects/app", "/h/Projects/app/.git"], ["/h/Projects/app/.envrc"]);
+    const { args } = buildBwrapPlan({ ...base, writableRoots: ["/h/Projects/app"], denyWrite: ["/h/Projects/app/.git", "/h/Projects/app/.envrc", "/h/Projects/other/.git"], denyRead: [], cwd: "/h/Projects/app", fs });
+    const s = args.join(" ");
+    expect(pairs(args, "--bind")).toEqual(["/h/Projects/app"]);
+    const bind = s.indexOf("--bind /h/Projects/app /h/Projects/app");
+    expect(s.indexOf("--ro-bind /h/Projects/app/.git /h/Projects/app/.git")).toBeGreaterThan(bind);
+    expect(s.indexOf("--ro-bind /h/Projects/app/.envrc /h/Projects/app/.envrc")).toBeGreaterThan(bind);
+    // Outside the inner root nothing needs a mount: it is read-only already.
+    expect(s).not.toContain("/h/Projects/other");
+  });
 });
 
 describe("expandPatterns", () => {
@@ -295,6 +321,22 @@ describe("linuxSandboxListsFor: a walk that can't finish (fails closed)", () => 
     expect(lists.notHeld).toEqual([{ root: "/big", prefix: "/big" }]);
     const fine = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w"] } as Parameters<typeof linuxSandboxListsFor>[0], (_p, regexes) => regexes.map(() => []));
     expect(fine.notHeld).toBeUndefined();
+  });
+
+  test("a working folder INSIDE a root whose walk can't finish stays writable when its own walk finished; the outer root drops", () => {
+    // ~/Projects (huge: its walk stops) holding the bot's project ~/Projects/app (walked whole), both write roots.
+    const host = { denyWriteRegexes: ["^/h/(.*/)?\\.husky(/.*)?$"], denyWriteGlobFixedPrefixes: ["/h"] };
+    const lists = linuxSandboxListsFor({ cwd: "/h/Projects/app", writableRoots: ["/h/Projects/app", "/h/Projects"], ...host } as Parameters<typeof linuxSandboxListsFor>[0],
+      (prefix, regexes) => ({ found: regexes.map(() => []), complete: prefix !== "/h/Projects" && prefix !== "/h" }));
+    expect(lists.writableRoots).toEqual(["/h/Projects/app"]);
+    expect(lists.notHeld).toEqual([{ root: "/h/Projects", prefix: "/h/Projects" }]);
+  });
+
+  test("a root inside an unfinished walk whose own walk wasn't asked every pattern of it (the working folder's protections) drops too", () => {
+    const lists = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w", "/w/sub"] } as Parameters<typeof linuxSandboxListsFor>[0],
+      (prefix, regexes) => ({ found: regexes.map(() => []), complete: prefix !== "/w" }));
+    expect(lists.writableRoots).toEqual([]);
+    expect(lists.notHeld?.map((n) => n.root).sort()).toEqual(["/w", "/w/sub"]);
   });
 });
 

@@ -225,28 +225,43 @@ export function buildBwrapPlan(input: BwrapPlanInput): { args: string[]; held: H
     }
   }
   const byDepth = (x: string, y: string): number => x.split("/").length - y.split("/").length || (x < y ? -1 : x > y ? 1 : 0);
-  for (const h of [...holders].sort(byDepth)) if (fs.kind(h) === "dir") a.push("--bind", h, h);
-  for (const n of [...naming].sort(byDepth)) {
-    if (fs.kind(n) !== "dir") continue;
-    a.push("--ro-bind", n, n);
-    for (const name of fs.list(n).sort()) {
-      const c = join(n, name);
-      if (fenced.has(c) || naming.has(c) || denyWrite.some((d) => inside(d, c))) continue;
-      const k = fs.kind(c);
-      if (k === "dir" || k === "file") a.push("--bind", c, c);
+  /** The write side's mounts for the paths `keep` takes: the ancestor-rename holders, the held folders (their present
+   *  children bound back), the write denies read-only. */
+  const writeSide = (keep: (p: string) => boolean): void => {
+    for (const h of [...holders].filter(keep).sort(byDepth)) if (fs.kind(h) === "dir") a.push("--bind", h, h);
+    for (const n of [...naming].filter(keep).sort(byDepth)) {
+      if (fs.kind(n) !== "dir") continue;
+      a.push("--ro-bind", n, n);
+      for (const name of fs.list(n).sort()) {
+        const c = join(n, name);
+        if (fenced.has(c) || naming.has(c) || denyWrite.some((d) => inside(d, c))) continue;
+        const k = fs.kind(c);
+        if (k === "dir" || k === "file") a.push("--bind", c, c);
+      }
     }
-  }
-  for (const d of [...denyWrite].sort(byDepth)) {
-    const k = fs.kind(d);
-    if (k === "dir" || k === "file") a.push("--ro-bind", d, d);
-  }
+    for (const d of [...denyWrite].filter(keep).sort(byDepth)) {
+      const k = fs.kind(d);
+      if (k === "dir" || k === "file") a.push("--ro-bind", d, d);
+    }
+  };
+  writeSide(() => true);
   // Read denies last: nothing above may show them again. A writable root inside one is bound back after it (it is
-  // writable; Seatbelt's write re-permit does the same).
-  for (const d of readDenied.sort(byDepth)) {
+  // writable; Seatbelt's write re-permit does the same), and a bind-back mounts the root's real tree over everything
+  // mounted inside it before: so the write side inside that root, and the read denies inside it, are mounted again
+  // AFTER it (a held entry in a root under a read-denied folder stays read-only, a secret in it stays unread).
+  const readDeny = (d: string): void => {
     const k = fs.kind(d);
     if (k === "dir") a.push("--tmpfs", d);
     else a.push("--ro-bind", "/dev/null", d);
-    for (const r of roots) if (r !== d && inside(r, d)) a.push("--bind", r, r);
+  };
+  for (const d of [...readDenied].sort(byDepth)) {
+    readDeny(d);
+    for (const r of roots) {
+      if (r === d || !inside(r, d)) continue;
+      a.push("--bind", r, r);
+      writeSide((p) => p !== r && inside(p, r));
+      for (const e of [...readDenied].sort(byDepth)) if (e !== r && inside(e, r)) readDeny(e);
+    }
   }
   for (const v of LINUX_UNSET_ENV) a.push("--unsetenv", v);
   a.push("--chdir", input.cwd);

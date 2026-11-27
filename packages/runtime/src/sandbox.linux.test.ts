@@ -60,7 +60,7 @@ function filesHolding(dir: string, text: string): string[] {
 
 describe("the ./sandbox entry", () => {
   test("names what a host needs: the run, its readiness, the input builder and the deny splitter", () => {
-    for (const name of ["runCommand", "linuxSandboxReady", "commandSandboxAvailable", "isSandboxAvailable", "sweepLinuxRuns", "buildHostSandboxRunInputs", "computeDenyPaths", "splitDenyPathsByGlobShape", "globDenyEntriesOf", "sandboxUnavailableMessage", "movedAsideNote", "notePath"]) {
+    for (const name of ["runCommand", "linuxSandboxReady", "commandSandboxAvailable", "isSandboxAvailable", "sweepLinuxRuns", "buildHostSandboxRunInputs", "computeDenyPaths", "splitDenyPathsByGlobShape", "globDenyEntriesOf", "sandboxUnavailableMessage", "movedAsideNote", "notePath", "notWritableLine"]) {
       expect([name, typeof (entry as Record<string, unknown>)[name]]).toEqual([name, "function"]);
     }
     // The glob denies become regexes with their fixed prefix, as a session's Bash gets them.
@@ -113,6 +113,59 @@ describe("a host's command under real bubblewrap (Linux)", () => {
       expect(readFileSync(join(work, "inside.txt"), "utf8")).toBe("y\n");
       expect(r.out).toContain("NO-NETWORK");
     } finally { server.stop(true); }
+  });
+});
+
+describe("a working folder inside a root whose walk can't finish (Linux): the working folder stays writable, the rest says why", () => {
+  linuxTest("the parent's walk can't finish (a folder 17 deep): the working folder inside it is still written; the parent isn't, and that is said on an exit 0", async () => {
+    const home = temp("sbx-inner-");
+    const parent = join(home, "Projects");
+    const work = join(parent, "app");
+    mkdirSync(work, { recursive: true });
+    // What makes the parent's walk stop: a folder past the walk's 16 levels (a big sibling-heavy folder does the same by
+    // its budget, slower to build here).
+    mkdirSync(join(parent, ...Array.from({ length: 18 }, (_, i) => `d${i}`)), { recursive: true });
+    const r = await hostRun("echo x > ok.txt; echo y > ../outside.txt 2>/dev/null; echo done", { cwd: work, roots: [work, parent], home });
+    expect(r.exitCode).toBe(0);
+    expect(r.out).toContain("done");
+    // 0.0.91 dropped the working folder with the parent (any root overlapping an unfinished walk): ok.txt was refused
+    // as a read-only file system and nothing said so on an exit 0.
+    expect(readFileSync(join(work, "ok.txt"), "utf8")).toBe("x\n");
+    expect(existsSync(join(parent, "outside.txt"))).toBe(false);
+    expect(r.notWritable).toEqual([parent]);
+    expect(entry.notWritableLine(r.notWritable ?? [])).toContain(`not writable this run, too large to check for protected paths`);
+  });
+
+  linuxTest("swept: a peer's folder whose walk can't finish is dropped, and the working folder kept inside it is still swept", async () => {
+    // Command 1 left a folder 18 deep in the peer's folder F; command 2 runs in F/sub (kept writable inside the dropped
+    // F) and makes a repository there: it must be swept and moved aside, never left unseen.
+    const home = temp("sbx-inner-sweep-");
+    const f = join(home, "F");
+    const sub = join(f, "sub");
+    mkdirSync(sub, { recursive: true });
+    mkdirSync(join(f, ...Array.from({ length: 18 }, (_, i) => `d${i}`)), { recursive: true });
+    const r = await hostRun("git init -q . && git config core.fsmonitor 'echo PLANTED' && echo done", { cwd: sub, roots: [f], home, sweep: [f] });
+    expect(r.out).toContain("done");
+    expect(r.notWritable).toEqual([f]);
+    // The working folder's own protected paths (its `.git/hooks`, `.git/config`, missing at the start) go first, then the
+    // sweep's new `.git` whole.
+    expect(r.quarantined).toEqual([join(sub, ".git", "hooks"), join(sub, ".git", "config"), join(sub, ".git")]);
+    expect(existsSync(join(sub, ".git"))).toBe(false);
+    expect(r.unswept).toBeUndefined();
+  });
+
+  linuxTest("a root inside an unfinished walk that its own walk didn't fully cover (the working folder's protections) is dropped too", async () => {
+    const home = temp("sbx-inner2-");
+    const work = join(home, "work");
+    const inner = join(work, "sub");
+    mkdirSync(inner, { recursive: true });
+    mkdirSync(join(work, ...Array.from({ length: 18 }, (_, i) => `d${i}`)), { recursive: true });
+    // The working folder's walk can't finish; `sub` is a root inside it, but the working folder's own protections
+    // (`**/.git/hooks` under it, and the rest) were asked under the working folder only: `sub` isn't known whole.
+    const r = await hostRun("echo x > sub/f.txt 2>/dev/null; echo done", { cwd: work, roots: [work, inner], home });
+    expect(r.out).toContain("done");
+    expect(existsSync(join(inner, "f.txt"))).toBe(false);
+    expect([...(r.notWritable ?? [])].sort()).toEqual([inner, work].sort());
   });
 });
 
