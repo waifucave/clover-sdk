@@ -18,7 +18,13 @@ if (linux && !ready && process.env.WINTER_REQUIRE_LINUX_SANDBOX === "1") throw n
 const linuxTest = test.skipIf(!ready);
 
 const temps: string[] = [];
-afterAll(() => { for (const d of temps.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterAll(() => {
+  for (const d of temps.splice(0)) {
+    // A case leaves a folder without write (chmod 111): writable again first.
+    spawnSync("chmod", ["-R", "u+rwx", d]);
+    rmSync(d, { recursive: true, force: true });
+  }
+});
 const temp = (p: string) => { const d = realpathSync(mkdtempSync(join(tmpdir(), p))); temps.push(d); return d; };
 
 /** A host's held names, as MOSS draws them for a command's folder on Linux (one `/**` pattern per name). */

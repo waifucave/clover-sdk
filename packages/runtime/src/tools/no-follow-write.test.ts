@@ -531,29 +531,30 @@ describe("the Linux quarantine of a planted protected path (sandbox/linux-runs.t
     writeFileSync(planted, "planted\n");
     mkdirSync(join(outside, "b"));
     writeFileSync(join(outside, "b", "hook"), SECRET);
-    let swapped = false;
-    _setNoFollowWriteSeamForTests((stage) => {
-      if (stage !== "beforeRemove" || swapped) return;
-      swapped = true;
-      renameSync(join(root, "a"), join(root, "a-old"));
-      symlinkSync(outside, join(root, "a"));
-    });
-    quarantinePlanted([{ path: planted, anchor: root }], undefined);
-    expect(swapped).toBe(true);
+    // With no quarantine folder nothing is removed any more (never delete): the planted file stays, said in notMoved,
+    // and nothing outside is touched.
+    let removing = false;
+    _setNoFollowWriteSeamForTests((stage) => { if (stage === "beforeRemove") removing = true; });
+    const notMoved: { path: string; why: string }[] = [];
+    expect(quarantinePlanted([{ path: planted, anchor: root }], undefined, { notMoved })).toEqual([]);
+    expect(removing).toBe(false);
+    expect(notMoved).toEqual([{ path: planted, why: "there is no quarantine folder to move it to" }]);
+    expect(readFileSync(planted, "utf8")).toBe("planted\n");
     expect(readFileSync(join(outside, "b", "hook"), "utf8")).toBe(SECRET);
     expect(readdirSync(join(outside, "b"))).toEqual(["hook"]);
   });
 
-  test("an ordinary planted file is removed, and a planted link is removed as a link (its target untouched)", () => {
+  test("with no quarantine folder an ordinary planted file and a planted link both stay (never deleted), each said", () => {
     const planted = join(root, "a", "hook");
     mkdirSync(join(root, "a"));
     writeFileSync(planted, "planted\n");
     const link = join(root, "a", "hook2");
     symlinkSync(secret, link);
-    const removed = quarantinePlanted([{ path: planted, anchor: root }, { path: link, anchor: root }], undefined);
-    expect(removed.sort()).toEqual([planted, link].sort());
-    expect(existsSync(planted)).toBe(false);
-    expect(() => lstatSync(link)).toThrow();
+    const notMoved: { path: string; why: string }[] = [];
+    expect(quarantinePlanted([{ path: planted, anchor: root }, { path: link, anchor: root }], undefined, { notMoved })).toEqual([]);
+    expect(notMoved.map((n) => n.path).sort()).toEqual([planted, link].sort());
+    expect(existsSync(planted)).toBe(true);
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
     expectOutsideUntouched();
   });
 });

@@ -1146,7 +1146,9 @@ export function linuxSandboxListsFor(
     return anchorDir.startsWith(p) || p.startsWith(anchorDir);
   };
   const expandUnder = (prefixes: readonly string[], source: string, into: Set<string>): void => {
-    const re = new RegExp(source);
+    // dotAll: a `.` in a pattern matches a newline too, so a folder whose name holds one (`a\nb/.husky`) is matched
+    // like any other (the walk tests whole paths; without it `(.*/)?` stops at the newline and the entry is never held).
+    const re = new RegExp(source, "s");
     const anchorDir = regexAnchorDir(source);
     for (const prefix of prefixes) {
       if (!mayMatchUnder(anchorDir, prefix)) continue;

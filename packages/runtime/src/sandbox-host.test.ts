@@ -21,6 +21,8 @@ afterAll(() => {
   }
 });
 const temp = (p: string) => { const d = realpathSync(mkdtempSync(join(tmpdir(), p))); temps.push(d); return d; };
+/** A held path as a run takes it: its handle kept (Linux), so a reused inode number can't pass for it. */
+const hp = (p: string) => heldPathOf(p, true);
 const base = (cwd: string) => ({ command: "", cwd, env: { ...process.env, TMPDIR: cwd }, timeoutMs: 20_000, writableRoots: [cwd], home: cwd });
 
 describe("requireSandboxed: refused before anything starts", () => {
@@ -59,7 +61,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     const quarantine = join(root, ".home", "quarantine");
     mkdirSync(join(root, "proj", ".git", "hooks"), { recursive: true });
     writeFileSync(join(root, "proj", ".git", "config"), "ORIGINAL\n");
-    const held = [heldPathOf(join(root, "proj", ".git"))!];
+    const held = [hp(join(root, "proj", ".git"))!];
     const end = beginLinuxRun({ unheld: [], held, quarantineRoot: quarantine, made: [] });
     // What a command does when nothing holds the folders: the rename, then a planted repository at the held path.
     renameSync(join(root, "proj"), join(root, "proj-old"));
@@ -79,7 +81,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     const root = temp("sbx-host-same-");
     mkdirSync(join(root, "a", ".git"), { recursive: true });
     mkdirSync(join(root, "b", ".git"), { recursive: true });
-    const held: HeldPath[] = [heldPathOf(join(root, "a", ".git"))!, heldPathOf(join(root, "b", ".git"))!];
+    const held: HeldPath[] = [hp(join(root, "a", ".git"))!, hp(join(root, "b", ".git"))!];
     rmSync(join(root, "b"), { recursive: true });
     expect(swappedHeld(held)).toEqual([]);
     expect(beginLinuxRun({ unheld: [], held, quarantineRoot: join(root, ".home", "quarantine"), made: [] })()).toEqual([]);
@@ -106,7 +108,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     mkdirSync(join(root, "proj", ".git"), { recursive: true });
     writeFileSync(join(root, "proj", ".envrc"), "export A=1\n");
     writeFileSync(join(root, "proj", ".git", "config"), "[core]\n");
-    const held = [heldPathOf(join(root, "proj", ".envrc"))!, heldPathOf(join(root, "proj", ".git", "config"))!];
+    const held = [hp(join(root, "proj", ".envrc"))!, hp(join(root, "proj", ".git", "config"))!];
     const quarantine = join(root, ".home", "quarantine");
     const end = beginLinuxRun({ unheld: [], held, quarantineRoot: quarantine, made: [] });
     // As an editor saves (and as `git config` rewrites its file): a new file written beside it, renamed over it. Another
@@ -129,7 +131,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     mkdirSync(join(root, "proj"), { recursive: true });
     writeFileSync(join(root, "proj", ".envrc"), "export A=1\n");
     mkdirSync(join(root, "other", ".husky"), { recursive: true });
-    const held = [heldPathOf(join(root, "proj", ".envrc"))!, heldPathOf(join(root, "other", ".husky"))!];
+    const held = [hp(join(root, "proj", ".envrc"))!, hp(join(root, "other", ".husky"))!];
     const end = beginLinuxRun({ unheld: [], held, quarantineRoot: join(root, ".home", "quarantine"), made: [] });
     renameSync(join(root, "proj"), join(root, "proj-old"));
     mkdirSync(join(root, "proj"));
@@ -151,7 +153,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     // A stow-style home: `.zshrc` a link to a file, `.husky` a link to a folder.
     symlinkSync(join(root, "dots", "zshrc"), join(root, ".zshrc"));
     symlinkSync(join(root, "dots", "hooks"), join(root, ".husky"));
-    const held = [heldPathOf(join(root, ".zshrc"))!, heldPathOf(join(root, ".husky"))!];
+    const held = [hp(join(root, ".zshrc"))!, hp(join(root, ".husky"))!];
     expect(held.map((h) => h.kind)).toEqual(["link", "link"]);
     const quarantine = join(root, ".home", "quarantine");
     const end = beginLinuxRun({ unheld: [], held, quarantineRoot: quarantine, made: [] });
@@ -172,7 +174,7 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     resetLinuxRunsForTest();
     const root = temp("sbx-host-kind-");
     mkdirSync(join(root, ".husky"));
-    const held = [heldPathOf(join(root, ".husky"))!];
+    const held = [hp(join(root, ".husky"))!];
     const end = beginLinuxRun({ unheld: [], held, quarantineRoot: join(root, ".home", "quarantine"), made: [] });
     rmSync(join(root, ".husky"), { recursive: true });
     writeFileSync(join(root, ".husky"), "PLANTED\n");
@@ -183,17 +185,20 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     resetLinuxRunsForTest();
     const root = temp("sbx-host-noq-");
     mkdirSync(join(root, "proj", ".git"), { recursive: true });
-    const held = [heldPathOf(join(root, "proj", ".git"))!];
+    const held = [hp(join(root, "proj", ".git"))!];
     const report: RunReport = { notMoved: [], unswept: [] };
-    const end = beginLinuxRun({ unheld: [], held, rescan: () => [{ path: join(root, "sub", ".envrc"), anchor: root }], report, quarantineRoot: undefined, made: [] });
+    // A literal protected path missing at the start too (`unheld`): the same rule.
+    const end = beginLinuxRun({ unheld: [{ path: join(root, ".mcp.json"), anchor: root }], held, rescan: () => [{ path: join(root, "sub", ".envrc"), anchor: root }], report, quarantineRoot: undefined, made: [] });
     renameSync(join(root, "proj"), join(root, "proj-old"));
     mkdirSync(join(root, "proj", ".git"), { recursive: true });
     mkdirSync(join(root, "sub"));
     writeFileSync(join(root, "sub", ".envrc"), "mine\n");
+    writeFileSync(join(root, ".mcp.json"), "{}\n");
     expect(end()).toEqual([]);
     expect(existsSync(join(root, "proj", ".git"))).toBe(true);
     expect(readFileSync(join(root, "sub", ".envrc"), "utf8")).toBe("mine\n");
-    expect(report.notMoved.map((n) => n.path).sort()).toEqual([join(root, "proj", ".git"), join(root, "sub", ".envrc")].sort());
+    expect(readFileSync(join(root, ".mcp.json"), "utf8")).toBe("{}\n");
+    expect(report.notMoved.map((n) => n.path).sort()).toEqual([join(root, ".mcp.json"), join(root, "proj", ".git"), join(root, "sub", ".envrc")].sort());
     expect(report.notMoved[0]!.why).toBe("there is no quarantine folder to move it to");
   });
 
@@ -216,17 +221,58 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
 
 describe("the end-of-run sweep (sweepRoots): honest about what it couldn't read", () => {
   const MATCH = [/\/\.git$/, /\/\.husky$/];
-  test.skipIf(process.platform === "win32")("a folder the command made unreadable (chmod 111) is opened u+rx and read; a 17-deep folder doesn't hide its sibling", () => {
+  const linuxOwner = process.platform === "linux" && process.getuid?.() !== 0;
+  test.skipIf(!linuxOwner)("a folder the command made unreadable (chmod 111) is opened and read; a 17-deep folder doesn't hide its sibling; the old mode comes back", () => {
     const root = temp("sbx-sweep-read-");
     mkdirSync(join(root, "sub", ".git"), { recursive: true });
     chmodSync(join(root, "sub"), 0o111);
     mkdirSync(join(root, ...Array.from({ length: 17 }, (_, i) => `d${i}`)), { recursive: true });
     mkdirSync(join(root, "z", ".husky"), { recursive: true });
     const unswept: { root: string; why: string }[] = [];
-    const r = sweepExpander([root], unswept)(root, MATCH);
+    const sweep = sweepExpander([root], unswept);
+    const r = sweep(root, MATCH);
     expect(r.found[0]).toEqual([join(root, "sub", ".git")]);
     expect(r.found[1]).toEqual([join(root, "z", ".husky")]);
     expect(unswept).toEqual([]);
+    // Open for the moves until `restore`, then as the command left it.
+    expect(lstatSync(join(root, "sub")).mode & 0o777).toBe(0o711);
+    sweep.restore();
+    expect(lstatSync(join(root, "sub")).mode & 0o777).toBe(0o111);
+  });
+
+  test.skipIf(!linuxOwner)("a folder that can be read but not entered (chmod 400) is opened BEFORE it is read: what's in it is found", () => {
+    const root = temp("sbx-sweep-enter-");
+    mkdirSync(join(root, "sub", "x", ".git"), { recursive: true });
+    chmodSync(join(root, "sub"), 0o400);
+    const unswept: { root: string; why: string }[] = [];
+    const sweep = sweepExpander([root], unswept);
+    expect(sweep(root, MATCH).found[0]).toEqual([join(root, "sub", "x", ".git")]);
+    expect(unswept).toEqual([]);
+    sweep.restore();
+    expect(lstatSync(join(root, "sub")).mode & 0o777).toBe(0o400);
+  });
+
+  test.skipIf(!linuxOwner)("a link swapped in for a folder is never chmod'ed through: what it points at keeps its mode", () => {
+    const root = temp("sbx-sweep-link-");
+    mkdirSync(join(root, "elsewhere"));
+    chmodSync(join(root, "elsewhere"), 0o500);
+    symlinkSync(join(root, "elsewhere"), join(root, "sub"));
+    const unswept: { root: string; why: string }[] = [];
+    const sweep = sweepExpander([join(root, "sub")], unswept, { writeRoots: [root] });
+    sweep(join(root, "sub"), MATCH);
+    sweep.restore();
+    expect(lstatSync(join(root, "elsewhere")).mode & 0o777).toBe(0o500);
+  });
+
+  test("a child that can't be looked at (listed, not entered) is counted unread, not taken as gone", () => {
+    // Off Linux (no O_PATH opener) a folder left 0400 is read but its children can't be looked at.
+    if (process.platform === "linux" || process.platform === "win32" || process.getuid?.() === 0) return;
+    const root = temp("sbx-sweep-unread-");
+    mkdirSync(join(root, "sub", "x"), { recursive: true });
+    chmodSync(join(root, "sub"), 0o400);
+    const unswept: { root: string; why: string }[] = [];
+    sweepExpander([root], unswept)(root, MATCH);
+    expect(unswept).toEqual([{ root, why: `a folder in it can't be read: ${join(root, "sub")}` }]);
   });
 
   test("past its budget: the root is said unswept, never silent", () => {
@@ -248,11 +294,12 @@ describe("the end-of-run sweep (sweepRoots): honest about what it couldn't read"
     writeFileSync(join(root, "afile"), "");
     real(join(root, "afile", "x"), MATCH);
     expect(unswept).toEqual([]); // ENOTDIR: nothing there, not a failure
-    if (process.platform !== "win32" && process.getuid?.() !== 0) {
+    if (linuxOwner) {
       chmodSync(join(root, "locked"), 0o000);
-      // Owned by this user: retried with u+rx and read.
+      // Owned by this user: opened and read.
       real(root, MATCH);
       expect(unswept).toEqual([]);
+      real.restore();
     }
   });
 

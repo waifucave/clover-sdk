@@ -10,7 +10,7 @@ import type { HostOutputTransport } from "./host-output.ts";
 // "run a shell command under whatever fence the effective config selects" -- keeping the sandbox
 // MECHANISM (this file + profile.ts) independent of either tool's own contract (output capping,
 // background-task registration, WS message framing, ...).
-import { accessSync, chmodSync, closeSync, constants as fsConstants, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, chmodSync, closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
@@ -573,7 +573,7 @@ export function notePath(p: string): string {
 export function movedAsideNote(paths: readonly string[], quarantineRoot: string | undefined, report: Partial<RunReport> = {}): string {
   const why = (p: string) => /\.git$/.test(p) ? "a repository there runs its hooks and config outside the sandbox"
     : "it runs later, outside the sandbox";
-  const where = quarantineRoot === undefined ? "removed" : `moved to ${notePath(quarantineRoot)}`;
+  const where = quarantineRoot === undefined ? "moved aside" : `moved to ${notePath(quarantineRoot)}`;
   const lines = paths.slice(0, MOVED_ASIDE_NOTE_CAP).map((p) => `[sandbox] ${notePath(p)}: ${where} at the command's end (${why(p)}); writing it again is moved aside again`);
   if (paths.length > MOVED_ASIDE_NOTE_CAP) lines.push(`[sandbox] and ${paths.length - MOVED_ASIDE_NOTE_CAP} more moved aside the same way`);
   for (const n of (report.notMoved ?? []).slice(0, MOVED_ASIDE_NOTE_CAP)) lines.push(`[sandbox] ${notePath(n.path)}: could not move aside (${n.why}); it is still there`);
@@ -589,7 +589,7 @@ export function movedAsideNote(paths: readonly string[], quarantineRoot: string 
  * owns it (`chmod 111 sub` after `git init sub`) and else counted unread, and every root with something unread is said in
  * `unswept` (the root and why). Links are never followed (`kind` is by lstat).
  */
-export function sweepExpander(roots: readonly string[], unswept: { root: string; why: string }[], o: { budget?: { maxVisited: number; maxMs: number }; now?: () => number; writeRoots?: readonly string[] } = {}): (prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean } {
+export function sweepExpander(roots: readonly string[], unswept: { root: string; why: string }[], o: { budget?: { maxVisited: number; maxMs: number }; now?: () => number; writeRoots?: readonly string[] } = {}): ((prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean }) & { restore: () => void } {
   const b = o.budget ?? PATTERN_WALK_PER_COMMAND;
   const writeRoots = o.writeRoots ?? roots;
   const now = o.now ?? Date.now;
@@ -604,22 +604,46 @@ export function sweepExpander(roots: readonly string[], unswept: { root: string;
     said.add(root);
     unswept.push({ root, why });
   };
+  // A folder the user owns that the command left without rwx for its owner (`chmod 111`, `chmod 400`: listed but not
+  // entered) is opened BEFORE it is read, by an O_PATH handle that doesn't follow a link, and given u+rwx through that
+  // handle (`/proc/self/fd/<n>` names the very folder opened, never what a link swapped in later points at): read and
+  // entered, and its matches movable. Its old mode is put back after the end's moves (`restore`).
+  const opened: { fd: number; mode: number }[] = [];
+  const openToRead = (dir: string): boolean => {
+    if (process.platform !== "linux" || uid < 0) return false;
+    let fd: number | undefined;
+    try {
+      fd = openSync(dir, O_PATH | fsConstants.O_NOFOLLOW | fsConstants.O_DIRECTORY);
+      const st = fstatSync(fd);
+      if (!st.isDirectory() || st.uid !== uid) { closeSync(fd); return false; }
+      const mode = st.mode & 0o7777;
+      if ((mode & 0o700) === 0o700) { closeSync(fd); return true; }
+      chmodSync(`/proc/self/fd/${fd}`, mode | 0o700);
+      opened.push({ fd, mode });
+      return true;
+    } catch {
+      if (fd !== undefined) try { closeSync(fd); } catch { /* closed */ }
+      return false;
+    }
+  };
   const list = (dir: string): string[] | undefined => {
+    let st: ReturnType<typeof lstatSync>;
+    try { st = lstatSync(dir); } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === "ENOENT" || code === "ENOTDIR") return [];
+      miss(dir, `a folder in it can't be read: ${notePath(dir)}`);
+      return undefined;
+    }
+    if (!st.isDirectory()) return [];
+    if ((st.mode & 0o700) !== 0o700 && st.uid === uid) openToRead(dir);
     try { return readdirSync(dir); } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === "ENOENT" || code === "ENOTDIR") return [];
-      try {
-        const st = lstatSync(dir);
-        if (st.isDirectory() && st.uid === uid && (st.mode & 0o500) !== 0o500) {
-          chmodSync(dir, st.mode | 0o500);
-          return readdirSync(dir);
-        }
-      } catch { /* below */ }
       miss(dir, `a folder in it can't be read: ${notePath(dir)}`);
       return undefined;
     }
   };
-  return (prefix, regexes) => {
+  const expand = (prefix: string, regexes: readonly RegExp[]): { found: string[][]; complete: boolean } => {
     until ??= now() + b.maxMs;
     const out: string[][] = regexes.map(() => []);
     // Only what lies in a swept root: a prefix inside one is walked; for a prefix above some (a write root holding a
@@ -643,12 +667,27 @@ export function sweepExpander(roots: readonly string[], unswept: { root: string;
         let matched = false;
         regexes.forEach((re, i) => { if (re.test(p)) { out[i]!.push(p); matched = true; } });
         if (matched) continue;
-        try { if (lstatSync(p).isDirectory()) stack.push(p); } catch { /* gone */ }
+        try { if (lstatSync(p).isDirectory()) stack.push(p); } catch (err) {
+          // Gone meanwhile is nothing; any other failure (EACCES: listed but not entered) left it unread.
+          if ((err as NodeJS.ErrnoException).code !== "ENOENT") miss(dir, `a folder in it can't be read: ${notePath(dir)}`);
+        }
       }
     }
     return { found: out, complete: true };
   };
+  /** Puts each folder's old mode back, by the handle it was opened with (after the end's moves). */
+  const restore = (): void => {
+    for (const { fd, mode } of opened.splice(0)) {
+      try { chmodSync(`/proc/self/fd/${fd}`, mode); } catch { /* gone with its folder */ }
+      try { closeSync(fd); } catch { /* closed */ }
+    }
+  };
+  return Object.assign(expand, { restore });
 }
+
+/** Linux's O_PATH (the same on x64 and arm64): a handle to a folder without reading it, so one can be had for a folder
+ *  without read permission. */
+const O_PATH = 0o10000000;
 
 /** Whether `path` is a real folder (not a link to one). */
 function isRealDir(path: string): boolean {
@@ -766,7 +805,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   const held: HeldPath[] = [];
   for (const d of lists.denyWrite) {
     if (!inRoot(d)) continue;
-    const h = heldPathOf(d);
+    const h = heldPathOf(d, true); // its handle kept for the run: a reused inode number can't pass for it
     if (h !== undefined) held.push(h); // not there: an unheld path, checked as one
   }
   // A match the command made itself (a new repository's `.git`, a `.husky` in a new folder): a pattern is expanded against
@@ -779,6 +818,8 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   const rescan = sweep.length === 0 ? undefined : (): UnheldPath[] => {
     const found = new Set<string>();
     const expand = sweepExpander(sweep, report.unswept, { writeRoots: lists.writableRoots });
+    // The folders opened for the sweep get their old modes back after the end's moves (linux-runs.ts finishRun).
+    report.afterMoves = expand.restore;
     const again = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expand(prefix, regexes));
     const rootOf = (p: string) => sweep.filter((r) => p !== r && p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0];
     const out: UnheldPath[] = [];
