@@ -4,6 +4,23 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.90
+
+### Linux sandbox: the deny lists are gathered once, and the walk's budget is spent where it helps
+
+- Fixed: with many deny globs (a host that hands thousands), gathering the lists took most of a minute per command and
+  the write was then lost. Every pattern canonicalized every prefix again and was handed to every prefix, and the
+  walk's 3 s clock had started before that gathering, so no prefix had walk time left and every root was dropped.
+  Now each prefix is canonicalized once per command, each pattern is tried only under the prefixes it can match (read
+  from the literal folder its regex starts at; a pattern that doesn't start that way, or has a top-level alternation,
+  is tried everywhere), and the clock starts at the first walk. Measured on a 300,000-entry home with 5,884 globs and
+  106 roots: 58.7 s and no write before; about 1 s and the write lands after.
+- The walk's order: the working folder first, on the whole remaining budget; then the prefixes whose size an earlier
+  walk in this process remembers, smallest first; a never-walked prefix gets a fair share of what is left. A giant
+  folder is what drops, not the small ones after it. A prefix whose walk stops at its share still fails closed (its
+  roots are not writable for that command), and the per-command cap (400,000 entries, 3 s) still binds.
+- The time cap is also checked at every folder read.
+
 ## 0.0.89
 
 ### Linux sandbox: the held-names walk is budgeted and fails closed
