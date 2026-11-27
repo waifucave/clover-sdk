@@ -127,17 +127,20 @@ describe("live sandboxed runs", () => {
     expect(readFileSync(join(outside, "target.json"), "utf8")).toContain("unheld");
   });
 
-  test("a link as the quarantine folder is refused: nothing goes through it, and a planted folder with something in it is never deleted", () => {
+  test("a link as the quarantine folder is refused: nothing goes through it, and nothing is deleted instead", () => {
     const w = setup();
     const elsewhere = temp("clover-a3-runs-elsewhere-");
     symlinkSync(elsewhere, w.quarantineRoot);
     writeFileSync(join(w.cwd, ".mcp.json"), "{}");
     mkdirSync(join(w.cwd, ".claude"));
     writeFileSync(join(w.cwd, ".claude", "kept.md"), "x");
-    const moved = quarantinePlanted([{ path: join(w.cwd, ".mcp.json"), anchor: w.cwd }, { path: join(w.cwd, ".claude"), anchor: w.cwd }], w.quarantineRoot);
+    const notMoved: { path: string; why: string }[] = [];
+    const moved = quarantinePlanted([{ path: join(w.cwd, ".mcp.json"), anchor: w.cwd }, { path: join(w.cwd, ".claude"), anchor: w.cwd }], w.quarantineRoot, { notMoved });
     expect(readdirSync(elsewhere)).toEqual([]);
-    // The file is unlinked; the folder with something in it stays (never a recursive delete).
-    expect(moved).toEqual([join(w.cwd, ".mcp.json")]);
+    // Both stay where they are (never deleted), each said.
+    expect(moved).toEqual([]);
+    expect(notMoved.map((n) => n.path)).toEqual([join(w.cwd, ".mcp.json"), join(w.cwd, ".claude")]);
+    expect(existsSync(join(w.cwd, ".mcp.json"))).toBe(true);
     expect(existsSync(join(w.cwd, ".claude", "kept.md"))).toBe(true);
   });
 

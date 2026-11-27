@@ -73,13 +73,15 @@ describe("quarantinePlanted: what a command made at a protected path is moved as
     expect(() => lstatSync(join(cwd, ".claude"))).toThrow();
   });
 
-  test("with no quarantine folder a planted file is unlinked, and a folder with something in it is never deleted", () => {
+  test("with no quarantine folder nothing is deleted, a file or a folder: each stays, said in notMoved", () => {
     const cwd = temp("clover-a3-q-");
     mkdirSync(join(cwd, ".git", "hooks"), { recursive: true });
     writeFileSync(join(cwd, ".git", "hooks", "pre-commit"), "#!/bin/sh");
     writeFileSync(join(cwd, ".gitconfig"), "[x]");
-    expect(quarantinePlanted([{ path: join(cwd, ".git", "hooks"), anchor: cwd }, { path: join(cwd, ".gitconfig"), anchor: cwd }], undefined)).toEqual([join(cwd, ".gitconfig")]);
-    expect(existsSync(join(cwd, ".gitconfig"))).toBe(false);
+    const notMoved: { path: string; why: string }[] = [];
+    expect(quarantinePlanted([{ path: join(cwd, ".git", "hooks"), anchor: cwd }, { path: join(cwd, ".gitconfig"), anchor: cwd }], undefined, { notMoved })).toEqual([]);
+    expect(notMoved.map((n) => n.path)).toEqual([join(cwd, ".git", "hooks"), join(cwd, ".gitconfig")]);
+    expect(existsSync(join(cwd, ".gitconfig"))).toBe(true);
     expect(existsSync(join(cwd, ".git", "hooks", "pre-commit"))).toBe(true);
   });
 });

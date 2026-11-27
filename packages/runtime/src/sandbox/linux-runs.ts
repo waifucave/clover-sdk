@@ -16,12 +16,77 @@
 // quarantine folder must be a real folder (never a link), and nothing here ever deletes recursively.
 // The protected folders a run made before it started (`ensureProtectedFolders`) are removed at its end when they are
 // still empty and no other sandboxed run is live (none in this realm, no record of a live process).
-import { closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, readlinkSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { removePlanned } from "../tools/no-follow-write.ts";
 
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
 export interface UnheldPath { path: string; anchor: string }
+
+/** A held match that existed when the run started: its identity then (device, inode), its kind then, and its parent
+ *  folder's identity. */
+export interface HeldPath { path: string; dev: number; ino: number; kind: "file" | "dir" | "link" | "other"; parentDev: number; parentIno: number; target?: string }
+
+/**
+ * A held path as it is now, with its kind (a link's target too) and its parent's identity: what `swappedHeld` compares
+ * at the end. No handle is kept on it (nothing a run holds open can starve the engine of descriptors), so an inode
+ * NUMBER can be reused (ext4 hands a freed one straight to the next file): the identity is the number, the kind, and a
+ * link's target. That is enough for what a command can do: a held FILE or FOLDER is mounted read-only onto itself, and
+ * the folders above it are mount points, so the command can neither remove nor replace it (only the person can); a held
+ * LINK has no mount, so `rm` then a new entry at its path is the command's own swap, and a new entry with the same
+ * number differs in kind (a file, a folder) or, as another link, in its target. A link with the same number and the
+ * same target points where the old one did: nothing changed.
+ */
+export function heldPathOf(path: string): HeldPath | undefined {
+  try {
+    const st = lstatSync(path);
+    const parent = lstatSync(dirname(path));
+    const kind = st.isSymbolicLink() ? "link" : st.isFile() ? "file" : st.isDirectory() ? "dir" : "other";
+    let target: string | undefined;
+    if (kind === "link") { try { target = readlinkSync(path); } catch { target = undefined; } }
+    return { path, dev: st.dev, ino: st.ino, kind, parentDev: parent.dev, parentIno: parent.ino, ...(target !== undefined ? { target } : {}) };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The held paths swapped during the command: an entry at a held path that is another entry than at the start is moved
+ * aside, but for ONE case: the entry at the start was a regular FILE, and its parent is the same folder. That is a
+ * person's own change made while a command ran (an editor's atomic save of `.envrc` or `.mcp.json`, `git config`
+ * rewriting `.git/config`), never the command's, which can't make it: a held regular file is bound read-only onto
+ * itself (linux-bwrap.ts `buildBwrapPlan`: `a.push("--ro-bind", d, d)` for each existing deny path whose kind is a file
+ * or a folder), so a rename over it or an unlink of it fails with EBUSY, and the folders between a root and it are mount
+ * points (the ancestor-rename fence). A held LINK gets no mount (its kind is neither), so the command can replace it
+ * (`rm ~/.zshrc; echo … > ~/.zshrc` with a stow link there): a link at the start is never spared, nor is a folder, nor
+ * anything under a new parent (the rename). Each one moved comes back as an unheld path anchored at its parent, so
+ * `quarantinePlanted` moves it aside (its parent's identity checked as for any plant). A held path that is gone now has
+ * nothing to move.
+ */
+export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
+  const out: UnheldPath[] = [];
+  for (const h of held) {
+    const now = heldPathOf(h.path);
+    // The same entry: its device, inode number and kind, and a link's target (`heldPathOf`).
+    if (now === undefined) continue;
+    // A link whose target couldn't be read (at the start or now) can't be told apart: moved aside (fails closed).
+    const unsure = h.kind === "link" && (h.target === undefined || now.target === undefined);
+    if (!unsure && now.dev === h.dev && now.ino === h.ino && now.kind === h.kind && now.target === h.target) continue;
+    const sameParent = now.parentDev === h.parentDev && now.parentIno === h.parentIno;
+    if (h.kind === "file" && sameParent) continue;
+    out.push({ path: h.path, anchor: dirname(h.path) });
+  }
+  return out;
+}
+
+/** What a run's end couldn't do, said as data and in plain lines outside the command's own output (`protectedPathsNote`). */
+export interface RunReport {
+  /** A path that should have been moved aside and wasn't, and why (left where it is: never deleted). */
+  notMoved: { path: string; why: string }[];
+  /** A swept root the end-of-run sweep couldn't read through, and why: a new match there may have stayed. */
+  unswept: { root: string; why: string }[];
+  /** Run once after the end's moves (the sweep puts back the modes of the folders it opened). Not data. */
+  afterMoves?: () => void;
+}
 
 export function lexists(p: string): boolean {
   try {
@@ -85,7 +150,16 @@ export function renameFromParent(parentReal: string, walked: { dev: number; ino:
   }
 }
 
-export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { removeWhenStuck?: boolean; kept?: string[] } = {}): string[] {
+/** A quarantined entry's name: its path with `_` for `/` and a random tail, cut (keeping the tail) so it stays a valid
+ *  name (255 bytes) however deep the path was. */
+export function quarantineName(target: string): string {
+  const tail = `.quarantined-${Math.random().toString(16).slice(2, 10)}`;
+  let base = target.split("/").filter(Boolean).join("_");
+  while (Buffer.byteLength(base + tail) > 240) base = base.slice(Math.max(1, Math.floor(base.length / 8)));
+  return base + tail;
+}
+
+export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { kept?: string[]; notMoved?: { path: string; why: string }[] } = {}): string[] {
   const planted: string[] = [];
   const folder = quarantineFolder(quarantineRoot);
   for (const { path, anchor } of unheld) {
@@ -112,9 +186,8 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
     }
     if (target === undefined || planted.includes(target)) continue;
     // 0.0.77: the folder above the target as the walk found it (no link from the anchor down). A command still
-    // running (a leftover child) could swap a folder for a link after the walk: the move and the removal both
-    // check it again first, and the removal goes through the shared no-follow remover, which never deletes
-    // through a swapped folder (tools/no-follow-write.ts's `removePlanned`).
+    // running (a leftover child) could swap a folder for a link after the walk: the move checks it again first,
+    // and the folder it opens against the walk's identity. Nothing is ever deleted: what can't be moved stays.
     let parentReal: string;
     try {
       parentReal = realpathSync(dirname(target));
@@ -129,29 +202,22 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
       }
     };
     let gone = false;
+    let why = folder === undefined ? "there is no quarantine folder to move it to" : "it couldn't be moved";
+    if (folder !== undefined && !parentStill()) why = "the folder holding it changed while it was checked";
     if (folder !== undefined && parentStill() && parentId !== undefined) {
       try {
-        renameFromParent(parentReal, parentId, basename(target), join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
+        renameFromParent(parentReal, parentId, basename(target), join(folder, quarantineName(target)));
         gone = true;
-      } catch { /* below */ }
+      } catch (err) { why = `it couldn't be moved (${(err as NodeJS.ErrnoException).code ?? "error"})`; }
     }
-    if (!gone && o.removeWhenStuck === false) {
-      // A recovery: the path may be the user's own, made after the crash, so it stays where it is, reported.
+    if (!gone) {
+      // Never deleted, wherever it came from (a literal path missing at the start, a swap, a sweep's find, a recovery:
+      // any of them may be the person's own): it stays where it is, and the reason is said.
       o.kept?.push(target);
+      o.notMoved?.push({ path: target, why });
       continue;
     }
-    if (!gone && parentStill()) {
-      try {
-        const real = join(parentReal, basename(target));
-        const st = lstatSync(real);
-        if (st.isDirectory() && !st.isSymbolicLink()) rmdirSync(real); // only when empty
-        else {
-          removePlanned({ lexicalPath: target, realPath: real, realParent: parentReal, base: basename(target), missingDirs: [], existing: st, throughLink: false }, { allowLink: true });
-        }
-        gone = true;
-      } catch { /* a folder with something in it stays; a folder that moved meanwhile stays too */ }
-    }
-    if (gone) planted.push(target);
+    planted.push(target);
   }
   return planted;
 }
@@ -166,6 +232,13 @@ export interface LinuxRunRoots {
 /** One live run. */
 export interface LinuxRun {
   unheld: UnheldPath[];
+  /** The held matches inside the write roots, by their identity at the start (`swappedHeld` at the end). */
+  held?: HeldPath[];
+  /** The matches the command made itself, found by sweeping the roots the caller named at the end (in memory, never
+   *  recorded); it says in `report.unswept` what it couldn't read through. */
+  rescan?: () => UnheldPath[];
+  /** Where the end says what it couldn't do (in memory, never recorded). */
+  report?: RunReport;
   quarantineRoot: string | undefined;
   /** The folders made for it before it started, top first. */
   made: string[];
@@ -265,7 +338,10 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
       if (!realDir(dir)) throw new Error("not a real folder");
       record = join(dir, `${process.pid}-${id}-${Math.random().toString(16).slice(2, 10)}.json`);
-      writeFileSync(record, JSON.stringify({ ...run, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
+      // The held identities stay in memory: a recovery recomputes only what the lists name and trusts no record's
+      // identities (a crashed run's swapped entry is the known gap the mounts still cover).
+      const { held: _held, rescan: _rescan, report: _report, ...recorded } = run;
+      writeFileSync(record, JSON.stringify({ ...recorded, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
     } catch {
       record = undefined;
     }
@@ -283,7 +359,20 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
 }
 
 function finishRun(entry: LinuxRun & { record?: string }, keepRecord = false): string[] {
-  const quarantined = quarantinePlanted(entry.unheld, entry.quarantineRoot);
+  let made: UnheldPath[] = [];
+  try { made = entry.rescan?.() ?? []; } catch (err) {
+    // Never swallowed: a sweep that threw checked nothing, and says so.
+    entry.report?.unswept.push({ root: "(the sweep)", why: `it failed: ${err instanceof Error ? err.message.slice(0, 200) : String(err)}` });
+  }
+  // The literal paths missing at the start, what was swapped, and what was made new: moved aside, never deleted when
+  // they can't be (any may be the person's own), each failure said.
+  const notMoved = entry.report ? { notMoved: entry.report.notMoved } : {};
+  const quarantined = quarantinePlanted(entry.unheld, entry.quarantineRoot, notMoved);
+  const swapped = swappedHeld(entry.held ?? []);
+  const more = quarantinePlanted([...swapped, ...made].filter((u) => !quarantined.includes(u.path)), entry.quarantineRoot, notMoved);
+  quarantined.push(...more);
+  // The sweep's opened folders get their old modes back, now that the moves out of them are done.
+  try { entry.report?.afterMoves?.(); } catch { /* a folder gone meanwhile */ }
   if (keepRecord) return quarantined;
   if (entry.record !== undefined) rmSync(entry.record, { force: true });
   const own = new Set([...live.values()].flatMap((r) => (r.record !== undefined ? [r.record] : [])));
@@ -358,7 +447,7 @@ export function recoverCrashedLinuxRuns(quarantineRoot: string | undefined, chec
         && facts.protectedPaths.has(u.path) && u.anchor !== u.path && within(u.path, u.anchor)
         && facts.roots.some((r) => within(u.anchor, r)));
       const kept: string[] = [];
-      out.push(...quarantinePlanted(unheld, quarantineRoot, { removeWhenStuck: false, kept }));
+      out.push(...quarantinePlanted(unheld, quarantineRoot, { kept }));
       if (kept.length > 0) log?.(`sandbox: a crashed run's protected paths stay where they are (the quarantine folder can't be used): ${kept.join(", ")}`);
       const made = (Array.isArray(run.made) ? run.made : []).filter((m): m is string =>
         typeof m === "string" && !facts.roots.includes(m) && [...facts.folders].some((f) => f === m || f.startsWith(`${m}/`))
