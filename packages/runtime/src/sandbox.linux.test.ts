@@ -110,34 +110,38 @@ describe("a host's command under real bubblewrap (Linux)", () => {
 
 describe("a repository and the run-later names a command makes itself (Linux): what stays, what is moved aside, what it is told", () => {
   const GIT = "git -c user.email=t@example.invalid -c user.name=t";
-  linuxTest("git init, add, commit: the repository works in the next command; its hooks and config were moved aside, and said", async () => {
+  linuxTest("a host that denies every .git: a command's git init ends with the whole new .git moved aside, its files kept, the line said", async () => {
     const home = temp("sbx-git-init-");
     const work = join(home, "work");
     mkdirSync(work, { recursive: true });
     const r = await hostRun(`mkdir proj && cd proj && git init -q && echo a > f && git add f && ${GIT} commit -qm one && echo done`, { cwd: work, roots: [work], home });
     expect(r.out).toContain("done");
-    expect(existsSync(join(work, "proj", ".git", "HEAD"))).toBe(true);
-    expect(existsSync(join(work, "proj", ".git", "hooks"))).toBe(false);
-    expect(existsSync(join(work, "proj", ".git", "config"))).toBe(false);
-    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git", "hooks")}: moved to`);
-    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git", "config")}: moved to`);
-    const next = await hostRun("cd proj && git status --short && git log --oneline | wc -l", { cwd: work, roots: [work], home });
-    expect(next.exitCode).toBe(0);
-    expect(next.out.trim()).toBe("1");
+    expect(existsSync(join(work, "proj", ".git"))).toBe(false);
+    expect(readFileSync(join(work, "proj", "f"), "utf8")).toBe("a\n");
+    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git")}: moved to`);
+    expect(r.err).toContain("a repository can't be made at a protected path inside the sandbox");
   });
 
-  linuxTest("git clone of a local bare repository: git log works in the next command; hooks and config moved aside", async () => {
-    const home = temp("sbx-git-clone-");
+  linuxTest("a host that denies only .git/hooks: only the hooks are moved aside, and git works in the next command", async () => {
+    const home = temp("sbx-git-hooks-");
     const work = join(home, "work");
     const src = join(home, "src");
     mkdirSync(work, { recursive: true });
-    expect(spawnSync("bash", ["-c", `git init -q --bare ${JSON.stringify(join(src, "b.git"))} && git init -q ${JSON.stringify(join(src, "w"))} && cd ${JSON.stringify(join(src, "w"))} && echo a > f && git add f && ${GIT} commit -qm one && git push -q ${JSON.stringify(join(src, "b.git"))} HEAD:main`]).status).toBe(0);
-    const r = await hostRun(`git clone -q ${JSON.stringify(join(src, "b.git"))} x && echo done`, { cwd: work, roots: [work], home });
+    const settings: SandboxSettings = { filesystem: { allowWrite: [work], denyWrite: ["/**/.git/hooks"] } };
+    const r = await hostRun(`mkdir proj && cd proj && git init -q && echo a > f && git add f && ${GIT} commit -qm one && echo done`, { cwd: work, roots: [work], home, settings });
     expect(r.out).toContain("done");
-    expect(existsSync(join(work, "x", "f"))).toBe(true);
-    expect(existsSync(join(work, "x", ".git", "hooks"))).toBe(false);
-    const next = await hostRun("cd x && git log --oneline | wc -l", { cwd: work, roots: [work], home });
+    expect(existsSync(join(work, "proj", ".git", "hooks"))).toBe(false);
+    expect(existsSync(join(work, "proj", ".git", "config"))).toBe(true);
+    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git", "hooks")}: moved to`);
+    const next = await hostRun("cd proj && git status --short && git log --oneline | wc -l", { cwd: work, roots: [work], home, settings });
+    expect(next.exitCode).toBe(0);
     expect(next.out.trim()).toBe("1");
+    // And a clone of a local bare repository: its history works in the next command, its hooks gone.
+    expect(spawnSync("bash", ["-c", `git init -q --bare ${JSON.stringify(join(src, "b.git"))} && git init -q ${JSON.stringify(join(src, "w"))} && cd ${JSON.stringify(join(src, "w"))} && echo a > f && git add f && ${GIT} commit -qm one && git push -q ${JSON.stringify(join(src, "b.git"))} HEAD:main`]).status).toBe(0);
+    const c = await hostRun(`git clone -q ${JSON.stringify(join(src, "b.git"))} x && echo done`, { cwd: work, roots: [work], home, settings });
+    expect(c.out).toContain("done");
+    expect(existsSync(join(work, "x", ".git", "hooks"))).toBe(false);
+    expect((await hostRun("cd x && git log --oneline | wc -l", { cwd: work, roots: [work], home, settings })).out.trim()).toBe("1");
   });
 
   linuxTest("a new .husky, .envrc, .mcp.json and .vscode/tasks.json: each moved aside whole at the end, one line each", async () => {

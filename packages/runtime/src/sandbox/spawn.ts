@@ -551,8 +551,7 @@ export const MOVED_ASIDE_NOTE_CAP = 20;
 /** What the command is told about the paths moved aside at its end: one plain line per path (capped), with why and where
  *  it went, so a command that wrote one doesn't try again unaware. */
 export function movedAsideNote(paths: readonly string[], quarantineRoot: string | undefined): string {
-  const why = (p: string) => /\.git\/hooks$/.test(p) ? "a repository's hooks run later, outside the sandbox; the repository itself stays"
-    : /\.git\/config$/.test(p) ? "a repository's config can name programs git runs; the repository stays and works without it"
+  const why = (p: string) => /\.git$/.test(p) ? "a repository can't be made at a protected path inside the sandbox"
     : "it runs later, outside the sandbox";
   const where = quarantineRoot === undefined ? "removed" : `moved to ${quarantineRoot}`;
   const lines = paths.slice(0, MOVED_ASIDE_NOTE_CAP).map((p) => `[sandbox] ${p}: ${where} at the command's end (${why(p)}); writing it again is moved aside again`);
@@ -694,14 +693,8 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
       if (startHeld.has(d) || !lexists(d)) continue;
       const root = rootOf(d);
       if (root === undefined) continue;
-      // A repository the command made (`git init`, `git clone`): only what makes git run something later is moved
-      // aside, its `hooks` folder and its `config` (core.hooksPath, core.fsmonitor, aliases, filters name programs); the
-      // objects, refs and HEAD stay, so the repository keeps working (git reads no config as the defaults). A `.git` that
-      // is a file (a `gitdir:` pointer) or a link is moved whole, as is every other new match (a `.husky`, a `.envrc`).
-      if (/\.git$/.test(d) && isRealDir(d)) {
-        for (const part of ["hooks", "config"]) if (lexists(join(d, part))) out.push({ path: join(d, part), anchor: root });
-        continue;
-      }
+      // Exactly what the host's deny patterns match, whole: a host that denies every `.git` gets a new repository moved
+      // aside (as its macOS sandbox refuses making one), a host that denies only `.git/hooks` gets only the hooks.
       out.push({ path: d, anchor: root });
     }
     return out;
