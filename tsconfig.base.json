@@ -85,6 +85,9 @@
       ],
       "@waifucave/clover-agent-runtime/lookalike": [
         "./packages/runtime/src/context/lookalike-fold.ts"
+      ],
+      "@waifucave/clover-agent-runtime/sandbox": [
+        "./packages/runtime/src/sandbox.ts"
       ]
     }
   }

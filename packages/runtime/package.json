@@ -67,6 +67,11 @@
       "types": "./dist/context/lookalike-fold.d.ts",
       "bun": "./src/context/lookalike-fold.ts",
       "default": "./dist/context/lookalike-fold.js"
+    },
+    "./sandbox": {
+      "types": "./dist/sandbox.d.ts",
+      "bun": "./src/sandbox.ts",
+      "default": "./dist/sandbox.js"
     }
   },
   "files": [
@@ -121,6 +126,10 @@
       "./lookalike": {
         "types": "./dist/context/lookalike-fold.d.ts",
         "default": "./dist/context/lookalike-fold.js"
+      },
+      "./sandbox": {
+        "types": "./dist/sandbox.d.ts",
+        "default": "./dist/sandbox.js"
       }
     }
   },
