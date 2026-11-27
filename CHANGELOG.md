@@ -4,6 +4,21 @@ All notable changes to the Winter Agent SDK are recorded here. Versions follow t
 `VERSION` file (bumped via `bun run version:bump`, synced via `bun run version:sync`); each entry
 corresponds to one `chore(release): vX.Y.Z` commit.
 
+## 0.0.92
+
+### Linux sandbox: a working folder inside a root that can't be walked stays writable, and a dropped root is always said
+
+- Fixed (0.0.90, 0.0.91): a write root whose own walk finished was dropped when a root that contains it couldn't be
+  walked within its share (a project at `~/Projects/app` under a very large `~/Projects`), so a command's own working
+  folder came up read-only. Now a root drops only when an unfinished walk lies at it or inside it; a root inside an
+  unfinished walk is kept when its own walk finished and covered every pattern of the outer walk that can match in
+  it. The outer root stays read-only, the inner one is bound writable inside it.
+- Fixed: the "not writable this run" line was said only when the command failed. The dropped roots are now on every
+  result (`notWritable`), and Bash says them in its note outside the output cap whatever the exit code.
+- The opt-in end sweep (`sweepRoots`) also covers a kept writable root that lies inside a dropped swept root.
+- A writable root bound back inside a read-denied folder gets its held (read-only) entries and its read denies
+  mounted again after that bind, so they are no longer covered by it.
+
 ## 0.0.91
 
 ### A host entry for the Linux sandbox (`./sandbox`), and what a command leaves behind
