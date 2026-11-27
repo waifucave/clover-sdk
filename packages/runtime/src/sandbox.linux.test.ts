@@ -23,12 +23,15 @@ const temp = (p: string) => { const d = realpathSync(mkdtempSync(join(tmpdir(), 
 /** A host's held names, as MOSS draws them for a command's folder on Linux (one `/**` pattern per name). */
 const HELD = ["/**/*.git", "/**/.husky", "/**/.githooks", "/**/.envrc", "/**/.vscode"];
 
-/** A command as a host runs it: its settings, its roots, the entry's own input builder. */
+/** A command as a host runs it: its settings, its roots, the entry's own input builder. The working folder is one of
+ *  the roots (the runtime makes it writable). */
 async function hostRun(command: string, o: { cwd: string; roots: string[]; home: string; settings?: SandboxSettings }) {
   const settings: SandboxSettings = o.settings ?? { filesystem: { allowWrite: o.roots, denyWrite: HELD } };
   const inputs = buildHostSandboxRunInputs({ cwd: o.cwd, env: { ...process.env, TMPDIR: o.roots[0]! }, settings, writableRoots: o.roots, home: o.home });
   let out = "", err = "";
   const r = await runCommand({ ...inputs, command, timeoutMs: 30_000, onStdout: (c) => { out += c.toString(); }, onStderr: (c) => { err += c.toString(); } });
+  // It ran sandboxed, never plain.
+  expect(r.posture).toBe("sandboxed");
   return { ...r, out, err };
 }
 
@@ -64,8 +67,8 @@ describe("a host's command under real bubblewrap (Linux)", () => {
     const work = join(home, "work");
     mkdirSync(join(work, "proj", ".git", "hooks"), { recursive: true });
     writeFileSync(join(work, "proj", ".git", "config"), "ORIGINAL\n");
-    const cmd = "cd work && mv proj proj-old 2>/dev/null; mkdir -p proj/.git/hooks 2>/dev/null; echo PLANTED > proj/.git/hooks/post-checkout 2>/dev/null; echo PLANTED > proj/.git/config 2>/dev/null; echo done";
-    const r = await hostRun(cmd, { cwd: home, roots: [work], home });
+    const cmd = "mv proj proj-old 2>/dev/null; mkdir -p proj/.git/hooks 2>/dev/null; echo PLANTED > proj/.git/hooks/post-checkout 2>/dev/null; echo PLANTED > proj/.git/config 2>/dev/null; echo done";
+    const r = await hostRun(cmd, { cwd: work, roots: [work], home });
     expect(r.out).toContain("done");
     // The repository's own .git keeps its config, wherever its folder now is, and no hook or config written by the
     // command is left at a .git path.
@@ -79,8 +82,8 @@ describe("a host's command under real bubblewrap (Linux)", () => {
     const home = temp("sbx-entry-plant-");
     const work = join(home, "work");
     mkdirSync(work, { recursive: true });
-    const cmd = "cd work && mkdir -p sub/.git/hooks && echo PLANTED > sub/.git/hooks/post-checkout; mkdir -p sub/.husky && echo PLANTED > sub/.husky/pre-commit; echo kept > sub/notes.txt; echo done";
-    const r = await hostRun(cmd, { cwd: home, roots: [work], home });
+    const cmd = "mkdir -p sub/.git/hooks && echo PLANTED > sub/.git/hooks/post-checkout; mkdir -p sub/.husky && echo PLANTED > sub/.husky/pre-commit; echo kept > sub/notes.txt; echo done";
+    const r = await hostRun(cmd, { cwd: work, roots: [work], home });
     expect(r.out).toContain("done");
     expect(readFileSync(join(work, "sub", "notes.txt"), "utf8")).toBe("kept\n");
     expect(existsSync(join(work, "sub", ".git", "hooks", "post-checkout"))).toBe(false);
@@ -95,8 +98,8 @@ describe("a host's command under real bubblewrap (Linux)", () => {
     const server = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } });
     try {
       const outside = join(home, "outside.txt");
-      const cmd = `echo x > ${JSON.stringify(outside)} 2>/dev/null; echo y > work/inside.txt; (exec 3<>/dev/tcp/127.0.0.1/${server.port}) 2>/dev/null && echo REACHED || echo NO-NETWORK`;
-      const r = await hostRun(cmd, { cwd: home, roots: [work], home });
+      const cmd = `echo x > ${JSON.stringify(outside)} 2>/dev/null; echo y > inside.txt; (exec 3<>/dev/tcp/127.0.0.1/${server.port}) 2>/dev/null && echo REACHED || echo NO-NETWORK`;
+      const r = await hostRun(cmd, { cwd: work, roots: [work], home });
       expect(existsSync(outside)).toBe(false);
       expect(readFileSync(join(work, "inside.txt"), "utf8")).toBe("y\n");
       expect(r.out).toContain("NO-NETWORK");
