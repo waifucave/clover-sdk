@@ -14,7 +14,7 @@ import { accessSync, closeSync, constants as fsConstants, existsSync, lstatSync,
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
-import { anchorOf, beginLinuxRun, lexists, recoverCrashedLinuxRuns, type HeldPath, type UnheldPath } from "./linux-runs.ts";
+import { anchorOf, beginLinuxRun, heldPathOf, lexists, recoverCrashedLinuxRuns, type HeldPath, type UnheldPath } from "./linux-runs.ts";
 export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
 import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, findBwrap, perCommandExpander, heldFolderNote, unixSocketFilter, walkSizes } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
@@ -649,14 +649,16 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     rmSync(dir, { recursive: true, force: true });
   }
   const args = [...plan.args, "--", "/bin/bash", "-c", opts.command];
-  // Every held match inside a write root, by its identity now (device, inode): at the command's end anything at one of
-  // these paths that is another entry (the rename: the real one moved away, a new one made in its place) is moved aside,
-  // whatever the mounts held (`linux-runs.ts` `swappedHeld`).
+  // Every held match inside a write root, by its identity now (device, inode) and its parent's: at the command's end an
+  // entry at one of these paths under another parent (the rename: a new folder at the old path), or another folder in the
+  // same parent, is moved aside, whatever the mounts held; a person's atomic save of a held file is left alone
+  // (`linux-runs.ts` `swappedHeld`).
   const inRoot = (p: string) => lists.writableRoots.some((r) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`));
   const held: HeldPath[] = [];
   for (const d of lists.denyWrite) {
     if (!inRoot(d)) continue;
-    try { const st = lstatSync(d); held.push({ path: d, dev: st.dev, ino: st.ino }); } catch { /* not there: an unheld path, checked as one */ }
+    const h = heldPathOf(d);
+    if (h !== undefined) held.push(h); // not there: an unheld path, checked as one
   }
   return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, failed, made, quarantineRoot };
 }

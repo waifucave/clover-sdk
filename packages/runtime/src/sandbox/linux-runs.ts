@@ -23,23 +23,41 @@ import { removePlanned } from "../tools/no-follow-write.ts";
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
 export interface UnheldPath { path: string; anchor: string }
 
-/** A held match that existed when the run started, by its identity then (device, inode). */
-export interface HeldPath { path: string; dev: number; ino: number }
+/** A held match that existed when the run started, by its identity then (device, inode), and its parent folder's. */
+export interface HeldPath { path: string; dev: number; ino: number; parentDev: number; parentIno: number }
+
+/** A held path as it is now, with its parent's identity: what `swappedHeld` compares at the end. */
+export function heldPathOf(path: string): HeldPath | undefined {
+  try {
+    const st = lstatSync(path);
+    const parent = lstatSync(dirname(path));
+    return { path, dev: st.dev, ino: st.ino, parentDev: parent.dev, parentIno: parent.ino };
+  } catch {
+    return undefined;
+  }
+}
 
 /**
- * The held paths where, at the command's end, there is another entry than the one there at its start: the rename (the
- * real `.git` moved away with its folder, a new one made at its path). Each comes back as an unheld path anchored at its
- * parent, so `quarantinePlanted` moves it aside (into the quarantine folder, its parent's identity checked as for any
- * plant). This does not rest on the mounts: whatever they held, a swapped entry at a held path doesn't stay. A held path
- * that is gone now (the real one moved away and nothing made in its place) has nothing to move.
+ * The held paths swapped during the command: the rename (the real `.git` moved away with its folder, a new folder made
+ * at the old path, a new `.git` in it). That always gives the held path a NEW PARENT, so an entry there whose parent is
+ * another folder than at the start is moved aside, as is a held FOLDER that is another folder in the same parent. A held
+ * FILE that is another file in the same parent is left alone: that is a person's own change made while a command ran (an
+ * editor's atomic save of `.envrc` or `.mcp.json`, `git config` rewriting `.git/config`), never the command's, which
+ * can't replace it: every held file is bound read-only onto itself (linux-bwrap.ts `buildBwrapPlan`:
+ * `a.push("--ro-bind", d, d)` for each existing deny path), so a rename over it or an unlink of it fails with EBUSY,
+ * and the folders between a root and it are mount points (the ancestor-rename fence). Each one moved comes back as an
+ * unheld path anchored at its parent, so `quarantinePlanted` moves it aside (into the quarantine folder, its parent's
+ * identity checked as for any plant). A held path that is gone now has nothing to move.
  */
 export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
   const out: UnheldPath[] = [];
   for (const h of held) {
-    let st;
-    try { st = lstatSync(h.path); } catch { continue; }
-    if (st.dev === h.dev && st.ino === h.ino) continue;
-    out.push({ path: h.path, anchor: dirname(h.path) });
+    const now = heldPathOf(h.path);
+    if (now === undefined || (now.dev === h.dev && now.ino === h.ino)) continue;
+    const newParent = now.parentDev !== h.parentDev || now.parentIno !== h.parentIno;
+    let folder = false;
+    try { const st = lstatSync(h.path); folder = st.isDirectory() && !st.isSymbolicLink(); } catch { continue; }
+    if (newParent || folder) out.push({ path: h.path, anchor: dirname(h.path) });
   }
   return out;
 }
