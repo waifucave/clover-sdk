@@ -296,6 +296,22 @@ describe("linuxSandboxListsFor: a walk that can't finish (fails closed)", () => 
     const fine = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w"] } as Parameters<typeof linuxSandboxListsFor>[0], (_p, regexes) => regexes.map(() => []));
     expect(fine.notHeld).toBeUndefined();
   });
+
+  test("a working folder INSIDE a root whose walk can't finish stays writable when its own walk finished; the outer root drops", () => {
+    // ~/Projects (huge: its walk stops) holding the bot's project ~/Projects/app (walked whole), both write roots.
+    const host = { denyWriteRegexes: ["^/h/(.*/)?\\.husky(/.*)?$"], denyWriteGlobFixedPrefixes: ["/h"] };
+    const lists = linuxSandboxListsFor({ cwd: "/h/Projects/app", writableRoots: ["/h/Projects/app", "/h/Projects"], ...host } as Parameters<typeof linuxSandboxListsFor>[0],
+      (prefix, regexes) => ({ found: regexes.map(() => []), complete: prefix !== "/h/Projects" && prefix !== "/h" }));
+    expect(lists.writableRoots).toEqual(["/h/Projects/app"]);
+    expect(lists.notHeld).toEqual([{ root: "/h/Projects", prefix: "/h/Projects" }]);
+  });
+
+  test("a root inside an unfinished walk whose own walk wasn't asked every pattern of it (the working folder's protections) drops too", () => {
+    const lists = linuxSandboxListsFor({ cwd: "/w", writableRoots: ["/w", "/w/sub"] } as Parameters<typeof linuxSandboxListsFor>[0],
+      (prefix, regexes) => ({ found: regexes.map(() => []), complete: prefix !== "/w" }));
+    expect(lists.writableRoots).toEqual([]);
+    expect(lists.notHeld?.map((n) => n.root).sort()).toEqual(["/w", "/w/sub"]);
+  });
 });
 
 describe("linuxSandboxListsFor (the Seatbelt profile's policy as paths)", () => {

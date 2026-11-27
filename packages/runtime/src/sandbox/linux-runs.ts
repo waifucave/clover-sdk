@@ -84,6 +84,8 @@ export interface RunReport {
   notMoved: { path: string; why: string }[];
   /** A swept root the end-of-run sweep couldn't read through, and why: a new match there may have stayed. */
   unswept: { root: string; why: string }[];
+  /** The write roots this command's sandbox didn't hold writable (their walk couldn't finish). */
+  notWritable?: string[];
   /** Run once after the end's moves (the sweep puts back the modes of the folders it opened). Not data. */
   afterMoves?: () => void;
 }

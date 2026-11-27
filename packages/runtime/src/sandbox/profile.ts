@@ -1223,9 +1223,20 @@ export function linuxSandboxListsFor(
     if (!Array.isArray(got) && !got.complete) unfinished.push(prefix);
     list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });
   }
-  const overlaps = (a: string, b: string) => a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
+  // A root is dropped when a walk that couldn't finish lies AT it or INSIDE it: something in it went unread. A root that
+  // lies INSIDE an unfinished walk (the working folder inside a home's big top folder, both write roots) is kept when its
+  // own walk finished and asked every pattern of that outer walk that can match in it: what it holds is then known whole
+  // (`expandUnder` queues a pattern under each write root it can match in). Else it is dropped too (a pattern asked only
+  // at the outer prefix, like the working folder's own protections asked under the working folder alone, left it unread).
+  // The outer root is dropped (read-only); the inner one is bound writable inside it.
+  const within = (p: string, r: string) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`);
+  const walkedWhole = (root: string, outer: string): boolean => {
+    if (unfinished.includes(root)) return false;
+    const mine = new Set((wanted.get(root) ?? []).map((w) => w.re));
+    return (wanted.get(outer) ?? []).every((w) => !mayMatchUnder(regexAnchorDir(w.re.source), root) || mine.has(w.re));
+  };
   const notHeld = roots.flatMap((root) => {
-    const prefix = unfinished.find((u) => overlaps(root, u));
+    const prefix = unfinished.find((u) => within(u, root)) ?? unfinished.find((u) => within(root, u) && !walkedWhole(root, u));
     return prefix === undefined ? [] : [{ root, prefix }];
   });
   if (notHeld.length > 0) {

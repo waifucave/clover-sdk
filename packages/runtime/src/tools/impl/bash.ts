@@ -41,6 +41,7 @@ import {
   sandboxUnavailableMessage,
   movedAsideNote,
   notePath,
+  notWritableLine,
   type RunCommandResult,
 } from "../../sandbox/spawn.ts";
 import { adoptLeftBehind, leftBehindNote } from "./left-behind.ts";
@@ -331,8 +332,11 @@ function capOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", raw: 
  * Linux (#74's review B1): the protected paths this command's sandbox couldn't hold -- they didn't exist, so no mount
  * covers them -- and what the command made at any of them, moved aside at its end. Empty when there is nothing to say.
  */
-export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined, end: { quarantineRoot?: string; notMoved?: { path: string; why: string }[]; unswept?: { root: string; why: string }[] } = {}): string {
+export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined, end: { quarantineRoot?: string; notMoved?: { path: string; why: string }[]; unswept?: { root: string; why: string }[]; notWritable?: string[] } = {}): string {
   const lines: string[] = [];
+  // The write roots this command couldn't write (their walk unfinished): said for every command, its exit 0 too.
+  const dropped = notWritableLine(end.notWritable ?? []);
+  if (dropped !== "") lines.push(dropped);
   if (unheld !== undefined && unheld.length > 0) lines.push(`[sandbox: not held (missing, checked at the command's end): ${unheld.map(notePath).join(", ")}]`);
   // What was moved aside, what couldn't be and what couldn't be swept: one line each, here OUTSIDE the command's capped
   // output (sandbox/spawn.ts `movedAsideNote`), so a chatty command can't push them out.
