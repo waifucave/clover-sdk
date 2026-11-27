@@ -611,6 +611,9 @@ export function sweepExpander(roots: readonly string[], unswept: { root: string;
   const opened: { fd: number; mode: number }[] = [];
   const openToRead = (dir: string): boolean => {
     if (process.platform !== "linux" || uid < 0) return false;
+    // Past its cap a sweep opens no more (a command making 100,000 folders at 0500 can't drive the engine out of
+    // descriptors): the folder is left unread, and its root said unswept.
+    if (opened.length >= SWEEP_OPENED_MAX) return false;
     let fd: number | undefined;
     try {
       fd = openSync(dir, O_PATH | fsConstants.O_NOFOLLOW | fsConstants.O_DIRECTORY);
@@ -635,7 +638,9 @@ export function sweepExpander(roots: readonly string[], unswept: { root: string;
       return undefined;
     }
     if (!st.isDirectory()) return [];
-    if ((st.mode & 0o700) !== 0o700 && st.uid === uid) openToRead(dir);
+    if ((st.mode & 0o700) !== 0o700 && st.uid === uid && !openToRead(dir) && opened.length >= SWEEP_OPENED_MAX) {
+      miss(dir, `more folders in it were closed to their owner than one command's end opens (${SWEEP_OPENED_MAX})`);
+    }
     try { return readdirSync(dir); } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === "ENOENT" || code === "ENOTDIR") return [];
@@ -688,6 +693,8 @@ export function sweepExpander(roots: readonly string[], unswept: { root: string;
 /** Linux's O_PATH (the same on x64 and arm64): a handle to a folder without reading it, so one can be had for a folder
  *  without read permission. */
 const O_PATH = 0o10000000;
+/** How many folders one sweep opens (and holds until its restore) at most. */
+export const SWEEP_OPENED_MAX = 256;
 
 /** Whether `path` is a real folder (not a link to one). */
 function isRealDir(path: string): boolean {
@@ -949,7 +956,11 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   const hostFloor = currentHostChildFloorProfile();
   if (hostFloor || (opts.mandatoryFloor && hasMandatoryFloor(opts.mandatoryFloor))) {
     // The host floors are Seatbelt profiles: macOS only.
-    if (process.platform !== "darwin" || !isSandboxAvailable()) throw new SandboxUnavailableError("mandatory host control floor unavailable");
+    if (process.platform !== "darwin" || !isSandboxAvailable()) {
+      // Nothing started: the Linux plan's seccomp descriptor is let go (held entries keep no handle).
+      if (seccompFd !== undefined) closeSync(seccompFd);
+      throw new SandboxUnavailableError("mandatory host control floor unavailable");
+    }
     const profiles = [hostFloor, opts.mandatoryFloor && hasMandatoryFloor(opts.mandatoryFloor) ? buildMandatoryFloorProfile(opts.mandatoryFloor) : undefined].filter((value): value is string => value !== undefined);
     const floor = profiles[0]! + profiles.slice(1).map(value => `\n${value.split("\n").slice(2).join("\n")}`).join("");
     profile = profile === undefined ? floor : `${profile}\n${floor.split("\n").slice(2).join("\n")}`;

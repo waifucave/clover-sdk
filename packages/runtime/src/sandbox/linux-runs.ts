@@ -67,7 +67,10 @@ export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
   for (const h of held) {
     const now = heldPathOf(h.path);
     // The same entry: its device, inode number and kind, and a link's target (`heldPathOf`).
-    if (now === undefined || (now.dev === h.dev && now.ino === h.ino && now.kind === h.kind && now.target === h.target)) continue;
+    if (now === undefined) continue;
+    // A link whose target couldn't be read (at the start or now) can't be told apart: moved aside (fails closed).
+    const unsure = h.kind === "link" && (h.target === undefined || now.target === undefined);
+    if (!unsure && now.dev === h.dev && now.ino === h.ino && now.kind === h.kind && now.target === h.target) continue;
     const sameParent = now.parentDev === h.parentDev && now.parentIno === h.parentIno;
     if (h.kind === "file" && sameParent) continue;
     out.push({ path: h.path, anchor: dirname(h.path) });

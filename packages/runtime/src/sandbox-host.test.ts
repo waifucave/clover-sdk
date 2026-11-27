@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 import { commandSandboxAvailable, movedAsideNote, notePath, runCommand, SandboxUnavailableError } from "@waifucave/clover-agent-runtime/sandbox";
 import { installHostCodeProcessClient, type HostCodeProcessClient } from "./sandbox/host-code-process.ts";
 import { beginLinuxRun, heldPathOf, quarantineName, resetLinuxRunsForTest, swappedHeld, type HeldPath, type RunReport } from "./sandbox/linux-runs.ts";
-import { sweepExpander } from "./sandbox/spawn.ts";
+import { SWEEP_OPENED_MAX, sweepExpander } from "./sandbox/spawn.ts";
 
 const temps: string[] = [];
 afterAll(() => {
@@ -258,6 +258,17 @@ describe("the end-of-run sweep (sweepRoots): honest about what it couldn't read"
     expect(unswept).toEqual([]);
     sweep.restore();
     expect(lstatSync(join(root, "sub")).mode & 0o777).toBe(0o400);
+  });
+
+  test.skipIf(!linuxOwner)("past its cap of opened folders the sweep opens no more: the root is said unswept, and every opened one is restored", () => {
+    const root = temp("sbx-sweep-cap-");
+    for (let i = 0; i < SWEEP_OPENED_MAX + 20; i++) { mkdirSync(join(root, `f${i}`)); chmodSync(join(root, `f${i}`), 0o500); }
+    const unswept: { root: string; why: string }[] = [];
+    const sweep = sweepExpander([root], unswept);
+    sweep(root, MATCH);
+    expect(unswept).toEqual([{ root, why: `more folders in it were closed to their owner than one command's end opens (${SWEEP_OPENED_MAX})` }]);
+    sweep.restore();
+    for (let i = 0; i < SWEEP_OPENED_MAX + 20; i++) expect(lstatSync(join(root, `f${i}`)).mode & 0o777).toBe(0o500);
   });
 
   test.skipIf(!linuxOwner)("a link swapped in for a folder is never chmod'ed through: what it points at keeps its mode", () => {
