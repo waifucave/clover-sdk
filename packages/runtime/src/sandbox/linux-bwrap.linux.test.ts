@@ -8,7 +8,7 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, symlinkSync, mkdtempSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { commandSandboxAvailable, isSandboxAvailable, linuxHostConfinement, linuxSandboxReady, linuxUnheldProtectedPaths, runCommand, SandboxUnavailableError } from "./spawn.ts";
+import { commandSandboxAvailable, isSandboxAvailable, linuxHostConfinement, linuxSandboxReady, linuxUnheldProtectedPaths, movedAsideNote, runCommand, SandboxUnavailableError } from "./spawn.ts";
 import { findBwrap, bwrapHasDisableUserns } from "./linux-bwrap.ts";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
 import { buildHostCodePermissionContext, type HostCodePermissionSnapshot } from "../permissions/host-code.ts";
@@ -148,7 +148,9 @@ describe("the Linux sandbox (bubblewrap)", () => {
     const r2 = await run("mkdir -p .git/hooks && echo x > .git/hooks/pre-commit && echo made", bare, { home });
     expect(r2.out).toContain("made");
     expect(r2.quarantined).toEqual([join(bare, ".git", "hooks")]);
-    expect(r2.err).toContain("moved aside");
+    // Said outside the command's own output now (Bash's note, `movedAsideNote`), never on its stderr.
+    expect(r2.err).not.toContain(": moved to");
+    expect(movedAsideNote(r2.quarantined ?? [], r2.quarantineRoot)).toContain(`[sandbox] ${join(bare, ".git", "hooks")}: moved to`);
     expect(existsSync(join(bare, ".git", "hooks"))).toBe(false);
     expect(readdirSync(join(home, ".winter", "quarantine")).length).toBeGreaterThan(0);
   });
