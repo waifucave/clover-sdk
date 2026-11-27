@@ -136,6 +136,22 @@ describe("a working folder inside a root whose walk can't finish (Linux): the wo
     expect(entry.notWritableLine(r.notWritable ?? [])).toContain(`not writable this run, too large to check for protected paths`);
   });
 
+  linuxTest("swept: a peer's folder whose walk can't finish is dropped, and the working folder kept inside it is still swept", async () => {
+    // Command 1 left a folder 18 deep in the peer's folder F; command 2 runs in F/sub (kept writable inside the dropped
+    // F) and makes a repository there: it must be swept and moved aside, never left unseen.
+    const home = temp("sbx-inner-sweep-");
+    const f = join(home, "F");
+    const sub = join(f, "sub");
+    mkdirSync(sub, { recursive: true });
+    mkdirSync(join(f, ...Array.from({ length: 18 }, (_, i) => `d${i}`)), { recursive: true });
+    const r = await hostRun("git init -q . && git config core.fsmonitor 'echo PLANTED' && echo done", { cwd: sub, roots: [f], home, sweep: [f] });
+    expect(r.out).toContain("done");
+    expect(r.notWritable).toEqual([f]);
+    expect(r.quarantined).toEqual([join(sub, ".git")]);
+    expect(existsSync(join(sub, ".git"))).toBe(false);
+    expect(r.unswept).toBeUndefined();
+  });
+
   linuxTest("a root inside an unfinished walk that its own walk didn't fully cover (the working folder's protections) is dropped too", async () => {
     const home = temp("sbx-inner2-");
     const work = join(home, "work");

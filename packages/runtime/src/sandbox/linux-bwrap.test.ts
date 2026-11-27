@@ -101,6 +101,32 @@ describe("buildBwrapPlan", () => {
     expect(s).not.toContain("/missing");
     expect(args.indexOf("/h/.clover/run")).toBeGreaterThan(args.indexOf("/w"));
   });
+
+  test("a root bound back inside a read deny gets its held entries and its own read denies mounted again AFTER it", () => {
+    // /h/proj is a write root inside a read-denied /h; it holds a held .git (write-denied) and a read-denied .env.
+    const fs = fakeFs(["/h", "/h/proj", "/h/proj/.git", "/h/proj/src"], ["/h/proj/.env", "/h/proj/.envrc"]);
+    const { args } = buildBwrapPlan({ ...base, writableRoots: ["/h/proj"], denyWrite: ["/h/proj/.git", "/h/proj/.envrc"], denyRead: ["/h", "/h/proj/.env"], cwd: "/h/proj", fs });
+    const s = args.join(" ");
+    const rebind = s.lastIndexOf("--bind /h/proj /h/proj");
+    expect(rebind).toBeGreaterThan(s.indexOf("--tmpfs /h"));
+    // Every write deny and read deny inside the root comes after its last bind-back: none is shadowed by it.
+    expect(s.lastIndexOf("--ro-bind /h/proj/.git /h/proj/.git")).toBeGreaterThan(rebind);
+    expect(s.lastIndexOf("--ro-bind /h/proj/.envrc /h/proj/.envrc")).toBeGreaterThan(rebind);
+    expect(s.lastIndexOf("--ro-bind /dev/null /h/proj/.env")).toBeGreaterThan(rebind);
+  });
+
+  test("an inner root bound writable inside a read-only outer (its walk dropped): the inner root's held entries are read-only after its bind", () => {
+    // The outer /h/Projects isn't a write root this run (#99: its walk didn't finish); /h/Projects/app is.
+    const fs = fakeFs(["/h", "/h/Projects", "/h/Projects/app", "/h/Projects/app/.git"], ["/h/Projects/app/.envrc"]);
+    const { args } = buildBwrapPlan({ ...base, writableRoots: ["/h/Projects/app"], denyWrite: ["/h/Projects/app/.git", "/h/Projects/app/.envrc", "/h/Projects/other/.git"], denyRead: [], cwd: "/h/Projects/app", fs });
+    const s = args.join(" ");
+    expect(pairs(args, "--bind")).toEqual(["/h/Projects/app"]);
+    const bind = s.indexOf("--bind /h/Projects/app /h/Projects/app");
+    expect(s.indexOf("--ro-bind /h/Projects/app/.git /h/Projects/app/.git")).toBeGreaterThan(bind);
+    expect(s.indexOf("--ro-bind /h/Projects/app/.envrc /h/Projects/app/.envrc")).toBeGreaterThan(bind);
+    // Outside the inner root nothing needs a mount: it is read-only already.
+    expect(s).not.toContain("/h/Projects/other");
+  });
 });
 
 describe("expandPatterns", () => {

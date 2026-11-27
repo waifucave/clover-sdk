@@ -830,7 +830,16 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   // just handed): at the end those roots are swept for the same patterns (`sweepNewMatches`) and every match that wasn't
   // there at the start is moved aside whole, walked down from its root (never through a link), never deleted.
   const startHeld = new Set(held.map((h) => h.path));
-  const sweep = (opts.sweepRoots ?? []).map((r) => canonicalizePath(r)).filter((r) => lists.writableRoots.some((w) => r === w || r.startsWith(w.endsWith("/") ? w : `${w}/`)));
+  // What is swept: each asked root that lies in a writable root, and each KEPT writable root that lies inside an asked
+  // one (an asked folder whose own walk didn't finish is dropped this run, read-only, but a root inside it the command
+  // could still write is swept). An asked root that is neither writable nor holds a kept root needs no sweep: nothing
+  // in it was writable, and it is on the result as not writable already.
+  const under = (p: string, r: string) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`);
+  const asked = (opts.sweepRoots ?? []).map((r) => canonicalizePath(r));
+  const sweep = [...new Set([
+    ...asked.filter((r) => lists.writableRoots.some((w) => under(r, w))),
+    ...lists.writableRoots.filter((w) => asked.some((r) => under(w, r))),
+  ])];
   const rescan = sweep.length === 0 ? undefined : (): UnheldPath[] => {
     const found = new Set<string>();
     const expand = sweepExpander(sweep, report.unswept, { writeRoots: lists.writableRoots });
