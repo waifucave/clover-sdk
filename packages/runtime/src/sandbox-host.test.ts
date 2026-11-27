@@ -21,8 +21,8 @@ afterAll(() => {
   }
 });
 const temp = (p: string) => { const d = realpathSync(mkdtempSync(join(tmpdir(), p))); temps.push(d); return d; };
-/** A held path as a run takes it: its handle kept (Linux), so a reused inode number can't pass for it. */
-const hp = (p: string) => heldPathOf(p, true);
+/** A held path as a run takes it. */
+const hp = (p: string) => heldPathOf(p);
 const base = (cwd: string) => ({ command: "", cwd, env: { ...process.env, TMPDIR: cwd }, timeoutMs: 20_000, writableRoots: [cwd], home: cwd });
 
 describe("requireSandboxed: refused before anything starts", () => {
@@ -165,6 +165,14 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     writeFileSync(join(root, ".husky", "pre-commit"), "PLANTED\n");
     expect(end().sort()).toEqual([join(root, ".husky"), join(root, ".zshrc")].sort());
     expect(existsSync(join(root, ".zshrc"))).toBe(false);
+    // A link replaced by another link (which may even reuse the inode number): told apart by its target.
+    resetLinuxRunsForTest();
+    symlinkSync(join(root, "dots", "zshrc"), join(root, ".envrc"));
+    const heldLink = [hp(join(root, ".envrc"))!];
+    const end2 = beginLinuxRun({ unheld: [], held: heldLink, quarantineRoot: quarantine, made: [] });
+    rmSync(join(root, ".envrc"));
+    symlinkSync("/tmp/elsewhere-planted", join(root, ".envrc"));
+    expect(end2()).toEqual([join(root, ".envrc")]);
     expect(existsSync(join(root, ".husky"))).toBe(false);
     // What the links pointed at is untouched.
     expect(readFileSync(join(root, "dots", "zshrc"), "utf8")).toBe("# mine\n");

@@ -16,7 +16,7 @@
 // quarantine folder must be a real folder (never a link), and nothing here ever deletes recursively.
 // The protected folders a run made before it started (`ensureProtectedFolders`) are removed at its end when they are
 // still empty and no other sandboxed run is live (none in this realm, no record of a live process).
-import { closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants as fsConstants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, readlinkSync, realpathSync, renameSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
@@ -24,41 +24,28 @@ export interface UnheldPath { path: string; anchor: string }
 
 /** A held match that existed when the run started: its identity then (device, inode), its kind then, and its parent
  *  folder's identity. */
-export interface HeldPath { path: string; dev: number; ino: number; kind: "file" | "dir" | "link" | "other"; parentDev: number; parentIno: number; fd?: number }
+export interface HeldPath { path: string; dev: number; ino: number; kind: "file" | "dir" | "link" | "other"; parentDev: number; parentIno: number; target?: string }
 
-/** Linux's O_PATH (the same on x64 and arm64): a handle on an entry, a link itself with O_NOFOLLOW, without reading it. */
-const O_PATH = 0o10000000;
-/** How many held entries one run keeps a handle on (past it, identity is by device, inode and kind alone). */
-export const HELD_HANDLES_MAX = 4_096;
-let heldHandles = 0;
-
-/** A held path as it is now, with its kind and its parent's identity: what `swappedHeld` compares at the end. With
- *  `hold` (Linux), the entry is also opened (O_PATH, no follow) and the handle kept for the run: while it is open the
- *  entry's inode can't be freed, so a new entry made at the path after `rm` can never reuse its number (ext4 hands a
- *  freed inode number straight to the next file) and pass for the old one. `releaseHeld` closes them. */
-export function heldPathOf(path: string, hold = false): HeldPath | undefined {
-  let fd: number | undefined;
+/**
+ * A held path as it is now, with its kind (a link's target too) and its parent's identity: what `swappedHeld` compares
+ * at the end. No handle is kept on it (nothing a run holds open can starve the engine of descriptors), so an inode
+ * NUMBER can be reused (ext4 hands a freed one straight to the next file): the identity is the number, the kind, and a
+ * link's target. That is enough for what a command can do: a held FILE or FOLDER is mounted read-only onto itself, and
+ * the folders above it are mount points, so the command can neither remove nor replace it (only the person can); a held
+ * LINK has no mount, so `rm` then a new entry at its path is the command's own swap, and a new entry with the same
+ * number differs in kind (a file, a folder) or, as another link, in its target. A link with the same number and the
+ * same target points where the old one did: nothing changed.
+ */
+export function heldPathOf(path: string): HeldPath | undefined {
   try {
-    if (hold && process.platform === "linux" && heldHandles < HELD_HANDLES_MAX) {
-      try { fd = openSync(path, O_PATH | fsConstants.O_NOFOLLOW); heldHandles++; } catch { fd = undefined; }
-    }
-    const st = fd !== undefined ? fstatSync(fd) : lstatSync(path);
+    const st = lstatSync(path);
     const parent = lstatSync(dirname(path));
     const kind = st.isSymbolicLink() ? "link" : st.isFile() ? "file" : st.isDirectory() ? "dir" : "other";
-    return { path, dev: st.dev, ino: st.ino, kind, parentDev: parent.dev, parentIno: parent.ino, ...(fd !== undefined ? { fd } : {}) };
+    let target: string | undefined;
+    if (kind === "link") { try { target = readlinkSync(path); } catch { target = undefined; } }
+    return { path, dev: st.dev, ino: st.ino, kind, parentDev: parent.dev, parentIno: parent.ino, ...(target !== undefined ? { target } : {}) };
   } catch {
-    if (fd !== undefined) { try { closeSync(fd); } catch { /* closed */ } heldHandles--; }
     return undefined;
-  }
-}
-
-/** Closes the handles `heldPathOf` kept for a run. */
-export function releaseHeld(held: readonly HeldPath[]): void {
-  for (const h of held) {
-    if (h.fd === undefined) continue;
-    try { closeSync(h.fd); } catch { /* closed */ }
-    heldHandles--;
-    delete h.fd;
   }
 }
 
@@ -79,8 +66,8 @@ export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
   const out: UnheldPath[] = [];
   for (const h of held) {
     const now = heldPathOf(h.path);
-    // The same entry: its device, inode and kind (with its handle held, an inode number can't have been reused).
-    if (now === undefined || (now.dev === h.dev && now.ino === h.ino && now.kind === h.kind)) continue;
+    // The same entry: its device, inode number and kind, and a link's target (`heldPathOf`).
+    if (now === undefined || (now.dev === h.dev && now.ino === h.ino && now.kind === h.kind && now.target === h.target)) continue;
     const sameParent = now.parentDev === h.parentDev && now.parentIno === h.parentIno;
     if (h.kind === "file" && sameParent) continue;
     out.push({ path: h.path, anchor: dirname(h.path) });
@@ -379,7 +366,6 @@ function finishRun(entry: LinuxRun & { record?: string }, keepRecord = false): s
   const notMoved = entry.report ? { notMoved: entry.report.notMoved } : {};
   const quarantined = quarantinePlanted(entry.unheld, entry.quarantineRoot, notMoved);
   const swapped = swappedHeld(entry.held ?? []);
-  releaseHeld(entry.held ?? []);
   const more = quarantinePlanted([...swapped, ...made].filter((u) => !quarantined.includes(u.path)), entry.quarantineRoot, notMoved);
   quarantined.push(...more);
   // The sweep's opened folders get their old modes back, now that the moves out of them are done.

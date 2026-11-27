@@ -805,7 +805,7 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report:
   const held: HeldPath[] = [];
   for (const d of lists.denyWrite) {
     if (!inRoot(d)) continue;
-    const h = heldPathOf(d, true); // its handle kept for the run: a reused inode number can't pass for it
+    const h = heldPathOf(d);
     if (h !== undefined) held.push(h); // not there: an unheld path, checked as one
   }
   // A match the command made itself (a new repository's `.git`, a `.husky` in a new folder): a pattern is expanded against
