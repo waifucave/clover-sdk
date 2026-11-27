@@ -207,6 +207,8 @@ export interface LinuxRun {
   unheld: UnheldPath[];
   /** The held matches inside the write roots, by their identity at the start (`swappedHeld` at the end). */
   held?: HeldPath[];
+  /** The matches the command made itself, found by walking the roots again at the end (in memory, never recorded). */
+  rescan?: () => UnheldPath[];
   quarantineRoot: string | undefined;
   /** The folders made for it before it started, top first. */
   made: string[];
@@ -308,7 +310,7 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
       record = join(dir, `${process.pid}-${id}-${Math.random().toString(16).slice(2, 10)}.json`);
       // The held identities stay in memory: a recovery recomputes only what the lists name and trusts no record's
       // identities (a crashed run's swapped entry is the known gap the mounts still cover).
-      const { held: _held, ...recorded } = run;
+      const { held: _held, rescan: _rescan, ...recorded } = run;
       writeFileSync(record, JSON.stringify({ ...recorded, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
     } catch {
       record = undefined;
@@ -327,7 +329,9 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
 }
 
 function finishRun(entry: LinuxRun & { record?: string }, keepRecord = false): string[] {
-  const quarantined = quarantinePlanted([...entry.unheld, ...swappedHeld(entry.held ?? [])], entry.quarantineRoot);
+  let made: UnheldPath[] = [];
+  try { made = entry.rescan?.() ?? []; } catch { /* a walk that fails moves nothing more */ }
+  const quarantined = quarantinePlanted([...entry.unheld, ...swappedHeld(entry.held ?? []), ...made], entry.quarantineRoot);
   if (keepRecord) return quarantined;
   if (entry.record !== undefined) rmSync(entry.record, { force: true });
   const own = new Set([...live.values()].flatMap((r) => (r.record !== undefined ? [r.record] : [])));

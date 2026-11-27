@@ -78,6 +78,20 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     expect(existsSync(join(root, "a", ".git"))).toBe(true);
   });
 
+  test("a match the command made itself (found by the end-of-run walk): moved aside from its root, never through a link", () => {
+    resetLinuxRunsForTest();
+    const root = temp("sbx-host-new-");
+    const quarantine = join(root, ".home", "quarantine");
+    const end = beginLinuxRun({ unheld: [], held: [], rescan: () => [{ path: join(root, "sub", ".git"), anchor: root }], quarantineRoot: quarantine, made: [] });
+    mkdirSync(join(root, "sub", ".git", "hooks"), { recursive: true });
+    writeFileSync(join(root, "sub", ".git", "hooks", "post-checkout"), "PLANTED\n");
+    writeFileSync(join(root, "sub", "notes.txt"), "kept\n");
+    expect(end()).toEqual([join(root, "sub", ".git")]);
+    expect(existsSync(join(root, "sub", ".git"))).toBe(false);
+    expect(readFileSync(join(root, "sub", "notes.txt"), "utf8")).toBe("kept\n");
+    expect(readdirSync(quarantine).length).toBe(1);
+  });
+
   test("a person's atomic save of a held file during the run (same parent, a new file): left where it is", () => {
     resetLinuxRunsForTest();
     const root = temp("sbx-host-save-");

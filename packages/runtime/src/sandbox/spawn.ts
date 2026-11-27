@@ -617,7 +617,7 @@ export function bashCountsAsSandboxed(settings: SandboxSettings, where: Pick<Run
   return true;
 }
 
-function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; held: HeldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
+function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; held: HeldPath[]; rescan: () => UnheldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
   const bin = findBwrap();
   const filter = unixSocketFilter();
   if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
@@ -660,7 +660,24 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     const h = heldPathOf(d);
     if (h !== undefined) held.push(h); // not there: an unheld path, checked as one
   }
-  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, failed, made, quarantineRoot };
+  // A match the command made itself (a new repository's `.git`, a `.husky` in a new folder): a pattern is expanded against
+  // the disk at the start, so no mount covers it. At the end the write roots are walked again for the same patterns, on
+  // a budget of their own, and every match inside a root that wasn't there at the start is moved aside, walked down from
+  // its root (never through a link). A root whose second walk can't finish is said in the result's note like the first.
+  const startHeld = new Set(held.map((h) => h.path));
+  const rootOf = (p: string) => lists.writableRoots.filter((r) => p !== r && p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0];
+  const rescan = (): UnheldPath[] => {
+    let again: ReturnType<typeof linuxSandboxListsFor>;
+    try { again = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), perCommandExpander(), { sizeOf: (p) => walkSizes.get(p) }); } catch { return []; }
+    const out: UnheldPath[] = [];
+    for (const d of again.denyWrite) {
+      if (startHeld.has(d) || !lexists(d)) continue;
+      const root = rootOf(d);
+      if (root !== undefined) out.push({ path: d, anchor: root });
+    }
+    return out;
+  };
+  return { file: bin, args, profile: `${bin} ${plan.args.join(" ")}`, seccompFd: fd, heldNote: `${heldFolderNote(plan.held)}${notHeldNote}`, unheld: plan.unheld.map((path) => ({ path, anchor: anchorOf(path) })), held, rescan, failed, made, quarantineRoot };
 }
 
 export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCommandResult> {
@@ -687,6 +704,8 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   let unheld: UnheldPath[] = [];
   // Linux: the held matches inside the write roots by their identity at the start (`swappedHeld` at the end).
   let heldPaths: HeldPath[] = [];
+  // Linux: the end-of-run walk for the matches the command made (`linuxBwrapSpawn`'s `rescan`).
+  let rescanHeld: (() => UnheldPath[]) | undefined;
   let failedFolders: string[] = [];
   let madeFolders: string[] = [];
   let quarantineRoot: string | undefined;
@@ -715,6 +734,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         heldNote = linux.heldNote;
         unheld = linux.unheld;
         heldPaths = linux.held;
+        rescanHeld = linux.rescan;
         failedFolders = linux.failed;
         madeFolders = linux.made;
         quarantineRoot = linux.quarantineRoot;
@@ -797,7 +817,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
   // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
   // never comes (`linux-runs.ts`).
-  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 || heldPaths.length > 0 ? beginLinuxRun({ unheld, held: heldPaths, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 || heldPaths.length > 0 || rescanHeld !== undefined ? beginLinuxRun({ unheld, held: heldPaths, ...(rescanHeld !== undefined ? { rescan: rescanHeld } : {}), quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
