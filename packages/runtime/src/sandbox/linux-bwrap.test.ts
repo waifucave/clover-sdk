@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, expandPatterns, expandPatternsChecked, findBwrap, perCommandExpander, LINUX_UNSET_ENV, SECCOMP_FD, unixSocketFilter, type BwrapFs } from "./linux-bwrap.ts";
-import { linuxSandboxListsFor } from "./profile.ts";
+import { linuxSandboxListsFor, regexAnchorDir } from "./profile.ts";
 
 /** A disk from a list of folders and files. */
 function fakeFs(dirs: readonly string[], files: readonly string[] = []): BwrapFs {
@@ -162,6 +162,129 @@ describe("a pnpm-shaped project, on a real disk: the project stays writable, the
     expect(lists.writableRoots).not.toContain("/big");
     const timed = perCommandExpander({ fs, budget: { maxVisited: 1_000, maxMs: 5 }, now: () => (t += 10) });
     expect(timed("/w", [/x/]).complete).toBe(false);
+  });
+
+  test("the budget's clock starts at the first walk: time spent before it (gathering the patterns) isn't the walk's", () => {
+    const fs = fakeFs(["/w", "/w/a"], ["/w/a/f"]);
+    let t = 0;
+    const expand = perCommandExpander({ fs, budget: { maxVisited: 1_000, maxMs: 3_000 }, now: () => t });
+    t = 60_000; // a minute of setup between making the expander and its first walk
+    expect(expand("/w", [/f$/]).complete).toBe(true);
+  });
+});
+
+describe("the walk's order and shares: the working folder first, small remembered folders next, a fair share for the unknown", () => {
+  type Lists = Parameters<typeof linuxSandboxListsFor>[0];
+  /** A home: `/w` (the working folder, 2 entries), `/g` (a giant, 1,000 files), sixty small folders of 2 files. */
+  const home = () => {
+    const smalls = Array.from({ length: 60 }, (_, i) => `/s${i}`);
+    const dirs = ["/w", "/w/a", "/g", ...smalls];
+    const files = ["/w/a/f", ...Array.from({ length: 1_000 }, (_, i) => `/g/f${i}`), ...smalls.flatMap((s) => [`${s}/1`, `${s}/2`])];
+    return { fs: fakeFs(dirs, files), smalls };
+  };
+  const run = (sizes: Map<string, number>, roots: string[], fs: BwrapFs, order: string[] = []) => linuxSandboxListsFor({ cwd: "/w", writableRoots: roots } as Lists, (() => {
+    const e = perCommandExpander({ fs, budget: { maxVisited: 400, maxMs: 60_000 }, sizes });
+    return (prefix: string, regexes: readonly RegExp[], hint?: { first?: boolean; remaining?: number }) => { order.push(prefix); return e(prefix, regexes, hint); };
+  })(), { sizeOf: (p) => sizes.get(p) });
+
+  test("a giant folder first in directory order no longer starves sixty small ones: with nothing known, each gets a fair share and the giant drops", () => {
+    const { fs, smalls } = home();
+    const lists = run(new Map(), ["/g", ...smalls], fs);
+    expect(lists.writableRoots).toContain("/w");
+    expect(lists.writableRoots).not.toContain("/g");
+    expect(smalls.filter((s) => !lists.writableRoots.includes(s))).toEqual([]);
+  });
+
+  test("with sizes remembered: the working folder, then smallest first; the next command keeps the small ones and drops the giant", () => {
+    const { fs, smalls } = home();
+    const sizes = new Map<string, number>();
+    run(sizes, ["/g", ...smalls], fs);
+    const order: string[] = [];
+    const again = run(sizes, ["/g", ...smalls], fs, order);
+    expect(order[0]).toBe("/w");
+    expect(order.at(-1)).toBe("/g");
+    expect(smalls.filter((s) => !again.writableRoots.includes(s))).toEqual([]);
+    expect(again.writableRoots).not.toContain("/g");
+  });
+
+  test("the working folder is walked first and on the whole budget, whatever its remembered size", () => {
+    const { fs } = home();
+    const sizes = new Map<string, number>([["/w", 10_000], ["/s0", 1]]);
+    const order: string[] = [];
+    const lists = run(sizes, ["/s0", "/g"], fs, order);
+    expect(order[0]).toBe("/w");
+    expect(order.slice(1, 2)).toEqual(["/s0"]);
+    expect(lists.writableRoots).toContain("/w");
+  });
+
+  test("the time cap is checked at each folder read, not only every 1,024 entries", () => {
+    const fs = fakeFs(["/r", "/r/a", "/r/b"], ["/r/a/1", "/r/b/1"]);
+    let t = 0;
+    // Each clock read moves a second on: the first folder read already passes a 1.5 s cap, long before 1,024 entries.
+    const r = expandPatternsChecked("/r", [/x$/], { fs, maxMs: 1_500, now: () => (t += 1_000) });
+    expect(r.complete).toBe(false);
+    expect(r.visited).toBeLessThan(5);
+  });
+});
+
+describe("linuxSandboxListsFor: each pattern only under the prefixes it can match, each prefix canonicalized once", () => {
+  test("regexAnchorDir: the literal folder after `^`, never past a quantifier or a class", () => {
+    expect(regexAnchorDir("^/h/top1/(.*/)?\\.git(/.*)?$")).toBe("/h/top1/");
+    expect(regexAnchorDir("^/(.*/)?\\.git(/.*)?$")).toBe("/");
+    expect(regexAnchorDir("^/h/top\\.1/(.*/)?[\\.]bashrc(/.*)?$")).toBe("/h/top.1/");
+    expect(regexAnchorDir("^/a/?b")).toBe("/");
+    expect(regexAnchorDir("^/a/b\\d/x")).toBe("/a/");
+    expect(regexAnchorDir("(^|/)\\.git$")).toBeUndefined();
+    // A `|` outside every group: several patterns, so tried everywhere; inside a group or a class it isn't one.
+    expect(regexAnchorDir("^/a/x|^/b/y")).toBeUndefined();
+    expect(regexAnchorDir("^/a/x/(b|c)$")).toBe("/a/x/");
+    expect(regexAnchorDir("^/a/x/[|]$")).toBe("/a/x/");
+    expect(regexAnchorDir("^/a/x/\\|$")).toBe("/a/x/");
+  });
+
+  test("a regex with two top-level branches is tried under the second branch's folder too", () => {
+    const seen = new Map<string, string[]>();
+    const two = "^/a/x/(.*/)?\\.git$|^/b/y/(.*/)?\\.git$";
+    linuxSandboxListsFor({ cwd: "/b/y", writableRoots: ["/b/y"], denyWriteRegexes: [two] } as Parameters<typeof linuxSandboxListsFor>[0], (prefix, regexes) => {
+      seen.set(prefix, [...(seen.get(prefix) ?? []), ...regexes.map((r) => r.source)]);
+      return regexes.map(() => []);
+    });
+    expect(seen.get("/b/y")).toContain(new RegExp(two).source);
+  });
+
+  test("a pattern under one root isn't tried under another; one from `/` is tried under every root", () => {
+    const seen = new Map<string, string[]>();
+    const rx = (g: string) => g;
+    // As the expander sees them (`RegExp.source` writes `/` as `\/`).
+    const src = (g: string) => new RegExp(g).source;
+    const git = src("^/a/x/(.*/)?\\.git(/.*)?$"), bashrc = src("^/(.*/)?\\.bashrc(/.*)?$");
+    linuxSandboxListsFor({
+      cwd: "/a/x", writableRoots: ["/a/x", "/a/y", "/a/x2"],
+      denyWriteRegexes: [rx("^/a/x/(.*/)?\\.git(/.*)?$"), rx("^/(.*/)?\\.bashrc(/.*)?$")], denyWriteGlobFixedPrefixes: ["/a/x"],
+    } as Parameters<typeof linuxSandboxListsFor>[0], (prefix, regexes) => {
+      seen.set(prefix, [...(seen.get(prefix) ?? []), ...regexes.map((r) => r.source)]);
+      return regexes.map(() => []);
+    });
+    expect(seen.get("/a/x")).toEqual(expect.arrayContaining([git, bashrc]));
+    expect(seen.get("/a/y")).toContain(bashrc);
+    expect(seen.get("/a/y")).not.toContain(git);
+    // `/a/x2` only shares the characters, not the folder.
+    expect(seen.get("/a/x2")).toContain(bashrc);
+    expect(seen.get("/a/x2")).not.toContain(git);
+  });
+
+  test("a host's thousands of patterns over a hundred roots are gathered in well under a second (it took about a minute)", () => {
+    const roots = Array.from({ length: 107 }, (_, i) => `/nonexistent-clover-probe/home/top${i}`);
+    const names = Array.from({ length: 55 }, (_, i) => `name${i}`);
+    const denyWriteRegexes = roots.flatMap((r) => names.map((n) => `^${r}/(.*/)?${n}(/.*)?$`));
+    const start = performance.now();
+    let pairs = 0;
+    linuxSandboxListsFor({ cwd: roots[0]!, writableRoots: roots, denyWriteRegexes, denyWriteGlobFixedPrefixes: roots.flatMap((r) => names.map(() => r)) } as Parameters<typeof linuxSandboxListsFor>[0],
+      (_prefix, regexes) => { pairs += regexes.length; return regexes.map(() => []); });
+    const ms = performance.now() - start;
+    // Each root gets its own 55 patterns, not all 5,885.
+    expect(pairs).toBeLessThan(denyWriteRegexes.length * 2);
+    expect(ms).toBeLessThan(5_000);
   });
 });
 

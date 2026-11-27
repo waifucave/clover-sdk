@@ -1065,6 +1065,48 @@ ${machRules})
 // linuxSandboxListsFor: the same policy as `buildSeatbeltProfile`, as paths for bubblewrap (linux-bwrap.ts)
 // ---------------------------------------------------------------------------------------------
 
+/** The folder a regex's matches all lie in: the literal path after its `^`, up to its last `/` before the first
+ *  unescaped metacharacter (the regex of `/h/a/` + `**` + `/.git` gives `/h/a/`). Undefined when it doesn't start that way (then
+ *  it is tried under every prefix, as before). A literal escaped as `\x` is the character `x`. */
+export function regexAnchorDir(source: string): string | undefined {
+  if (!source.startsWith("^/")) return undefined;
+  if (hasTopLevelAlternation(source)) return undefined; // `^/a/x|^/b/y`: a second branch the anchor doesn't cover
+  let literal = "";
+  for (let i = 1; i < source.length; i++) {
+    const ch = source[i]!;
+    if (ch === "\\") {
+      const next = source[i + 1];
+      if (next === undefined || /[A-Za-z0-9]/.test(next)) break; // \d, \w and the like are classes, not literals
+      literal += next;
+      i++;
+      continue;
+    }
+    // A quantifier makes the character before it optional (that one may be a `/`): it isn't part of the anchor.
+    if ("*+?{".includes(ch)) { literal = literal.slice(0, -1); break; }
+    if ("()[].|$^".includes(ch)) break;
+    literal += ch;
+  }
+  const cut = literal.lastIndexOf("/");
+  return cut < 0 ? undefined : literal.slice(0, cut + 1);
+}
+
+/** Whether `source` holds a `|` outside every group and class (escapes skipped): then the regex is several patterns,
+ *  and its first literal anchors only the first. */
+function hasTopLevelAlternation(source: string): boolean {
+  let depth = 0;
+  let inClass = false;
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i]!;
+    if (ch === "\\") { i++; continue; }
+    if (inClass) { if (ch === "]") inClass = false; continue; }
+    if (ch === "[") inClass = true;
+    else if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    else if (ch === "|" && depth === 0) return true;
+  }
+  return false;
+}
+
 /** The Seatbelt profile's input as the Linux sandbox's paths: what may be written, and what may not be written or read.
  *  A pattern (an SBPL regex: a glob-shaped deny, a control-plane or default-protection name at any depth, the
  *  provider-state files) can only name what is on disk, so `expand(prefix, regex)` lists the existing paths under
@@ -1072,7 +1114,9 @@ ${machRules})
  *  that doesn't compile refuses the command (thrown `SyntaxError`): a deny is never dropped. */
 export function linuxSandboxListsFor(
   input: SeatbeltProfileInput,
-  expand: (prefix: string, regexes: readonly RegExp[]) => string[][] | { found: string[][]; complete: boolean },
+  expand: (prefix: string, regexes: readonly RegExp[], hint?: { first?: boolean; remaining?: number }) => string[][] | { found: string[][]; complete: boolean },
+  /** `sizeOf`: an earlier walk's entry count for a prefix (linux-bwrap.ts `walkSizes`), to walk the small ones first. */
+  o: { sizeOf?: (prefix: string) => number | undefined } = {},
 ): { writableRoots: string[]; denyWrite: string[]; denyRead: string[]; ensureFolders: string[]; notHeld?: { root: string; prefix: string }[] } {
   const brand = input.brand ?? WINTER_BRAND;
   const durableRoot = input.storeHome ?? input.winterHome;
@@ -1083,9 +1127,29 @@ export function linuxSandboxListsFor(
   const denyRead = new Set<string>();
   // Every pattern is gathered first and each prefix walked once for all of its patterns (`expand`), below.
   const wanted = new Map<string, { re: RegExp; into: Set<string> }[]>();
+  // Each prefix canonicalized once per command (a realpath each): a host handing thousands of patterns over a hundred
+  // roots had every pattern canonicalize every prefix again (6,000 × 6,000 realpaths, about a minute, before any walk;
+  // the clover-sdk probe on MOSS's lists, probe/linux-spawn-timing).
+  const canonical = new Map<string, string>();
+  const canonOnce = (p: string): string => {
+    let c = canonical.get(p);
+    if (c === undefined) { c = canon(p); canonical.set(p, c); }
+    return c;
+  };
+  const distinct = (prefixes: readonly string[]): string[] => [...new Set(prefixes.map(canonOnce))];
+  // Only under a prefix the pattern can match there: a regex is `^` and a literal path first (`regexAnchorDir`), so a
+  // match is a path under that literal, and a prefix beside it holds none (`/a/x/(.*/)?\.git` never matches under `/a/y`).
+  // The walk tested every pattern on every entry under every prefix; now each prefix gets its own patterns only.
+  const mayMatchUnder = (anchorDir: string | undefined, prefix: string): boolean => {
+    if (anchorDir === undefined) return true;
+    const p = prefix.endsWith("/") ? prefix : `${prefix}/`;
+    return anchorDir.startsWith(p) || p.startsWith(anchorDir);
+  };
   const expandUnder = (prefixes: readonly string[], source: string, into: Set<string>): void => {
     const re = new RegExp(source);
-    for (const prefix of new Set(prefixes.map(canon))) {
+    const anchorDir = regexAnchorDir(source);
+    for (const prefix of prefixes) {
+      if (!mayMatchUnder(anchorDir, prefix)) continue;
       const list = wanted.get(prefix) ?? [];
       list.push({ re, into });
       wanted.set(prefix, list);
@@ -1095,10 +1159,12 @@ export function linuxSandboxListsFor(
   // filesystem.denyWrite and denyRead: plain paths, and the glob-shaped ones as what they match now (under their fixed
   // prefixes, and under every writable root for a pattern anchored at `/`).
   for (const p of input.denyWritePaths ?? []) denyWrite.add(canon(p));
-  for (const r of input.denyWriteRegexes ?? []) expandUnder([...(input.denyWriteGlobFixedPrefixes ?? []), ...roots], r, denyWrite);
+  const writePrefixes = distinct([...(input.denyWriteGlobFixedPrefixes ?? []), ...roots]);
+  for (const r of input.denyWriteRegexes ?? []) expandUnder(writePrefixes, r, denyWrite);
   for (const p of input.denyReadPaths ?? []) denyRead.add(canon(p));
-  for (const r of input.denyReadRegexes ?? []) expandUnder([...(input.denyReadGlobFixedPrefixes ?? []), ...roots], r, denyRead);
-  for (const e of input.denyReadGlobEntries ?? []) expandUnder([e.fixedPrefix], e.regex, denyRead);
+  const readPrefixes = distinct([...(input.denyReadGlobFixedPrefixes ?? []), ...roots]);
+  for (const r of input.denyReadRegexes ?? []) expandUnder(readPrefixes, r, denyRead);
+  for (const e of input.denyReadGlobEntries ?? []) expandUnder(distinct([e.fixedPrefix]), e.regex, denyRead);
 
   // The default write protections at cwd (`buildDefaultWriteProtectionBlock`): plain, and at any depth under cwd.
   const proj = brand.projectDirName;
@@ -1133,14 +1199,24 @@ export function linuxSandboxListsFor(
   // The run folders and the provider-state files, read-denied.
   if (winterRoot !== undefined) denyRead.add(join(winterRoot, "run"));
   if (input.winterHome !== undefined) denyRead.add(join(canon(input.winterHome), "run"));
-  for (const a of anchors) expandUnder([join(a, "projects")], providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
+  for (const a of anchors) expandUnder(distinct([join(a, "projects")]), providerStateReadDenyRegex(sbplRegexLiteral(a)), denyRead);
   // A walk that couldn't finish (`expandPatternsChecked`) left what lies past it unmatched: no writable root that
   // holds that prefix, or lies inside it, is kept, so nothing past the walk is writable (fails closed).
   const unfinished: string[] = [];
   // The working folder's walk first: a command's budget (`perCommandExpander`) goes to where it runs before the rest.
+  // Then the prefixes whose size an earlier walk remembers, smallest first (so a giant folder is what drops, not sixty
+  // small ones), then the ones never walked, in their order, each on a fair share of what's left (`WalkHint`).
   const inCwd = (p: string) => p === cwd || p.startsWith(`${cwd}/`);
-  for (const [prefix, list] of [...wanted].sort(([a], [b]) => Number(inCwd(b)) - Number(inCwd(a)))) {
-    const got = expand(prefix, list.map((w) => w.re));
+  const sizeOf = (p: string): number | undefined => o.sizeOf?.(p);
+  const rank = (p: string): [number, number] => {
+    if (inCwd(p)) return [0, 0];
+    const s = sizeOf(p);
+    return s === undefined ? [2, 0] : [1, s];
+  };
+  const ordered = [...wanted].map((e, i) => ({ e, i, r: rank(e[0]) }))
+    .sort((a, b) => a.r[0] - b.r[0] || a.r[1] - b.r[1] || a.i - b.i).map((x) => x.e);
+  for (const [n, [prefix, list]] of ordered.entries()) {
+    const got = expand(prefix, list.map((w) => w.re), { first: inCwd(prefix), remaining: ordered.length - n });
     const found = Array.isArray(got) ? got : got.found;
     if (!Array.isArray(got) && !got.complete) unfinished.push(prefix);
     list.forEach((w, i) => { for (const p of found[i] ?? []) w.into.add(p); });
