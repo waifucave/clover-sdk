@@ -147,7 +147,9 @@ describe("a working folder inside a root whose walk can't finish (Linux): the wo
     const r = await hostRun("git init -q . && git config core.fsmonitor 'echo PLANTED' && echo done", { cwd: sub, roots: [f], home, sweep: [f] });
     expect(r.out).toContain("done");
     expect(r.notWritable).toEqual([f]);
-    expect(r.quarantined).toEqual([join(sub, ".git")]);
+    // The working folder's own protected paths (its `.git/hooks`, `.git/config`, missing at the start) go first, then the
+    // sweep's new `.git` whole.
+    expect(r.quarantined).toEqual([join(sub, ".git", "hooks"), join(sub, ".git", "config"), join(sub, ".git")]);
     expect(existsSync(join(sub, ".git"))).toBe(false);
     expect(r.unswept).toBeUndefined();
   });
