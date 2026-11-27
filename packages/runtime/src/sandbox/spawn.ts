@@ -10,13 +10,13 @@ import type { HostOutputTransport } from "./host-output.ts";
 // "run a shell command under whatever fence the effective config selects" -- keeping the sandbox
 // MECHANISM (this file + profile.ts) independent of either tool's own contract (output capping,
 // background-task registration, WS message framing, ...).
-import { accessSync, closeSync, constants as fsConstants, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, chmodSync, closeSync, constants as fsConstants, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WINTER_BRAND } from "@waifucave/clover-agent-sdk";
-import { anchorOf, beginLinuxRun, heldPathOf, lexists, recoverCrashedLinuxRuns, type HeldPath, type UnheldPath } from "./linux-runs.ts";
+import { anchorOf, beginLinuxRun, heldPathOf, lexists, recoverCrashedLinuxRuns, type HeldPath, type RunReport, type UnheldPath } from "./linux-runs.ts";
 export { quarantinePlanted, sweepLinuxRuns, type UnheldPath } from "./linux-runs.ts";
-import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, findBwrap, perCommandExpander, heldFolderNote, unixSocketFilter, walkSizes } from "./linux-bwrap.ts";
+import { BWRAP_SYSTEM_PATHS, buildBwrapPlan, bwrapHasDisableUserns, bwrapWorks, findBwrap, perCommandExpander, heldFolderNote, PATTERN_WALK_PER_COMMAND, unixSocketFilter, walkSizes } from "./linux-bwrap.ts";
 import { spawn, spawnSync } from "node:child_process";
 import {
   buildSeatbeltProfile,
@@ -376,6 +376,14 @@ export interface RunCommandOptions {
    * (another computer's command) sets it, so it never learns of a plain run only from the result. Omitted: as before.
    */
   requireSandboxed?: boolean;
+  /**
+   * Linux: the write roots to SWEEP at the command's end (default none): every match of the deny patterns in them that
+   * wasn't there at the start is moved aside whole (`sweepNewMatches`), never deleted, and what couldn't be read through
+   * or moved is said (`RunCommandResult.unswept`, `notMoved`). A sweep can't tell the command's new files from a person's,
+   * so a host names only a folder it just handed a command (MOSS: another computer's command's folder and temp root),
+   * never a home a long command shares with the person.
+   */
+  sweepRoots?: string[];
   /** Extra writable roots beyond cwd -- session scratch, configured filesystem.allowWrite, outputs dir. */
   writableRoots?: string[];
   denyWritePaths?: string[];
@@ -484,6 +492,12 @@ export interface RunCommandResult {
   unheldProtectedPaths?: string[];
   /** Linux: the protected paths the command made and that were moved aside at its end. */
   quarantined?: string[];
+  /** Linux: where `quarantined` went. */
+  quarantineRoot?: string;
+  /** Linux: a path that should have been moved aside and is still there, and why (never deleted instead). */
+  notMoved?: { path: string; why: string }[];
+  /** Linux: a root named in `sweepRoots` the end couldn't read through, and why: a new match there may have stayed. */
+  unswept?: { root: string; why: string }[];
   exitCode: number | null;
   timedOut: boolean;
   aborted: boolean;
@@ -541,22 +555,99 @@ function linuxListsInput(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" |
   };
 }
 
-let endOfRunWalk = true;
-/** TEST-ONLY: the end-of-run walk off, to measure what it costs (sandbox-walk-cost.linux.test.ts). Never from settings. */
-export function setEndOfRunWalkForTest(on: boolean): void { endOfRunWalk = on; }
 
 /** How many moved-aside paths the note names one by one; the rest are counted. */
 export const MOVED_ASIDE_NOTE_CAP = 20;
 
-/** What the command is told about the paths moved aside at its end: one plain line per path (capped), with why and where
- *  it went, so a command that wrote one doesn't try again unaware. */
-export function movedAsideNote(paths: readonly string[], quarantineRoot: string | undefined): string {
-  const why = (p: string) => /\.git$/.test(p) ? "a repository can't be made at a protected path inside the sandbox"
+/** A path as one line of a note: a control character (a newline in a folder's name) written as an escape, so a name
+ *  can never start a line of its own. */
+const NOTE_PATH_ESCAPED = new RegExp("[\\x00-\\x1f\\x7f\\u2028\\u2029\\\\]", "g");
+export function notePath(p: string): string {
+  return p.replace(NOTE_PATH_ESCAPED, (c) => (c === "\\" ? "\\\\" : `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`));
+}
+
+/** What the command is told about the paths moved aside at its end, about the ones that couldn't be, and about a swept
+ *  root it couldn't read through: one plain line each (the moved ones capped), with why and where, so a command that
+ *  wrote one doesn't try again unaware. Said OUTSIDE the command's own output (bash.ts `protectedPathsNote`), so a
+ *  chatty command can't push it out. Empty when there is nothing to say. */
+export function movedAsideNote(paths: readonly string[], quarantineRoot: string | undefined, report: Partial<RunReport> = {}): string {
+  const why = (p: string) => /\.git$/.test(p) ? "a repository there runs its hooks and config outside the sandbox"
     : "it runs later, outside the sandbox";
-  const where = quarantineRoot === undefined ? "removed" : `moved to ${quarantineRoot}`;
-  const lines = paths.slice(0, MOVED_ASIDE_NOTE_CAP).map((p) => `[sandbox] ${p}: ${where} at the command's end (${why(p)}); writing it again is moved aside again`);
+  const where = quarantineRoot === undefined ? "removed" : `moved to ${notePath(quarantineRoot)}`;
+  const lines = paths.slice(0, MOVED_ASIDE_NOTE_CAP).map((p) => `[sandbox] ${notePath(p)}: ${where} at the command's end (${why(p)}); writing it again is moved aside again`);
   if (paths.length > MOVED_ASIDE_NOTE_CAP) lines.push(`[sandbox] and ${paths.length - MOVED_ASIDE_NOTE_CAP} more moved aside the same way`);
-  return `\n${lines.join("\n")}\n`;
+  for (const n of (report.notMoved ?? []).slice(0, MOVED_ASIDE_NOTE_CAP)) lines.push(`[sandbox] ${notePath(n.path)}: could not move aside (${n.why}); it is still there`);
+  if ((report.notMoved?.length ?? 0) > MOVED_ASIDE_NOTE_CAP) lines.push(`[sandbox] and ${report.notMoved!.length - MOVED_ASIDE_NOTE_CAP} more that could not be moved aside`);
+  for (const u of report.unswept ?? []) lines.push(`[sandbox] ${notePath(u.root)}: could not be fully checked at the command's end (${u.why}); something it made there may have stayed`);
+  return lines.length === 0 ? "" : lines.join("\n");
+}
+
+/**
+ * The end-of-run sweep's expander, for the roots a caller named (`sweepRoots`): honest about what it couldn't read.
+ * Unlike the start's walk, one deep folder never abandons its siblings (the depth is bounded by the budget alone, a
+ * folder past the budget is what's left unread), a folder that can't be read is retried once with u+rx when the user
+ * owns it (`chmod 111 sub` after `git init sub`) and else counted unread, and every root with something unread is said in
+ * `unswept` (the root and why). Links are never followed (`kind` is by lstat).
+ */
+export function sweepExpander(roots: readonly string[], unswept: { root: string; why: string }[], o: { budget?: { maxVisited: number; maxMs: number }; now?: () => number; writeRoots?: readonly string[] } = {}): (prefix: string, regexes: readonly RegExp[]) => { found: string[][]; complete: boolean } {
+  const b = o.budget ?? PATTERN_WALK_PER_COMMAND;
+  const writeRoots = o.writeRoots ?? roots;
+  const now = o.now ?? Date.now;
+  let until: number | undefined;
+  let left = b.maxVisited;
+  const said = new Set<string>();
+  const uid = typeof process.getuid === "function" ? process.getuid() : -1;
+  const rootOf = (p: string) => roots.filter((r) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0] ?? p;
+  const miss = (dir: string, why: string) => {
+    const root = rootOf(dir);
+    if (said.has(root)) return;
+    said.add(root);
+    unswept.push({ root, why });
+  };
+  const list = (dir: string): string[] | undefined => {
+    try { return readdirSync(dir); } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === "ENOENT" || code === "ENOTDIR") return [];
+      try {
+        const st = lstatSync(dir);
+        if (st.isDirectory() && st.uid === uid && (st.mode & 0o500) !== 0o500) {
+          chmodSync(dir, st.mode | 0o500);
+          return readdirSync(dir);
+        }
+      } catch { /* below */ }
+      miss(dir, `a folder in it can't be read: ${notePath(dir)}`);
+      return undefined;
+    }
+  };
+  return (prefix, regexes) => {
+    until ??= now() + b.maxMs;
+    const out: string[][] = regexes.map(() => []);
+    // Only what lies in a swept root: a prefix inside one is walked; for a prefix above some (a write root holding a
+    // swept folder), those roots are walked from themselves. A glob's own fixed prefix above every write root (`/` for
+    // `/**/x`) is skipped: every pattern is also asked under each write root (`linuxSandboxListsFor`), which finds it.
+    const under = (p: string, r: string) => p === r || p.startsWith(r.endsWith("/") ? r : `${r}/`);
+    const inside = (p: string) => roots.some((r) => under(p, r));
+    const stack: string[] = inside(prefix) ? [prefix] : writeRoots.some((w) => under(prefix, w)) ? roots.filter((r) => under(r, prefix)) : [];
+    while (stack.length > 0) {
+      const dir = stack.pop()!;
+      if (left <= 0 || now() > until) {
+        miss(dir, "it holds more than one command's end can check");
+        for (const d of stack) if (inside(d)) miss(d, "it holds more than one command's end can check");
+        break;
+      }
+      const names = list(dir);
+      if (names === undefined) continue;
+      for (const name of names) {
+        left--;
+        const p = join(dir, name);
+        let matched = false;
+        regexes.forEach((re, i) => { if (re.test(p)) { out[i]!.push(p); matched = true; } });
+        if (matched) continue;
+        try { if (lstatSync(p).isDirectory()) stack.push(p); } catch { /* gone */ }
+      }
+    }
+    return { found: out, complete: true };
+  };
 }
 
 /** Whether `path` is a real folder (not a link to one). */
@@ -635,7 +726,7 @@ export function bashCountsAsSandboxed(settings: SandboxSettings, where: Pick<Run
   return true;
 }
 
-function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; held: HeldPath[]; rescan: () => UnheldPath[]; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
+function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean, report: RunReport): { file: string; args: string[]; profile: string; seccompFd: number; heldNote: string; unheld: UnheldPath[]; held: HeldPath[]; rescan: (() => UnheldPath[]) | undefined; failed: string[]; made: string[]; quarantineRoot: string | undefined } {
   const bin = findBwrap();
   const filter = unixSocketFilter();
   if (bin === undefined || filter === null) throw new SandboxUnavailableError(sandboxUnavailableMessage());
@@ -679,22 +770,25 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
     if (h !== undefined) held.push(h); // not there: an unheld path, checked as one
   }
   // A match the command made itself (a new repository's `.git`, a `.husky` in a new folder): a pattern is expanded against
-  // the disk at the start, so no mount covers it. At the end the write roots are walked again for the same patterns, on
-  // a budget of their own, and every match inside a root that wasn't there at the start is moved aside, walked down from
-  // its root (never through a link). A root whose second walk can't finish is said in the result's note like the first.
+  // the disk at the start, so no mount covers it. OPT-IN PER CALL (`sweepRoots`, default none: a post-hoc sweep can't
+  // tell the command's new files from the person's, so it is asked for only where the scope is a folder a command was
+  // just handed): at the end those roots are swept for the same patterns (`sweepNewMatches`) and every match that wasn't
+  // there at the start is moved aside whole, walked down from its root (never through a link), never deleted.
   const startHeld = new Set(held.map((h) => h.path));
-  const rootOf = (p: string) => lists.writableRoots.filter((r) => p !== r && p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0];
-  const rescan = (): UnheldPath[] => {
-    if (!endOfRunWalk) return [];
-    let again: ReturnType<typeof linuxSandboxListsFor>;
-    try { again = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), perCommandExpander(), { sizeOf: (p) => walkSizes.get(p) }); } catch { return []; }
+  const sweep = (opts.sweepRoots ?? []).map((r) => canonicalizePath(r)).filter((r) => lists.writableRoots.some((w) => r === w || r.startsWith(w.endsWith("/") ? w : `${w}/`)));
+  const rescan = sweep.length === 0 ? undefined : (): UnheldPath[] => {
+    const found = new Set<string>();
+    const expand = sweepExpander(sweep, report.unswept, { writeRoots: lists.writableRoots });
+    const again = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), (prefix, regexes) => expand(prefix, regexes));
+    const rootOf = (p: string) => sweep.filter((r) => p !== r && p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0];
     const out: UnheldPath[] = [];
     for (const d of again.denyWrite) {
-      if (startHeld.has(d) || !lexists(d)) continue;
+      if (startHeld.has(d) || found.has(d) || !lexists(d)) continue;
       const root = rootOf(d);
       if (root === undefined) continue;
       // Exactly what the host's deny patterns match, whole: a host that denies every `.git` gets a new repository moved
       // aside (as its macOS sandbox refuses making one), a host that denies only `.git/hooks` gets only the hooks.
+      found.add(d);
       out.push({ path: d, anchor: root });
     }
     return out;
@@ -728,6 +822,8 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   let heldPaths: HeldPath[] = [];
   // Linux: the end-of-run walk for the matches the command made (`linuxBwrapSpawn`'s `rescan`).
   let rescanHeld: (() => UnheldPath[]) | undefined;
+  // Linux: what the end couldn't do (a swept root it couldn't read through, a path it couldn't move), for the result.
+  const runReport: RunReport = { notMoved: [], unswept: [] };
   let failedFolders: string[] = [];
   let madeFolders: string[] = [];
   let quarantineRoot: string | undefined;
@@ -748,7 +844,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         spawnArgs = ["-c", opts.command];
         profile = "host-fenced";
       } else {
-        const linux = linuxBwrapSpawn(opts, allowNetwork);
+        const linux = linuxBwrapSpawn(opts, allowNetwork, runReport);
         spawnFile = linux.file;
         spawnArgs = linux.args;
         profile = linux.profile;
@@ -839,7 +935,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
   const holder = process.platform === "darwin" && opts.processHolder !== undefined && opts.processHolder !== "" && existsSync(opts.processHolder) ? opts.processHolder : undefined;
   // Linux: the run is live from here (and on disk) until its end, so a sweep or the next start finishes it if its end
   // never comes (`linux-runs.ts`).
-  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 || heldPaths.length > 0 || rescanHeld !== undefined ? beginLinuxRun({ unheld, held: heldPaths, ...(rescanHeld !== undefined ? { rescan: rescanHeld } : {}), quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
+  const endLinuxRun = unheld.length > 0 || madeFolders.length > 0 || heldPaths.length > 0 || rescanHeld !== undefined ? beginLinuxRun({ unheld, held: heldPaths, ...(rescanHeld !== undefined ? { rescan: rescanHeld } : {}), report: runReport, quarantineRoot, made: madeFolders, roots: { cwd: canonicalizePath(opts.cwd), writableRoots: [...(opts.writableRoots ?? [])], ...(opts.allowGitConfigWrites === true ? { allowGitConfigWrites: true } : {}) } }) : () => [];
   return new Promise<RunCommandResult>((resolve) => {
     let child: ReturnType<typeof spawn>;
     try {
@@ -974,8 +1070,9 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       if (heldNote !== "" && exitCode !== 0 && !aborted && !streamKilled) opts.onStderr?.(Buffer.from(heldNote));
       // B1: what the command made at a protected path the sandbox couldn't hold is moved aside now, at ITS end (a
       // background command's too), and said.
+      // What was moved aside, what couldn't be and what couldn't be swept: data on the result, never on the command's own
+      // stderr (a chatty command would push it past the output cap); bash.ts says it in a note outside the cap.
       const quarantined = endLinuxRun();
-      if (quarantined.length > 0) opts.onStderr?.(Buffer.from(movedAsideNote(quarantined, quarantineRoot)));
       const result: RunCommandResult = {
         exitCode,
         timedOut,
@@ -988,6 +1085,9 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
         ...(leftBehind !== undefined ? { leftBehind } : {}),
         ...(failedFolders.length > 0 ? { unheldProtectedPaths: failedFolders } : {}),
         ...(quarantined.length > 0 ? { quarantined } : {}),
+        ...(quarantineRoot !== undefined && quarantined.length > 0 ? { quarantineRoot } : {}),
+        ...(runReport.notMoved.length > 0 ? { notMoved: runReport.notMoved } : {}),
+        ...(runReport.unswept.length > 0 ? { unswept: runReport.unswept } : {}),
       };
       const monitor = violationMonitor;
       violationMonitor = undefined;

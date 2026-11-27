@@ -7,6 +7,9 @@
 // made before the run so a mount holds them; what the command made at a protected path moved aside at its end, its
 // parent checked against the walk's identity (`quarantinePlanted`); and every held match's identity taken at the start,
 // so an entry swapped in at a held path (the rename) is moved aside at the end whatever the mounts held (`swappedHeld`).
+// A host that hands a command one folder can also ask for that folder to be SWEPT at the end (`sweepRoots`): every new
+// match of the deny patterns there moved aside whole, never deleted, and what couldn't be read through or moved said
+// as data (`unswept`, `notMoved`) for the host to tell its caller (`movedAsideNote` words it; `notePath` escapes a path).
 //
 // WHAT. `runCommand` here is the HOST's run: it never hands the command to a host Code broker bound in the calling
 // thread (a session realm's door; the host is the trusted parent), and it always runs as `requireSandboxed` (refused,
@@ -31,6 +34,8 @@ export {
   isSandboxAvailable,
   sandboxUnavailableMessage,
   sweepLinuxRuns,
+  movedAsideNote,
+  notePath,
   SandboxUnavailableError,
   type RunCommandOptions,
   type RunCommandResult,

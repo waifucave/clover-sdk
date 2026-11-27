@@ -23,43 +23,53 @@ import { removePlanned } from "../tools/no-follow-write.ts";
 /** An unheld protected path and its deepest ancestor that existed before the run (its anchor). */
 export interface UnheldPath { path: string; anchor: string }
 
-/** A held match that existed when the run started, by its identity then (device, inode), and its parent folder's. */
-export interface HeldPath { path: string; dev: number; ino: number; parentDev: number; parentIno: number }
+/** A held match that existed when the run started: its identity then (device, inode), its kind then, and its parent
+ *  folder's identity. */
+export interface HeldPath { path: string; dev: number; ino: number; kind: "file" | "dir" | "link" | "other"; parentDev: number; parentIno: number }
 
-/** A held path as it is now, with its parent's identity: what `swappedHeld` compares at the end. */
+/** A held path as it is now, with its kind and its parent's identity: what `swappedHeld` compares at the end. */
 export function heldPathOf(path: string): HeldPath | undefined {
   try {
     const st = lstatSync(path);
     const parent = lstatSync(dirname(path));
-    return { path, dev: st.dev, ino: st.ino, parentDev: parent.dev, parentIno: parent.ino };
+    const kind = st.isSymbolicLink() ? "link" : st.isFile() ? "file" : st.isDirectory() ? "dir" : "other";
+    return { path, dev: st.dev, ino: st.ino, kind, parentDev: parent.dev, parentIno: parent.ino };
   } catch {
     return undefined;
   }
 }
 
 /**
- * The held paths swapped during the command: the rename (the real `.git` moved away with its folder, a new folder made
- * at the old path, a new `.git` in it). That always gives the held path a NEW PARENT, so an entry there whose parent is
- * another folder than at the start is moved aside, as is a held FOLDER that is another folder in the same parent. A held
- * FILE that is another file in the same parent is left alone: that is a person's own change made while a command ran (an
- * editor's atomic save of `.envrc` or `.mcp.json`, `git config` rewriting `.git/config`), never the command's, which
- * can't replace it: every held file is bound read-only onto itself (linux-bwrap.ts `buildBwrapPlan`:
- * `a.push("--ro-bind", d, d)` for each existing deny path), so a rename over it or an unlink of it fails with EBUSY,
- * and the folders between a root and it are mount points (the ancestor-rename fence). Each one moved comes back as an
- * unheld path anchored at its parent, so `quarantinePlanted` moves it aside (into the quarantine folder, its parent's
- * identity checked as for any plant). A held path that is gone now has nothing to move.
+ * The held paths swapped during the command: an entry at a held path that is another entry than at the start is moved
+ * aside, but for ONE case: the entry at the start was a regular FILE, and its parent is the same folder. That is a
+ * person's own change made while a command ran (an editor's atomic save of `.envrc` or `.mcp.json`, `git config`
+ * rewriting `.git/config`), never the command's, which can't make it: a held regular file is bound read-only onto
+ * itself (linux-bwrap.ts `buildBwrapPlan`: `a.push("--ro-bind", d, d)` for each existing deny path whose kind is a file
+ * or a folder), so a rename over it or an unlink of it fails with EBUSY, and the folders between a root and it are mount
+ * points (the ancestor-rename fence). A held LINK gets no mount (its kind is neither), so the command can replace it
+ * (`rm ~/.zshrc; echo … > ~/.zshrc` with a stow link there): a link at the start is never spared, nor is a folder, nor
+ * anything under a new parent (the rename). Each one moved comes back as an unheld path anchored at its parent, so
+ * `quarantinePlanted` moves it aside (its parent's identity checked as for any plant). A held path that is gone now has
+ * nothing to move.
  */
 export function swappedHeld(held: readonly HeldPath[]): UnheldPath[] {
   const out: UnheldPath[] = [];
   for (const h of held) {
     const now = heldPathOf(h.path);
     if (now === undefined || (now.dev === h.dev && now.ino === h.ino)) continue;
-    const newParent = now.parentDev !== h.parentDev || now.parentIno !== h.parentIno;
-    let folder = false;
-    try { const st = lstatSync(h.path); folder = st.isDirectory() && !st.isSymbolicLink(); } catch { continue; }
-    if (newParent || folder) out.push({ path: h.path, anchor: dirname(h.path) });
+    const sameParent = now.parentDev === h.parentDev && now.parentIno === h.parentIno;
+    if (h.kind === "file" && sameParent) continue;
+    out.push({ path: h.path, anchor: dirname(h.path) });
   }
   return out;
+}
+
+/** What a run's end couldn't do, said as data and in plain lines outside the command's own output (`protectedPathsNote`). */
+export interface RunReport {
+  /** A path that should have been moved aside and wasn't, and why (left where it is: never deleted). */
+  notMoved: { path: string; why: string }[];
+  /** A swept root the end-of-run sweep couldn't read through, and why: a new match there may have stayed. */
+  unswept: { root: string; why: string }[];
 }
 
 export function lexists(p: string): boolean {
@@ -124,7 +134,16 @@ export function renameFromParent(parentReal: string, walked: { dev: number; ino:
   }
 }
 
-export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { removeWhenStuck?: boolean; kept?: string[] } = {}): string[] {
+/** A quarantined entry's name: its path with `_` for `/` and a random tail, cut (keeping the tail) so it stays a valid
+ *  name (255 bytes) however deep the path was. */
+export function quarantineName(target: string): string {
+  const tail = `.quarantined-${Math.random().toString(16).slice(2, 10)}`;
+  let base = target.split("/").filter(Boolean).join("_");
+  while (Buffer.byteLength(base + tail) > 240) base = base.slice(Math.max(1, Math.floor(base.length / 8)));
+  return base + tail;
+}
+
+export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot: string | undefined, o: { removeWhenStuck?: boolean; kept?: string[]; notMoved?: { path: string; why: string }[] } = {}): string[] {
   const planted: string[] = [];
   const folder = quarantineFolder(quarantineRoot);
   for (const { path, anchor } of unheld) {
@@ -168,15 +187,18 @@ export function quarantinePlanted(unheld: readonly UnheldPath[], quarantineRoot:
       }
     };
     let gone = false;
+    let why = folder === undefined ? "there is no quarantine folder to move it to" : "it couldn't be moved";
+    if (folder !== undefined && !parentStill()) why = "the folder holding it changed while it was checked";
     if (folder !== undefined && parentStill() && parentId !== undefined) {
       try {
-        renameFromParent(parentReal, parentId, basename(target), join(folder, `${target.split("/").filter(Boolean).join("_")}.quarantined-${Math.random().toString(16).slice(2, 10)}`));
+        renameFromParent(parentReal, parentId, basename(target), join(folder, quarantineName(target)));
         gone = true;
-      } catch { /* below */ }
+      } catch (err) { why = `it couldn't be moved (${(err as NodeJS.ErrnoException).code ?? "error"})`; }
     }
     if (!gone && o.removeWhenStuck === false) {
-      // A recovery: the path may be the user's own, made after the crash, so it stays where it is, reported.
+      // Never deleted here (a recovery, or a new match a sweep found: it may be the person's own): it stays, reported.
       o.kept?.push(target);
+      o.notMoved?.push({ path: target, why });
       continue;
     }
     if (!gone && parentStill()) {
@@ -207,8 +229,11 @@ export interface LinuxRun {
   unheld: UnheldPath[];
   /** The held matches inside the write roots, by their identity at the start (`swappedHeld` at the end). */
   held?: HeldPath[];
-  /** The matches the command made itself, found by walking the roots again at the end (in memory, never recorded). */
+  /** The matches the command made itself, found by sweeping the roots the caller named at the end (in memory, never
+   *  recorded); it says in `report.unswept` what it couldn't read through. */
   rescan?: () => UnheldPath[];
+  /** Where the end says what it couldn't do (in memory, never recorded). */
+  report?: RunReport;
   quarantineRoot: string | undefined;
   /** The folders made for it before it started, top first. */
   made: string[];
@@ -310,7 +335,7 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
       record = join(dir, `${process.pid}-${id}-${Math.random().toString(16).slice(2, 10)}.json`);
       // The held identities stay in memory: a recovery recomputes only what the lists name and trusts no record's
       // identities (a crashed run's swapped entry is the known gap the mounts still cover).
-      const { held: _held, rescan: _rescan, ...recorded } = run;
+      const { held: _held, rescan: _rescan, report: _report, ...recorded } = run;
       writeFileSync(record, JSON.stringify({ ...recorded, pid: process.pid, ...(ownStart !== undefined ? { start: ownStart } : {}) }), { mode: 0o600, flag: "wx" });
     } catch {
       record = undefined;
@@ -330,8 +355,15 @@ export function beginLinuxRun(run: LinuxRun): () => string[] {
 
 function finishRun(entry: LinuxRun & { record?: string }, keepRecord = false): string[] {
   let made: UnheldPath[] = [];
-  try { made = entry.rescan?.() ?? []; } catch { /* a walk that fails moves nothing more */ }
-  const quarantined = quarantinePlanted([...entry.unheld, ...swappedHeld(entry.held ?? []), ...made], entry.quarantineRoot);
+  try { made = entry.rescan?.() ?? []; } catch (err) {
+    // Never swallowed: a sweep that threw checked nothing, and says so.
+    entry.report?.unswept.push({ root: "(the sweep)", why: `it failed: ${err instanceof Error ? err.message.slice(0, 200) : String(err)}` });
+  }
+  // The literal paths missing at the start (as before); then what was swapped or made new, never deleted when it can't
+  // be moved (a sweep's find may be the person's own), each failure said.
+  const quarantined = quarantinePlanted(entry.unheld, entry.quarantineRoot);
+  const more = quarantinePlanted([...swappedHeld(entry.held ?? []), ...made].filter((u) => !quarantined.includes(u.path)), entry.quarantineRoot, { removeWhenStuck: false, kept: [], ...(entry.report ? { notMoved: entry.report.notMoved } : {}) });
+  quarantined.push(...more);
   if (keepRecord) return quarantined;
   if (entry.record !== undefined) rmSync(entry.record, { force: true });
   const own = new Set([...live.values()].flatMap((r) => (r.record !== undefined ? [r.record] : [])));

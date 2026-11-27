@@ -3,15 +3,23 @@
 // thread, and the end-of-run clean-up moves aside an entry swapped in at a held path (the rename) by its identity alone,
 // with no mount involved (`swappedHeld`).
 import { afterAll, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync, lstatSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync, lstatSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { commandSandboxAvailable, runCommand, SandboxUnavailableError } from "@waifucave/clover-agent-runtime/sandbox";
+import { spawnSync } from "node:child_process";
+import { commandSandboxAvailable, movedAsideNote, notePath, runCommand, SandboxUnavailableError } from "@waifucave/clover-agent-runtime/sandbox";
 import { installHostCodeProcessClient, type HostCodeProcessClient } from "./sandbox/host-code-process.ts";
-import { beginLinuxRun, heldPathOf, resetLinuxRunsForTest, swappedHeld, type HeldPath } from "./sandbox/linux-runs.ts";
+import { beginLinuxRun, heldPathOf, quarantineName, resetLinuxRunsForTest, swappedHeld, type HeldPath, type RunReport } from "./sandbox/linux-runs.ts";
+import { sweepExpander } from "./sandbox/spawn.ts";
 
 const temps: string[] = [];
-afterAll(() => { for (const d of temps.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterAll(() => {
+  for (const d of temps.splice(0)) {
+    // The sweep's cases leave folders without write (chmod 111, then the sweep's u+rx): writable again first.
+    if (process.platform !== "win32") spawnSync("chmod", ["-R", "u+rwx", d]);
+    rmSync(d, { recursive: true, force: true });
+  }
+});
 const temp = (p: string) => { const d = realpathSync(mkdtempSync(join(tmpdir(), p))); temps.push(d); return d; };
 const base = (cwd: string) => ({ command: "", cwd, env: { ...process.env, TMPDIR: cwd }, timeoutMs: 20_000, writableRoots: [cwd], home: cwd });
 
@@ -133,5 +141,124 @@ describe("the end-of-run clean-up holds a held path by its identity (no mounts)"
     expect(existsSync(join(root, "proj", ".envrc"))).toBe(false);
     expect(existsSync(join(root, "other", ".husky"))).toBe(false);
     expect(readFileSync(join(root, "proj-old", ".envrc"), "utf8")).toBe("export A=1\n");
+  });
+
+  test("a held LINK (no mount holds one): replaced in the same parent, by a file or by a folder, it is moved aside", () => {
+    resetLinuxRunsForTest();
+    const root = temp("sbx-host-link-");
+    mkdirSync(join(root, "dots", "hooks"), { recursive: true });
+    writeFileSync(join(root, "dots", "zshrc"), "# mine\n");
+    // A stow-style home: `.zshrc` a link to a file, `.husky` a link to a folder.
+    symlinkSync(join(root, "dots", "zshrc"), join(root, ".zshrc"));
+    symlinkSync(join(root, "dots", "hooks"), join(root, ".husky"));
+    const held = [heldPathOf(join(root, ".zshrc"))!, heldPathOf(join(root, ".husky"))!];
+    expect(held.map((h) => h.kind)).toEqual(["link", "link"]);
+    const quarantine = join(root, ".home", "quarantine");
+    const end = beginLinuxRun({ unheld: [], held, quarantineRoot: quarantine, made: [] });
+    // `rm ~/.zshrc; echo … > ~/.zshrc`, and the same for the folder link.
+    rmSync(join(root, ".zshrc"));
+    writeFileSync(join(root, ".zshrc"), "PLANTED\n");
+    rmSync(join(root, ".husky"));
+    mkdirSync(join(root, ".husky"));
+    writeFileSync(join(root, ".husky", "pre-commit"), "PLANTED\n");
+    expect(end().sort()).toEqual([join(root, ".husky"), join(root, ".zshrc")].sort());
+    expect(existsSync(join(root, ".zshrc"))).toBe(false);
+    expect(existsSync(join(root, ".husky"))).toBe(false);
+    // What the links pointed at is untouched.
+    expect(readFileSync(join(root, "dots", "zshrc"), "utf8")).toBe("# mine\n");
+  });
+
+  test("the spare is by the START kind: a held folder replaced by a file in the same parent is moved aside", () => {
+    resetLinuxRunsForTest();
+    const root = temp("sbx-host-kind-");
+    mkdirSync(join(root, ".husky"));
+    const held = [heldPathOf(join(root, ".husky"))!];
+    const end = beginLinuxRun({ unheld: [], held, quarantineRoot: join(root, ".home", "quarantine"), made: [] });
+    rmSync(join(root, ".husky"), { recursive: true });
+    writeFileSync(join(root, ".husky"), "PLANTED\n");
+    expect(end()).toEqual([join(root, ".husky")]);
+  });
+
+  test("with no quarantine folder, a swapped or new match is never deleted: it stays, said in notMoved", () => {
+    resetLinuxRunsForTest();
+    const root = temp("sbx-host-noq-");
+    mkdirSync(join(root, "proj", ".git"), { recursive: true });
+    const held = [heldPathOf(join(root, "proj", ".git"))!];
+    const report: RunReport = { notMoved: [], unswept: [] };
+    const end = beginLinuxRun({ unheld: [], held, rescan: () => [{ path: join(root, "sub", ".envrc"), anchor: root }], report, quarantineRoot: undefined, made: [] });
+    renameSync(join(root, "proj"), join(root, "proj-old"));
+    mkdirSync(join(root, "proj", ".git"), { recursive: true });
+    mkdirSync(join(root, "sub"));
+    writeFileSync(join(root, "sub", ".envrc"), "mine\n");
+    expect(end()).toEqual([]);
+    expect(existsSync(join(root, "proj", ".git"))).toBe(true);
+    expect(readFileSync(join(root, "sub", ".envrc"), "utf8")).toBe("mine\n");
+    expect(report.notMoved.map((n) => n.path).sort()).toEqual([join(root, "proj", ".git"), join(root, "sub", ".envrc")].sort());
+    expect(report.notMoved[0]!.why).toBe("there is no quarantine folder to move it to");
+  });
+
+  test("a sweep that throws is never swallowed: said in unswept", () => {
+    resetLinuxRunsForTest();
+    const root = temp("sbx-host-throw-");
+    const report: RunReport = { notMoved: [], unswept: [] };
+    const end = beginLinuxRun({ unheld: [], held: [], rescan: () => { throw new Error("boom"); }, report, quarantineRoot: join(root, "q"), made: [] });
+    expect(end()).toEqual([]);
+    expect(report.unswept).toEqual([{ root: "(the sweep)", why: "it failed: boom" }]);
+  });
+
+  test("a quarantine name stays a valid name however deep the path", () => {
+    const deep = `/${Array.from({ length: 40 }, (_, i) => `folder-${i}-${"x".repeat(20)}`).join("/")}/.git`;
+    const name = quarantineName(deep);
+    expect(Buffer.byteLength(name)).toBeLessThanOrEqual(255);
+    expect(name).toMatch(/\.git\.quarantined-[0-9a-f]+$/);
+  });
+});
+
+describe("the end-of-run sweep (sweepRoots): honest about what it couldn't read", () => {
+  const MATCH = [/\/\.git$/, /\/\.husky$/];
+  test.skipIf(process.platform === "win32")("a folder the command made unreadable (chmod 111) is opened u+rx and read; a 17-deep folder doesn't hide its sibling", () => {
+    const root = temp("sbx-sweep-read-");
+    mkdirSync(join(root, "sub", ".git"), { recursive: true });
+    chmodSync(join(root, "sub"), 0o111);
+    mkdirSync(join(root, ...Array.from({ length: 17 }, (_, i) => `d${i}`)), { recursive: true });
+    mkdirSync(join(root, "z", ".husky"), { recursive: true });
+    const unswept: { root: string; why: string }[] = [];
+    const r = sweepExpander([root], unswept)(root, MATCH);
+    expect(r.found[0]).toEqual([join(root, "sub", ".git")]);
+    expect(r.found[1]).toEqual([join(root, "z", ".husky")]);
+    expect(unswept).toEqual([]);
+  });
+
+  test("past its budget: the root is said unswept, never silent", () => {
+    const root = temp("sbx-sweep-budget-");
+    for (let i = 0; i < 30; i++) mkdirSync(join(root, `f${i}`, "inner"), { recursive: true });
+    const unswept: { root: string; why: string }[] = [];
+    sweepExpander([root], unswept, { budget: { maxVisited: 10, maxMs: 60_000 } })(root, MATCH);
+    expect(unswept).toEqual([{ root, why: "it holds more than one command's end can check" }]);
+    expect(movedAsideNote([], undefined, { unswept })).toBe(`[sandbox] ${root}: could not be fully checked at the command's end (it holds more than one command's end can check); something it made there may have stayed`);
+  });
+
+  test("a folder it can't open even so (not the user's): the root is said unswept", () => {
+    const root = temp("sbx-sweep-fail-");
+    mkdirSync(join(root, "locked"));
+    const unswept: { root: string; why: string }[] = [];
+    const real = sweepExpander([root], unswept);
+    // A root another user owns can't be chmod'ed; here a name that is a folder no read can open (a seam-free stand-in:
+    // a path under a file).
+    writeFileSync(join(root, "afile"), "");
+    real(join(root, "afile", "x"), MATCH);
+    expect(unswept).toEqual([]); // ENOTDIR: nothing there, not a failure
+    if (process.platform !== "win32" && process.getuid?.() !== 0) {
+      chmodSync(join(root, "locked"), 0o000);
+      // Owned by this user: retried with u+rx and read.
+      real(root, MATCH);
+      expect(unswept).toEqual([]);
+    }
+  });
+
+  test("a path in a note is escaped: a newline in a folder's name can't start a line", () => {
+    expect(notePath("/w/a\nb/.husky")).toBe("/w/a\\u000ab/.husky");
+    const note = movedAsideNote(["/w/a\n[sandbox] /x: moved to/.husky"], "/q");
+    expect(note.split("\n").length).toBe(1);
   });
 });

@@ -39,6 +39,8 @@ import {
   commandSandboxAvailable,
   linuxUnheldProtectedPaths,
   sandboxUnavailableMessage,
+  movedAsideNote,
+  notePath,
   type RunCommandResult,
 } from "../../sandbox/spawn.ts";
 import { adoptLeftBehind, leftBehindNote } from "./left-behind.ts";
@@ -329,11 +331,13 @@ function capOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", raw: 
  * Linux (#74's review B1): the protected paths this command's sandbox couldn't hold -- they didn't exist, so no mount
  * covers them -- and what the command made at any of them, moved aside at its end. Empty when there is nothing to say.
  */
-export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined): string {
+export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined, end: { quarantineRoot?: string; notMoved?: { path: string; why: string }[]; unswept?: { root: string; why: string }[] } = {}): string {
   const lines: string[] = [];
-  if (unheld !== undefined && unheld.length > 0) lines.push(`[sandbox: not held (missing, checked at the command's end): ${unheld.join(", ")}]`);
-  // What was moved aside is said on the command's stderr already, one line per path (sandbox/spawn.ts `movedAsideNote`).
-  void quarantined;
+  if (unheld !== undefined && unheld.length > 0) lines.push(`[sandbox: not held (missing, checked at the command's end): ${unheld.map(notePath).join(", ")}]`);
+  // What was moved aside, what couldn't be and what couldn't be swept: one line each, here OUTSIDE the command's capped
+  // output (sandbox/spawn.ts `movedAsideNote`), so a chatty command can't push them out.
+  const moved = movedAsideNote(quarantined ?? [], end.quarantineRoot, { notMoved: end.notMoved ?? [], unswept: end.unswept ?? [] });
+  if (moved.length > 0) lines.push(moved);
   return lines.join("\n");
 }
 
@@ -537,7 +541,7 @@ async function runForeground(input: BashInput, ctx: ToolExecutionContext): Promi
   // only a macOS Seatbelt run that failed with non-baseline denials carries any.
   const sandboxViolations = !success && !result.aborted && result.sandboxViolations !== undefined ? formatSandboxViolations(result.sandboxViolations) : "";
 
-  const protectedNote = result.aborted ? "" : protectedPathsNote(result.unheldProtectedPaths, result.quarantined);
+  const protectedNote = result.aborted ? "" : protectedPathsNote(result.unheldProtectedPaths, result.quarantined, result);
   const formatted = formatForegroundResult({
       stdout: stdoutCapped,
       stderr: stderrCapped,
