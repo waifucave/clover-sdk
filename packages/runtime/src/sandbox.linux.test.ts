@@ -8,6 +8,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import * as entry from "@waifucave/clover-agent-runtime/sandbox";
 import { buildHostSandboxRunInputs, linuxSandboxReady, runCommand, type SandboxSettings } from "@waifucave/clover-agent-runtime/sandbox";
 
@@ -104,5 +105,52 @@ describe("a host's command under real bubblewrap (Linux)", () => {
       expect(readFileSync(join(work, "inside.txt"), "utf8")).toBe("y\n");
       expect(r.out).toContain("NO-NETWORK");
     } finally { server.stop(true); }
+  });
+});
+
+describe("a repository and the run-later names a command makes itself (Linux): what stays, what is moved aside, what it is told", () => {
+  const GIT = "git -c user.email=t@example.invalid -c user.name=t";
+  linuxTest("git init, add, commit: the repository works in the next command; its hooks and config were moved aside, and said", async () => {
+    const home = temp("sbx-git-init-");
+    const work = join(home, "work");
+    mkdirSync(work, { recursive: true });
+    const r = await hostRun(`mkdir proj && cd proj && git init -q && echo a > f && git add f && ${GIT} commit -qm one && echo done`, { cwd: work, roots: [work], home });
+    expect(r.out).toContain("done");
+    expect(existsSync(join(work, "proj", ".git", "HEAD"))).toBe(true);
+    expect(existsSync(join(work, "proj", ".git", "hooks"))).toBe(false);
+    expect(existsSync(join(work, "proj", ".git", "config"))).toBe(false);
+    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git", "hooks")}: moved to`);
+    expect(r.err).toContain(`[sandbox] ${join(work, "proj", ".git", "config")}: moved to`);
+    const next = await hostRun("cd proj && git status --short && git log --oneline | wc -l", { cwd: work, roots: [work], home });
+    expect(next.exitCode).toBe(0);
+    expect(next.out.trim()).toBe("1");
+  });
+
+  linuxTest("git clone of a local bare repository: git log works in the next command; hooks and config moved aside", async () => {
+    const home = temp("sbx-git-clone-");
+    const work = join(home, "work");
+    const src = join(home, "src");
+    mkdirSync(work, { recursive: true });
+    expect(spawnSync("bash", ["-c", `git init -q --bare ${JSON.stringify(join(src, "b.git"))} && git init -q ${JSON.stringify(join(src, "w"))} && cd ${JSON.stringify(join(src, "w"))} && echo a > f && git add f && ${GIT} commit -qm one && git push -q ${JSON.stringify(join(src, "b.git"))} HEAD:main`]).status).toBe(0);
+    const r = await hostRun(`git clone -q ${JSON.stringify(join(src, "b.git"))} x && echo done`, { cwd: work, roots: [work], home });
+    expect(r.out).toContain("done");
+    expect(existsSync(join(work, "x", "f"))).toBe(true);
+    expect(existsSync(join(work, "x", ".git", "hooks"))).toBe(false);
+    const next = await hostRun("cd x && git log --oneline | wc -l", { cwd: work, roots: [work], home });
+    expect(next.out.trim()).toBe("1");
+  });
+
+  linuxTest("a new .husky, .envrc, .mcp.json and .vscode/tasks.json: each moved aside whole at the end, one line each", async () => {
+    const home = temp("sbx-runlater-");
+    const work = join(home, "work");
+    mkdirSync(work, { recursive: true });
+    const settings: SandboxSettings = { filesystem: { allowWrite: [work], denyWrite: [...HELD, "/**/.mcp.json"] } };
+    const r = await hostRun("mkdir -p .husky && echo x > .husky/pre-commit; echo x > .envrc; echo {} > .mcp.json; mkdir -p .vscode && echo {} > .vscode/tasks.json; echo kept > notes.txt; echo done", { cwd: work, roots: [work], home, settings });
+    expect(r.out).toContain("done");
+    for (const name of [".husky", ".envrc", ".mcp.json", ".vscode"]) {
+      expect([name, existsSync(join(work, name))]).toEqual([name, false]);
+      expect(r.err).toContain(`[sandbox] ${join(work, name)}: moved to`);
+    }
+    expect(readFileSync(join(work, "notes.txt"), "utf8")).toBe("kept\n");
   });
 });

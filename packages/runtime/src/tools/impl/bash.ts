@@ -332,7 +332,8 @@ function capOutput(ctx: ToolExecutionContext, stream: "stdout" | "stderr", raw: 
 export function protectedPathsNote(unheld: readonly string[] | undefined, quarantined: readonly string[] | undefined): string {
   const lines: string[] = [];
   if (unheld !== undefined && unheld.length > 0) lines.push(`[sandbox: not held (missing, checked at the command's end): ${unheld.join(", ")}]`);
-  if (quarantined !== undefined && quarantined.length > 0) lines.push(`[sandbox: moved aside (made at a protected path): ${quarantined.join(", ")}]`);
+  // What was moved aside is said on the command's stderr already, one line per path (sandbox/spawn.ts `movedAsideNote`).
+  void quarantined;
   return lines.join("\n");
 }
 

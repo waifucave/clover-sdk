@@ -541,6 +541,25 @@ function linuxListsInput(opts: Pick<RunCommandOptions, "cwd" | "writableRoots" |
   };
 }
 
+let endOfRunWalk = true;
+/** TEST-ONLY: the end-of-run walk off, to measure what it costs (sandbox-walk-cost.linux.test.ts). Never from settings. */
+export function setEndOfRunWalkForTest(on: boolean): void { endOfRunWalk = on; }
+
+/** How many moved-aside paths the note names one by one; the rest are counted. */
+export const MOVED_ASIDE_NOTE_CAP = 20;
+
+/** What the command is told about the paths moved aside at its end: one plain line per path (capped), with why and where
+ *  it went, so a command that wrote one doesn't try again unaware. */
+export function movedAsideNote(paths: readonly string[], quarantineRoot: string | undefined): string {
+  const why = (p: string) => /\.git\/hooks$/.test(p) ? "a repository's hooks run later, outside the sandbox; the repository itself stays"
+    : /\.git\/config$/.test(p) ? "a repository's config can name programs git runs; the repository stays and works without it"
+    : "it runs later, outside the sandbox";
+  const where = quarantineRoot === undefined ? "removed" : `moved to ${quarantineRoot}`;
+  const lines = paths.slice(0, MOVED_ASIDE_NOTE_CAP).map((p) => `[sandbox] ${p}: ${where} at the command's end (${why(p)}); writing it again is moved aside again`);
+  if (paths.length > MOVED_ASIDE_NOTE_CAP) lines.push(`[sandbox] and ${paths.length - MOVED_ASIDE_NOTE_CAP} more moved aside the same way`);
+  return `\n${lines.join("\n")}\n`;
+}
+
 /** Whether `path` is a real folder (not a link to one). */
 function isRealDir(path: string): boolean {
   try {
@@ -667,13 +686,23 @@ function linuxBwrapSpawn(opts: RunCommandOptions, allowNetwork: boolean): { file
   const startHeld = new Set(held.map((h) => h.path));
   const rootOf = (p: string) => lists.writableRoots.filter((r) => p !== r && p.startsWith(r.endsWith("/") ? r : `${r}/`)).sort((x, y) => y.length - x.length)[0];
   const rescan = (): UnheldPath[] => {
+    if (!endOfRunWalk) return [];
     let again: ReturnType<typeof linuxSandboxListsFor>;
     try { again = linuxSandboxListsFor(linuxListsInput(opts, allowNetwork), perCommandExpander(), { sizeOf: (p) => walkSizes.get(p) }); } catch { return []; }
     const out: UnheldPath[] = [];
     for (const d of again.denyWrite) {
       if (startHeld.has(d) || !lexists(d)) continue;
       const root = rootOf(d);
-      if (root !== undefined) out.push({ path: d, anchor: root });
+      if (root === undefined) continue;
+      // A repository the command made (`git init`, `git clone`): only what makes git run something later is moved
+      // aside, its `hooks` folder and its `config` (core.hooksPath, core.fsmonitor, aliases, filters name programs); the
+      // objects, refs and HEAD stay, so the repository keeps working (git reads no config as the defaults). A `.git` that
+      // is a file (a `gitdir:` pointer) or a link is moved whole, as is every other new match (a `.husky`, a `.envrc`).
+      if (/\.git$/.test(d) && isRealDir(d)) {
+        for (const part of ["hooks", "config"]) if (lexists(join(d, part))) out.push({ path: join(d, part), anchor: root });
+        continue;
+      }
+      out.push({ path: d, anchor: root });
     }
     return out;
   };
@@ -953,7 +982,7 @@ export async function runCommandLocally(opts: RunCommandOptions): Promise<RunCom
       // B1: what the command made at a protected path the sandbox couldn't hold is moved aside now, at ITS end (a
       // background command's too), and said.
       const quarantined = endLinuxRun();
-      if (quarantined.length > 0) opts.onStderr?.(Buffer.from(`\n[sandbox] moved aside what the command made at protected paths (they run later, outside the sandbox): ${quarantined.join(", ")}\n`));
+      if (quarantined.length > 0) opts.onStderr?.(Buffer.from(movedAsideNote(quarantined, quarantineRoot)));
       const result: RunCommandResult = {
         exitCode,
         timedOut,
